@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin code="qcloud_storage" version="v1" name="Qcloud Storage">
+ <interface>
+	<action>query</action>
+	<target>STORAGE-OS-IDC-DCN-SET-ZONE-IPSEGMENT</target>
+	<parameters>
+	  <parameter datatype="string">guid</parameter>
+	  <parameter datatype="string">provider_params</parameter>
+	  <parameter datatype="string">disk_type</parameter>
+	  <parameter datatype="string">disk_size</parameter>
+	  <parameter datatype="string">disk_name</parameter>
+	  <parameter datatype="string">disk_id</parameter>
+	  <parameter datatype="string">disk_charge_type</parameter>
+	  <parameter datatype="string">disk_charge_period</parameter>
+	  <parameter datatype="string">instance_id</parameter>
+	  <parameter datatype="string">process_instance_id</parameter>
+	  <parameter datatype="string">state</parameter>
+	</parameters>
+ </interface>
+ <interface>
+	<action>operate</action>
+	<target>wb_storage</target>
+	<parameters>
+	  <parameter datatype="string">guid</parameter>
+	  <parameter datatype="string">disk_id</parameter>
+	  <parameter datatype="string">state</parameter>
+	 </parameters>
+ </interface>
+</plugin>

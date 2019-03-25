@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin code="qcloud_vm" version="v1" name="Qcloud VM">
+ <interface>
+	<action>query</action>
+	<target>OS-IDC-DCN-SET-ZONE-IPSEGMENT</target>
+	<parameters>
+	  <parameter datatype="string">provider_params</parameter>
+	  <parameter datatype="string">vpc_id</parameter>
+	  <parameter datatype="string">subnet_id</parameter>
+	  <parameter datatype="string">instance_name</parameter>
+	  <parameter datatype="string">instance_id</parameter>
+	  <parameter datatype="string">instance_type</parameter>
+	  <parameter datatype="string">image_id</parameter>
+	  <parameter datatype="string">instance_charge_type</parameter>
+	  <parameter datatype="string">instance_charge_period</parameter>
+	  <parameter datatype="string">state</parameter>
+
+	</parameters>
+ </interface>
+ <interface>
+	<action>operate</action>
+	<target>wb_os</target>
+	<parameters>
+	  <parameter datatype="string">instance_id</parameter>
+	  <parameter datatype="string">cpu</parameter>
+	  <parameter datatype="string">memory</parameter>
+	  <parameter datatype="string">system_disk_size</parameter>
+	  <parameter datatype="string">instance_state</parameter>
+	  <parameter datatype="string">state</parameter>
+	 </parameters>
+ </interface>
+ <interface>
+	<action>operate</action>
+	<target>wb_ip_used</target>
+	<parameters>
+	  <parameter datatype="string">ip_type</parameter>
+	  <parameter datatype="string">ip</parameter>
+	  <parameter datatype="string">instance_id</parameter>
+	  <parameter datatype="string">state</parameter>
+	 </parameters>
+ </interface>
+</plugin>
