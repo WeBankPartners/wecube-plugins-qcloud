@@ -50,7 +50,7 @@ func getPluginByName(name string) (Plugin, error) {
 func init() {
 	registerPlugin("vm", new(VmPlugin))
 	registerPlugin("storage", new(StoragePlugin))
-
+	registerPlugin("subnet", new(SubnetPlugin))
 }
 
 type WorkflowParam struct {
