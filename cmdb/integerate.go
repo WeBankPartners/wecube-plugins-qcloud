@@ -37,7 +37,14 @@ func GetIntegrateStoragesByProcessInstanceId(queryParam *CmdbCiQueryParam) ([]In
 
 type IntegrateSubnet struct {
 	ProviderParams string `json:"provider_params,omitempty"`
-	SubnetInfo
+	Guid              string `json:"guid,omitempty"`
+	Id                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	CidrBlock         string `json:"cidr_block,omitempty"`
+	VpcId             string `json:"vpc_id,omitempty"`
+	RouteTableId      string `json:"route_table_id,omitempty"`
+	ProcessInstanceId string `json:"process_instance_id,omitempty"`
+	State             string `json:"state,omitempty"`
 }
 
 func GetIntegrateSubnetsByProcessInstanceId(queryParam *CmdbCiQueryParam) ([]IntegrateSubnet, int, error) {
