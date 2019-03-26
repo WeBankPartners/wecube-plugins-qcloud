@@ -4,6 +4,7 @@
 	<action>query</action>
 	<target>OS-IDC-DCN-SET-ZONE-IPSEGMENT</target>
 	<parameters>
+	  <parameter datatype="string">guid</parameter>
 	  <parameter datatype="string">provider_params</parameter>
 	  <parameter datatype="string">vpc_id</parameter>
 	  <parameter datatype="string">subnet_id</parameter>
@@ -14,7 +15,6 @@
 	  <parameter datatype="string">instance_charge_type</parameter>
 	  <parameter datatype="string">instance_charge_period</parameter>
 	  <parameter datatype="string">state</parameter>
-
 	</parameters>
  </interface>
  <interface>

@@ -2,8 +2,10 @@
 <plugin code="qcloud_security_group_rule" version="v1" name="Qcloud Security Group Rule">
  <interface>
 	<action>query</action>
-	<target>SECURITY-GROUP-RULE</target>
+	<target>SECURITY-GROUP-RULE-IDC</target>
 	<parameters>
+	  <parameter datatype="string">guid</parameter>
+	  <parameter datatype="string">provider_params</parameter>
 	  <parameter datatype="string">id</parameter>
 	  <parameter datatype="string">type</parameter>
 	  <parameter datatype="string">cidr_ip</parameter>
