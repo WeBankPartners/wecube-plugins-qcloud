@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin code="qcloud_security_group_rule" version="v1" name="Qcloud Security Group Rule">
+ <interface>
+	<action>query</action>
+	<target>SECURITY-GROUP-RULE</target>
+	<parameters>
+	  <parameter datatype="string">id</parameter>
+	  <parameter datatype="string">type</parameter>
+	  <parameter datatype="string">cidr_ip</parameter>
+	  <parameter datatype="string">ip_protocol</parameter>
+	  <parameter datatype="string">port_range</parameter>
+	  <parameter datatype="string">policy</parameter>
+	  <parameter datatype="string">state</parameter>
+
+	</parameters>
+ </interface>
+ <interface>
+	<action>operate</action>
+	<target>wb_security_group_rule</target>
+	<parameters>
+	  <parameter datatype="string">id</parameter>
+	  <parameter datatype="string">state</parameter>
+	 </parameters>
+ </interface>
+</plugin>
