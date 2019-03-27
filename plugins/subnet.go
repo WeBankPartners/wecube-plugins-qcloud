@@ -3,12 +3,13 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"net"
+
 	"git.webank.io/wecube-plugins/cmdb"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
-	"net"
 )
 
 var SubnetActions = make(map[string]Action)
@@ -92,7 +93,7 @@ func (action *SubnetCreateAction) createSubnet(subnet cmdb.IntegrateSubnet) (str
 	request.VpcId = &subnet.VpcId
 	request.SubnetName = &subnet.Name
 	request.CidrBlock = &subnet.CidrBlock
-	az := paramsMap["AvailabelZone"]
+	az := paramsMap["AvailableZone"]
 	request.Zone = &az
 
 	response, err := client.CreateSubnet(request)
