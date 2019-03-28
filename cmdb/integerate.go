@@ -6,6 +6,7 @@ import (
 
 const (
 	STORAGE_OS_IDC_DCN_SET_ZONE_IPSEGMENT = "STORAGE-OS-IDC-DCN-SET-ZONE-IPSEGMENT"
+	SUBNET_IDC_DCN_SET_ZONE_IPSEGMENT     = "SUBNET-IDC-DCN-SET-ZONE-IPSEGMENT"
 )
 
 type IntegrateStorage struct {
@@ -29,6 +30,30 @@ func GetIntegrateStoragesByProcessInstanceId(queryParam *CmdbCiQueryParam) ([]In
 	total, err := ListIntegrateEntries(STORAGE_OS_IDC_DCN_SET_ZONE_IPSEGMENT, queryParam, &results)
 	if err != nil {
 		logrus.Errorf("GetIntegrateStoragesByProcessInstanceId meet error err=%v,queryParam=%v", err, queryParam)
+	}
+
+	return results, total, err
+}
+
+type IntegrateSubnet struct {
+	ProviderParams string `json:"provider_params,omitempty"`
+	Guid              string `json:"guid,omitempty"`
+	Id                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	CidrBlock         string `json:"cidr_block,omitempty"`
+	VpcId             string `json:"vpc_id,omitempty"`
+	RouteTableId      string `json:"route_table_id,omitempty"`
+	ProcessInstanceId string `json:"process_instance_id,omitempty"`
+	State             string `json:"state,omitempty"`
+}
+
+func GetIntegrateSubnetsByProcessInstanceId(queryParam *CmdbCiQueryParam) ([]IntegrateSubnet, int, error) {
+	results := []IntegrateSubnet{}
+	queryParam.ResultColumn = ExtractColumnFromStruct(IntegrateSubnet{})
+
+	total, err := ListIntegrateEntries(SUBNET_IDC_DCN_SET_ZONE_IPSEGMENT, queryParam, &results)
+	if err != nil {
+		logrus.Errorf(" GetIntegrateSubnetsByProcessInstanceId meet error err=%v,queryParam=%v", err, queryParam)
 	}
 
 	return results, total, err

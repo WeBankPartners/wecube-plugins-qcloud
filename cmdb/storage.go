@@ -5,6 +5,7 @@ const (
 )
 
 type Storage struct {
+	Guid              string `json:"guid,omitempty"`
 	DiskType          string `json:"disk_type,omitempty"`
 	DiskSize          uint64 `json:"disk_size,omitempty"`
 	DiskName          string `json:"disk_name,omitempty"`
