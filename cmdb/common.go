@@ -487,15 +487,15 @@ func ListIntegrateEntries(ciName string, queryParam *CmdbCiQueryParam, results i
 
 func GetSecurityGroupIntegrateTemplateDataByProcessID(processID string) (response *CmdbResponse, origin []byte, err error) {
 	filter := make(map[string]interface{})
-	filter["wb_os__process_instance_id"] = processID
+	filter["process_instance_id"] = processID
 	cmdbRequest := CmdbRequest{
-		Type:         "SecurityGroup",
+		Type:         "SECURITY-GROUP-IDC",
 		Action:       "select",
 		StartIndex:   0,
-		PageSize:     100,
+		PageSize:     1000,
 		IsPaging:     true,
 		Filter:       filter,
-		ResultColumn: []string{"name", "wb_os__process_instance_id", "os_type", "subnet_name", "os_image", "provider", "charge_type", "provider_params", "system_disk_size", "vpc", "state", "guid", "assetid"},
+		ResultColumn: []string{"name", "rule_description", "priority", "id", "rule_type", "description", "ip_protocol", "guid", "port_range", "state", "policy", "process_instance_id", "cidr_ip", "provider_params"},
 	}
 	return GetIntegrateTemplateData(&cmdbRequest)
 }
