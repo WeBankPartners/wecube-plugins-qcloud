@@ -46,7 +46,7 @@ type SubnetCreateAction struct {
 
 func (action *SubnetCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
 	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceID
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
 	filter["state"] = cmdb.CMDB_STATE_REGISTERED
 	integrateQueyrParam := cmdb.CmdbCiQueryParam{
 		Offset:        0,
@@ -135,7 +135,7 @@ type SubnetTerminateAction struct {
 
 func (action *SubnetTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
 	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceID
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
 	filter["state"] = cmdb.CMDB_STATE_CREATED
 	integrateQueyrParam := cmdb.CmdbCiQueryParam{
 		Offset:        0,
