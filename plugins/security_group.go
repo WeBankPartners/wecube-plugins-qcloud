@@ -23,7 +23,7 @@ var SecurityGroupActions = make(map[string]Action)
 
 func init() {
 	SecurityGroupActions["create"] = new(SecurityGroupCreation)
-	SecurityGroupActions["delete"] = new(SecurityGroupDeletion)
+	SecurityGroupActions["terminate"] = new(SecurityGroupDeletion)
 }
 
 func (plugin *SecurityGroupPlugin) GetActionByName(actionName string) (Action, error) {
