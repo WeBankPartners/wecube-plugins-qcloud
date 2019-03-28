@@ -197,22 +197,47 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
 		logrus.Infof("Create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
 
-		createSecurityGroupPolicyRequest := CreateSecurityGroupPolicyRequest{
-			SecurityGroupId:        securityGroup.SecurityGroupId,
-			SecurityGroupPolicySet: securityGroup.SecurityGroupPolicySet,
+		if len(securityGroup.SecurityGroupPolicySet.Ingress) > 0 {
+			createSecurityGroupPolicyRequest := CreateSecurityGroupPolicyRequest{
+				SecurityGroupId: securityGroup.SecurityGroupId,
+				SecurityGroupPolicySet: SecurityGroupPolicySet{
+					Ingress: securityGroup.SecurityGroupPolicySet.Ingress,
+				},
+			}
+
+			createIngressPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
+			bytecreateSecurityGroupPolicyRequestData, _ := json.Marshal(createSecurityGroupPolicyRequest)
+			logrus.Debugf("bytecreateSecurityGroupPolicyRequestData=%v", string(bytecreateSecurityGroupPolicyRequestData))
+			createIngressPolicies.FromJsonString(string(bytecreateSecurityGroupPolicyRequestData))
+
+			createIngressPoliciesResp, err := client.CreateSecurityGroupPolicies(createIngressPolicies)
+			if err != nil {
+				return err
+			}
+
+			logrus.Infof("Create SecurityGroup Ingress Policy's request has been submitted, RequestID is [%v]", *createIngressPoliciesResp.Response.RequestId)
 		}
 
-		createPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
-		bytecreateSecurityGroupPolicyRequestData, _ := json.Marshal(createSecurityGroupPolicyRequest)
-		logrus.Debugf("bytecreateSecurityGroupPolicyRequestData=%v", string(bytecreateSecurityGroupPolicyRequestData))
-		createPolicies.FromJsonString(string(bytecreateSecurityGroupPolicyRequestData))
+		if len(securityGroup.SecurityGroupPolicySet.Egress) > 0 {
+			createSecurityGroupPolicyRequest := CreateSecurityGroupPolicyRequest{
+				SecurityGroupId: securityGroup.SecurityGroupId,
+				SecurityGroupPolicySet: SecurityGroupPolicySet{
+					Egress: securityGroup.SecurityGroupPolicySet.Egress,
+				},
+			}
 
-		createPoliciesResp, err := client.CreateSecurityGroupPolicies(createPolicies)
-		if err != nil {
-			return err
+			createEgressPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
+			bytecreateSecurityGroupPolicyRequestData, _ := json.Marshal(createSecurityGroupPolicyRequest)
+			logrus.Debugf("bytecreateSecurityGroupPolicyRequestData=%v", string(bytecreateSecurityGroupPolicyRequestData))
+			createEgressPolicies.FromJsonString(string(bytecreateSecurityGroupPolicyRequestData))
+
+			createEgressPoliciesResp, err := client.CreateSecurityGroupPolicies(createEgressPolicies)
+			if err != nil {
+				return err
+			}
+
+			logrus.Infof("Create SecurityGroup Egress Policy's request has been submitted, RequestID is [%v]", *createEgressPoliciesResp.Response.RequestId)
 		}
-
-		logrus.Infof("Create SecurityGroupPolicy's request has been submitted, RequestID is [%v]", *createPoliciesResp.Response.RequestId)
 
 		updateSecurityGroupCi := cmdb.UpdateSecurityGroupCiEntry{
 			Guid:            securityGroup.Guid,
@@ -232,20 +257,20 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 }
 
 func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionParam) (securityGroups []SecurityGroupParam, err error) {
-	for _, actionParam := range actionParams {
+	for i := 0; i < len(actionParams); i++ {
 		policy := SecurityGroupPolicy{
-			PolicyIndex:       actionParam.PolicyIndex,
-			Protocol:          actionParam.Protocol,
-			Port:              actionParam.Port,
-			CidrBlock:         actionParam.CidrBlock,
-			SecurityGroupId:   actionParam.SecurityGroupId,
-			Action:            actionParam.Action,
-			PolicyDescription: actionParam.PolicyDescription,
+			PolicyIndex:       actionParams[i].PolicyIndex,
+			Protocol:          actionParams[i].Protocol,
+			Port:              actionParams[i].Port,
+			CidrBlock:         actionParams[i].CidrBlock,
+			SecurityGroupId:   actionParams[i].SecurityGroupId,
+			Action:            actionParams[i].Action,
+			PolicyDescription: actionParams[i].PolicyDescription,
 		}
 
-		index := checkSecurityGroupIfAppend(securityGroups, actionParam)
+		index := checkSecurityGroupIfAppend(securityGroups, actionParams[i])
 		if index == -1 {
-			SecurityGroup, err := buildNewSecurityGroup(actionParam, policy)
+			SecurityGroup, err := buildNewSecurityGroup(actionParams[i], policy)
 			if err != nil {
 				return securityGroups, err
 			}
@@ -253,12 +278,12 @@ func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionPara
 
 		} else {
 
-			if actionParam.RuleType == "Egress" {
+			if actionParams[i].RuleType == "Egress" {
 				securityGroups[index].SecurityGroupPolicySet.Egress = append(securityGroups[index].SecurityGroupPolicySet.Egress, policy)
-			} else if actionParam.RuleType == "Ingress" {
+			} else if actionParams[i].RuleType == "Ingress" {
 				securityGroups[index].SecurityGroupPolicySet.Ingress = append(securityGroups[index].SecurityGroupPolicySet.Ingress, policy)
 			} else {
-				return securityGroups, fmt.Errorf("Invalid rule type[%v]", actionParam.RuleType)
+				return securityGroups, fmt.Errorf("Invalid rule type[%v]", actionParams[i].RuleType)
 			}
 
 		}
