@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	CMDB_HOST_CI_NAME = "wb_os"
+	OS_CI = "wb_os"
 )
 
 type CommonHostInfo struct {
@@ -50,13 +50,13 @@ type UpdateOsCiEntry struct {
 }
 
 func DeleteHostInfo(hostGuid, pluginName, pluginVersion string) error {
-	return DeleteCiEntryByGuid(hostGuid, pluginName, pluginVersion, CMDB_HOST_CI_NAME, true)
+	return DeleteCiEntryByGuid(hostGuid, pluginName, pluginVersion, OS_CI, true)
 }
 
 func UpdateHostInfoByGuid(guid, pluginName, pluginVersion string, updateCiEntry UpdateOsCiEntry) error {
 	params := []interface{}{}
 	params = append(params, updateCiEntry)
-	err := updateCiEntryByGuid(CMDB_HOST_CI_NAME, guid, pluginName, pluginVersion, params...)
+	err := updateCiEntryByGuid(OS_CI, guid, pluginName, pluginVersion, params...)
 	return err
 }
 
@@ -85,7 +85,7 @@ func UpdateOsCis(updateOsCiEntrys []UpdateOsCiEntry) error {
 	}
 
 	req := CmdbRequest{
-		Type:       CMDB_HOST_CI_NAME,
+		Type:       OS_CI,
 		Action:     "update",
 		Filters:    filters,
 		Parameters: params,

@@ -5,14 +5,16 @@
 	<target>SECURITY-GROUP-RULE-IDC</target>
 	<parameters>
 	  <parameter datatype="string">guid</parameter>
+	  <parameter datatype="string">security_group_id</parameter>
 	  <parameter datatype="string">provider_params</parameter>
-	  <parameter datatype="string">id</parameter>
+	  <parameter datatype="string">index</parameter>
 	  <parameter datatype="string">type</parameter>
 	  <parameter datatype="string">cidr_ip</parameter>
 	  <parameter datatype="string">ip_protocol</parameter>
 	  <parameter datatype="string">port_range</parameter>
 	  <parameter datatype="string">policy</parameter>
 	  <parameter datatype="string">state</parameter>
+	  <parameter datatype="string">description</parameter>
 
 	</parameters>
  </interface>
@@ -20,7 +22,7 @@
 	<action>operate</action>
 	<target>wb_security_group_rule</target>
 	<parameters>
-	  <parameter datatype="string">id</parameter>
+	  <parameter datatype="string">index</parameter>
 	  <parameter datatype="string">state</parameter>
 	 </parameters>
  </interface>

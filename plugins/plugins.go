@@ -50,7 +50,7 @@ func getPluginByName(name string) (Plugin, error) {
 func init() {
 	registerPlugin("vm", new(VmPlugin))
 	registerPlugin("storage", new(StoragePlugin))
-
+	registerPlugin("security_group", new(SecurityGroupPlugin))
 }
 
 type WorkflowParam struct {
@@ -58,10 +58,10 @@ type WorkflowParam struct {
 	AckServer           string `json:"ackServer"`
 	ApplicationName     string `json:"applicationName"`
 	ApplicationAction   string `json:"applicationAction"`
-	ProcessDefinitionID string `json:"processDefinitionId"`
-	ProcessExecutionID  string `json:"processExecutionId"`
-	ProcessInstanceID   string `json:"processInstanceId"`
-	RequestID           string `json:"requestId"`
+	ProcessDefinitionId string `json:"processDefinitionId"`
+	ProcessExecutionId  string `json:"processExecutionId"`
+	ProcessInstanceId   string `json:"processInstanceId"`
+	RequestId           string `json:"requestId"`
 
 	ResultCode string `json:"resultCode"`
 	ResultMsg  string `json:"resultMsg"`
@@ -97,7 +97,7 @@ func CallPluginAction(workflowParam WorkflowParam) {
 		return
 	}
 
-	logrus.Infof("get CMDB parameters with process instance id = %v", workflowParam.ProcessInstanceID)
+	logrus.Infof("get CMDB parameters with process instance id = %v", workflowParam.ProcessInstanceId)
 	actionParam, err := action.BuildParamFromCmdb(&workflowParam)
 	if err != nil {
 		return

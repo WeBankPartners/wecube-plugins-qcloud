@@ -10,7 +10,15 @@
 	  <parameter datatype="string">id</parameter>
 	  <parameter datatype="string">description</parameter>
 	  <parameter datatype="string">state</parameter>
-
+	  <parameter datatype="string">rule_guid</parameter>
+	  <parameter datatype="string">rule_index</parameter>
+	  <parameter datatype="string">rule_type</parameter>
+	  <parameter datatype="string">rule_cidr_ip</parameter>
+	  <parameter datatype="string">rule_ip_protocol</parameter>
+	  <parameter datatype="string">rule_port_range</parameter>
+	  <parameter datatype="string">rule_policy</parameter>
+	  <parameter datatype="string">rule_description</parameter>
+	
 	</parameters>
  </interface>
  <interface>

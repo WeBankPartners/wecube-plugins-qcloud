@@ -68,7 +68,7 @@ func (plugin *StorageCreateAction) BuildParamFromCmdb(workflowParam *WorkflowPar
 	var params []StoragePluginParam
 
 	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceID
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
 
 	filter["state"] = cmdb.CMDB_STATE_REGISTERED
 	integrateQueyrParam := cmdb.CmdbCiQueryParam{
@@ -213,7 +213,7 @@ func (plugin *StorageTerminateAction) BuildParamFromCmdb(workflowParam *Workflow
 	var params []StoragePluginParam
 
 	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceID
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
 	filter["state"] = cmdb.CMDB_STATE_CREATED
 	integrateQueyrParam := cmdb.CmdbCiQueryParam{
 		Offset:        0,
