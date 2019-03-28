@@ -5,9 +5,7 @@ const (
 )
 
 type UpdateSecurityGroupCiEntry struct {
-	Guid              string `json:"guid,omitempty"`
-	SecurityGroupId   string `json:"security_group_id,omitempty"`
-	SecurityGroupName string `json:"security_group_name,omitempty"`
-	SecurityGroupDesc string `json:"security_group_desc,omitempty"`
-	State             string `json:"state,omitempty"`
+	Guid            string `json:"guid,omitempty"`
+	SecurityGroupId string `json:"id,omitempty"`
+	State           string `json:"state,omitempty"`
 }
