@@ -42,6 +42,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/storage/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/subnet/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/subnet/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/security-group/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/security-group/terminate", routeDispatcher)
 
 }
 

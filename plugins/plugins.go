@@ -50,7 +50,7 @@ func getPluginByName(name string) (Plugin, error) {
 func init() {
 	registerPlugin("vm", new(VmPlugin))
 	registerPlugin("storage", new(StoragePlugin))
-	registerPlugin("security_group", new(SecurityGroupPlugin))
+	registerPlugin("security-group", new(SecurityGroupPlugin))
 	registerPlugin("subnet", new(SubnetPlugin))
 }
 
