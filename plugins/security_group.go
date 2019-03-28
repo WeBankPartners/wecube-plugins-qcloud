@@ -2,7 +2,6 @@ package plugins
 
 import (
 	"fmt"
-	"strconv"
 
 	"git.webank.io/wecube-plugins/cmdb"
 
@@ -56,7 +55,7 @@ type QcloudSecurityGroupActionParam struct {
 	SecurityGroupDesc string `json:"description"`
 	ProviderParams    string `json:"provider_params"`
 
-	PolicyIndex       string `json:"priority"`
+	PolicyIndex       int64  `json:"priority"`
 	RuleType          string `json:"rule_type"`
 	CidrBlock         string `json:"cidr_ip"`
 	Protocol          string `json:"ip_protocol"`
@@ -87,6 +86,9 @@ func (action *SecurityGroupCreation) BuildParamFromCmdb(workflowParam *WorkflowP
 
 	cmdbRes := []QcloudSecurityGroupActionParam{}
 	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
+	if err != nil {
+		return nil, err
+	}
 	logrus.Debugf("cmdbRes=%v", cmdbRes)
 
 	return &cmdbRes, nil
@@ -109,6 +111,7 @@ func (action *SecurityGroupCreation) CheckParam(param interface{}) error {
 	for _, actionParam := range *actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
 			err = fmt.Errorf("Invalid SecurityGroup state")
+			return err
 		}
 	}
 
@@ -230,12 +233,8 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 
 func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionParam) (securityGroups []SecurityGroupParam, err error) {
 	for _, actionParam := range actionParams {
-		policyIndex, err := strconv.Atoi(actionParam.PolicyIndex)
-		if err != nil {
-			return securityGroups, err
-		}
 		policy := SecurityGroupPolicy{
-			PolicyIndex:       int64(policyIndex),
+			PolicyIndex:       actionParam.PolicyIndex,
 			Protocol:          actionParam.Protocol,
 			Port:              actionParam.Port,
 			CidrBlock:         actionParam.CidrBlock,
@@ -319,6 +318,9 @@ func (action *SecurityGroupDeletion) BuildParamFromCmdb(workflowParam *WorkflowP
 
 	cmdbRes := []QcloudSecurityGroupActionParam{}
 	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
+	if err != nil {
+		return nil, err
+	}
 	logrus.Debugf("cmdbRes=%v", cmdbRes)
 
 	return &cmdbRes, nil
@@ -341,9 +343,11 @@ func (action *SecurityGroupDeletion) CheckParam(param interface{}) error {
 	for _, actionParam := range *actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_CREATED {
 			err = fmt.Errorf("Invalid SecurityGroup state")
+			return err
 		}
 		if actionParam.SecurityGroupId == "" {
 			err = fmt.Errorf("Invalid SecurityGroupId")
+			return err
 		}
 	}
 

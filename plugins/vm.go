@@ -362,6 +362,7 @@ func (action *VMCreateAction) CheckParam(param interface{}) error {
 	for _, actionParam := range *actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
 			err = fmt.Errorf("Invalid OS state")
+			return err
 		}
 		if actionParam.ImageID == "" {
 			err = fmt.Errorf("Invalid ImageID")
@@ -547,10 +548,12 @@ func (action *VMTerminateAction) CheckParam(param interface{}) error {
 	logrus.Debugf("actionParams=%v", actionParams)
 	for _, actionParam := range *actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_CREATED {
-			return fmt.Errorf("CMDB OS's state(%v) invalid", actionParam.State)
+			err = fmt.Errorf("CMDB OS's state(%v) invalid", actionParam.State)
+			return err
 		}
 		if actionParam.InstanceId == "" {
-			return fmt.Errorf("CMDB OS's AssetID(%v) invalid", actionParam.InstanceId)
+			err = fmt.Errorf("CMDB OS's AssetID(%v) invalid", actionParam.InstanceId)
+			return err
 		}
 	}
 
