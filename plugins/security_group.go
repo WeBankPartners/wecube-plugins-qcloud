@@ -124,24 +124,24 @@ type CreateSecurityGroupRequest struct {
 }
 
 type CreateSecurityGroupPolicyRequest struct {
-	SecurityGroupId        string                 `json:"SecurityGroupId"`
-	SecurityGroupPolicySet SecurityGroupPolicySet `json:"SecurityGroupPolicySet"`
+	SecurityGroupId        string                 `json:"SecurityGroupId,omitempty"`
+	SecurityGroupPolicySet SecurityGroupPolicySet `json:"SecurityGroupPolicySet,omitempty"`
 }
 
 type SecurityGroupPolicySet struct {
-	Version string                `json:"Version"`
-	Egress  []SecurityGroupPolicy `json:"Egress"`
-	Ingress []SecurityGroupPolicy `json:"Ingress"`
+	Version string                `json:"Version,omitempty"`
+	Egress  []SecurityGroupPolicy `json:"Egress,omitempty"`
+	Ingress []SecurityGroupPolicy `json:"Ingress,omitempty"`
 }
 
 type SecurityGroupPolicy struct {
-	PolicyIndex       int64  `json:"PolicyIndex"`
-	Protocol          string `json:"Protocol"`
-	Port              string `json:"Port"`
-	CidrBlock         string `json:"CidrBlock"`
-	SecurityGroupId   string `json:"SecurityGroupId"`
-	Action            string `json:"Action"`
-	PolicyDescription string `json:"PolicyDescription"`
+	PolicyIndex       int64  `json:"PolicyIndex,omitempty"`
+	Protocol          string `json:"Protocol,omitempty"`
+	Port              string `json:"Port,omitempty"`
+	CidrBlock         string `json:"CidrBlock,omitempty"`
+	SecurityGroupId   string `json:"SecurityGroupId,omitempty"`
+	Action            string `json:"Action,omitempty"`
+	PolicyDescription string `json:"PolicyDescription,omitempty"`
 }
 
 type SecurityGroupParam struct {
@@ -259,7 +259,6 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionParam) (securityGroups []SecurityGroupParam, err error) {
 	for i := 0; i < len(actionParams); i++ {
 		policy := SecurityGroupPolicy{
-			PolicyIndex:       actionParams[i].PolicyIndex,
 			Protocol:          actionParams[i].Protocol,
 			Port:              actionParams[i].Port,
 			CidrBlock:         actionParams[i].CidrBlock,
