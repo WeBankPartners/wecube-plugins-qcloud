@@ -392,8 +392,20 @@ func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *Workfl
 		return err
 	}
 
+	var deletedSecurityGroups []string
+
 	for _, actionParam := range *actionParams {
-		logrus.Debugf("actionParam:%v")
+		logrus.Debugf("actionParam:%v", actionParam)
+
+		continueFlag := false
+		for _, deletedSecurityGroupId := range deletedSecurityGroups {
+			if deletedSecurityGroupId == actionParam.SecurityGroupId {
+				continueFlag = true
+			}
+		}
+		if continueFlag {
+			continue
+		}
 
 		err = cmdb.DeleteCiEntryByGuid(actionParam.Guid, workflowParam.PluginName, workflowParam.PluginVersion, cmdb.SECURITY_GROUP_CI_NAME, true)
 		if err != nil {
@@ -422,6 +434,7 @@ func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *Workfl
 		}
 		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.SecurityGroupId, *resp.Response.RequestId)
 		logrus.Infof("Terminated SecurityGroup[%v] has been done", actionParam.SecurityGroupId)
+		deletedSecurityGroups = append(deletedSecurityGroups, actionParam.SecurityGroupId)
 	}
 
 	return nil
