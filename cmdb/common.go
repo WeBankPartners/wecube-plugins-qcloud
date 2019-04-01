@@ -466,21 +466,6 @@ func GetIntegrateTemplateData(params *CmdbRequest) (response *CmdbResponse, orig
 	return resp, bytes, err
 }
 
-func GetVMIntegrateTemplateDataByProcessID(processID string) (response *CmdbResponse, origin []byte, err error) {
-	filter := make(map[string]interface{})
-	filter["wb_os__process_instance_id"] = processID
-	cmdbRequest := CmdbRequest{
-		Type:         "OS-IDC-DCN-SET-ZONE-IPSEGMENT",
-		Action:       "select",
-		StartIndex:   0,
-		PageSize:     100,
-		IsPaging:     true,
-		Filter:       filter,
-		ResultColumn: []string{"name", "wb_os__process_instance_id", "os_type", "subnet_name", "os_image", "provider", "charge_type", "provider_params", "system_disk_size", "vpc", "state", "guid", "assetid"},
-	}
-	return GetIntegrateTemplateData(&cmdbRequest)
-}
-
 func ListIntegrateEntries(ciName string, queryParam *CmdbCiQueryParam, results interface{}) (int, error) {
 	return listEntries(CI_TYPE_INTEGRATE, ciName, queryParam, results)
 }
