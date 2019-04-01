@@ -79,13 +79,13 @@ func (action *SecurityGroupCreation) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
+	actionParams, ok := param.([]cmdb.SecurityGroupInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
 			err = fmt.Errorf("Invalid SecurityGroup state")
 			return err
@@ -137,14 +137,14 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
+	actionParams, ok := param.([]cmdb.SecurityGroupInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 
-	SecurityGroups, err := groupingPolicysBySecurityGroup(*actionParams)
+	SecurityGroups, err := groupingPolicysBySecurityGroup(actionParams)
 
 	for _, securityGroup := range SecurityGroups {
 		logrus.Debugf("securityGroup:%v", securityGroup)
@@ -329,13 +329,13 @@ func (action *SecurityGroupTermination) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
+	actionParams, ok := param.([]cmdb.SecurityGroupInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_CREATED {
 			err = fmt.Errorf("Invalid SecurityGroup state")
 			return err
@@ -356,7 +356,7 @@ func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *Wor
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
+	actionParams, ok := param.([]cmdb.SecurityGroupInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
@@ -365,7 +365,7 @@ func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *Wor
 
 	var deletedSecurityGroups []string
 
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		logrus.Debugf("actionParam:%v", actionParam)
 
 		continueFlag := false
