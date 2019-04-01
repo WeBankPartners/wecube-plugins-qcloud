@@ -228,13 +228,13 @@ func (action *VMCreateAction) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.VmInput)
+	actionParams, ok := param.([]cmdb.VmInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
 			err = fmt.Errorf("Invalid VM state")
 			return err
@@ -255,14 +255,14 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.VmInput)
+	actionParams, ok := param.([]cmdb.VmInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		paramsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
 		logrus.Debugf("actionParam:%v", actionParam)
 		runInstanceRequest := QcloudRunInstanceStruct{
@@ -379,13 +379,13 @@ func (action *VMTerminateAction) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.VmInput)
+	actionParams, ok := param.([]cmdb.VmInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_CREATED {
 			err = fmt.Errorf("CMDB VM's state(%v) invalid", actionParam.State)
 			return err
@@ -406,14 +406,14 @@ func (action *VMTerminateAction) Do(param interface{}, workflowParam *WorkflowPa
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]cmdb.VmInput)
+	actionParams, ok := param.([]cmdb.VmInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		paramsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
 		logrus.Debugf("actionParam:%v")
 
