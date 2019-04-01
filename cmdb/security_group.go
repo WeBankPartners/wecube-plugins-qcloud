@@ -16,7 +16,7 @@ type SecurityGroupInput struct {
 	Description       string `json:"description,omitempty"`
 	State             string `json:"state,omitempty"`
 	ProcessInstanceId string `json:"process_instance_id,omitempty"`
-	RulePriority      string `json:"rule_priority,omitempty"`
+	RulePriority      int64  `json:"rule_priority,omitempty"`
 	RuleType          string `json:"rule_type,omitempty"`
 	RuleCidrIp        string `json:"rule_cidr_ip,omitempty"`
 	RuleIpProtocol    string `json:"rule_ip_protocol,omitempty"`

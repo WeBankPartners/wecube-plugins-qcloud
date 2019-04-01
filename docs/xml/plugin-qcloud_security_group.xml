@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin code="qcloud_security_group" version="v1" name="Qcloud Security Group">
+<plugin code="qcloud_security-group" version="v1" name="Qcloud Security Group">
  <interface>
 	<action>query</action>
 	<target>SECURITY-GROUP-IDC</target>
