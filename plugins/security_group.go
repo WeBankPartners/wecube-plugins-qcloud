@@ -221,7 +221,8 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 			SecurityGroupId: securityGroup.SecurityGroupId,
 		}
 
-		err = cmdb.UpdateCiEntryByGuid(cmdb.SECURITY_GROUP_CI_NAME, securityGroup.Guid, workflowParam.PluginName, workflowParam.PluginVersion, securityGroupOutput)
+		err = cmdb.UpdateCiEntryByGuid(cmdb.SECURITY_GROUP_CI_NAME, securityGroup.Guid,
+			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, securityGroupOutput)
 		if err != nil {
 			return err
 		}
@@ -377,7 +378,8 @@ func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *Wor
 			continue
 		}
 
-		err = cmdb.DeleteCiEntryByGuid(actionParam.Guid, workflowParam.PluginName, workflowParam.PluginVersion, cmdb.SECURITY_GROUP_CI_NAME, true)
+		err = cmdb.DeleteCiEntryByGuid(actionParam.Guid,
+			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, cmdb.SECURITY_GROUP_CI_NAME, true)
 		if err != nil {
 			return err
 		}

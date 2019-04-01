@@ -10,13 +10,13 @@
 	  <parameter datatype="string">id</parameter>
 	  <parameter datatype="string">description</parameter>
 	  <parameter datatype="string">state</parameter>
-	  <parameter datatype="string">rule_guid</parameter>
 	  <parameter datatype="string">rule_priority</parameter>
 	  <parameter datatype="string">rule_type</parameter>
 	  <parameter datatype="string">rule_cidr_ip</parameter>
 	  <parameter datatype="string">rule_ip_protocol</parameter>
 	  <parameter datatype="string">rule_port_range</parameter>
 	  <parameter datatype="string">rule_description</parameter>
+	  <parameter datatype="string">process_instance_id</parameter>
 	</parameters>
  </interface>
  <interface>
