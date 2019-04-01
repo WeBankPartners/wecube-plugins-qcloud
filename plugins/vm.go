@@ -336,7 +336,8 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 			InstancePrivateIp: *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0],
 		}
 
-		err = cmdb.UpdateVmByGuid(actionParam.Guid, workflowParam.PluginName, workflowParam.PluginVersion, updateOsCi)
+		err = cmdb.UpdateVmByGuid(actionParam.Guid,
+			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateOsCi)
 		if err != nil {
 			return err
 		}
@@ -417,7 +418,7 @@ func (action *VMTerminateAction) Do(param interface{}, workflowParam *WorkflowPa
 		paramsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
 		logrus.Debugf("actionParam:%v")
 
-		err = cmdb.DeleteVm(actionParam.Guid, workflowParam.PluginName, workflowParam.PluginVersion)
+		err = cmdb.DeleteVm(actionParam.Guid, workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
 		if err != nil {
 			return err
 		}
