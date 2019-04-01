@@ -21,6 +21,7 @@ type SecurityGroupInput struct {
 	RuleCidrIp        string `json:"rule_cidr_ip,omitempty"`
 	RuleIpProtocol    string `json:"rule_ip_protocol,omitempty"`
 	RulePortRange     string `json:"rule_port_range,omitempty"`
+	RulePolicy        string `json:"rule_policy,omitempty"`
 	RuleDescription   string `json:"rule_description,omitempty"`
 }
 

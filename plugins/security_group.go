@@ -240,7 +240,7 @@ func groupingPolicysBySecurityGroup(actionParams []cmdb.SecurityGroupInput) (sec
 			Port:              actionParams[i].RulePortRange,
 			CidrBlock:         actionParams[i].RuleCidrIp,
 			SecurityGroupId:   actionParams[i].Id,
-			Action:            actionParams[i].RuleType,
+			Action:            actionParams[i].RulePolicy,
 			PolicyDescription: actionParams[i].RuleDescription,
 		}
 

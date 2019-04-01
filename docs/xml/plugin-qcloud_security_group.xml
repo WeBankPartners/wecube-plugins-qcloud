@@ -15,6 +15,7 @@
 	  <parameter datatype="string">rule_cidr_ip</parameter>
 	  <parameter datatype="string">rule_ip_protocol</parameter>
 	  <parameter datatype="string">rule_port_range</parameter>
+	  <parameter datatype="string">rule_policy</parameter>
 	  <parameter datatype="string">rule_description</parameter>
 	  <parameter datatype="string">process_instance_id</parameter>
 	</parameters>
