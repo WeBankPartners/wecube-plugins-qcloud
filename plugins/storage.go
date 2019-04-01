@@ -76,7 +76,11 @@ func (action *StorageCreateAction) CheckParam(param interface{}) error {
 }
 
 func (action *StorageCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	storages, _ := param.([]cmdb.StorageInput)
+	storages, ok := param.([]cmdb.StorageInput)
+	if !ok {
+		return fmt.Errorf("storageCreateAtion:param type=%T not right", param)
+	}
+
 	for _, storage := range storages {
 		diskId, err := action.createStorage(storage)
 		if err != nil {
@@ -105,7 +109,7 @@ func (action *StorageCreateAction) updateToCmdb(storage cmdb.StorageInput, workf
 		DiskId: storage.DiskId,
 		State:  storage.State,
 	}
-	err := cmdb.UpdateStorageInfoByGuid(storage.Guid,
+	err := cmdb.UpdateStorageByGuid(storage.Guid,
 		workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
 	if err != nil {
 		return fmt.Errorf("update storage(guid = %v) meet error = %v", storage.Guid, err)
@@ -220,9 +224,13 @@ func (action *StorageTerminateAction) CheckParam(param interface{}) error {
 }
 
 func (action *StorageTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	storages, _ := param.([]cmdb.StorageInput)
+	storages, ok := param.([]cmdb.StorageInput)
+	if !ok {
+		return fmt.Errorf("storageTerminationAtion:param type=%T not right", param)
+	}
+
 	for _, storage := range storages {
-		err := cmdb.DeleteStorageInfoByGuid(storage.Guid,
+		err := cmdb.DeleteStorageByGuid(storage.Guid,
 			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
 		if err != nil {
 			return fmt.Errorf("delete storage(guid = %v) from CMDB meet error = %v", storage.Guid, err)

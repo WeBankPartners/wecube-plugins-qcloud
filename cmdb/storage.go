@@ -43,12 +43,12 @@ type StorageOutput struct {
 	State  string `json:"state,omitempty"`
 }
 
-func UpdateStorageInfoByGuid(guid, pluginCode, pluginVersion string, storage StorageOutput) error {
+func UpdateStorageByGuid(guid, pluginCode, pluginVersion string, storage StorageOutput) error {
 	params := []interface{}{}
 	params = append(params, storage)
 	return updateCiEntryByGuid(STORAGE_OUTPUT_NAME, guid, pluginCode, pluginVersion, params...)
 }
 
-func DeleteStorageInfoByGuid(guid, pluginCode, pluginVersion string) error {
+func DeleteStorageByGuid(guid, pluginCode, pluginVersion string) error {
 	return DeleteCiEntryByGuid(guid, pluginCode, pluginVersion, STORAGE_OUTPUT_NAME, true)
 }
