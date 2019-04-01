@@ -56,7 +56,7 @@ func (action *SubnetCreateAction) BuildParamFromCmdb(workflowParam *WorkflowPara
 		PluginVersion: workflowParam.PluginVersion,
 	}
 
-	subnets, _, err := cmdb.GetIntegrateSubnetsByProcessInstanceId(&integrateQueyrParam)
+	subnets, _, err := cmdb.GetSubnetInputsByProcessInstanceId(&integrateQueyrParam)
 	if err != nil {
 		return subnets, err
 	}
@@ -65,7 +65,7 @@ func (action *SubnetCreateAction) BuildParamFromCmdb(workflowParam *WorkflowPara
 }
 
 func (action *SubnetCreateAction) CheckParam(param interface{}) error {
-	subnets, ok := param.([]cmdb.IntegrateSubnet)
+	subnets, ok := param.([]cmdb.SubnetInput)
 	if !ok {
 		return fmt.Errorf("subnetCreateAtion:param type=%T not right", param)
 	}
@@ -85,7 +85,7 @@ func (action *SubnetCreateAction) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *SubnetCreateAction) createSubnet(subnet cmdb.IntegrateSubnet) (string, error) {
+func (action *SubnetCreateAction) createSubnet(subnet cmdb.SubnetInput) (string, error) {
 	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -106,18 +106,18 @@ func (action *SubnetCreateAction) createSubnet(subnet cmdb.IntegrateSubnet) (str
 }
 
 func (action *SubnetCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	subnets, _ := param.([]cmdb.IntegrateSubnet)
+	subnets, _ := param.([]cmdb.SubnetInput)
 	for _, subnet := range subnets {
 		subnetId, err := action.createSubnet(subnet)
 		if err != nil {
 			return err
 		}
-		updateCiEntry := cmdb.SubnetInfo{
+		updateCiEntry := cmdb.SubnetOutput{
 			Id:    subnetId,
 			State: cmdb.CMDB_STATE_CREATED,
 		}
 
-		err = cmdb.UpdateSubnetInfoByGuid(subnet.Guid,
+		err = cmdb.UpdateSubnetByGuid(subnet.Guid,
 			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
 		if err != nil {
 			return fmt.Errorf("update subnet(guid = %v),subnetId=%v meet error = %v", subnet.Guid, subnetId, err)
@@ -145,7 +145,7 @@ func (action *SubnetTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowP
 		PluginVersion: workflowParam.PluginVersion,
 	}
 
-	subnets, _, err := cmdb.GetIntegrateSubnetsByProcessInstanceId(&integrateQueyrParam)
+	subnets, _, err := cmdb.GetSubnetInputsByProcessInstanceId(&integrateQueyrParam)
 	if err != nil {
 		return subnets, err
 	}
@@ -154,7 +154,7 @@ func (action *SubnetTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowP
 }
 
 func (action *SubnetTerminateAction) CheckParam(param interface{}) error {
-	subnets, ok := param.([]cmdb.IntegrateSubnet)
+	subnets, ok := param.([]cmdb.SubnetInput)
 	if !ok {
 		return fmt.Errorf("subnetTerminateAtion:param type=%T not right", param)
 	}
@@ -167,7 +167,7 @@ func (action *SubnetTerminateAction) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.IntegrateSubnet) error {
+func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.SubnetInput) error {
 	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -184,9 +184,9 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.IntegrateSubnet
 }
 
 func (action *SubnetTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	subnets, _ := param.([]cmdb.IntegrateSubnet)
+	subnets, _ := param.([]cmdb.SubnetInput)
 	for _, subnet := range subnets {
-		err := cmdb.DeleteSubnetInfoByGuid(subnet.Guid,
+		err := cmdb.DeleteSubnetByGuid(subnet.Guid,
 			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
 		if err != nil {
 			return fmt.Errorf("delete subnet(guid = %v) from CMDB meet error = %v", subnet.Guid, err)

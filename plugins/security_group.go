@@ -23,7 +23,7 @@ var SecurityGroupActions = make(map[string]Action)
 
 func init() {
 	SecurityGroupActions["create"] = new(SecurityGroupCreation)
-	SecurityGroupActions["terminate"] = new(SecurityGroupDeletion)
+	SecurityGroupActions["terminate"] = new(SecurityGroupTermination)
 }
 
 func (plugin *SecurityGroupPlugin) GetActionByName(actionName string) (Action, error) {
@@ -47,51 +47,28 @@ func createVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 	return
 }
 
-type QcloudSecurityGroupActionParam struct {
-	Guid              string `json:"guid"`
-	State             string `json:"state"`
-	SecurityGroupName string `json:"name"`
-	SecurityGroupId   string `json:"id"`
-	SecurityGroupDesc string `json:"description"`
-	ProviderParams    string `json:"provider_params"`
-
-	PolicyIndex       int64  `json:"priority"`
-	RuleType          string `json:"rule_type"`
-	CidrBlock         string `json:"cidr_ip"`
-	Protocol          string `json:"ip_protocol"`
-	Port              string `json:"port_range"`
-	Action            string `json:"policy"`
-	PolicyDescription string `json:"rule_description"`
-}
-
 type SecurityGroupCreation struct{}
 
 func (action *SecurityGroupCreation) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	if workflowParam.ProcessInstanceId == "" {
-		return nil, INVALID_PARAMETERS
+	filter := make(map[string]string)
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
+	filter["state"] = cmdb.CMDB_STATE_REGISTERED
+
+	integrateQueyrParam := cmdb.CmdbCiQueryParam{
+		Offset:        0,
+		Limit:         cmdb.MAX_LIMIT_VALUE,
+		Filter:        filter,
+		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
+		PluginVersion: workflowParam.PluginVersion,
 	}
 
-	response, bytes, err := cmdb.GetSecurityGroupIntegrateTemplateDataByProcessID(workflowParam.ProcessInstanceId)
+	securityGroups, _, err := cmdb.GetSecurityGroupInputsByProcessInstanceId(&integrateQueyrParam)
+
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("bytes=%v", string(bytes))
-	logrus.Debugf("response.Data.Content=%v", response.Data.Content)
 
-	cmdbRes := []QcloudSecurityGroupActionParam{}
-	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("cmdbRes=%v", cmdbRes)
-
-	return &cmdbRes, nil
+	return securityGroups, nil
 }
 
 func (action *SecurityGroupCreation) CheckParam(param interface{}) error {
@@ -102,7 +79,7 @@ func (action *SecurityGroupCreation) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudSecurityGroupActionParam)
+	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
@@ -160,7 +137,7 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudSecurityGroupActionParam)
+	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
@@ -239,13 +216,12 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 			logrus.Infof("Create SecurityGroup Egress Policy's request has been submitted, RequestID is [%v]", *createEgressPoliciesResp.Response.RequestId)
 		}
 
-		updateSecurityGroupCi := cmdb.UpdateSecurityGroupCiEntry{
-			Guid:            securityGroup.Guid,
+		securityGroupOutput := cmdb.SecurityGroupOutput{
 			State:           cmdb.CMDB_STATE_CREATED,
 			SecurityGroupId: securityGroup.SecurityGroupId,
 		}
 
-		err = cmdb.UpdateCiEntryByGuid(cmdb.SECURITY_GROUP_CI_NAME, securityGroup.Guid, workflowParam.PluginName, workflowParam.PluginVersion, updateSecurityGroupCi)
+		err = cmdb.UpdateCiEntryByGuid(cmdb.SECURITY_GROUP_CI_NAME, securityGroup.Guid, workflowParam.PluginName, workflowParam.PluginVersion, securityGroupOutput)
 		if err != nil {
 			return err
 		}
@@ -256,15 +232,15 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 	return nil
 }
 
-func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionParam) (securityGroups []SecurityGroupParam, err error) {
+func groupingPolicysBySecurityGroup(actionParams []cmdb.SecurityGroupInput) (securityGroups []SecurityGroupParam, err error) {
 	for i := 0; i < len(actionParams); i++ {
 		policy := SecurityGroupPolicy{
-			Protocol:          actionParams[i].Protocol,
-			Port:              actionParams[i].Port,
-			CidrBlock:         actionParams[i].CidrBlock,
-			SecurityGroupId:   actionParams[i].SecurityGroupId,
-			Action:            actionParams[i].Action,
-			PolicyDescription: actionParams[i].PolicyDescription,
+			Protocol:          actionParams[i].RuleIpProtocol,
+			Port:              actionParams[i].RulePortRange,
+			CidrBlock:         actionParams[i].RuleCidrIp,
+			SecurityGroupId:   actionParams[i].Id,
+			Action:            actionParams[i].RuleType,
+			PolicyDescription: actionParams[i].RuleDescription,
 		}
 
 		index := checkSecurityGroupIfAppend(securityGroups, actionParams[i])
@@ -290,12 +266,12 @@ func groupingPolicysBySecurityGroup(actionParams []QcloudSecurityGroupActionPara
 	return securityGroups, nil
 }
 
-func buildNewSecurityGroup(actionParam QcloudSecurityGroupActionParam, policy SecurityGroupPolicy) (SecurityGroupParam, error) {
+func buildNewSecurityGroup(actionParam cmdb.SecurityGroupInput, policy SecurityGroupPolicy) (SecurityGroupParam, error) {
 	SecurityGroup := SecurityGroupParam{
 		Guid:             actionParam.Guid,
 		ProviderParams:   actionParam.ProviderParams,
-		GroupName:        actionParam.SecurityGroupName,
-		GroupDescription: actionParam.SecurityGroupDesc,
+		GroupName:        actionParam.Name,
+		GroupDescription: actionParam.Description,
 		SecurityGroupPolicySet: SecurityGroupPolicySet{
 			Egress:  []SecurityGroupPolicy{},
 			Ingress: []SecurityGroupPolicy{},
@@ -311,46 +287,40 @@ func buildNewSecurityGroup(actionParam QcloudSecurityGroupActionParam, policy Se
 	return SecurityGroup, nil
 }
 
-func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam QcloudSecurityGroupActionParam) int {
+func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam cmdb.SecurityGroupInput) int {
 	for i := 0; i < len(SecurityGroups); i++ {
-		if SecurityGroups[i].GroupName == actionParam.SecurityGroupName {
+		if SecurityGroups[i].GroupName == actionParam.Name {
 			return i
 		}
 	}
 	return -1
 }
 
-type SecurityGroupDeletion struct{}
+type SecurityGroupTermination struct{}
 
-func (action *SecurityGroupDeletion) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	if workflowParam.ProcessInstanceId == "" {
-		return nil, INVALID_PARAMETERS
+func (action *SecurityGroupTermination) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
+	filter := make(map[string]string)
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
+	filter["state"] = cmdb.CMDB_STATE_CREATED
+
+	integrateQueyrParam := cmdb.CmdbCiQueryParam{
+		Offset:        0,
+		Limit:         cmdb.MAX_LIMIT_VALUE,
+		Filter:        filter,
+		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
+		PluginVersion: workflowParam.PluginVersion,
 	}
 
-	response, bytes, err := cmdb.GetSecurityGroupIntegrateTemplateDataByProcessID(workflowParam.ProcessInstanceId)
+	securityGroups, _, err := cmdb.GetSecurityGroupInputsByProcessInstanceId(&integrateQueyrParam)
+
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("bytes=%v", string(bytes))
-	logrus.Debugf("response.Data.Content=%v", response.Data.Content)
 
-	cmdbRes := []QcloudSecurityGroupActionParam{}
-	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("cmdbRes=%v", cmdbRes)
-
-	return &cmdbRes, nil
+	return securityGroups, nil
 }
 
-func (action *SecurityGroupDeletion) CheckParam(param interface{}) error {
+func (action *SecurityGroupTermination) CheckParam(param interface{}) error {
 	logrus.Debugf("param=%#v", param)
 	var err error
 	defer func() {
@@ -358,7 +328,7 @@ func (action *SecurityGroupDeletion) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudSecurityGroupActionParam)
+	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
@@ -369,7 +339,7 @@ func (action *SecurityGroupDeletion) CheckParam(param interface{}) error {
 			err = fmt.Errorf("Invalid SecurityGroup state")
 			return err
 		}
-		if actionParam.SecurityGroupId == "" {
+		if actionParam.Id == "" {
 			err = fmt.Errorf("Invalid SecurityGroupId")
 			return err
 		}
@@ -378,14 +348,14 @@ func (action *SecurityGroupDeletion) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *WorkflowParam) error {
+func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *WorkflowParam) error {
 	var err error
 	defer func() {
 		if err != nil {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudSecurityGroupActionParam)
+	actionParams, ok := param.(*[]cmdb.SecurityGroupInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
@@ -399,7 +369,7 @@ func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *Workfl
 
 		continueFlag := false
 		for _, deletedSecurityGroupId := range deletedSecurityGroups {
-			if deletedSecurityGroupId == actionParam.SecurityGroupId {
+			if deletedSecurityGroupId == actionParam.Id {
 				continueFlag = true
 			}
 		}
@@ -421,7 +391,7 @@ func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *Workfl
 		}
 
 		deleteSecurityGroupRequestData := vpc.DeleteSecurityGroupRequest{
-			SecurityGroupId: &actionParam.SecurityGroupId,
+			SecurityGroupId: &actionParam.Id,
 		}
 
 		deleteSecurityGroupRequest := vpc.NewDeleteSecurityGroupRequest()
@@ -432,9 +402,9 @@ func (action *SecurityGroupDeletion) Do(param interface{}, workflowParam *Workfl
 		if err != nil {
 			return err
 		}
-		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.SecurityGroupId, *resp.Response.RequestId)
-		logrus.Infof("Terminated SecurityGroup[%v] has been done", actionParam.SecurityGroupId)
-		deletedSecurityGroups = append(deletedSecurityGroups, actionParam.SecurityGroupId)
+		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.Id, *resp.Response.RequestId)
+		logrus.Infof("Terminated SecurityGroup[%v] has been done", actionParam.Id)
+		deletedSecurityGroups = append(deletedSecurityGroups, actionParam.Id)
 	}
 
 	return nil
