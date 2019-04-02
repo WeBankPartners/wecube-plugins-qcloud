@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin code="qcloud_nat-gateway" version="v1" name="Qcloud NAT Gateway">
+ <interface>
+	<action>query</action>
+	<target>NAT-GATEWAY-ZONE-DCN-IDC</target>
+	<parameters>
+	  <parameter datatype="string">guid</parameter>
+	  <parameter datatype="string">provider_params</parameter>
+	  <parameter datatype="string">name</parameter>
+	  <parameter datatype="string">vpc_id</parameter>
+	  <parameter datatype="string">max_concurrent</parameter>
+	  <parameter datatype="string">bandwidth</parameter>
+	  <parameter datatype="string">assigned_eip_set</parameter>
+	  <parameter datatype="string">auto_alloc_eip_num</parameter>
+	  <parameter datatype="string">process_instance_id</parameter>
+	  <parameter datatype="string">state</parameter>
+	</parameters>
+ </interface>
+ <interface>
+	<action>operate</action>
+	<target>wb_nat_gateway</target>
+	<parameters>
+	  <parameter datatype="string">id</parameter>
+	  <parameter datatype="string">state</parameter>
+	 </parameters>
+ </interface>
+</plugin>
