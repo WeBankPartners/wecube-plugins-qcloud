@@ -21,7 +21,6 @@
 	<action>operate</action>
 	<target>wb_storage</target>
 	<parameters>
-	  <parameter datatype="string">guid</parameter>
 	  <parameter datatype="string">disk_id</parameter>
 	  <parameter datatype="string">state</parameter>
 	 </parameters>

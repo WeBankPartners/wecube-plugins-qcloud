@@ -419,6 +419,10 @@ func GetNameAndGuidFromReferenceId(referenceId []map[string]string) (name string
 	return
 }
 
+func UpdateCiEntryByGuid(ciName string, guid, pluginCode, pluginVersion string, ciEntries ...interface{}) error {
+	return updateCiEntryByGuid(ciName, guid, pluginCode, pluginVersion, ciEntries...)
+}
+
 func updateCiEntryByGuid(ciName string, guid, pluginCode, pluginVersion string, ciEntries ...interface{}) error {
 	parameters := []map[string]interface{}{}
 	for _, ciEntries := range ciEntries {
@@ -460,21 +464,6 @@ func GetOperateCi(request []byte) (response *CmdbResponse, origin []byte, err er
 func GetIntegrateTemplateData(params *CmdbRequest) (response *CmdbResponse, origin []byte, err error) {
 	resp, bytes, err := getIntegrateTemplateData(params)
 	return resp, bytes, err
-}
-
-func GetVMIntegrateTemplateDataByProcessID(processID string) (response *CmdbResponse, origin []byte, err error) {
-	filter := make(map[string]interface{})
-	filter["wb_os__process_instance_id"] = processID
-	cmdbRequest := CmdbRequest{
-		Type:         "OS-IDC-DCN-SET-ZONE-IPSEGMENT",
-		Action:       "select",
-		StartIndex:   0,
-		PageSize:     100,
-		IsPaging:     true,
-		Filter:       filter,
-		ResultColumn: []string{"name", "wb_os__process_instance_id", "os_type", "subnet_name", "os_image", "provider", "charge_type", "provider_params", "system_disk_size", "vpc", "state", "guid", "assetid"},
-	}
-	return GetIntegrateTemplateData(&cmdbRequest)
 }
 
 func ListIntegrateEntries(ciName string, queryParam *CmdbCiQueryParam, results interface{}) (int, error) {

@@ -12,28 +12,18 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	tchttp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 )
 
 const (
 	INSTANCE_STATE_RUNNING = "RUNNING"
-	INSTANCE_STATE_STOPPED = "STOPPED"
-
-	CMDB_OS_STATE_RUNNING = "RUNNING"
-	CMDB_OS_STATE_STOPPED = "STOPPED"
-
-	CMDB_IP_STATE_CREATED = "Created"
-	CMDB_IP_TYPE_HOST_IP  = "Private IP"
 )
 
-//Qcloud
 const (
-	QCLOUD_ENDPOINT                  = "cvm.tencentcloudapi.com"
+	QCLOUD_ENDPOINT_CVM              = "cvm.tencentcloudapi.com"
 	INSTANCE_CHARGE_TYPE_PREPAID     = "PREPAID"
 	RENEW_FLAG_NOTIFY_AND_AUTO_RENEW = "NOTIFY_AND_AUTO_RENEW"
-	PROVIDER_QCLOUD                  = "Qcloud"
 )
 
 var (
@@ -57,36 +47,6 @@ func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
 		return nil, fmt.Errorf("vmplugin,action[%s] not found", actionName)
 	}
 	return action, nil
-}
-
-type CreateVmParametersOfQcloud struct {
-	IdcGuid            string
-	ZoneGuid           string
-	DcnGuid            string
-	SetGuid            string
-	IpSegmentGuid      string
-	InstanceType       string
-	ImageId            string
-	InstanceChargeType string
-	Period             string
-
-	Count    int64
-	Operator string
-}
-
-type QcloudCreateVMRequestData struct {
-	CommonParameters    QcloudCommonStruct
-	RunInstancesRequest QcloudRunInstanceStruct
-}
-
-type QcloudCommonStruct struct {
-	Credential QcloudCredentialStruct
-	Region     string
-}
-
-type QcloudCredentialStruct struct {
-	SecretId  string
-	SecretKey string
 }
 
 type QcloudRunInstanceStruct struct {
@@ -137,7 +97,7 @@ func createCvmClient(region, secretId, secretKey string) (client *cvm.Client, er
 	credential := common.NewCredential(secretId, secretKey)
 
 	clientProfile := profile.NewClientProfile()
-	clientProfile.HttpProfile.Endpoint = QCLOUD_ENDPOINT
+	clientProfile.HttpProfile.Endpoint = QCLOUD_ENDPOINT_CVM
 
 	client, err = cvm.NewClient(credential, region, clientProfile)
 	if err != nil {
@@ -236,114 +196,28 @@ func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) err
 	return nil
 }
 
-type CMDBVMParam struct {
-	Guid           string `json:"guid"`
-	OsImage        string `json:"os_image"`
-	ChargeType     string `json:"charge_type"`
-	ProviderParams string `json:"provider_params"`
-	Name           string `json:"name"`
-	State          string `json:"state"`
-	SubnetName     string `json:"subnet_name"`
-	Provider       string `json:"provider"`
-	VPC            string `json:"vpc"`
-	SystemDiskSize int64  `json:"system_disk_size"`
-	OSType         string `json:"os_type"`
-	InstanceID     string `json:"assetid"`
-}
-
-type QcloudVmActionParam struct {
-	InstanceGuid    string
-	State           string
-	ImageID         string
-	ChargeType      string
-	ChargePrepaid   string
-	ChargePeriod    int64
-	InstanceType    string
-	SystemDiskSize  int64
-	SystemDiskType  string
-	Password        string
-	VpcID           string
-	SubnetID        string
-	ProjectID       int64
-	DiskCreateParam []DataDiskParam
-	Provider        QcloudProviderParam
-
-	InstanceID    string
-	InstanceLanIP string
-}
-
-type QcloudProviderParam struct {
-	Provider      string
-	Region        string
-	AvailableZone string
-	SecretID      string
-	SecretKey     string
-}
-
-type DataDiskParam struct {
-	Capacity    int
-	StorageType string
-	DiskId      string
-}
-
 type VMCreateAction struct{}
 
 func (action *VMCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	if workflowParam.ProcessInstanceID == "" {
-		return nil, INVALID_PARAMETERS
+	filter := make(map[string]string)
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
+
+	filter["state"] = cmdb.CMDB_STATE_REGISTERED
+	integrateQueyrParam := cmdb.CmdbCiQueryParam{
+		Offset:        0,
+		Limit:         cmdb.MAX_LIMIT_VALUE,
+		Filter:        filter,
+		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
+		PluginVersion: workflowParam.PluginVersion,
 	}
 
-	response, bytes, err := cmdb.GetVMIntegrateTemplateDataByProcessID(workflowParam.ProcessInstanceID)
+	vms, _, err := cmdb.GetVmInputsByProcessInstanceId(&integrateQueyrParam)
+
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("bytes=%v", string(bytes))
-	logrus.Debugf("response.Data.Content=%v", response.Data.Content)
 
-	cmdbRes := []CMDBVMParam{}
-	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
-	logrus.Debugf("cmdbRes=%v", cmdbRes)
-
-	actionParamsArray := []QcloudVmActionParam{}
-	for i := range cmdbRes {
-		ProviderParamsMap, err := cmdb.GetMapFromProviderParams(cmdbRes[i].ProviderParams)
-		if err != nil {
-			return nil, err
-		}
-		logrus.Infof("ProviderParamsMap=%#v", ProviderParamsMap)
-
-		actionParams := QcloudVmActionParam{}
-		actionParams.Provider.Region = ProviderParamsMap["Region"]
-		actionParams.Provider.AvailableZone = ProviderParamsMap["AvailableZone"]
-		actionParams.Provider.SecretID = ProviderParamsMap["SecretID"]
-		actionParams.Provider.SecretKey = ProviderParamsMap["SecretKey"]
-
-		actionParams.InstanceGuid = cmdbRes[i].Guid
-		actionParams.ImageID = cmdbRes[i].OsImage
-		actionParams.ChargeType = cmdbRes[i].ChargeType
-		actionParams.ChargePrepaid = ""
-		actionParams.ChargePeriod = 0
-		actionParams.InstanceType = cmdbRes[i].OSType
-		actionParams.SystemDiskSize = cmdbRes[i].SystemDiskSize
-		actionParams.SystemDiskType = "CLOUD_PREMIUM"
-		actionParams.Password = "Ab888888"
-		actionParams.VpcID = cmdbRes[i].VPC
-		actionParams.SubnetID = cmdbRes[i].SubnetName
-		actionParams.ProjectID = 0
-		actionParams.State = cmdbRes[i].State
-
-		actionParamsArray = append(actionParamsArray, actionParams)
-	}
-
-	logrus.Debugf("actionParamsArray=%v", actionParamsArray)
-
-	return &actionParamsArray, nil
+	return vms, nil
 }
 
 func (action *VMCreateAction) CheckParam(param interface{}) error {
@@ -354,17 +228,18 @@ func (action *VMCreateAction) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudVmActionParam)
+	actionParams, ok := param.([]cmdb.VmInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
-			err = fmt.Errorf("Invalid OS state")
+			err = fmt.Errorf("Invalid VM state")
+			return err
 		}
-		if actionParam.ImageID == "" {
+		if actionParam.ImageId == "" {
 			err = fmt.Errorf("Invalid ImageID")
 			return err
 		}
@@ -380,45 +255,46 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudVmActionParam)
+	actionParams, ok := param.([]cmdb.VmInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
+		paramsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
 		logrus.Debugf("actionParam:%v", actionParam)
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
-				Zone: actionParam.Provider.AvailableZone,
+				Zone: paramsMap["AvailableZone"],
 			},
-			ImageId:            actionParam.ImageID,
-			InstanceChargeType: actionParam.ChargeType,
+			ImageId:            actionParam.ImageId,
+			InstanceChargeType: actionParam.InstanceChargeType,
 			InstanceType:       actionParam.InstanceType,
 			SystemDisk: SystemDiskStruct{
-				DiskType: actionParam.SystemDiskType,
+				DiskType: "CLOUD_PREMIUM",
 				DiskSize: actionParam.SystemDiskSize,
 			},
 			VirtualPrivateCloud: VirtualPrivateCloudStruct{
-				VpcId:    actionParam.VpcID,
-				SubnetId: actionParam.SubnetID,
+				VpcId:    actionParam.VpcId,
+				SubnetId: actionParam.SubnetId,
 			},
 			LoginSettings: LoginSettingsStruct{
-				Password: actionParam.Password,
+				Password: "Ab888888",
 			},
 			InternetAccessible: InternetAccessible{
 				PublicIpAssigned: false,
 			},
 		}
 
-		if actionParam.ChargeType == INSTANCE_CHARGE_TYPE_PREPAID {
+		if actionParam.InstanceChargeType == INSTANCE_CHARGE_TYPE_PREPAID {
 			runInstanceRequest.InstanceChargePrepaid = InstanceChargePrepaidStruct{
-				Period:    actionParam.ChargePeriod,
+				Period:    actionParam.InstanceChargePeriod,
 				RenewFlag: RENEW_FLAG_NOTIFY_AND_AUTO_RENEW,
 			}
 		}
-		client, err := createCvmClient(actionParam.Provider.Region, actionParam.Provider.SecretID, actionParam.Provider.SecretKey)
+		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
 			return err
 		}
@@ -433,16 +309,16 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 			return err
 		}
 
-		actionParam.InstanceID = *resp.Response.InstanceIdSet[0]
-		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", actionParam.InstanceID, *resp.Response.RequestId)
+		actionParam.InstanceId = *resp.Response.InstanceIdSet[0]
+		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", actionParam.InstanceId, *resp.Response.RequestId)
 
-		if err = waitVmInDesireState(client, actionParam.InstanceID, INSTANCE_STATE_RUNNING, 120); err != nil {
+		if err = waitVmInDesireState(client, actionParam.InstanceId, INSTANCE_STATE_RUNNING, 120); err != nil {
 			return err
 		}
 		logrus.Infof("Created VM's state is [%v] now", INSTANCE_STATE_RUNNING)
 
 		describeInstancesParams := cvm.DescribeInstancesRequest{
-			InstanceIds: []*string{&actionParam.InstanceID},
+			InstanceIds: []*string{&actionParam.InstanceId},
 		}
 
 		describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
@@ -450,19 +326,18 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 			return err
 		}
 
-		actionParam.InstanceLanIP = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
-		logrus.Infof("Created VM IP's is [%v]", actionParam.InstanceLanIP)
-
 		updateOsCi := cmdb.UpdateOsCiEntry{
-			Guid:    actionParam.InstanceGuid,
-			State:   cmdb.CMDB_STATE_CREATED,
-			AssetID: *describeInstancesResponse.Response.InstanceSet[0].InstanceId,
-			CoreNum: strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory)),
-			MemNum:  strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU)),
-			OSState: *describeInstancesResponse.Response.InstanceSet[0].InstanceState,
+			Guid:              actionParam.Guid,
+			State:             cmdb.CMDB_STATE_CREATED,
+			InstanceId:        actionParam.InstanceId,
+			Memory:            strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory)),
+			Cpu:               strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU)),
+			InstanceState:     *describeInstancesResponse.Response.InstanceSet[0].InstanceState,
+			InstancePrivateIp: *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0],
 		}
 
-		err = cmdb.UpdateHostInfoByGuid(actionParam.InstanceGuid, workflowParam.PluginName, workflowParam.PluginVersion, updateOsCi)
+		err = cmdb.UpdateVmByGuid(actionParam.Guid,
+			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateOsCi)
 		if err != nil {
 			return err
 		}
@@ -476,60 +351,25 @@ func (action *VMCreateAction) Do(param interface{}, workflowParam *WorkflowParam
 type VMTerminateAction struct{}
 
 func (action *VMTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	if workflowParam.ProcessInstanceID == "" {
-		return nil, INVALID_PARAMETERS
+	filter := make(map[string]string)
+	filter["process_instance_id"] = workflowParam.ProcessInstanceId
+
+	filter["state"] = cmdb.CMDB_STATE_CREATED
+	integrateQueyrParam := cmdb.CmdbCiQueryParam{
+		Offset:        0,
+		Limit:         cmdb.MAX_LIMIT_VALUE,
+		Filter:        filter,
+		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
+		PluginVersion: workflowParam.PluginVersion,
 	}
-	response, bytes, err := cmdb.GetVMIntegrateTemplateDataByProcessID(workflowParam.ProcessInstanceID)
+
+	vms, _, err := cmdb.GetVmInputsByProcessInstanceId(&integrateQueyrParam)
+
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("bytes=%v", string(bytes))
-	logrus.Debugf("response.Data.Content=%v", response.Data.Content)
 
-	cmdbRes := []CMDBVMParam{}
-	err = cmdb.UnmarshalContent(response.Data.Content, &cmdbRes)
-	logrus.Debugf("cmdbRes=%v", cmdbRes)
-
-	actionParamsArray := []QcloudVmActionParam{}
-	for i := range cmdbRes {
-		ProviderParamsMap, err := cmdb.GetMapFromProviderParams(cmdbRes[i].ProviderParams)
-		if err != nil {
-			return nil, err
-		}
-
-		actionParam := QcloudVmActionParam{}
-		actionParam.Provider.Region = ProviderParamsMap["Region"]
-		actionParam.Provider.AvailableZone = ProviderParamsMap["AvailableZone"]
-		actionParam.Provider.SecretID = ProviderParamsMap["SecretID"]
-		actionParam.Provider.SecretKey = ProviderParamsMap["SecretKey"]
-
-		actionParam.InstanceGuid = cmdbRes[i].Guid
-		actionParam.ImageID = cmdbRes[i].OsImage
-		actionParam.ChargeType = cmdbRes[i].ChargeType
-		actionParam.ChargePrepaid = ""
-		actionParam.ChargePeriod = 0
-		actionParam.InstanceType = cmdbRes[i].OSType
-		actionParam.SystemDiskSize = 50
-		actionParam.SystemDiskType = "CLOUD_PREMIUM"
-		actionParam.Password = "Ab888888"
-		actionParam.VpcID = cmdbRes[i].VPC
-		actionParam.SubnetID = cmdbRes[i].SubnetName
-		actionParam.ProjectID = 0
-		actionParam.State = cmdbRes[i].State
-		actionParam.InstanceID = cmdbRes[i].InstanceID
-
-		actionParamsArray = append(actionParamsArray, actionParam)
-	}
-
-	logrus.Debugf("actionParamsArray=%v", actionParamsArray)
-
-	return &actionParamsArray, nil
+	return vms, nil
 }
 
 func (action *VMTerminateAction) CheckParam(param interface{}) error {
@@ -540,18 +380,20 @@ func (action *VMTerminateAction) CheckParam(param interface{}) error {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudVmActionParam)
+	actionParams, ok := param.([]cmdb.VmInput)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
 		if actionParam.State != cmdb.CMDB_STATE_CREATED {
-			return fmt.Errorf("CMDB OS's state(%v) invalid", actionParam.State)
+			err = fmt.Errorf("CMDB VM's state(%v) invalid", actionParam.State)
+			return err
 		}
-		if actionParam.InstanceID == "" {
-			return fmt.Errorf("CMDB OS's AssetID(%v) invalid", actionParam.InstanceID)
+		if actionParam.InstanceId == "" {
+			err = fmt.Errorf("CMDB VM's AssetID(%v) invalid", actionParam.InstanceId)
+			return err
 		}
 	}
 
@@ -565,27 +407,28 @@ func (action *VMTerminateAction) Do(param interface{}, workflowParam *WorkflowPa
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.(*[]QcloudVmActionParam)
+	actionParams, ok := param.([]cmdb.VmInput)
 	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
 	}
 
-	for _, actionParam := range *actionParams {
+	for _, actionParam := range actionParams {
+		paramsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
 		logrus.Debugf("actionParam:%v")
 
-		err = cmdb.DeleteHostInfo(actionParam.InstanceGuid, workflowParam.PluginName, workflowParam.PluginVersion)
+		err = cmdb.DeleteVm(actionParam.Guid, workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
 		if err != nil {
 			return err
 		}
-		logrus.Infof("Terminated VM [%v] has been deleted from CMDB", actionParam.InstanceID)
+		logrus.Infof("Terminated VM [%v] has been deleted from CMDB", actionParam.InstanceId)
 
 		terminateInstancesRequestData := cvm.TerminateInstancesRequest{
-			InstanceIds: []*string{&actionParam.InstanceID},
+			InstanceIds: []*string{&actionParam.InstanceId},
 		}
 
-		client, err := createCvmClient(actionParam.Provider.Region, actionParam.Provider.SecretID, actionParam.Provider.SecretKey)
+		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
 			return err
 		}
@@ -597,42 +440,13 @@ func (action *VMTerminateAction) Do(param interface{}, workflowParam *WorkflowPa
 		if err != nil {
 			return err
 		}
-		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.InstanceID, *resp.Response.RequestId)
+		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.InstanceId, *resp.Response.RequestId)
 
-		if err = waitVmTerminateDone(client, actionParam.InstanceID, 600); err != nil {
+		if err = waitVmTerminateDone(client, actionParam.InstanceId, 600); err != nil {
 			return err
 		}
-		logrus.Infof("Terminated VM[%v] has been done", actionParam.InstanceID)
+		logrus.Infof("Terminated VM[%v] has been done", actionParam.InstanceId)
 	}
 
 	return nil
-}
-
-type CVMParameter struct {
-	provider    QcloudProviderParam
-	request     *tchttp.BaseRequest
-	requestData interface{}
-	APIName     string
-}
-
-func callCVMApi(cvmParameters CVMParameter) (response *cvm.RunInstancesResponse, err error) {
-	credential := common.NewCredential(cvmParameters.provider.SecretID, cvmParameters.provider.SecretKey)
-	clientProfile := profile.NewClientProfile()
-	clientProfile.HttpProfile.Endpoint = QCLOUD_ENDPOINT
-	client, err := cvm.NewClient(credential, cvmParameters.provider.Region, clientProfile)
-	if err != nil {
-		logrus.Errorf("Create Qcloud CVM client failed, err=%v", err)
-		return nil, err
-	}
-
-	cvmParameters.request.Init().WithApiInfo("cvm", cvm.APIVersion, cvmParameters.APIName)
-	byteRequestData, _ := json.Marshal(cvmParameters.requestData)
-	logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRequestData))
-	err = json.Unmarshal(byteRequestData, &cvmParameters.request)
-	if err != nil {
-		return nil, err
-	}
-
-	err = client.Send(cvmParameters.request, response)
-	return response, err
 }
