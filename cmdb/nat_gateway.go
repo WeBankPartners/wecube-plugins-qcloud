@@ -13,10 +13,10 @@ type NatGatewayInput struct {
 	ProviderParams    string `json:"provider_params,omitempty"`
 	Name              string `json:"name,omitempty"`
 	VpcId             string `json:"vpc_id,omitempty"`
-	MaxConcurrent     string `json:"max_concurrent,omitempty"`
-	BandWidth         string `json:"bandwidth,omitempty"`
+	MaxConcurrent     int    `json:"max_concurrent,omitempty"`
+	BandWidth         int    `json:"bandwidth,omitempty"`
 	AssignedEipSet    string `json:"assigned_eip_set,omitempty"`
-	AutoAllocEipNum   string `json:"auto_alloc_eip_num,omitempty"`
+	AutoAllocEipNum   int    `json:"auto_alloc_eip_num,omitempty"`
 	Id                string `json:"id,omitempty"`
 	ProcessInstanceId string `json:"process_instance_id,omitempty"`
 	State             string `json:"state,omitempty"`

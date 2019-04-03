@@ -9,10 +9,10 @@
 	  <parameter datatype="string">name</parameter>
 	  <parameter datatype="string">id</parameter>
 	  <parameter datatype="string">vpc_id</parameter>
-	  <parameter datatype="string">max_concurrent</parameter>
-	  <parameter datatype="string">bandwidth</parameter>
+	  <parameter datatype="number">max_concurrent</parameter>
+	  <parameter datatype="number">bandwidth</parameter>
 	  <parameter datatype="string">assigned_eip_set</parameter>
-	  <parameter datatype="string">auto_alloc_eip_num</parameter>
+	  <parameter datatype="number">auto_alloc_eip_num</parameter>
 	  <parameter datatype="string">process_instance_id</parameter>
 	  <parameter datatype="string">state</parameter>
 	</parameters>

@@ -3,11 +3,11 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"git.webank.io/wecube-plugins/cmdb"
 	"github.com/sirupsen/logrus"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
-	"strconv"
-	"time"
 )
 
 func newVpcClient(region, secretId, secretKey string) (*vpc.Client, error) {
@@ -75,12 +75,6 @@ func (action *NatGatewayCreateAction) CheckParam(param interface{}) error {
 		if natGateway.Name == "" {
 			return errors.New("natGatewayCreateAction param name is empty")
 		}
-		if natGateway.MaxConcurrent == "" {
-			return errors.New("natGatewayCreateAction param maxConcurrent is empty")
-		}
-		if _, err := strconv.Atoi(natGateway.MaxConcurrent); err != nil {
-			return fmt.Errorf("natGatewayCreateAction param maxConcurrent(%v) is not int", natGateway.MaxConcurrent)
-		}
 	}
 
 	return nil
@@ -93,19 +87,12 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway cmdb.NatGatewa
 	createReq := vpc.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
-	maxConCurrent, _ := strconv.Atoi(natGateway.MaxConcurrent)
-	createReq.MaxConcurrent = &maxConCurrent
+	createReq.MaxConcurrent = &natGateway.MaxConcurrent
+	createReq.Bandwidth = &natGateway.BandWidth
+	createReq.AutoAllocEipNum = &natGateway.AutoAllocEipNum
 
-	if natGateway.BandWidth != "" {
-		bandWidth, _ := strconv.Atoi(natGateway.BandWidth)
-		createReq.Bandwidth = &bandWidth
-	}
 	if natGateway.AssignedEipSet != "" {
 		createReq.AssignedEipSet = []*string{&natGateway.AssignedEipSet}
-	}
-	if natGateway.AutoAllocEipNum != "" {
-		eipNum, _ := strconv.Atoi(natGateway.AutoAllocEipNum)
-		createReq.AutoAllocEipNum = &eipNum
 	}
 
 	createResp, err := c.CreateNatGateway(createReq)

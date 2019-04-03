@@ -7,7 +7,7 @@
 	  <parameter datatype="string">guid</parameter>
 	  <parameter datatype="string">provider_params</parameter>
 	  <parameter datatype="string">disk_type</parameter>
-	  <parameter datatype="string">disk_size</parameter>
+	  <parameter datatype="number">disk_size</parameter>
 	  <parameter datatype="string">disk_name</parameter>
 	  <parameter datatype="string">disk_id</parameter>
 	  <parameter datatype="string">disk_charge_type</parameter>
