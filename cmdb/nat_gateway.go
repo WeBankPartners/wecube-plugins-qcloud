@@ -17,7 +17,6 @@ type NatGatewayInput struct {
 	BandWidth         string `json:"bandwidth,omitempty"`
 	AssignedEipSet    string `json:"assigned_eip_set,omitempty"`
 	AutoAllocEipNum   string `json:"auto_alloc_eip_num,omitempty"`
-	InstanceId        string `json:"instance_id,omitempty"`
 	Id                string `json:"id,omitempty"`
 	ProcessInstanceId string `json:"process_instance_id,omitempty"`
 	State             string `json:"state,omitempty"`
