@@ -64,15 +64,15 @@ func (action *PeeringConnectionCreateAction) BuildParamFromCmdb(workflowParam *W
 func (action *PeeringConnectionCreateAction) CheckParam(param interface{}) error {
 	peeringConnections, ok := param.([]cmdb.PeeringConnectionInput)
 	if !ok {
-		return fmt.Errorf("PeeringConnectionCreateAction:param type=%T not right", param)
+		return fmt.Errorf("peeringConnectionCreateAction:param type=%T not right", param)
 	}
 
-	for _, PeeringConnection := range peeringConnections {
-		if PeeringConnection.VpcId == "" {
-			return errors.New("PeeringConnectionCreateAction param vpcId is empty")
+	for _, peeringConnection := range peeringConnections {
+		if peeringConnection.VpcId == "" {
+			return errors.New("peeringConnectionCreateAction param vpcId is empty")
 		}
-		if PeeringConnection.Name == "" {
-			return errors.New("PeeringConnectionCreateAction param name is empty")
+		if peeringConnection.Name == "" {
+			return errors.New("peeringConnectionCreateAction param name is empty")
 		}
 	}
 
@@ -100,23 +100,23 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 func (action *PeeringConnectionCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
 	peeringConnections, _ := param.([]cmdb.PeeringConnectionInput)
 	for _, peeringConnection := range peeringConnections {
-		PeeringConnectionId, err := action.createPeeringConnection(peeringConnection)
+		peeringConnectionId, err := action.createPeeringConnection(peeringConnection)
 		if err != nil {
 			return err
 		}
 
 		updateCiEntry := cmdb.PeeringConnectionOutput{
-			Id:    PeeringConnectionId,
+			Id:    peeringConnectionId,
 			State: cmdb.CMDB_STATE_CREATED,
 		}
 
 		err = cmdb.UpdatePeeringConnectionByGuid(peeringConnection.Guid,
 			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
 		if err != nil {
-			return fmt.Errorf("update PeeringConnection(guid = %v),PeeringConnectionId=%v meet error = %v", peeringConnection.Guid, PeeringConnectionId, err)
+			return fmt.Errorf("update PeeringConnection(guid = %v),PeeringConnectionId=%v meet error = %v", peeringConnection.Guid, peeringConnectionId, err)
 		}
 
-		logrus.Infof("PeeringConnection with guid = %v and gatewayId = %v is created", peeringConnection.Guid, PeeringConnectionId)
+		logrus.Infof("peeringConnection with guid = %v and gatewayId = %v is created", peeringConnection.Guid, peeringConnectionId)
 	}
 
 	logrus.Infof("all PeeringConnections = %v are created", peeringConnections)
@@ -150,12 +150,12 @@ func (action *PeeringConnectionTerminateAction) BuildParamFromCmdb(workflowParam
 func (action *PeeringConnectionTerminateAction) CheckParam(param interface{}) error {
 	peeringConnections, ok := param.([]cmdb.PeeringConnectionInput)
 	if !ok {
-		return fmt.Errorf("PeeringConnectionTerminateAction:param type=%T not right", param)
+		return fmt.Errorf("peeringConnectionTerminateAction:param type=%T not right", param)
 	}
 
-	for _, PeeringConnection := range peeringConnections {
-		if PeeringConnection.Id == "" {
-			return errors.New("PeeringConnectionTerminateAction param PeeringConnection is empty")
+	for _, peeringConnection := range peeringConnections {
+		if peeringConnection.Id == "" {
+			return errors.New("peeringConnectionTerminateAction param peeringConnection is empty")
 		}
 	}
 
