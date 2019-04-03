@@ -52,6 +52,7 @@ func init() {
 	registerPlugin("storage", new(StoragePlugin))
 	registerPlugin("security-group", new(SecurityGroupPlugin))
 	registerPlugin("subnet", new(SubnetPlugin))
+	registerPlugin("vpc", new(VpcPlugin))
 }
 
 type WorkflowParam struct {

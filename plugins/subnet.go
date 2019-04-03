@@ -19,7 +19,7 @@ func init() {
 	SubnetActions["terminate"] = new(SubnetTerminateAction)
 }
 
-func CreateVpcClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
+func CreateSubnetClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
 
 	clientProfile := profile.NewClientProfile()
@@ -87,7 +87,7 @@ func (action *SubnetCreateAction) CheckParam(param interface{}) error {
 
 func (action *SubnetCreateAction) createSubnet(subnet cmdb.SubnetInput) (string, error) {
 	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
-	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewCreateSubnetRequest()
 	request.VpcId = &subnet.VpcId
@@ -169,7 +169,7 @@ func (action *SubnetTerminateAction) CheckParam(param interface{}) error {
 
 func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.SubnetInput) error {
 	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
-	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewDeleteSubnetRequest()
 	request.SubnetId = &subnet.Id
