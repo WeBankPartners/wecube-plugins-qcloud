@@ -48,6 +48,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/nat-gateway/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/vpc/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/vpc/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/peering-connection/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/peering-connection/terminate", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {

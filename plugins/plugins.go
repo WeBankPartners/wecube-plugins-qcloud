@@ -54,6 +54,7 @@ func init() {
 	registerPlugin("subnet", new(SubnetPlugin))
 	registerPlugin("nat-gateway", new(NatGatewayPlugin))
 	registerPlugin("vpc", new(VpcPlugin))
+	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
 }
 
 type WorkflowParam struct {
