@@ -53,6 +53,7 @@ func init() {
 	registerPlugin("security-group", new(SecurityGroupPlugin))
 	registerPlugin("subnet", new(SubnetPlugin))
 	registerPlugin("nat-gateway", new(NatGatewayPlugin))
+	registerPlugin("vpc", new(VpcPlugin))
 }
 
 type WorkflowParam struct {

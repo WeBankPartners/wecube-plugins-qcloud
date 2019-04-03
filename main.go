@@ -46,7 +46,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/security-group/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/nat-gateway/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/nat-gateway/terminate", routeDispatcher)
-
+	http.HandleFunc("/v1/qcloud/vpc/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/vpc/terminate", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
