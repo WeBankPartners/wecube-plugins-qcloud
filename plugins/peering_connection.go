@@ -3,14 +3,15 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"git.webank.io/wecube-plugins/cmdb"
-	vpc "git.webank.io/wecube-plugins/extend/qcloud"
+	vpcExtend "git.webank.io/wecube-plugins/extend/qcloud"
 	"github.com/sirupsen/logrus"
 )
 
-func newVpcPeeringConnectionClient(region, secretId, secretKey string) (*vpc.Client, error) {
-	return vpc.NewClientWithSecretId(
+func newVpcPeeringConnectionClient(region, secretId, secretKey string) (*vpcExtend.Client, error) {
+	return vpcExtend.NewClientWithSecretId(
 		secretId,
 		secretKey,
 		region,
@@ -81,20 +82,62 @@ func (action *PeeringConnectionCreateAction) CheckParam(param interface{}) error
 
 func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConnection cmdb.PeeringConnectionInput) (string, error) {
 	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
+	peerParamsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	createReq := vpc.NewCreateVpcPeeringConnectionRequest()
-	createReq.VpcId = &peeringConnection.VpcId
-	createReq.PeerVpcId = &peeringConnection.PeerVpcId
-	createReq.PeeringConnectionName = &peeringConnection.Name
-	createReq.PeerUin = &peeringConnection.PeerUin
+	if paramsMap["Region"] == peerParamsMap["Region"] {
+		createReq := vpcExtend.NewCreateVpcPeeringConnectionRequest()
+		createReq.VpcId = &peeringConnection.VpcId
+		createReq.PeerVpcId = &peeringConnection.PeerVpcId
+		createReq.PeeringConnectionName = &peeringConnection.Name
+		createReq.PeerUin = &peeringConnection.PeerUin
 
-	createResp, err := client.CreateVpcPeeringConnection(createReq)
-	if err != nil || createResp.PeeringConnectionId == nil {
-		return "", err
+		createResp, err := client.CreateVpcPeeringConnection(createReq)
+		if err != nil || createResp.PeeringConnectionId == nil {
+			return "", err
+		}
+		return *createResp.PeeringConnectionId, nil
+	} else {
+		createReq := vpcExtend.NewCreateVpcPeeringConnectionExRequest()
+		createReq.VpcId = &peeringConnection.VpcId
+		createReq.PeerVpcId = &peeringConnection.PeerVpcId
+		createReq.PeeringConnectionName = &peeringConnection.Name
+		createReq.PeerUin = &peeringConnection.PeerUin
+		region := peerParamsMap["Region"]
+		createReq.PeerRegion = &region
+		createReq.Bandwidth = &peeringConnection.Bandwidth
+
+		createResp, err := client.CreateVpcPeeringConnectionEx(createReq)
+		if err != nil {
+			return "", err
+		}
+		logrus.Infof("createPeeringConnection is completed, UniqVpcPeerId = %v", createResp.UniqVpcPeerId)
+
+		taskReq := vpcExtend.NewDescribeVpcTaskResultRequest()
+		taskReq.TaskId = createResp.TaskId
+		count := 0
+		for {
+			taskResp, err := client.DescribeVpcTaskResult(taskReq)
+			if err != nil {
+				return "", err
+			}
+
+			if *taskResp.Data.Status == 0 {
+				return *taskResp.Data.Output.UniqVpcPeerId, nil
+			}
+			if *taskResp.Data.Status == 1 {
+				return "", errors.New("createPeeringConnection execute failed ,need retry")
+			}
+
+			time.Sleep(10 * time.Second)
+			count++
+			if count >= 20 {
+				return "", errors.New("createPeeringConnection query result timeout")
+			}
+		}
+
+		return "", nil
 	}
-
-	return *(createResp.PeeringConnectionId), nil
 }
 
 func (action *PeeringConnectionCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
@@ -166,7 +209,7 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	request := vpc.NewDeletePeeringConnectionRequest()
+	request := vpcExtend.NewDeleteVpcPeeringConnectionRequest()
 	request.PeeringConnectionId = &peeringConnection.Id
 	response, err := client.DeletePeeringConnection(request)
 	if err != nil {

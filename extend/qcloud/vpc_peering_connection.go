@@ -21,12 +21,12 @@ type CreateVpcPeeringConnectionResponse struct {
 	PeeringConnectionId *string `json:"peeringConnectionId"`
 }
 
-type DeletePeeringConnectionRequest struct {
+type DeleteVpcPeeringConnectionRequest struct {
 	*common.BaseRequest
 	PeeringConnectionId *string `name:"peeringConnectionId"`
 }
 
-type DeletePeeringConnectionResponse struct {
+type DeleteVpcPeeringConnectionResponse struct {
 	*common.BaseResponse
 	Code    *int    `json:"code"`
 	Message *string `json:"message"`
@@ -67,26 +67,26 @@ func (c *Client) CreateVpcPeeringConnection(request *CreateVpcPeeringConnectionR
 	return
 }
 
-func NewDeletePeeringConnectionRequest() (request *DeletePeeringConnectionRequest) {
-	request = &DeletePeeringConnectionRequest{
+func NewDeleteVpcPeeringConnectionRequest() (request *DeleteVpcPeeringConnectionRequest) {
+	request = &DeleteVpcPeeringConnectionRequest{
 		BaseRequest: &common.BaseRequest{},
 	}
 	request.Init().WithApiInfo("vpc", APIVersion, "DeleteVpcPeeringConnection")
 	return
 }
 
-func NewDeletePeeringConnectionResponse() (response *DeletePeeringConnectionResponse) {
-	response = &DeletePeeringConnectionResponse{
+func NewDeleteVpcPeeringConnectionResponse() (response *DeleteVpcPeeringConnectionResponse) {
+	response = &DeleteVpcPeeringConnectionResponse{
 		BaseResponse: &common.BaseResponse{},
 	}
 	return
 }
 
-func (c *Client) DeletePeeringConnection(request *DeletePeeringConnectionRequest) (response *DeletePeeringConnectionResponse, err error) {
+func (c *Client) DeletePeeringConnection(request *DeleteVpcPeeringConnectionRequest) (response *DeleteVpcPeeringConnectionResponse, err error) {
 	if request == nil {
-		request = NewDeletePeeringConnectionRequest()
+		request = NewDeleteVpcPeeringConnectionRequest()
 	}
-	response = NewDeletePeeringConnectionResponse()
+	response = NewDeleteVpcPeeringConnectionResponse()
 	err = c.Send(request, response)
 	return
 }

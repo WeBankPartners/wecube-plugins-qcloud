@@ -9,15 +9,17 @@ const (
 )
 
 type PeeringConnectionInput struct {
-	Guid              string `json:"guid,omitempty"`
-	ProviderParams    string `json:"provider_params,omitempty"`
-	Name              string `json:"name,omitempty"`
-	VpcId             string `json:"vpc_id,omitempty"`
-	PeerVpcId         string `json:"peer_vpc_id,omitempty"`
-	PeerUin           string `json:"peer_uin,omitempty"`
-	Id                string `json:"id,omitempty"`
-	ProcessInstanceId string `json:"process_instance_id,omitempty"`
-	State             string `json:"state,omitempty"`
+	Guid               string `json:"guid,omitempty"`
+	ProviderParams     string `json:"provider_params,omitempty"`
+	Name               string `json:"name,omitempty"`
+	PeerProviderParams string `json:"peer_provider_params,omitempty"`
+	VpcId              string `json:"vpc_id,omitempty"`
+	PeerVpcId          string `json:"peer_vpc_id,omitempty"`
+	PeerUin            string `json:"peer_uin,omitempty"`
+	Bandwidth          string `json:"bandwidth,omitempty"`
+	Id                 string `json:"id,omitempty"`
+	ProcessInstanceId  string `json:"process_instance_id,omitempty"`
+	State              string `json:"state,omitempty"`
 }
 
 func GetPeeringConnectionInputsByProcessInstanceId(queryParam *CmdbCiQueryParam) ([]PeeringConnectionInput, int, error) {
