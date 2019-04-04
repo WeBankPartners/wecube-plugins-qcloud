@@ -80,63 +80,70 @@ func (action *PeeringConnectionCreateAction) CheckParam(param interface{}) error
 	return nil
 }
 
+func (action *PeeringConnectionCreateAction) createPeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput, paramsMap map[string]string) (string, error) {
+	createReq := vpcExtend.NewCreateVpcPeeringConnectionRequest()
+	createReq.VpcId = &peeringConnection.VpcId
+	createReq.PeerVpcId = &peeringConnection.PeerVpcId
+	createReq.PeeringConnectionName = &peeringConnection.Name
+	createReq.PeerUin = &peeringConnection.PeerUin
+
+	createResp, err := client.CreateVpcPeeringConnection(createReq)
+	if err != nil || createResp.PeeringConnectionId == nil {
+		return "", err
+	}
+	return *createResp.PeeringConnectionId, nil
+}
+func (action *PeeringConnectionCreateAction) createPeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput, paramsMap map[string]string) (string, error) {
+	createReq := vpcExtend.NewCreateVpcPeeringConnectionExRequest()
+	createReq.VpcId = &peeringConnection.VpcId
+	createReq.PeerVpcId = &peeringConnection.PeerVpcId
+	createReq.PeeringConnectionName = &peeringConnection.Name
+	createReq.PeerUin = &peeringConnection.PeerUin
+	region := paramsMap["Region"]
+	createReq.PeerRegion = &region
+	createReq.Bandwidth = &peeringConnection.Bandwidth
+
+	createResp, err := client.CreateVpcPeeringConnectionEx(createReq)
+	if err != nil {
+		return "", err
+	}
+	logrus.Infof("createPeeringConnection is completed, UniqVpcPeerId = %v", createResp.UniqVpcPeerId)
+
+	taskReq := vpcExtend.NewDescribeVpcTaskResultRequest()
+	taskReq.TaskId = createResp.TaskId
+	count := 0
+	for {
+		taskResp, err := client.DescribeVpcTaskResult(taskReq)
+		if err != nil {
+			return "", err
+		}
+
+		if *taskResp.Data.Status == 0 {
+			return *taskResp.Data.Output.UniqVpcPeerId, nil
+		}
+		if *taskResp.Data.Status == 1 {
+			return "", errors.New("createPeeringConnection execute failed ,need retry")
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return "", errors.New("createPeeringConnection query result timeout")
+		}
+	}
+
+	return "", nil
+}
+
 func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConnection cmdb.PeeringConnectionInput) (string, error) {
 	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
 	peerParamsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	if paramsMap["Region"] == peerParamsMap["Region"] {
-		createReq := vpcExtend.NewCreateVpcPeeringConnectionRequest()
-		createReq.VpcId = &peeringConnection.VpcId
-		createReq.PeerVpcId = &peeringConnection.PeerVpcId
-		createReq.PeeringConnectionName = &peeringConnection.Name
-		createReq.PeerUin = &peeringConnection.PeerUin
-
-		createResp, err := client.CreateVpcPeeringConnection(createReq)
-		if err != nil || createResp.PeeringConnectionId == nil {
-			return "", err
-		}
-		return *createResp.PeeringConnectionId, nil
+		return action.createPeeringConnectionAtSameRegion(client, peeringConnection, paramsMap)
 	} else {
-		createReq := vpcExtend.NewCreateVpcPeeringConnectionExRequest()
-		createReq.VpcId = &peeringConnection.VpcId
-		createReq.PeerVpcId = &peeringConnection.PeerVpcId
-		createReq.PeeringConnectionName = &peeringConnection.Name
-		createReq.PeerUin = &peeringConnection.PeerUin
-		region := peerParamsMap["Region"]
-		createReq.PeerRegion = &region
-		createReq.Bandwidth = &peeringConnection.Bandwidth
-
-		createResp, err := client.CreateVpcPeeringConnectionEx(createReq)
-		if err != nil {
-			return "", err
-		}
-		logrus.Infof("createPeeringConnection is completed, UniqVpcPeerId = %v", createResp.UniqVpcPeerId)
-
-		taskReq := vpcExtend.NewDescribeVpcTaskResultRequest()
-		taskReq.TaskId = createResp.TaskId
-		count := 0
-		for {
-			taskResp, err := client.DescribeVpcTaskResult(taskReq)
-			if err != nil {
-				return "", err
-			}
-
-			if *taskResp.Data.Status == 0 {
-				return *taskResp.Data.Output.UniqVpcPeerId, nil
-			}
-			if *taskResp.Data.Status == 1 {
-				return "", errors.New("createPeeringConnection execute failed ,need retry")
-			}
-
-			time.Sleep(10 * time.Second)
-			count++
-			if count >= 20 {
-				return "", errors.New("createPeeringConnection query result timeout")
-			}
-		}
-
-		return "", nil
+		return action.createPeeringConnectionCrossRegion(client, peeringConnection, peerParamsMap)
 	}
 }
 
@@ -205,10 +212,7 @@ func (action *PeeringConnectionTerminateAction) CheckParam(param interface{}) er
 	return nil
 }
 
-func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeringConnection cmdb.PeeringConnectionInput) error {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
-	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
+func (action *PeeringConnectionTerminateAction) deletePeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput) error {
 	request := vpcExtend.NewDeleteVpcPeeringConnectionRequest()
 	request.PeeringConnectionId = &peeringConnection.Id
 	response, err := client.DeletePeeringConnection(request)
@@ -218,6 +222,53 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 
 	logrus.Infof("terminate peering connection task id = %v", response.TaskId)
 	return nil
+}
+
+func (action *PeeringConnectionTerminateAction) deletePeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput) error {
+	request := vpcExtend.NewDeleteVpcPeeringConnectionExRequest()
+	request.PeeringConnectionId = &peeringConnection.Id
+	response, err := client.DeletePeeringConnectionEx(request)
+	if err != nil {
+		return fmt.Errorf("terminate peering connection(id = %v) in cloud meet error = %v", peeringConnection.Id, err)
+	}
+
+	taskReq := vpcExtend.NewDescribeVpcTaskResultRequest()
+	taskReq.TaskId = response.TaskId
+	count := 0
+	for {
+		taskResp, err := client.DescribeVpcTaskResult(taskReq)
+		if err != nil {
+			return err
+		}
+
+		if *taskResp.Data.Status == 0 {
+			return nil
+		}
+		if *taskResp.Data.Status == 1 {
+			return errors.New("terminatePeeringConnection execute failed ,need retry")
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return errors.New("terminatePeeringConnection query result timeout")
+		}
+	}
+
+	logrus.Infof("terminate peering connection task id = %v", response.TaskId)
+	return nil
+}
+
+func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeringConnection cmdb.PeeringConnectionInput) error {
+	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
+	peerParamsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.PeerProviderParams)
+	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	if paramsMap["Region"] == peerParamsMap["Region"] {
+		return action.deletePeeringConnectionAtSameRegion(client, peeringConnection)
+	} else {
+		return action.deletePeeringConnectionCrossRegion(client, peeringConnection)
+	}
 }
 
 func (action *PeeringConnectionTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
