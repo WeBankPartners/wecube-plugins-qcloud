@@ -2,10 +2,9 @@ package plugins
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
-
-	"git.webank.io/wecube-plugins/cmdb"
 
 	"github.com/sirupsen/logrus"
 	cbs "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312"
@@ -33,6 +32,29 @@ func CreateCbsClient(region, secretId, secretKey string) (client *cbs.Client, er
 	return cbs.NewClient(credential, region, clientProfile)
 }
 
+type StorageInputs struct {
+	Inputs []StorageInput
+}
+
+type StorageInput struct {
+	ProviderParams   string `json:"provider_params,omitempty"`
+	DiskType         string `json:"disk_type,omitempty"`
+	DiskSize         uint64 `json:"disk_size,omitempty"`
+	DiskName         string `json:"disk_name,omitempty"`
+	DiskId           string `json:"disk_id,omitempty"`
+	DiskChargeType   string `json:"disk_charge_type,omitempty"`
+	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
+	InstanceId       string `json:"instance_id,omitempty"`
+}
+
+type StorageOutputs struct {
+	Outputs []StorageOutput
+}
+
+type StorageOutput struct {
+	DiskId string `json:"disk_id,omitempty"`
+}
+
 type StoragePlugin struct {
 }
 
@@ -49,76 +71,48 @@ func (plugin *StoragePlugin) GetActionByName(actionName string) (Action, error) 
 type StorageCreateAction struct {
 }
 
-func (action *StorageCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	storages, _, err := cmdb.GetStorageInputsByProcessInstanceId(&integrateQueyrParam)
-
+func (action *StorageCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+	var inputs StorageInputs
+	err := UnmarshalJson(r, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return storages, nil
+	return inputs, nil
 }
 
-func (action *StorageCreateAction) CheckParam(param interface{}) error {
+func (action *StorageCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *StorageCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	storages, ok := param.([]cmdb.StorageInput)
+func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
+	storages, ok := input.(StorageInputs)
+	outputs := StorageOutputs{}
 	if !ok {
-		return fmt.Errorf("storageCreateAtion:param type=%T not right", param)
+		return nil, fmt.Errorf("storageCreateAtion:input type=%T not right", input)
 	}
 
-	for _, storage := range storages {
+	for _, storage := range storages.Inputs {
 		diskId, err := action.createStorage(storage)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		storage.DiskId = diskId
 
 		err = action.attachStorage(storage)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		storage.State = cmdb.CMDB_STATE_CREATED
-		if err := action.updateToCmdb(storage, workflowParam); err != nil {
-			return err
-		}
-		logrus.Infof("storage with guid = %v and diskId = %v is created", storage.Guid, storage.DiskId)
+		output := StorageOutput{}
+		output.DiskId = storage.DiskId
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all storages = %v are created", storages)
-	return nil
+	return &outputs, nil
 }
 
-func (action *StorageCreateAction) updateToCmdb(storage cmdb.StorageInput, workflowParam *WorkflowParam) error {
-	updateCiEntry := cmdb.StorageOutput{
-		DiskId: storage.DiskId,
-		State:  storage.State,
-	}
-	err := cmdb.UpdateStorageByGuid(storage.Guid,
-		workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
-	if err != nil {
-		return fmt.Errorf("update storage(guid = %v) meet error = %v", storage.Guid, err)
-	}
-	return nil
-}
-
-func (action *StorageCreateAction) attachStorage(storage cmdb.StorageInput) error {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(storage.ProviderParams)
+func (action *StorageCreateAction) attachStorage(storage StorageInput) error {
+	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	tryTimes := 10
@@ -147,8 +141,8 @@ func (action *StorageCreateAction) attachStorage(storage cmdb.StorageInput) erro
 	return nil
 }
 
-func (action *StorageCreateAction) createStorage(storage cmdb.StorageInput) (string, error) {
-	paramsMap, err := cmdb.GetMapFromProviderParams(storage.ProviderParams)
+func (action *StorageCreateAction) createStorage(storage StorageInput) (string, error) {
+	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := cbs.NewCreateDisksRequest()
@@ -181,77 +175,42 @@ func (action *StorageCreateAction) createStorage(storage cmdb.StorageInput) (str
 type StorageTerminateAction struct {
 }
 
-func (action *StorageTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	var params []cmdb.StorageInput
-
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	storages, _, err := cmdb.GetStorageInputsByProcessInstanceId(&integrateQueyrParam)
-
+func (action *StorageTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+	var inputs StorageInputs
+	err := UnmarshalJson(r, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, storage := range storages {
-		param := cmdb.StorageInput{}
-		param.ProviderParams = storage.ProviderParams
-		param.Guid = storage.Guid
-		param.DiskName = storage.DiskName
-		param.DiskSize = storage.DiskSize
-		param.DiskType = storage.DiskType
-		param.InstanceId = storage.InstanceId
-		param.DiskId = storage.DiskId
-		param.DiskChargeType = storage.DiskChargeType
-		param.DiskChargePeriod = storage.DiskChargePeriod
-		param.State = storage.State
-		params = append(params, param)
-	}
-
-	return params, nil
+	return inputs, nil
 }
 
-func (action *StorageTerminateAction) CheckParam(param interface{}) error {
+func (action *StorageTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *StorageTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	storages, ok := param.([]cmdb.StorageInput)
+func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error) {
+	storages, ok := input.(StorageInputs)
 	if !ok {
-		return fmt.Errorf("storageTerminationAtion:param type=%T not right", param)
+		return nil, fmt.Errorf("storageTerminationAtion:input type=%T not right", input)
 	}
 
-	for _, storage := range storages {
-		err := cmdb.DeleteStorageByGuid(storage.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
+	for _, storage := range storages.Inputs {
+		err := action.detachStorage(storage)
 		if err != nil {
-			return fmt.Errorf("delete storage(guid = %v) from CMDB meet error = %v", storage.Guid, err)
-		}
-
-		err = action.detachStorage(storage)
-		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = action.terminateStorage(storage)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return "", nil
 }
 
-func (action *StorageTerminateAction) detachStorage(storage cmdb.StorageInput) error {
-	paramsMap, err := cmdb.GetMapFromProviderParams(storage.ProviderParams)
+func (action *StorageTerminateAction) detachStorage(storage StorageInput) error {
+	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := cbs.NewDetachDisksRequest()
@@ -264,8 +223,8 @@ func (action *StorageTerminateAction) detachStorage(storage cmdb.StorageInput) e
 	return nil
 }
 
-func (action *StorageTerminateAction) terminateStorage(storage cmdb.StorageInput) error {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(storage.ProviderParams)
+func (action *StorageTerminateAction) terminateStorage(storage StorageInput) error {
+	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

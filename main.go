@@ -2,10 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"git.webank.io/wecube-plugins/conf"
 	"git.webank.io/wecube-plugins/plugins"
@@ -53,53 +50,15 @@ func initRouter() {
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
-	var err error
-	var workflowParam plugins.WorkflowParam
-
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-			OutputJson(w, &workflowParam, fmt.Sprint(err))
-		}
-	}()
-
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-	if err = json.Unmarshal(bodyBytes, &workflowParam); err != nil {
-		return
-	}
-	pathStrings := strings.Split(r.URL.Path, "/")
-	if len(pathStrings) >= 5 {
-		workflowParam.PluginVersion = pathStrings[1]
-		workflowParam.ProviderName = pathStrings[2]
-		workflowParam.PluginName = pathStrings[3]
-		workflowParam.ApplicationAction = pathStrings[4]
-	}
-
-	go plugins.CallPluginAction(workflowParam)
-
-	OutputJson(w, &workflowParam, "")
+	pluginResponse, _ := plugins.CallPluginAction(r)
+	write(w, pluginResponse)
 }
 
-const (
-	RESULT_CODE_SUCCESSFUL = "0"
-	RESULT_CODE_ERROR      = "1"
-)
-
-func OutputJson(w http.ResponseWriter, res *plugins.WorkflowParam, resultMsg string) {
+func write(w http.ResponseWriter, output *plugins.PluginResponse) {
 	w.Header().Set("content-type", "application/json")
-
-	if resultMsg == "" {
-		res.ResultCode = RESULT_CODE_SUCCESSFUL
-	} else {
-		res.ResultCode = RESULT_CODE_ERROR
-		res.ResultMsg = resultMsg
-	}
-	b, err := json.Marshal(res)
+	b, err := json.Marshal(output)
 	if err != nil {
-		return
+		logrus.Error("write http response (%v) meet error (%v)", output, err)
 	}
 	w.Write(b)
 }

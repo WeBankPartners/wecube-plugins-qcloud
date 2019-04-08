@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 
-	"git.webank.io/wecube-plugins/cmdb"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -28,6 +28,27 @@ func CreateSubnetClient(region, secretId, secretKey string) (client *vpc.Client,
 	return vpc.NewClient(credential, region, clientProfile)
 }
 
+type SubnetInputs struct {
+	Inputs []SubnetInput
+}
+
+type SubnetInput struct {
+	ProviderParams string `json:"provider_params,omitempty"`
+	Id             string `json:"id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	CidrBlock      string `json:"cidr_block,omitempty"`
+	VpcId          string `json:"vpc_id,omitempty"`
+	RouteTableId   string `json:"route_table_id,omitempty"`
+}
+
+type SubnetOutputs struct {
+	Outputs []SubnetOutput
+}
+
+type SubnetOutput struct {
+	Id string `json:"id,omitempty"`
+}
+
 type SubnetPlugin struct {
 }
 
@@ -44,38 +65,27 @@ func (plugin *SubnetPlugin) GetActionByName(actionName string) (Action, error) {
 type SubnetCreateAction struct {
 }
 
-func (action *SubnetCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	subnets, _, err := cmdb.GetSubnetInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *SubnetCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+	var inputs SubnetInputs
+	err := UnmarshalJson(r, &inputs)
 	if err != nil {
-		return subnets, err
+		return nil, err
 	}
-
-	return subnets, nil
+	return inputs, nil
 }
 
-func (action *SubnetCreateAction) CheckParam(param interface{}) error {
-	subnets, ok := param.([]cmdb.SubnetInput)
+func (action *SubnetCreateAction) CheckParam(input interface{}) error {
+	subnets, ok := input.(SubnetInputs)
 	if !ok {
-		return fmt.Errorf("subnetCreateAtion:param type=%T not right", param)
+		return fmt.Errorf("subnetCreateAtion:input type=%T not right", input)
 	}
 
-	for _, subnet := range subnets {
+	for _, subnet := range subnets.Inputs {
 		if subnet.VpcId == "" {
-			return errors.New("subnetCreateAtion param vpcId is empty")
+			return errors.New("subnetCreateAtion input vpcId is empty")
 		}
 		if subnet.Name == "" {
-			return errors.New("subnetCreateAtion param name is empty")
+			return errors.New("subnetCreateAtion input name is empty")
 		}
 		if _, _, err := net.ParseCIDR(subnet.CidrBlock); err != nil {
 			return fmt.Errorf("subnetCreateAtion invalid subnetCidr[%s]", subnet.CidrBlock)
@@ -85,8 +95,8 @@ func (action *SubnetCreateAction) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *SubnetCreateAction) createSubnet(subnet cmdb.SubnetInput) (string, error) {
-	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
+func (action *SubnetCreateAction) createSubnet(subnet SubnetInput) (string, error) {
+	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewCreateSubnetRequest()
@@ -105,61 +115,42 @@ func (action *SubnetCreateAction) createSubnet(subnet cmdb.SubnetInput) (string,
 	return *response.Response.Subnet.SubnetId, nil
 }
 
-func (action *SubnetCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	subnets, _ := param.([]cmdb.SubnetInput)
-	for _, subnet := range subnets {
+func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
+	subnets, _ := input.(SubnetInputs)
+	outputs := SubnetOutputs{}
+	for _, subnet := range subnets.Inputs {
 		subnetId, err := action.createSubnet(subnet)
 		if err != nil {
-			return err
-		}
-		updateCiEntry := cmdb.SubnetOutput{
-			Id:    subnetId,
-			State: cmdb.CMDB_STATE_CREATED,
+			return nil, err
 		}
 
-		err = cmdb.UpdateSubnetByGuid(subnet.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
-		if err != nil {
-			return fmt.Errorf("update subnet(guid = %v),subnetId=%v meet error = %v", subnet.Guid, subnetId, err)
-		}
-
-		logrus.Infof("subnet with guid = %v and diskId = %v is created", subnet.Guid, subnet.Id)
+		output := SubnetOutput{Id: subnetId}
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all subnet = %v are created", subnets)
-	return nil
+	return &outputs, nil
 }
 
 type SubnetTerminateAction struct {
 }
 
-func (action *SubnetTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	subnets, _, err := cmdb.GetSubnetInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *SubnetTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+	var inputs SubnetInputs
+	err := UnmarshalJson(r, &inputs)
 	if err != nil {
-		return subnets, err
+		return nil, err
 	}
-
-	return subnets, nil
+	return inputs, nil
 }
 
-func (action *SubnetTerminateAction) CheckParam(param interface{}) error {
-	subnets, ok := param.([]cmdb.SubnetInput)
+func (action *SubnetTerminateAction) CheckParam(input interface{}) error {
+	subnets, ok := input.(SubnetInputs)
 	if !ok {
-		return fmt.Errorf("subnetTerminateAtion:param type=%T not right", param)
+		return fmt.Errorf("subnetTerminateAtion:input type=%T not right", input)
 	}
 
-	for _, subnet := range subnets {
+	for _, subnet := range subnets.Inputs {
 		if subnet.Id == "" {
 			return errors.New("subnetTerminateAtion param subnetId is empty")
 		}
@@ -167,8 +158,8 @@ func (action *SubnetTerminateAction) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.SubnetInput) error {
-	paramsMap, err := cmdb.GetMapFromProviderParams(subnet.ProviderParams)
+func (action *SubnetTerminateAction) terminateSubnet(subnet SubnetInput) error {
+	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewDeleteSubnetRequest()
@@ -183,20 +174,14 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet cmdb.SubnetInput) er
 	return nil
 }
 
-func (action *SubnetTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	subnets, _ := param.([]cmdb.SubnetInput)
-	for _, subnet := range subnets {
-		err := cmdb.DeleteSubnetByGuid(subnet.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
+func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) {
+	subnets, _ := input.(SubnetInputs)
+	for _, subnet := range subnets.Inputs {
+		err := action.terminateSubnet(subnet)
 		if err != nil {
-			return fmt.Errorf("delete subnet(guid = %v) from CMDB meet error = %v", subnet.Guid, err)
-		}
-
-		err = action.terminateSubnet(subnet)
-		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return "", nil
 }
