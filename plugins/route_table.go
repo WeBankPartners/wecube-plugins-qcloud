@@ -119,6 +119,7 @@ func (action *RouteTableCreateAction) createRouteTable(routeTable RouteTableInpu
 	routeTableId := *response.Response.RouteTable.RouteTableId
 
 	routesRequest := vpc.NewCreateRoutesRequest()
+	routesRequest.RouteTableId = &routeTableId
 	for _, inputRoute := range routeTable.Routes {
 		route := vpc.Route{}
 		route.DestinationCidrBlock = &inputRoute.DestinationCidrBlock
