@@ -10,4 +10,4 @@ ADD wecube-plugins $DEPLOY_PATH/
 ADD conf $DEPLOY_PATH/
 
 WORKDIR $DEPLOY_PATH
-ENTRYPOINT ["./wecube-plugins"]
+ENTRYPOINT ["wecube-plugins"]
