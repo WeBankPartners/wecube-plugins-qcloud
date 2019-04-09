@@ -1,13 +1,26 @@
 FROM alpine:latest
 LABEL maintainer = "Webank CTB Team"
 
-ARG DEPLOY_PATH=/home/app/wecube-plugins
+RUN mkdir -p /home/app
 
-ENV LOG_PATH=$DEPLOY_PATH/logs
-RUN mkdir -p $DEPLOY_PATH/
+ADD wecube-plugins /home/app
+ENV LOG_PATH=/home/app/wecube-plugins/logs
+ADD conf /home/app
 
-ADD wecube-plugins $DEPLOY_PATH/
-ADD conf $DEPLOY_PATH/
+WORKDIR /home/app
 
-WORKDIR $DEPLOY_PATH
-ENTRYPOINT ["wecube-plugins"]
+CMD ["./wecube-plugins"]
+
+# FROM alpine:latest
+# LABEL maintainer = "Webank CTB Team"
+
+# ARG DEPLOY_PATH=/home/app/wecube-plugins
+
+# ENV LOG_PATH=$DEPLOY_PATH/logs
+# RUN mkdir -p $DEPLOY_PATH/
+
+# ADD wecube-plugins $DEPLOY_PATH/
+# ADD conf $DEPLOY_PATH/
+
+# WORKDIR $DEPLOY_PATH
+# ENTRYPOINT ["wecube-plugins"]
