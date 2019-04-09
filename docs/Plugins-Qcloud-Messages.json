@@ -5,13 +5,13 @@ Input:
 		"name": "VPC-A",
 		"id": "vpc-ahhd5uuy",
 		"cidr_block": "10.3.0.0/16",
-		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
 	},
 	{
 		"name": "VPC-B",
 		"id": "vpc-7s4zumm6",
 		"cidr_block": "10.4.0.0/16",
-		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
 	}]
 }
 Output:
@@ -30,34 +30,6 @@ Output:
     }
 }
 
-
-NAT-GATEWAY plugin: /v1/qcloud/nat-gateway/create
-{
-	"inputs":[{
-		"name": "NAT-GATEWAY-1",
-		"id": "id",
-		"vpc_id": "vpc-mnlhoc4a",
-		"max_concurrent": 1000000,
-		"bandwidth": 100,
-		"assigned_eip_set": "",
-		"auto_alloc_eip_num": 1,
-		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
-	}]
-}
-
-Output:
-{
-    "result_code": "0",
-    "result_message": "",
-    "results": {
-        "outputs": [
-            {
-                "id": "nat-ajmijt1n"
-            }
-        ]
-    }
-}
-
 SUBNET plugin: /v1/qcloud/subnet/create
 Input:
 {
@@ -66,7 +38,7 @@ Input:
 		"id": "xxx",
 		"cidr_block": "10.3.1.0/24",
 		"vpc_id": "vpc-mnlhoc4a",
-		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
 	}]
 }
 
@@ -83,3 +55,157 @@ Output:
     }
 }
 
+VM plugin: /v1/qcloud/vm/create
+Input:
+{
+ "inputs": [
+ 	    {
+			"instance_name": "VM1",
+			"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX",
+			"instance_type": "S2.SMALL1",
+			"vpc_id": "vpc-mnlhoc4a",
+			"instance_charge_period": null,
+			"image_id": "img-31tjrtph",
+			"instance_id": "ins-ghetr9ex",
+			"instance_charge_type": "POSTPAID_BY_HOUR",
+			"instance_private_ip": null,
+			"system_disk_size": 50,
+			"subnet_id": "subnet-rppczm79"
+		}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "instance_id": "ins-1o8z54xz",
+                "cpu": "1",
+                "memory": "1",
+                "instance_state": "RUNNING",
+                "instance_private_ip": "10.3.1.3"
+            }
+        ]
+    }
+}
+
+STORAGE plugin: /v1/qcloud/storage/create
+Input:
+{
+   "inputs": [
+	   {
+			"disk_size": 10,
+			"disk_name": "DISK1",
+			"disk_type": "CLOUD_BASIC",
+			"disk_id": null,
+			"instance_id": "ins-ghetr9ex",
+			"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX",
+			"disk_charge_type": "POSTPAID_BY_HOUR",
+			"disk_charge_period": null
+		}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "disk_id": "disk-jgqqm3id"
+            }
+        ]
+    }
+}
+
+NAT-GATEWAY plugin: /v1/qcloud/nat-gateway/create
+Input:
+{
+	"inputs":[{
+		"name": "NAT-GATEWAY-1",
+		"id": "id",
+		"vpc_id": "vpc-mnlhoc4a",
+		"max_concurrent": 1000000,
+		"bandwidth": 100,
+		"assigned_eip_set": "",
+		"auto_alloc_eip_num": 1,
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
+	}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "nat-ajmijt1n"
+            }
+        ]
+    }
+}
+
+SECURITY-GROUP plugin : /v1/qcloud/security-group/create
+Input:
+{
+  "inputs": [
+  	    {
+			"name": "Group1",
+			"rule_description": null,
+			"rule_priority": 1,
+			"id": "",
+			"rule_type": "Egress",
+			"description": "PluginAccess",
+			"rule_ip_protocol": "UDP",
+			"guid": "1004100000471",
+			"rule_port_range": "80",
+			"rule_policy": "DROP",
+			"rule_cidr_ip": "10.10.10.11",
+			"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
+		}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "sg-ey3xte5r"
+            }
+        ]
+    }
+}
+
+PEERING-CONNECTION plugin: /v1/qcloud/peering-connection/create
+Input:
+{
+    "inputs": [{
+			"name": "PeerConnA-B-01",
+			"bandwidth": null,
+			"zone_node_link_type": "Type1",
+			"vpc_id": "vpc-mnlhoc4a",
+			"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX",
+			"peer_uin": "100007707812",
+			"peer_vpc_id": "vpc-7bkezmf2",
+			"peer_provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX",
+			"id": "pcx-kurl7zs5"
+		}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "pcx-6u0hfvf3"
+            }
+        ]
+    }
+}
