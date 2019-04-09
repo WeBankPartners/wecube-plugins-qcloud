@@ -29,7 +29,7 @@ func CreateVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 }
 
 type VpcInputs struct {
-	Inputs []VpcInput
+	Inputs []VpcInput `json:"inputs,omitempty"`
 }
 
 type VpcInput struct {
@@ -40,7 +40,7 @@ type VpcInput struct {
 }
 
 type VpcOutputs struct {
-	Outputs []VpcOutput
+	Outputs []VpcOutput `json:"outputs,omitempty"`
 }
 
 type VpcOutput struct {

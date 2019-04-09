@@ -46,7 +46,7 @@ func createVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 }
 
 type SecurityGroupInputs struct {
-	Inputs []SecurityGroupInput
+	Inputs []SecurityGroupInput `json:"inputs,omitempty"`
 }
 
 type SecurityGroupInput struct {
@@ -67,12 +67,11 @@ type SecurityGroupInput struct {
 }
 
 type SecurityGroupOutputs struct {
-	Outputs []SecurityGroupOutput
+	Outputs []SecurityGroupOutput `json:"outputs,omitempty"`
 }
 
 type SecurityGroupOutput struct {
 	SecurityGroupId string `json:"id,omitempty"`
-	State           string `json:"state,omitempty"`
 }
 
 type SecurityGroupCreation struct{}

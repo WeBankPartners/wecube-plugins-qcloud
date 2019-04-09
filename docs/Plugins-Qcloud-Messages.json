@@ -1,0 +1,85 @@
+VPC Plugin: /v1/qcloud/vpc/create
+Input:
+{
+	"inputs":[{
+		"name": "VPC-A",
+		"id": "vpc-ahhd5uuy",
+		"cidr_block": "10.3.0.0/16",
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+	},
+	{
+		"name": "VPC-B",
+		"id": "vpc-7s4zumm6",
+		"cidr_block": "10.4.0.0/16",
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+	}]
+}
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "vpc-mnlhoc4a"
+            },
+            {
+                "id": "vpc-7bkezmf2"
+            }
+        ]
+    }
+}
+
+
+NAT-GATEWAY plugin: /v1/qcloud/nat-gateway/create
+{
+	"inputs":[{
+		"name": "NAT-GATEWAY-1",
+		"id": "id",
+		"vpc_id": "vpc-mnlhoc4a",
+		"max_concurrent": 1000000,
+		"bandwidth": 100,
+		"assigned_eip_set": "",
+		"auto_alloc_eip_num": 1,
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+	}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "nat-ajmijt1n"
+            }
+        ]
+    }
+}
+
+SUBNET plugin: /v1/qcloud/subnet/create
+Input:
+{
+	"inputs":[{
+		"name": "SUBNET1",
+		"id": "xxx",
+		"cidr_block": "10.3.1.0/24",
+		"vpc_id": "vpc-mnlhoc4a",
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=AKIDW54FXsQXrGkJrS7UfhlsyxHg0ODz9RNH;SecretKey=PvX9sZCsT3hIn2GRdmmpLziWCpKjCtcP"
+	}]
+}
+
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": {
+        "outputs": [
+            {
+                "id": "subnet-rppczm79"
+            }
+        ]
+    }
+}
+

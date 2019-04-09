@@ -33,7 +33,7 @@ func CreateCbsClient(region, secretId, secretKey string) (client *cbs.Client, er
 }
 
 type StorageInputs struct {
-	Inputs []StorageInput
+	Inputs []StorageInput `json:"inputs,omitempty"`
 }
 
 type StorageInput struct {
@@ -48,7 +48,7 @@ type StorageInput struct {
 }
 
 type StorageOutputs struct {
-	Outputs []StorageOutput
+	Outputs []StorageOutput `json:"outputs,omitempty"`
 }
 
 type StorageOutput struct {

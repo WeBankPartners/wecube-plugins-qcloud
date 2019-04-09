@@ -29,7 +29,7 @@ func CreateSubnetClient(region, secretId, secretKey string) (client *vpc.Client,
 }
 
 type SubnetInputs struct {
-	Inputs []SubnetInput
+	Inputs []SubnetInput `json:"inputs,omitempty"`
 }
 
 type SubnetInput struct {
@@ -42,7 +42,7 @@ type SubnetInput struct {
 }
 
 type SubnetOutputs struct {
-	Outputs []SubnetOutput
+	Outputs []SubnetOutput `json:"outputs,omitempty"`
 }
 
 type SubnetOutput struct {

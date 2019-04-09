@@ -29,7 +29,7 @@ type PeeringConnectionPlugin struct {
 }
 
 type PeeringConnectionInputs struct {
-	Inputs []PeeringConnectionInput
+	Inputs []PeeringConnectionInput `json:"inputs,omitempty"`
 }
 
 type PeeringConnectionInput struct {
@@ -44,7 +44,7 @@ type PeeringConnectionInput struct {
 }
 
 type PeeringConnectionOutputs struct {
-	Outputs []PeeringConnectionOutput
+	Outputs []PeeringConnectionOutput `json:"outputs,omitempty"`
 }
 
 type PeeringConnectionOutput struct {

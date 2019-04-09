@@ -32,7 +32,7 @@ var (
 )
 
 type VmInputs struct {
-	Inputs []VmInput
+	Inputs []VmInput `json:"inputs,omitempty"`
 }
 
 type VmInput struct {
@@ -50,7 +50,7 @@ type VmInput struct {
 }
 
 type VmOutputs struct {
-	Outputs []VmOutput
+	Outputs []VmOutput `json:"outputs,omitempty"`
 }
 
 type VmOutput struct {

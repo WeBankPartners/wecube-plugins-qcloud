@@ -63,9 +63,9 @@ type PluginRequest struct {
 }
 
 type PluginResponse struct {
-	ResultCode string      `json:"resultCode"`
-	ResultMsg  string      `json:"resultMsg"`
-	Outputs    interface{} `json:"outputs"`
+	ResultCode string      `json:"result_code"`
+	ResultMsg  string      `json:"result_message"`
+	Results    interface{} `json:"results"`
 }
 
 func CallPluginAction(r *http.Request) (*PluginResponse, error) {
@@ -112,7 +112,7 @@ func CallPluginAction(r *http.Request) (*PluginResponse, error) {
 		return &pluginResponse, err
 	}
 
-	pluginResponse.Outputs = outputs
+	pluginResponse.Results = outputs
 
 	return &pluginResponse, nil
 }

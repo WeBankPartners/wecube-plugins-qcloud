@@ -41,7 +41,7 @@ type NatGatewayCreateAction struct {
 }
 
 type NatGatewayInputs struct {
-	Inputs []NatGatewayInput
+	Inputs []NatGatewayInput `json:"inputs,omitempty"`
 }
 
 type NatGatewayInput struct {
@@ -56,7 +56,7 @@ type NatGatewayInput struct {
 }
 
 type NatGatewayOutputs struct {
-	Outputs []NatGatewayOutput
+	Outputs []NatGatewayOutput `json:"outputs,omitempty"`
 }
 
 type NatGatewayOutput struct {
