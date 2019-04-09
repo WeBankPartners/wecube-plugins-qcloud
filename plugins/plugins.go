@@ -53,6 +53,7 @@ func init() {
 	registerPlugin("nat-gateway", new(NatGatewayPlugin))
 	registerPlugin("vpc", new(VpcPlugin))
 	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
+	registerPlugin("route-table", new(RouteTablePlugin))
 }
 
 type PluginRequest struct {
