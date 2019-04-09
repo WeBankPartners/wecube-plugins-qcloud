@@ -4,12 +4,11 @@ LABEL maintainer = "Webank CTB Team"
 RUN mkdir -p /home/app
 
 ADD wecube-plugins /home/app
-ENV LOG_PATH=/home/app/wecube-plugins/logs
 ADD conf /home/app
 
 WORKDIR /home/app
 
-CMD ["./wecube-plugins"]
+ENTRYPOINT ["wecube-plugins"]
 
 # FROM alpine:latest
 # LABEL maintainer = "Webank CTB Team"
