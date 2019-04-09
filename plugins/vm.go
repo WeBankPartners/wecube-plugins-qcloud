@@ -364,7 +364,7 @@ func (action *VMTerminateAction) CheckParam(input interface{}) error {
 		}
 	}()
 
-	_, ok := input.(VmInput)
+	_, ok := input.(VmInputs)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
