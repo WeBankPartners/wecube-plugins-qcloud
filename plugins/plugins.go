@@ -52,6 +52,7 @@ func init() {
 	registerPlugin("vpc", new(VpcPlugin))
 	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
 	registerPlugin("route-table", new(RouteTablePlugin))
+	registerPlugin("mysql-vm", new(MysqlVmPlugin))
 }
 
 type PluginRequest struct {

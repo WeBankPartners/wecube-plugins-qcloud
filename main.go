@@ -50,6 +50,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/peering-connection/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/route-table/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/route-table/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/mysql-vm/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/mysql-vm/terminate", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
