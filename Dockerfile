@@ -1,25 +1,13 @@
-FROM alpine:latest
+FROM ubuntu:16.04
 LABEL maintainer = "Webank CTB Team"
 
-RUN mkdir -p /home/app
+ENV LOG_PATH=/home/app/logs
 
-ADD wecube-plugins /home/app
-ADD conf /home/app
+ADD wecube-plugins /home
+ADD conf /home
+RUN cd /home && chmod +x wecube-plugins
 
-WORKDIR /home/app
+WORKDIR /home
 
-ENTRYPOINT ["wecube-plugins"]
+ENTRYPOINT ["./wecube-plugins"]
 
-# FROM alpine:latest
-# LABEL maintainer = "Webank CTB Team"
-
-# ARG DEPLOY_PATH=/home/app/wecube-plugins
-
-# ENV LOG_PATH=$DEPLOY_PATH/logs
-# RUN mkdir -p $DEPLOY_PATH/
-
-# ADD wecube-plugins $DEPLOY_PATH/
-# ADD conf $DEPLOY_PATH/
-
-# WORKDIR $DEPLOY_PATH
-# ENTRYPOINT ["wecube-plugins"]
