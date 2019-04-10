@@ -39,6 +39,7 @@ type MysqlVmInput struct {
 	SubnetId       string `json:"subnet_id,omitempty"`
 	Name           string `json:"name,omitempty"`
 	Id             string `json:"id,omitempty"`
+	Count          int64  `json:"count,omitempty"`
 }
 
 type MysqlVmOutputs struct {
@@ -94,6 +95,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (str
 	request.UniqVpcId = &mysqlVmInput.VpcId
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
 	request.InstanceName = &mysqlVmInput.Name
+	request.GoodsNum = &mysqlVmInput.Count
 
 	response, err := client.CreateDBInstanceHour(request)
 	if err != nil {
