@@ -1,11 +1,7 @@
 package plugins
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -21,9 +17,9 @@ type Plugin interface {
 }
 
 type Action interface {
-	BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error)
+	ReadParam(param interface{}) (interface{}, error)
 	CheckParam(param interface{}) error
-	Do(param interface{}, workflowParam *WorkflowParam) error
+	Do(param interface{}) (interface{}, error)
 }
 
 func registerPlugin(name string, plugin Plugin) {
@@ -55,97 +51,67 @@ func init() {
 	registerPlugin("nat-gateway", new(NatGatewayPlugin))
 	registerPlugin("vpc", new(VpcPlugin))
 	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
+	registerPlugin("route-table", new(RouteTablePlugin))
 }
 
-type WorkflowParam struct {
-	AckPath             string `json:"ackPath"`
-	AckServer           string `json:"ackServer"`
-	ApplicationName     string `json:"applicationName"`
-	ApplicationAction   string `json:"applicationAction"`
-	ProcessDefinitionId string `json:"processDefinitionId"`
-	ProcessExecutionId  string `json:"processExecutionId"`
-	ProcessInstanceId   string `json:"processInstanceId"`
-	RequestId           string `json:"requestId"`
-
-	ResultCode string `json:"resultCode"`
-	ResultMsg  string `json:"resultMsg"`
-
-	PluginVersion string
-	PluginName    string
-	ProviderName  string
+type PluginRequest struct {
+	Version      string
+	ProviderName string
+	Name         string
+	Action       string
+	Parameters   interface{}
 }
 
-func CallPluginAction(workflowParam WorkflowParam) {
+type PluginResponse struct {
+	ResultCode string      `json:"result_code"`
+	ResultMsg  string      `json:"result_message"`
+	Results    interface{} `json:"results"`
+}
+
+func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
+	var pluginResponse = PluginResponse{}
 	var err error
 	defer func() {
 		if err != nil {
-			logrus.Errorf("plguin[%v]-action[%v] meet error = %v", workflowParam.PluginName, workflowParam.ApplicationAction, err)
-			workflowParam.ResultCode = "1"
-			workflowParam.ResultMsg = fmt.Sprint(err)
+			logrus.Errorf("plguin[%v]-action[%v] meet error = %v", pluginRequest.Name, pluginRequest.Action, err)
+			pluginResponse.ResultCode = "1"
+			pluginResponse.ResultMsg = fmt.Sprint(err)
 		} else {
-			logrus.Infof("plguin[%v]-action[%v] completed", workflowParam.PluginName, workflowParam.ApplicationAction)
-			workflowParam.ResultCode = "0"
+			logrus.Infof("plguin[%v]-action[%v] completed", pluginRequest.Name, pluginRequest.Action)
+			pluginResponse.ResultCode = "0"
 		}
-		callbackWorkflow(&workflowParam)
 	}()
 
-	logrus.Infof("plguin[%v]-action[%v] start...", workflowParam.PluginName, workflowParam.ApplicationAction)
+	logrus.Infof("plguin[%v]-action[%v] start...", pluginRequest.Name, pluginRequest.Action)
 
-	plugin, err := getPluginByName(workflowParam.PluginName)
+	plugin, err := getPluginByName(pluginRequest.Name)
 	if err != nil {
-		return
+		return &pluginResponse, err
 	}
 
-	action, err := plugin.GetActionByName(workflowParam.ApplicationAction)
+	action, err := plugin.GetActionByName(pluginRequest.Action)
 	if err != nil {
-		return
+		return &pluginResponse, err
 	}
 
-	logrus.Infof("get CMDB parameters with process instance id = %v", workflowParam.ProcessInstanceId)
-	actionParam, err := action.BuildParamFromCmdb(&workflowParam)
+	logrus.Infof("read parameters from http request = %v", pluginRequest.Parameters)
+	actionParam, err := action.ReadParam(pluginRequest.Parameters)
 	if err != nil {
-		return
+		return &pluginResponse, err
 	}
-	logrus.Infof("CMDB parameters results = %v", actionParam)
 
+	logrus.Infof("check parameters = %v", actionParam)
 	if err = action.CheckParam(actionParam); err != nil {
-		return
-	}
-	logrus.Info("CMDB parameters are passed validation")
-
-	logrus.Infof("action with parameters = %v", actionParam)
-	if err = action.Do(actionParam, &workflowParam); err != nil {
-		return
+		return &pluginResponse, err
 	}
 
-	return
-}
-
-func callbackWorkflow(workflowParam *WorkflowParam) {
-	requestBytes, err := json.Marshal(workflowParam)
+	logrus.Infof("action do with parameters = %v", actionParam)
+	outputs, err := action.Do(actionParam)
 	if err != nil {
-		logrus.Errorf("callbackWorkflow Marshal failed err=%v", err)
-		return
+		return &pluginResponse, err
 	}
 
-	url := "http://" + workflowParam.AckServer + workflowParam.AckPath
-	contentType := "application/json"
-	logrus.Debugf("callbackWorkflow request url = %s,requestData = %s", url, string(requestBytes))
+	pluginResponse.Results = outputs
 
-	response, err := http.Post(url, contentType, bytes.NewReader(requestBytes))
-	if err != nil {
-		logrus.Errorf("callbackWorkflow Post failed err=%v", err)
-		return
-	}
-
-	bytes, err := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		logrus.Errorf("callbackWorkflow response.StatusCode != 200,statusCode=%v", response.StatusCode)
-		return
-	}
-
-	logrus.Infof("callback workflow has been done, response is [%v]", string(bytes))
-	return
+	return &pluginResponse, nil
 }

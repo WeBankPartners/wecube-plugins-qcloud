@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"git.webank.io/wecube-plugins/cmdb"
 	vpcExtend "git.webank.io/wecube-plugins/extend/qcloud"
 	"github.com/sirupsen/logrus"
 )
@@ -28,6 +27,29 @@ func init() {
 type PeeringConnectionPlugin struct {
 }
 
+type PeeringConnectionInputs struct {
+	Inputs []PeeringConnectionInput `json:"inputs,omitempty"`
+}
+
+type PeeringConnectionInput struct {
+	ProviderParams     string `json:"provider_params,omitempty"`
+	Name               string `json:"name,omitempty"`
+	PeerProviderParams string `json:"peer_provider_params,omitempty"`
+	VpcId              string `json:"vpc_id,omitempty"`
+	PeerVpcId          string `json:"peer_vpc_id,omitempty"`
+	PeerUin            string `json:"peer_uin,omitempty"`
+	Bandwidth          string `json:"bandwidth,omitempty"`
+	Id                 string `json:"id,omitempty"`
+}
+
+type PeeringConnectionOutputs struct {
+	Outputs []PeeringConnectionOutput `json:"outputs,omitempty"`
+}
+
+type PeeringConnectionOutput struct {
+	Id string `json:"id,omitempty"`
+}
+
 func (plugin *PeeringConnectionPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := PeeringConnectionActions[actionName]
 	if !found {
@@ -40,47 +62,34 @@ func (plugin *PeeringConnectionPlugin) GetActionByName(actionName string) (Actio
 type PeeringConnectionCreateAction struct {
 }
 
-func (action *PeeringConnectionCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	peeringConnections, _, err := cmdb.GetPeeringConnectionInputsByProcessInstanceId(&integrateQueyrParam)
-
+func (action *PeeringConnectionCreateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs PeeringConnectionInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return peeringConnections, nil
+	return inputs, nil
 }
 
-func (action *PeeringConnectionCreateAction) CheckParam(param interface{}) error {
-	peeringConnections, ok := param.([]cmdb.PeeringConnectionInput)
+func (action *PeeringConnectionCreateAction) CheckParam(input interface{}) error {
+	peeringConnections, ok := input.(PeeringConnectionInputs)
 	if !ok {
-		return fmt.Errorf("peeringConnectionCreateAction:param type=%T not right", param)
+		return fmt.Errorf("peeringConnectionCreateAction:input type=%T not right", input)
 	}
 
-	for _, peeringConnection := range peeringConnections {
+	for _, peeringConnection := range peeringConnections.Inputs {
 		if peeringConnection.VpcId == "" {
-			return errors.New("peeringConnectionCreateAction param vpcId is empty")
+			return errors.New("peeringConnectionCreateAction input vpcId is empty")
 		}
 		if peeringConnection.Name == "" {
-			return errors.New("peeringConnectionCreateAction param name is empty")
+			return errors.New("peeringConnectionCreateAction input name is empty")
 		}
 	}
 
 	return nil
 }
 
-func (action *PeeringConnectionCreateAction) createPeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput, paramsMap map[string]string) (string, error) {
+func (action *PeeringConnectionCreateAction) createPeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection PeeringConnectionInput, paramsMap map[string]string) (string, error) {
 	createReq := vpcExtend.NewCreateVpcPeeringConnectionRequest()
 	createReq.VpcId = &peeringConnection.VpcId
 	createReq.PeerVpcId = &peeringConnection.PeerVpcId
@@ -93,7 +102,7 @@ func (action *PeeringConnectionCreateAction) createPeeringConnectionAtSameRegion
 	}
 	return *createResp.PeeringConnectionId, nil
 }
-func (action *PeeringConnectionCreateAction) createPeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput, paramsMap map[string]string) (string, error) {
+func (action *PeeringConnectionCreateAction) createPeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection PeeringConnectionInput, paramsMap map[string]string) (string, error) {
 	createReq := vpcExtend.NewCreateVpcPeeringConnectionExRequest()
 	createReq.VpcId = &peeringConnection.VpcId
 	createReq.PeerVpcId = &peeringConnection.PeerVpcId
@@ -135,9 +144,9 @@ func (action *PeeringConnectionCreateAction) createPeeringConnectionCrossRegion(
 	return "", nil
 }
 
-func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConnection cmdb.PeeringConnectionInput) (string, error) {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
-	peerParamsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.PeerProviderParams)
+func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConnection PeeringConnectionInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
+	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	if paramsMap["Region"] == peerParamsMap["Region"] {
@@ -147,72 +156,51 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 	}
 }
 
-func (action *PeeringConnectionCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	peeringConnections, _ := param.([]cmdb.PeeringConnectionInput)
-	for _, peeringConnection := range peeringConnections {
+func (action *PeeringConnectionCreateAction) Do(input interface{}) (interface{}, error) {
+	peeringConnections, _ := input.(PeeringConnectionInputs)
+	outputs := PeeringConnectionOutputs{}
+	for _, peeringConnection := range peeringConnections.Inputs {
 		peeringConnectionId, err := action.createPeeringConnection(peeringConnection)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		updateCiEntry := cmdb.PeeringConnectionOutput{
-			Id:    peeringConnectionId,
-			State: cmdb.CMDB_STATE_CREATED,
-		}
-
-		err = cmdb.UpdatePeeringConnectionByGuid(peeringConnection.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
-		if err != nil {
-			return fmt.Errorf("update PeeringConnection(guid = %v),PeeringConnectionId=%v meet error = %v", peeringConnection.Guid, peeringConnectionId, err)
-		}
-
-		logrus.Infof("peeringConnection with guid = %v and gatewayId = %v is created", peeringConnection.Guid, peeringConnectionId)
+		output := PeeringConnectionOutput{}
+		output.Id = peeringConnectionId
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all PeeringConnections = %v are created", peeringConnections)
-	return nil
+	return &outputs, nil
 }
 
 type PeeringConnectionTerminateAction struct {
 }
 
-func (action *PeeringConnectionTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	peeringConnections, _, err := cmdb.GetPeeringConnectionInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *PeeringConnectionTerminateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs PeeringConnectionInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return peeringConnections, nil
+	return inputs, nil
 }
 
-func (action *PeeringConnectionTerminateAction) CheckParam(param interface{}) error {
-	peeringConnections, ok := param.([]cmdb.PeeringConnectionInput)
+func (action *PeeringConnectionTerminateAction) CheckParam(input interface{}) error {
+	peeringConnections, ok := input.(PeeringConnectionInputs)
 	if !ok {
-		return fmt.Errorf("peeringConnectionTerminateAction:param type=%T not right", param)
+		return fmt.Errorf("peeringConnectionTerminateAction:input type=%T not right", input)
 	}
 
-	for _, peeringConnection := range peeringConnections {
+	for _, peeringConnection := range peeringConnections.Inputs {
 		if peeringConnection.Id == "" {
-			return errors.New("peeringConnectionTerminateAction param peeringConnection is empty")
+			return errors.New("peeringConnectionTerminateAction input peeringConnection is empty")
 		}
 	}
 
 	return nil
 }
 
-func (action *PeeringConnectionTerminateAction) deletePeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput) error {
+func (action *PeeringConnectionTerminateAction) deletePeeringConnectionAtSameRegion(client *vpcExtend.Client, peeringConnection PeeringConnectionInput) error {
 	request := vpcExtend.NewDeleteVpcPeeringConnectionRequest()
 	request.PeeringConnectionId = &peeringConnection.Id
 	response, err := client.DeletePeeringConnection(request)
@@ -224,7 +212,7 @@ func (action *PeeringConnectionTerminateAction) deletePeeringConnectionAtSameReg
 	return nil
 }
 
-func (action *PeeringConnectionTerminateAction) deletePeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection cmdb.PeeringConnectionInput) error {
+func (action *PeeringConnectionTerminateAction) deletePeeringConnectionCrossRegion(client *vpcExtend.Client, peeringConnection PeeringConnectionInput) error {
 	request := vpcExtend.NewDeleteVpcPeeringConnectionExRequest()
 	request.PeeringConnectionId = &peeringConnection.Id
 	response, err := client.DeletePeeringConnectionEx(request)
@@ -259,9 +247,9 @@ func (action *PeeringConnectionTerminateAction) deletePeeringConnectionCrossRegi
 	return nil
 }
 
-func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeringConnection cmdb.PeeringConnectionInput) error {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.ProviderParams)
-	peerParamsMap, _ := cmdb.GetMapFromProviderParams(peeringConnection.PeerProviderParams)
+func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeringConnection PeeringConnectionInput) error {
+	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
+	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	if paramsMap["Region"] == peerParamsMap["Region"] {
@@ -271,21 +259,15 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 	}
 }
 
-func (action *PeeringConnectionTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	peeringConnections, _ := param.([]cmdb.PeeringConnectionInput)
+func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface{}, error) {
+	peeringConnections, _ := input.([]PeeringConnectionInput)
 
 	for _, peeringConnection := range peeringConnections {
-		err := cmdb.DeletePeeringConnectionByGuid(peeringConnection.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
+		err := action.terminatePeeringConnection(peeringConnection)
 		if err != nil {
-			return fmt.Errorf("delete PeeringConnection(guid = %v) from CMDB meet error = %v", peeringConnection.Guid, err)
-		}
-
-		err = action.terminatePeeringConnection(peeringConnection)
-		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return "", nil
 }

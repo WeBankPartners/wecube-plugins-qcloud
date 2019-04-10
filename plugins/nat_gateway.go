@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"git.webank.io/wecube-plugins/cmdb"
 	"github.com/sirupsen/logrus"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
@@ -40,48 +39,58 @@ func (plugin *NatGatewayPlugin) GetActionByName(actionName string) (Action, erro
 type NatGatewayCreateAction struct {
 }
 
-func (action *NatGatewayCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
+type NatGatewayInputs struct {
+	Inputs []NatGatewayInput `json:"inputs,omitempty"`
+}
 
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
+type NatGatewayInput struct {
+	ProviderParams  string `json:"provider_params,omitempty"`
+	Name            string `json:"name,omitempty"`
+	VpcId           string `json:"vpc_id,omitempty"`
+	MaxConcurrent   int    `json:"max_concurrent,omitempty"`
+	BandWidth       int    `json:"bandwidth,omitempty"`
+	AssignedEipSet  string `json:"assigned_eip_set,omitempty"`
+	AutoAllocEipNum int    `json:"auto_alloc_eip_num,omitempty"`
+	Id              string `json:"id,omitempty"`
+}
 
-	natGateways, _, err := cmdb.GetNatGatewayInputsByProcessInstanceId(&integrateQueyrParam)
+type NatGatewayOutputs struct {
+	Outputs []NatGatewayOutput `json:"outputs,omitempty"`
+}
 
+type NatGatewayOutput struct {
+	Id string `json:"id,omitempty"`
+}
+
+func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs NatGatewayInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return natGateways, nil
+	return inputs, nil
 }
 
-func (action *NatGatewayCreateAction) CheckParam(param interface{}) error {
-	natGateways, ok := param.([]cmdb.NatGatewayInput)
+func (action *NatGatewayCreateAction) CheckParam(input interface{}) error {
+	natGateways, ok := input.(NatGatewayInputs)
 	if !ok {
-		return fmt.Errorf("natGatewayCreateAction:param type=%T not right", param)
+		return fmt.Errorf("natGatewayCreateAction:input type=%T not right", input)
 	}
 
-	for _, natGateway := range natGateways {
+	for _, natGateway := range natGateways.Inputs {
 		if natGateway.VpcId == "" {
-			return errors.New("natGatewayCreateAction param vpcId is empty")
+			return errors.New("natGatewayCreateAction input vpcId is empty")
 		}
 		if natGateway.Name == "" {
-			return errors.New("natGatewayCreateAction param name is empty")
+			return errors.New("natGatewayCreateAction input name is empty")
 		}
 	}
 
 	return nil
 }
 
-func (action *NatGatewayCreateAction) createNatGateway(natGateway cmdb.NatGatewayInput) (string, error) {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(natGateway.ProviderParams)
+func (action *NatGatewayCreateAction) createNatGateway(natGateway NatGatewayInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	createReq := vpc.NewCreateNatGatewayRequest()
@@ -103,73 +112,52 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway cmdb.NatGatewa
 	return *(createResp.NatGatewayId), nil
 }
 
-func (action *NatGatewayCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	natGateways, _ := param.([]cmdb.NatGatewayInput)
-	for _, natGateway := range natGateways {
+func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error) {
+	natGateways, _ := input.(NatGatewayInputs)
+	outputs := NatGatewayOutputs{}
+	for _, natGateway := range natGateways.Inputs {
 		natGatewayId, err := action.createNatGateway(natGateway)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		updateCiEntry := cmdb.NatGatewayOutput{
-			Id:    natGatewayId,
-			State: cmdb.CMDB_STATE_CREATED,
-		}
-
-		err = cmdb.UpdateNatGatewayByGuid(natGateway.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
-		if err != nil {
-			return fmt.Errorf("update natGateway(guid = %v),natGatewayId=%v meet error = %v", natGateway.Guid, natGatewayId, err)
-		}
-
-		logrus.Infof("natGateway with guid = %v and gatewayId = %v is created", natGateway.Guid, natGatewayId)
+		output := NatGatewayOutput{Id: natGatewayId}
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all natGateways = %v are created", natGateways)
-	return nil
+	return &outputs, nil
 }
 
 type NatGatewayTerminateAction struct {
 }
 
-func (action *NatGatewayTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	natGateways, _, err := cmdb.GetNatGatewayInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *NatGatewayTerminateAction) ReadParam(param interface{}) (interface{}, error) {
+	var input NatGatewayInputs
+	err := UnmarshalJson(param, &input)
 	if err != nil {
 		return nil, err
 	}
-
-	return natGateways, nil
+	return input, nil
 }
 
-func (action *NatGatewayTerminateAction) CheckParam(param interface{}) error {
-	natGateways, ok := param.([]cmdb.NatGatewayInput)
+func (action *NatGatewayTerminateAction) CheckParam(input interface{}) error {
+	natGateways, ok := input.(NatGatewayInputs)
 	if !ok {
-		return fmt.Errorf("natGatewayTerminateAction:param type=%T not right", param)
+		return fmt.Errorf("natGatewayTerminateAction:input type=%T not right", input)
 	}
 
-	for _, natGateway := range natGateways {
+	for _, natGateway := range natGateways.Inputs {
 		if natGateway.Id == "" {
-			return errors.New("natGatewayTerminateAction param natGateway is empty")
+			return errors.New("natGatewayTerminateAction input natGateway is empty")
 		}
 	}
 
 	return nil
 }
 
-func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway cmdb.NatGatewayInput) error {
-	paramsMap, _ := cmdb.GetMapFromProviderParams(natGateway.ProviderParams)
+func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway NatGatewayInput) error {
+	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	deleteReq := vpc.NewDeleteNatGatewayRequest()
@@ -208,21 +196,15 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway cmdb.Nat
 	return nil
 }
 
-func (action *NatGatewayTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	natGateways, _ := param.([]cmdb.NatGatewayInput)
+func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, error) {
+	natGateways, _ := input.(NatGatewayInputs)
 
-	for _, natGateway := range natGateways {
-		err := cmdb.DeleteNatGatewayByGuid(natGateway.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
+	for _, natGateway := range natGateways.Inputs {
+		err := action.terminateNatGateway(natGateway)
 		if err != nil {
-			return fmt.Errorf("delete natGateway(guid = %v) from CMDB meet error = %v", natGateway.Guid, err)
-		}
-
-		err = action.terminateNatGateway(natGateway)
-		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return "", nil
 }
