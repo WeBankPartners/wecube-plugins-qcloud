@@ -40,6 +40,8 @@ type MysqlVmInput struct {
 	Name           string `json:"name,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Count          int64  `json:"count,omitempty"`
+	ChargeType     string `json:"charge_type,omitempty"`
+	ChargePeriod   int64  `json:"charge_period,omitempty"`
 }
 
 type MysqlVmOutputs struct {
@@ -84,10 +86,32 @@ func (action *MysqlVmCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (string, error) {
-	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
-	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, mysqlVmInput MysqlVmInput) (string, error) {
+	request := cdb.NewCreateDBInstanceRequest()
+	request.Memory = &mysqlVmInput.Memory
+	request.Volume = &mysqlVmInput.Volume
+	request.EngineVersion = &mysqlVmInput.EngineVersion
+	request.UniqVpcId = &mysqlVmInput.VpcId
+	request.UniqSubnetId = &mysqlVmInput.SubnetId
+	request.InstanceName = &mysqlVmInput.Name
+	request.Period = &mysqlVmInput.ChargePeriod
+	request.GoodsNum = &mysqlVmInput.Count
 
+	response, err := client.CreateDBInstance(request)
+	if err != nil {
+		logrus.Errorf("failed to create mysqlVm, error=%s", err)
+		return "", err
+	}
+
+	if len(response.Response.InstanceIds) == 0 {
+		logrus.Errorf("no mysql vm instance id is created", err)
+		return "", err
+	}
+
+	return *response.Response.InstanceIds[0], nil
+}
+
+func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Client, mysqlVmInput MysqlVmInput) (string, error) {
 	request := cdb.NewCreateDBInstanceHourRequest()
 	request.Memory = &mysqlVmInput.Memory
 	request.Volume = &mysqlVmInput.Volume
@@ -109,6 +133,17 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (str
 	}
 
 	return *response.Response.InstanceIds[0], nil
+}
+
+func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
+	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	if mysqlVmInput.ChargeType == CHARGE_TYPE_PREPAID {
+		return action.createMysqlVmWithPrepaid(client, mysqlVmInput)
+	} else {
+		return action.createMysqlVmWithPostByHour(client, mysqlVmInput)
+	}
 }
 
 func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {

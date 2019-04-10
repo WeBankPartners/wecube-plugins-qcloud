@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+const (
+	CHARGE_TYPE_PREPAID = "PREPAID"
+)
+
 func GetMapFromProviderParams(providerParams string) (map[string]string, error) {
 	rtnMap := make(map[string]string)
 	params := strings.Split(providerParams, ";")
