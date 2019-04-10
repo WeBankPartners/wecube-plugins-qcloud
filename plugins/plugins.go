@@ -2,8 +2,6 @@ package plugins
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -19,9 +17,9 @@ type Plugin interface {
 }
 
 type Action interface {
-	ReadParam(*http.Request) (interface{}, error)
+	ReadParam(param interface{}) (interface{}, error)
 	CheckParam(param interface{}) error
-	Do(input interface{}) (interface{}, error)
+	Do(param interface{}) (interface{}, error)
 }
 
 func registerPlugin(name string, plugin Plugin) {
@@ -61,6 +59,7 @@ type PluginRequest struct {
 	ProviderName string
 	Name         string
 	Action       string
+	Parameters   interface{}
 }
 
 type PluginResponse struct {
@@ -69,9 +68,8 @@ type PluginResponse struct {
 	Results    interface{} `json:"results"`
 }
 
-func CallPluginAction(r *http.Request) (*PluginResponse, error) {
+func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	var pluginResponse = PluginResponse{}
-	pluginRequest := parsePluginRequest(r)
 	var err error
 	defer func() {
 		if err != nil {
@@ -96,8 +94,8 @@ func CallPluginAction(r *http.Request) (*PluginResponse, error) {
 		return &pluginResponse, err
 	}
 
-	logrus.Infof("read parameters from http request = %v", r)
-	actionParam, err := action.ReadParam(r)
+	logrus.Infof("read parameters from http request = %v", pluginRequest.Parameters)
+	actionParam, err := action.ReadParam(pluginRequest.Parameters)
 	if err != nil {
 		return &pluginResponse, err
 	}
@@ -116,18 +114,4 @@ func CallPluginAction(r *http.Request) (*PluginResponse, error) {
 	pluginResponse.Results = outputs
 
 	return &pluginResponse, nil
-}
-
-func parsePluginRequest(r *http.Request) *PluginRequest {
-	var pluginInput = PluginRequest{}
-	pathStrings := strings.Split(r.URL.Path, "/")
-	logrus.Infof("path strings = %v", pathStrings)
-	if len(pathStrings) >= 5 {
-		pluginInput.Version = pathStrings[1]
-		pluginInput.ProviderName = pathStrings[2]
-		pluginInput.Name = pathStrings[3]
-		pluginInput.Action = pathStrings[4]
-	}
-	logrus.Infof("parsed request = %v", pluginInput)
-	return &pluginInput
 }

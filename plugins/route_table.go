@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -70,9 +69,9 @@ func (plugin *RouteTablePlugin) GetActionByName(actionName string) (Action, erro
 type RouteTableCreateAction struct {
 }
 
-func (action *RouteTableCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *RouteTableCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs RouteTableInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -157,9 +156,9 @@ func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error)
 type RouteTableTerminateAction struct {
 }
 
-func (action *RouteTableTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *RouteTableTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs RouteTableInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

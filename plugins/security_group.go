@@ -3,7 +3,6 @@ package plugins
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -76,9 +75,9 @@ type SecurityGroupOutput struct {
 
 type SecurityGroupCreation struct{}
 
-func (action *SecurityGroupCreation) ReadParam(r *http.Request) (interface{}, error) {
+func (action *SecurityGroupCreation) ReadParam(param interface{}) (interface{}, error) {
 	var inputs SecurityGroupInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -298,9 +297,9 @@ func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam
 
 type SecurityGroupTermination struct{}
 
-func (action *SecurityGroupTermination) ReadParam(r *http.Request) (interface{}, error) {
+func (action *SecurityGroupTermination) ReadParam(param interface{}) (interface{}, error) {
 	var inputs SecurityGroupInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

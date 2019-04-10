@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -65,9 +64,9 @@ func (plugin *SubnetPlugin) GetActionByName(actionName string) (Action, error) {
 type SubnetCreateAction struct {
 }
 
-func (action *SubnetCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *SubnetCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs SubnetInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -135,9 +134,9 @@ func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
 type SubnetTerminateAction struct {
 }
 
-func (action *SubnetTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *SubnetTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs SubnetInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

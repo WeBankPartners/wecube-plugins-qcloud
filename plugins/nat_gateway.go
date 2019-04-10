@@ -3,7 +3,6 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -63,9 +62,9 @@ type NatGatewayOutput struct {
 	Id string `json:"id,omitempty"`
 }
 
-func (action *NatGatewayCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs NatGatewayInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -133,9 +132,9 @@ func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error)
 type NatGatewayTerminateAction struct {
 }
 
-func (action *NatGatewayTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *NatGatewayTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var input NatGatewayInputs
-	err := UnmarshalJson(r, &input)
+	err := UnmarshalJson(param, &input)
 	if err != nil {
 		return nil, err
 	}

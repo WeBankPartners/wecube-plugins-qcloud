@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -63,9 +62,9 @@ func (plugin *VpcPlugin) GetActionByName(actionName string) (Action, error) {
 type VpcCreateAction struct {
 }
 
-func (action *VpcCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *VpcCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs VpcInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -127,9 +126,9 @@ func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
 type VpcTerminateAction struct {
 }
 
-func (action *VpcTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *VpcTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs VpcInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

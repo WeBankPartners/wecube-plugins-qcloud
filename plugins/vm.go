@@ -5,7 +5,6 @@ import (
 
 	"encoding/json"
 	"errors"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -227,9 +226,9 @@ func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) err
 
 type VMCreateAction struct{}
 
-func (action *VMCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *VMCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs VmInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -346,9 +345,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 
 type VMTerminateAction struct{}
 
-func (action *VMTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *VMTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs VmInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

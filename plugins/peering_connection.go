@@ -3,7 +3,6 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	vpcExtend "git.webank.io/wecube-plugins/extend/qcloud"
@@ -63,9 +62,9 @@ func (plugin *PeeringConnectionPlugin) GetActionByName(actionName string) (Actio
 type PeeringConnectionCreateAction struct {
 }
 
-func (action *PeeringConnectionCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *PeeringConnectionCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs PeeringConnectionInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -177,9 +176,9 @@ func (action *PeeringConnectionCreateAction) Do(input interface{}) (interface{},
 type PeeringConnectionTerminateAction struct {
 }
 
-func (action *PeeringConnectionTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *PeeringConnectionTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs PeeringConnectionInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

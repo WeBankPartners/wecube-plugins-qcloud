@@ -2,7 +2,6 @@ package plugins
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -71,9 +70,9 @@ func (plugin *StoragePlugin) GetActionByName(actionName string) (Action, error) 
 type StorageCreateAction struct {
 }
 
-func (action *StorageCreateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *StorageCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs StorageInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -175,9 +174,9 @@ func (action *StorageCreateAction) createStorage(storage StorageInput) (string, 
 type StorageTerminateAction struct {
 }
 
-func (action *StorageTerminateAction) ReadParam(r *http.Request) (interface{}, error) {
+func (action *StorageTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs StorageInputs
-	err := UnmarshalJson(r, &inputs)
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}

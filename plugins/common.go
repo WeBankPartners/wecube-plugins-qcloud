@@ -3,8 +3,8 @@ package plugins
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"net/http"
 	"strings"
 )
 
@@ -28,14 +28,19 @@ func GetMapFromProviderParams(providerParams string) (map[string]string, error) 
 	return rtnMap, nil
 }
 
-func UnmarshalJson(r *http.Request, object interface{}) error {
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("parse http request (%v) meet error (%v)", r, err)
+func UnmarshalJson(source interface{}, target interface{}) error {
+	reader, ok := source.(io.Reader)
+	if !ok {
+		return fmt.Errorf("the source to be unmarshaled is not a io.reader type", source)
 	}
 
-	if err = json.Unmarshal(bodyBytes, object); err != nil {
-		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", r, err)
+	bodyBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("parse http request (%v) meet error (%v)", reader, err)
+	}
+
+	if err = json.Unmarshal(bodyBytes, target); err != nil {
+		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
 	}
 	return nil
 }
