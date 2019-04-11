@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM alpine:latest
 LABEL maintainer = "Webank CTB Team"
 
 ENV LOG_PATH=/home/app/logs

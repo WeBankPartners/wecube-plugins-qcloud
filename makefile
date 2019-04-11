@@ -14,7 +14,7 @@ archive:
 	mkdir target
 	tar zxvf source.tar.gz -C $(APP_HOME)
 	rm -rf source.tar.gz
-	cd $(APP_HOME) && go build
+	cd $(APP_HOME) && CGO_ENABLED=0 GOOS=linux go build
 	cp -R $(APP_HOME)/conf target
 	cp start.sh stop.sh makefile Dockerfile target
 	cd target && chmod 755 *.sh
