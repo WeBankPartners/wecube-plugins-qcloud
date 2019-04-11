@@ -1,13 +1,14 @@
 FROM alpine:latest
 LABEL maintainer = "Webank CTB Team"
 
+RUN mkdir -p /home/app
 ENV LOG_PATH=/home/app/logs
 
-ADD wecube-plugins /home
-ADD conf /home
-RUN cd /home && chmod +x wecube-plugins
+COPY wecube-plugins /home
+ADD conf /home/app/conf
+RUN cd /home/app && chmod +x wecube-plugins
 
-WORKDIR /home
+WORKDIR /home/app
 
-ENTRYPOINT ["wecube-plugins"]
+ENTRYPOINT ["./wecube-plugins"]
 
