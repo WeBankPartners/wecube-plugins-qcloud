@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"reflect"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func GetMapFromProviderParams(providerParams string) (map[string]string, error) 
 func UnmarshalJson(source interface{}, target interface{}) error {
 	reader, ok := source.(io.Reader)
 	if !ok {
-		return fmt.Errorf("the source to be unmarshaled is not a io.reader type", source)
+		return fmt.Errorf("the source to be unmarshaled is not a io.reader type")
 	}
 
 	bodyBytes, err := ioutil.ReadAll(reader)
@@ -47,4 +48,16 @@ func UnmarshalJson(source interface{}, target interface{}) error {
 		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
 	}
 	return nil
+}
+
+func ExtractJsonFromStruct(s interface{}) map[string]string {
+	fields := make(map[string]string)
+	t := reflect.TypeOf(s)
+	if t.Kind() == reflect.Struct {
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i).Tag.Get("json")
+			fields[strings.Split(field, ",")[0]] = t.Field(i).Type.String()
+		}
+	}
+	return fields
 }

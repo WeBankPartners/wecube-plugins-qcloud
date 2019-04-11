@@ -64,7 +64,7 @@ func write(w http.ResponseWriter, output *plugins.PluginResponse) {
 	w.Header().Set("content-type", "application/json")
 	b, err := json.Marshal(output)
 	if err != nil {
-		logrus.Error("write http response (%v) meet error (%v)", output, err)
+		logrus.Errorf("write http response (%v) meet error (%v)", output, err)
 	}
 	w.Write(b)
 }

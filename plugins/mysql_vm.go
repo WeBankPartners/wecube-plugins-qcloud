@@ -104,7 +104,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	}
 
 	if len(response.Response.InstanceIds) == 0 {
-		logrus.Errorf("no mysql vm instance id is created", err)
+		logrus.Error("no mysql vm instance id is created")
 		return "", err
 	}
 
@@ -128,7 +128,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	}
 
 	if len(response.Response.InstanceIds) == 0 {
-		logrus.Errorf("no mysql vm instance id is created", err)
+		logrus.Error("no mysql vm instance id is created")
 		return "", err
 	}
 
