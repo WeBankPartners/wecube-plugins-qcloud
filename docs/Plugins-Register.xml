@@ -306,5 +306,18 @@
 	 </parameters>
   </output>
   </action>
+  <action name="restart">
+  <input>
+	<parameters>
+	  <parameter datatype="string">provider_params</parameter>
+	  <parameter datatype="string">id</parameter>
+	</parameters>
+  </input>
+  <output>
+	<parameters>
+	  <parameter datatype="string">result</parameter>
+	 </parameters>
+  </output>
+  </action>
 </plugin>
 </plugins>

@@ -15,6 +15,7 @@ var MysqlVmActions = make(map[string]Action)
 func init() {
 	MysqlVmActions["create"] = new(MysqlVmCreateAction)
 	MysqlVmActions["terminate"] = new(MysqlVmTerminateAction)
+	MysqlVmActions["restart"] = new(MysqlVmRestartAction)
 }
 
 func CreateMysqlVmClient(region, secretId, secretKey string) (client *cdb.Client, err error) {
@@ -201,7 +202,6 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput MysqlVmInput
 		logrus.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
 		return err
 	}
-
 	return nil
 }
 
@@ -209,6 +209,59 @@ func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error)
 	mysqlVms, _ := input.(MysqlVmInputs)
 	for _, mysqlVm := range mysqlVms.Inputs {
 		err := action.terminateMysqlVm(mysqlVm)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return "", nil
+}
+
+type MysqlVmRestartAction struct {
+}
+
+func (action *MysqlVmRestartAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs MysqlVmInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *MysqlVmRestartAction) CheckParam(input interface{}) error {
+	mysqlVms, ok := input.(MysqlVmInputs)
+	if !ok {
+		return fmt.Errorf("mysqlVmRestartAtion:input type=%T not right", input)
+	}
+
+	for _, mysqlVm := range mysqlVms.Inputs {
+		if mysqlVm.Id == "" {
+			return errors.New("mysqlVmRestartAtion input mysqlVmId is empty")
+		}
+	}
+	return nil
+}
+
+func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) error {
+	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
+	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := cdb.NewRestartDBInstancesRequest()
+	request.InstanceIds = []*string{&mysqlVmInput.Id}
+
+	_, err = client.RestartDBInstances(request)
+	if err != nil {
+		logrus.Errorf("failed to restart MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
+		return err
+	}
+	return nil
+}
+
+func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
+	mysqlVms, _ := input.(MysqlVmInputs)
+	for _, mysqlVm := range mysqlVms.Inputs {
+		err := action.restartMysqlVm(mysqlVm)
 		if err != nil {
 			return nil, err
 		}
