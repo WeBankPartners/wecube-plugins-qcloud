@@ -9,5 +9,5 @@ RUN cd /home && chmod +x wecube-plugins
 
 WORKDIR /home
 
-ENTRYPOINT ["./wecube-plugins"]
+ENTRYPOINT ["wecube-plugins"]
 
