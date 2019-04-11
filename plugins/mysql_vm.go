@@ -242,7 +242,9 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput MysqlVmInput
 		return err
 	}
 
-	return waitForAsyncTaskToFinish(client, response.Response.AsyncRequestId)
+	logrus.Infof("terminateMysqlVm AsyncRequestId = %v", *response.Response.AsyncRequestId)
+
+	return waitForAsyncTaskToFinish(client, *response.Response.AsyncRequestId)
 }
 
 func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error) {
@@ -296,12 +298,14 @@ func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) er
 		return err
 	}
 
-	return waitForAsyncTaskToFinish(client, response.Response.AsyncRequestId)
+	logrus.Infof("restartMysqlVm AsyncRequestId = %v", *response.Response.AsyncRequestId)
+
+	return waitForAsyncTaskToFinish(client, *response.Response.AsyncRequestId)
 }
 
-func waitForAsyncTaskToFinish(client *cdb.Client, requestId *string) error {
+func waitForAsyncTaskToFinish(client *cdb.Client, requestId string) error {
 	taskReq := cdb.NewDescribeAsyncRequestInfoRequest()
-	taskReq.AsyncRequestId = requestId
+	taskReq.AsyncRequestId = &requestId
 	count := 0
 	for {
 		taskResp, err := client.DescribeAsyncRequestInfo(taskReq)
