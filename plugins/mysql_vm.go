@@ -236,15 +236,35 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput MysqlVmInput
 	request := cdb.NewIsolateDBInstanceRequest()
 	request.InstanceId = &mysqlVmInput.Id
 
-	response, err := client.IsolateDBInstance(request)
+	_, err = client.IsolateDBInstance(request)
 	if err != nil {
 		logrus.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
 		return err
 	}
 
-	logrus.Infof("terminateMysqlVm AsyncRequestId = %v", *response.Response.AsyncRequestId)
+	return action.waitForMysqlVmTerminationToFinish(client, mysqlVmInput.Id)
+}
 
-	return waitForAsyncTaskToFinish(client, *response.Response.AsyncRequestId)
+func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *cdb.Client, instanceId string) error {
+	request := cdb.NewDescribeDBInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &instanceId)
+	count := 0
+	for {
+		response, err := client.DescribeDBInstances(request)
+		if err != nil {
+			return err
+		}
+
+		if len(response.Response.Items) == 0 {
+			return nil
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return errors.New("waitForMysqlVmTerminationToFinish timeout")
+		}
+	}
 }
 
 func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error) {
