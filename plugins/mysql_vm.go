@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
@@ -250,10 +251,33 @@ func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) er
 	request := cdb.NewRestartDBInstancesRequest()
 	request.InstanceIds = []*string{&mysqlVmInput.Id}
 
-	_, err = client.RestartDBInstances(request)
+	response, err := client.RestartDBInstances(request)
 	if err != nil {
 		logrus.Errorf("failed to restart MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
 		return err
+	}
+
+	taskReq := cdb.NewDescribeAsyncRequestInfoRequest()
+	taskReq.AsyncRequestId = response.Response.AsyncRequestId
+	count := 0
+	for {
+		taskResp, err := client.DescribeAsyncRequestInfo(taskReq)
+		if err != nil {
+			return err
+		}
+
+		if *taskResp.Response.Status == "SUCCESS" {
+			break
+		}
+		if *taskResp.Response.Status == "FAILED" {
+			return errors.New("terminateNatGateway execute failed ,need retry")
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return errors.New("terminateNatGateway query result timeout")
+		}
 	}
 	return nil
 }
