@@ -51,7 +51,8 @@ type MysqlVmOutputs struct {
 }
 
 type MysqlVmOutput struct {
-	Id string `json:"id,omitempty"`
+	Id        string `json:"id,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
 }
 
 type MysqlVmPlugin struct {
@@ -137,14 +138,51 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	return *response.Response.InstanceIds[0], nil
 }
 
-func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (string, error) {
+func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput MysqlVmInput) (string, string, error) {
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	var instanceId, privateIp string
+	var err error
 	if mysqlVmInput.ChargeType == CHARGE_TYPE_PREPAID {
-		return action.createMysqlVmWithPrepaid(client, mysqlVmInput)
+		instanceId, err = action.createMysqlVmWithPrepaid(client, mysqlVmInput)
 	} else {
-		return action.createMysqlVmWithPostByHour(client, mysqlVmInput)
+		instanceId, err = action.createMysqlVmWithPostByHour(client, mysqlVmInput)
+	}
+
+	if instanceId != "" {
+		privateIp, err = action.waitForMysqlVmCreationToFinish(client, instanceId)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	return instanceId, privateIp, nil
+}
+
+func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Client, instanceId string) (string, error) {
+	request := cdb.NewDescribeDBInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &instanceId)
+	count := 0
+	for {
+		response, err := client.DescribeDBInstances(request)
+		if err != nil {
+			return "", err
+		}
+
+		if len(response.Response.Items) == 0 {
+			return "", fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
+		}
+
+		if *response.Response.Items[0].Status == 1 {
+			return *response.Response.Items[0].Vip, nil
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return "", errors.New("waitForMysqlVmCreationToFinish timeout")
+		}
 	}
 }
 
@@ -152,12 +190,12 @@ func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
-		mysqlVmId, err := action.createMysqlVm(mysqlVm)
+		mysqlVmId, privateIp, err := action.createMysqlVm(mysqlVm)
 		if err != nil {
 			return nil, err
 		}
 
-		mysqlVmOutput := MysqlVmOutput{Id: mysqlVmId}
+		mysqlVmOutput := MysqlVmOutput{Id: mysqlVmId, PrivateIp: privateIp}
 		outputs.Outputs = append(outputs.Outputs, mysqlVmOutput)
 	}
 
@@ -198,12 +236,13 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput MysqlVmInput
 	request := cdb.NewIsolateDBInstanceRequest()
 	request.InstanceId = &mysqlVmInput.Id
 
-	_, err = client.IsolateDBInstance(request)
+	response, err := client.IsolateDBInstance(request)
 	if err != nil {
 		logrus.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
 		return err
 	}
-	return nil
+
+	return waitForAsyncTaskToFinish(client, response.Response.AsyncRequestId)
 }
 
 func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error) {
@@ -257,8 +296,12 @@ func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) er
 		return err
 	}
 
+	return waitForAsyncTaskToFinish(client, response.Response.AsyncRequestId)
+}
+
+func waitForAsyncTaskToFinish(client *cdb.Client, requestId *string) error {
 	taskReq := cdb.NewDescribeAsyncRequestInfoRequest()
-	taskReq.AsyncRequestId = response.Response.AsyncRequestId
+	taskReq.AsyncRequestId = requestId
 	count := 0
 	for {
 		taskResp, err := client.DescribeAsyncRequestInfo(taskReq)
@@ -267,19 +310,18 @@ func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) er
 		}
 
 		if *taskResp.Response.Status == "SUCCESS" {
-			break
+			return nil
 		}
 		if *taskResp.Response.Status == "FAILED" {
-			return errors.New("terminateNatGateway execute failed ,need retry")
+			return fmt.Errorf("waitForAsyncTaskToFinish failed, request id = %v", requestId)
 		}
 
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			return errors.New("terminateNatGateway query result timeout")
+			return fmt.Errorf("waitForAsyncTaskToFinish timeout, request id = %v", requestId)
 		}
 	}
-	return nil
 }
 
 func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
