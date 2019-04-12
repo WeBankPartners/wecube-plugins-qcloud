@@ -1,11 +1,8 @@
 package plugins
 
 import (
-	"fmt"
-
-	"git.webank.io/wecube-plugins/cmdb"
-
 	"encoding/json"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -47,49 +44,59 @@ func createVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 	return
 }
 
+type SecurityGroupInputs struct {
+	Inputs []SecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type SecurityGroupInput struct {
+	Guid              string `json:"guid,omitempty"`
+	ProviderParams    string `json:"provider_params,omitempty"`
+	Name              string `json:"name,omitempty"`
+	Id                string `json:"id,omitempty"`
+	Description       string `json:"description,omitempty"`
+	State             string `json:"state,omitempty"`
+	ProcessInstanceId string `json:"process_instance_id,omitempty"`
+	RulePriority      int64  `json:"rule_priority,omitempty"`
+	RuleType          string `json:"rule_type,omitempty"`
+	RuleCidrIp        string `json:"rule_cidr_ip,omitempty"`
+	RuleIpProtocol    string `json:"rule_ip_protocol,omitempty"`
+	RulePortRange     string `json:"rule_port_range,omitempty"`
+	RulePolicy        string `json:"rule_policy,omitempty"`
+	RuleDescription   string `json:"rule_description,omitempty"`
+}
+
+type SecurityGroupOutputs struct {
+	Outputs []SecurityGroupOutput `json:"outputs,omitempty"`
+}
+
+type SecurityGroupOutput struct {
+	SecurityGroupId string `json:"id,omitempty"`
+}
+
 type SecurityGroupCreation struct{}
 
-func (action *SecurityGroupCreation) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	securityGroups, _, err := cmdb.GetSecurityGroupInputsByProcessInstanceId(&integrateQueyrParam)
-
+func (action *SecurityGroupCreation) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SecurityGroupInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return securityGroups, nil
+	return inputs, nil
 }
 
-func (action *SecurityGroupCreation) CheckParam(param interface{}) error {
-	logrus.Debugf("param=%#v", param)
+func (action *SecurityGroupCreation) CheckParam(input interface{}) error {
+	logrus.Debugf("param=%#v", input)
 	var err error
 	defer func() {
 		if err != nil {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.([]cmdb.SecurityGroupInput)
+
+	_, ok := input.(SecurityGroupInputs)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
-	}
-	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range actionParams {
-		if actionParam.State != cmdb.CMDB_STATE_REGISTERED {
-			err = fmt.Errorf("Invalid SecurityGroup state")
-			return err
-		}
 	}
 
 	return nil
@@ -130,26 +137,26 @@ type SecurityGroupParam struct {
 	SecurityGroupPolicySet SecurityGroupPolicySet `json:"SecurityGroupPolicySet"`
 }
 
-func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *WorkflowParam) error {
+func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) {
 	var err error
 	defer func() {
 		if err != nil {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.([]cmdb.SecurityGroupInput)
-	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
+	securityGroups, ok := input.(SecurityGroupInputs)
+	outputs := SecurityGroupOutputs{}
 	if !ok {
 		err = INVALID_PARAMETERS
-		return err
+		return nil, err
 	}
 
-	SecurityGroups, err := groupingPolicysBySecurityGroup(actionParams)
+	SecurityGroups, err := groupingPolicysBySecurityGroup(securityGroups.Inputs)
 
 	for _, securityGroup := range SecurityGroups {
 		logrus.Debugf("securityGroup:%v", securityGroup)
 
-		ProviderParamsMap, err := cmdb.GetMapFromProviderParams(securityGroup.ProviderParams)
+		ProviderParamsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 
 		createSecurityGroupRequest := CreateSecurityGroupRequest{
 			GroupName:        securityGroup.GroupName,
@@ -158,7 +165,7 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 
 		client, err := createVpcClient(ProviderParamsMap["Region"], ProviderParamsMap["SecretID"], ProviderParamsMap["SecretKey"])
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		createSecurityGroup := vpc.NewCreateSecurityGroupRequest()
@@ -168,7 +175,7 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 
 		createSecurityGroupresp, err := client.CreateSecurityGroup(createSecurityGroup)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
@@ -189,7 +196,7 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 
 			createIngressPoliciesResp, err := client.CreateSecurityGroupPolicies(createIngressPolicies)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			logrus.Infof("Create SecurityGroup Ingress Policy's request has been submitted, RequestID is [%v]", *createIngressPoliciesResp.Response.RequestId)
@@ -210,30 +217,21 @@ func (action *SecurityGroupCreation) Do(param interface{}, workflowParam *Workfl
 
 			createEgressPoliciesResp, err := client.CreateSecurityGroupPolicies(createEgressPolicies)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			logrus.Infof("Create SecurityGroup Egress Policy's request has been submitted, RequestID is [%v]", *createEgressPoliciesResp.Response.RequestId)
 		}
 
-		securityGroupOutput := cmdb.SecurityGroupOutput{
-			State:           cmdb.CMDB_STATE_CREATED,
-			SecurityGroupId: securityGroup.SecurityGroupId,
-		}
-
-		err = cmdb.UpdateCiEntryByGuid(cmdb.SECURITY_GROUP_CI_NAME, securityGroup.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, securityGroupOutput)
-		if err != nil {
-			return err
-		}
-
-		logrus.Infof("Created SecurityGroup [%v] has been updated to CMDB", securityGroup.SecurityGroupId)
+		output := SecurityGroupOutput{}
+		output.SecurityGroupId = securityGroup.SecurityGroupId
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return nil
+	return &outputs, nil
 }
 
-func groupingPolicysBySecurityGroup(actionParams []cmdb.SecurityGroupInput) (securityGroups []SecurityGroupParam, err error) {
+func groupingPolicysBySecurityGroup(actionParams []SecurityGroupInput) (securityGroups []SecurityGroupParam, err error) {
 	for i := 0; i < len(actionParams); i++ {
 		policy := SecurityGroupPolicy{
 			Protocol:          actionParams[i].RuleIpProtocol,
@@ -267,7 +265,7 @@ func groupingPolicysBySecurityGroup(actionParams []cmdb.SecurityGroupInput) (sec
 	return securityGroups, nil
 }
 
-func buildNewSecurityGroup(actionParam cmdb.SecurityGroupInput, policy SecurityGroupPolicy) (SecurityGroupParam, error) {
+func buildNewSecurityGroup(actionParam SecurityGroupInput, policy SecurityGroupPolicy) (SecurityGroupParam, error) {
 	SecurityGroup := SecurityGroupParam{
 		Guid:             actionParam.Guid,
 		ProviderParams:   actionParam.ProviderParams,
@@ -288,7 +286,7 @@ func buildNewSecurityGroup(actionParam cmdb.SecurityGroupInput, policy SecurityG
 	return SecurityGroup, nil
 }
 
-func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam cmdb.SecurityGroupInput) int {
+func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam SecurityGroupInput) int {
 	for i := 0; i < len(SecurityGroups); i++ {
 		if SecurityGroups[i].GroupName == actionParam.Name {
 			return i
@@ -299,78 +297,51 @@ func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, actionParam
 
 type SecurityGroupTermination struct{}
 
-func (action *SecurityGroupTermination) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	securityGroups, _, err := cmdb.GetSecurityGroupInputsByProcessInstanceId(&integrateQueyrParam)
-
+func (action *SecurityGroupTermination) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SecurityGroupInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	return securityGroups, nil
+	return inputs, nil
 }
 
-func (action *SecurityGroupTermination) CheckParam(param interface{}) error {
-	logrus.Debugf("param=%#v", param)
+func (action *SecurityGroupTermination) CheckParam(input interface{}) error {
 	var err error
 	defer func() {
 		if err != nil {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.([]cmdb.SecurityGroupInput)
+
+	_, ok := input.(SecurityGroupInputs)
 	if !ok {
 		err = INVALID_PARAMETERS
 		return err
-	}
-	logrus.Debugf("actionParams=%v", actionParams)
-	for _, actionParam := range actionParams {
-		if actionParam.State != cmdb.CMDB_STATE_CREATED {
-			err = fmt.Errorf("Invalid SecurityGroup state")
-			return err
-		}
-		if actionParam.Id == "" {
-			err = fmt.Errorf("Invalid SecurityGroupId")
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *WorkflowParam) error {
+func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, error) {
 	var err error
 	defer func() {
 		if err != nil {
 			logrus.Error(err)
 		}
 	}()
-	actionParams, ok := param.([]cmdb.SecurityGroupInput)
-	logrus.Debugf("actionParams=%v,ok=%v", actionParams, ok)
+	securityGroups, ok := input.(SecurityGroupInputs)
 	if !ok {
 		err = INVALID_PARAMETERS
-		return err
+		return nil, err
 	}
 
 	var deletedSecurityGroups []string
 
-	for _, actionParam := range actionParams {
-		logrus.Debugf("actionParam:%v", actionParam)
-
+	for _, securityGroup := range securityGroups.Inputs {
 		continueFlag := false
 		for _, deletedSecurityGroupId := range deletedSecurityGroups {
-			if deletedSecurityGroupId == actionParam.Id {
+			if deletedSecurityGroupId == securityGroup.Id {
 				continueFlag = true
 			}
 		}
@@ -378,22 +349,15 @@ func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *Wor
 			continue
 		}
 
-		err = cmdb.DeleteCiEntryByGuid(actionParam.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, cmdb.SECURITY_GROUP_CI_NAME, true)
-		if err != nil {
-			return err
-		}
-		logrus.Infof("Terminated SecurityGroup [%v] has been deleted from CMDB", actionParam.Guid)
-
-		ProviderParamsMap, err := cmdb.GetMapFromProviderParams(actionParam.ProviderParams)
+		ProviderParamsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 
 		client, err := createVpcClient(ProviderParamsMap["Region"], ProviderParamsMap["SecretID"], ProviderParamsMap["SecretKey"])
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		deleteSecurityGroupRequestData := vpc.DeleteSecurityGroupRequest{
-			SecurityGroupId: &actionParam.Id,
+			SecurityGroupId: &securityGroup.Id,
 		}
 
 		deleteSecurityGroupRequest := vpc.NewDeleteSecurityGroupRequest()
@@ -402,12 +366,12 @@ func (action *SecurityGroupTermination) Do(param interface{}, workflowParam *Wor
 
 		resp, err := client.DeleteSecurityGroup(deleteSecurityGroupRequest)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", actionParam.Id, *resp.Response.RequestId)
-		logrus.Infof("Terminated SecurityGroup[%v] has been done", actionParam.Id)
-		deletedSecurityGroups = append(deletedSecurityGroups, actionParam.Id)
+		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", securityGroup.Id, *resp.Response.RequestId)
+		logrus.Infof("Terminated SecurityGroup[%v] has been done", securityGroup.Id)
+		deletedSecurityGroups = append(deletedSecurityGroups, securityGroup.Id)
 	}
 
-	return nil
+	return "", nil
 }

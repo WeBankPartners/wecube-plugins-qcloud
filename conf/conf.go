@@ -44,16 +44,6 @@ func InitConfig(file string) {
 		fmt.Printf("get HttpPort err: %v\n", err)
 		return
 	}
-	GobalAppConfig.CMDBLink, err = conf.GetString("cmdb.link")
-	if err != nil {
-		fmt.Printf("get CMDBLink err: %v\n", err)
-		return
-	}
-	GobalAppConfig.CMDBUserAuthKey, err = conf.GetString("cmdb.user.auth.key")
-	if err != nil {
-		fmt.Printf("get CMDBUserAuthKey err: %v\n", err)
-		return
-	}
 
 	AppConfMgr.Config.Store(GobalAppConfig)
 }

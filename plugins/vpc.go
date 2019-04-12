@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"git.webank.io/wecube-plugins/cmdb"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -28,6 +27,25 @@ func CreateVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 	return vpc.NewClient(credential, region, clientProfile)
 }
 
+type VpcInputs struct {
+	Inputs []VpcInput `json:"inputs,omitempty"`
+}
+
+type VpcInput struct {
+	ProviderParams string `json:"provider_params,omitempty"`
+	Id             string `json:"id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	CidrBlock      string `json:"cidr_block,omitempty"`
+}
+
+type VpcOutputs struct {
+	Outputs []VpcOutput `json:"outputs,omitempty"`
+}
+
+type VpcOutput struct {
+	Id string `json:"id,omitempty"`
+}
+
 type VpcPlugin struct {
 }
 
@@ -44,35 +62,24 @@ func (plugin *VpcPlugin) GetActionByName(actionName string) (Action, error) {
 type VpcCreateAction struct {
 }
 
-func (action *VpcCreateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_REGISTERED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	vpcs, _, err := cmdb.GetVpcInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *VpcCreateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VpcInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
-		return vpcs, err
+		return nil, err
 	}
-
-	return vpcs, nil
+	return inputs, nil
 }
 
-func (action *VpcCreateAction) CheckParam(param interface{}) error {
-	vpcs, ok := param.([]cmdb.VpcInput)
+func (action *VpcCreateAction) CheckParam(input interface{}) error {
+	vpcs, ok := input.(VpcInputs)
 	if !ok {
-		return fmt.Errorf("vpcCreateAtion:param type=%T not right", param)
+		return fmt.Errorf("vpcCreateAtion:input type=%T not right", input)
 	}
 
-	for _, vpc := range vpcs {
+	for _, vpc := range vpcs.Inputs {
 		if vpc.Name == "" {
-			return errors.New("vpcCreateAtion param name is empty")
+			return errors.New("vpcCreateAtion input name is empty")
 		}
 		if _, _, err := net.ParseCIDR(vpc.CidrBlock); err != nil {
 			return fmt.Errorf("vpcCreateAtion invalid vpcCidr[%s]", vpc.CidrBlock)
@@ -82,8 +89,8 @@ func (action *VpcCreateAction) CheckParam(param interface{}) error {
 	return nil
 }
 
-func (action *VpcCreateAction) createVpc(vpcInput cmdb.VpcInput) (string, error) {
-	paramsMap, err := cmdb.GetMapFromProviderParams(vpcInput.ProviderParams)
+func (action *VpcCreateAction) createVpc(vpcInput VpcInput) (string, error) {
+	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewCreateVpcRequest()
@@ -99,70 +106,51 @@ func (action *VpcCreateAction) createVpc(vpcInput cmdb.VpcInput) (string, error)
 	return *response.Response.Vpc.VpcId, nil
 }
 
-func (action *VpcCreateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	vpcs, _ := param.([]cmdb.VpcInput)
-	for _, vpc := range vpcs {
+func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
+	vpcs, _ := input.(VpcInputs)
+	outputs := VpcOutputs{}
+	for _, vpc := range vpcs.Inputs {
 		vpcId, err := action.createVpc(vpc)
 		if err != nil {
-			return err
-		}
-		updateCiEntry := cmdb.VpcOutput{
-			Id:    vpcId,
-			State: cmdb.CMDB_STATE_CREATED,
+			return nil, err
 		}
 
-		err = cmdb.UpdateVpcByGuid(vpc.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion, updateCiEntry)
-		if err != nil {
-			return fmt.Errorf("update vpc with guid = %v and vpc id = %v meet error = %v", vpc.Guid, vpcId, err)
-		}
-
-		logrus.Infof("vpc with guid = %v and vpc id = %v is created", vpc.Guid, vpc.Id)
+		vpcOutput := VpcOutput{Id: vpcId}
+		outputs.Outputs = append(outputs.Outputs, vpcOutput)
 	}
 
 	logrus.Infof("all vpcs = %v are created", vpcs)
-	return nil
+	return &outputs, nil
 }
 
 type VpcTerminateAction struct {
 }
 
-func (action *VpcTerminateAction) BuildParamFromCmdb(workflowParam *WorkflowParam) (interface{}, error) {
-	filter := make(map[string]string)
-	filter["process_instance_id"] = workflowParam.ProcessInstanceId
-	filter["state"] = cmdb.CMDB_STATE_CREATED
-	integrateQueyrParam := cmdb.CmdbCiQueryParam{
-		Offset:        0,
-		Limit:         cmdb.MAX_LIMIT_VALUE,
-		Filter:        filter,
-		PluginCode:    workflowParam.ProviderName + "_" + workflowParam.PluginName,
-		PluginVersion: workflowParam.PluginVersion,
-	}
-
-	vpcs, _, err := cmdb.GetVpcInputsByProcessInstanceId(&integrateQueyrParam)
+func (action *VpcTerminateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VpcInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
-		return vpcs, err
+		return nil, err
 	}
-
-	return vpcs, nil
+	return inputs, nil
 }
 
-func (action *VpcTerminateAction) CheckParam(param interface{}) error {
-	vpcs, ok := param.([]cmdb.VpcInput)
+func (action *VpcTerminateAction) CheckParam(input interface{}) error {
+	vpcs, ok := input.(VpcInputs)
 	if !ok {
-		return fmt.Errorf("vpcTerminateAtion:param type=%T not right", param)
+		return fmt.Errorf("vpcTerminateAtion:input type=%T not right", input)
 	}
 
-	for _, vpc := range vpcs {
+	for _, vpc := range vpcs.Inputs {
 		if vpc.Id == "" {
-			return errors.New("vpcTerminateAtion param vpcId is empty")
+			return errors.New("vpcTerminateAtion input vpcId is empty")
 		}
 	}
 	return nil
 }
 
-func (action *VpcTerminateAction) terminateVpc(vpcInput cmdb.VpcInput) error {
-	paramsMap, err := cmdb.GetMapFromProviderParams(vpcInput.ProviderParams)
+func (action *VpcTerminateAction) terminateVpc(vpcInput VpcInput) error {
+	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewDeleteVpcRequest()
@@ -177,20 +165,14 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput cmdb.VpcInput) error {
 	return nil
 }
 
-func (action *VpcTerminateAction) Do(param interface{}, workflowParam *WorkflowParam) error {
-	vpcs, _ := param.([]cmdb.VpcInput)
-	for _, vpc := range vpcs {
-		err := cmdb.DeleteVpcByGuid(vpc.Guid,
-			workflowParam.ProviderName+"_"+workflowParam.PluginName, workflowParam.PluginVersion)
+func (action *VpcTerminateAction) Do(input interface{}) (interface{}, error) {
+	vpcs, _ := input.(VpcInputs)
+	for _, vpc := range vpcs.Inputs {
+		err := action.terminateVpc(vpc)
 		if err != nil {
-			return fmt.Errorf("delete vpc(guid = %v) from CMDB meet error = %v", vpc.Guid, err)
-		}
-
-		err = action.terminateVpc(vpc)
-		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return "", nil
 }
