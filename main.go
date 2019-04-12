@@ -50,6 +50,9 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/peering-connection/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/route-table/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/route-table/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/mysql-vm/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/mysql-vm/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/mysql-vm/restart", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +65,7 @@ func write(w http.ResponseWriter, output *plugins.PluginResponse) {
 	w.Header().Set("content-type", "application/json")
 	b, err := json.Marshal(output)
 	if err != nil {
-		logrus.Error("write http response (%v) meet error (%v)", output, err)
+		logrus.Errorf("write http response (%v) meet error (%v)", output, err)
 	}
 	w.Write(b)
 }
