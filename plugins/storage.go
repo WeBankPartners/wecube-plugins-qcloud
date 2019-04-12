@@ -11,10 +11,6 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 )
 
-const (
-	CHARGE_TYPE_PREPAID = "PREPAID"
-)
-
 var StorageActions = make(map[string]Action)
 
 func init() {

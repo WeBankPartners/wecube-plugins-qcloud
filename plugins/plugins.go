@@ -52,6 +52,7 @@ func init() {
 	registerPlugin("vpc", new(VpcPlugin))
 	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
 	registerPlugin("route-table", new(RouteTablePlugin))
+	registerPlugin("mysql-vm", new(MysqlVmPlugin))
 }
 
 type PluginRequest struct {
@@ -79,6 +80,7 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 		} else {
 			logrus.Infof("plguin[%v]-action[%v] completed", pluginRequest.Name, pluginRequest.Action)
 			pluginResponse.ResultCode = "0"
+			pluginResponse.ResultMsg = "success"
 		}
 	}()
 
