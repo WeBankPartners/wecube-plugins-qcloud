@@ -11,6 +11,11 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 )
 
+const (
+	MYSQL_VM_STATUS_RUNNING  = 1
+	MYSQL_VM_STATUS_ISOLATED = 5
+)
+
 var MysqlVmActions = make(map[string]Action)
 
 func init() {
@@ -174,7 +179,7 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 			return "", fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
 		}
 
-		if *response.Response.Items[0].Status == 1 {
+		if *response.Response.Items[0].Status == MYSQL_VM_STATUS_RUNNING {
 			return *response.Response.Items[0].Vip, nil
 		}
 
@@ -256,6 +261,10 @@ func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *
 		}
 
 		if len(response.Response.Items) == 0 {
+			return nil
+		}
+
+		if *response.Response.Items[0].Status == MYSQL_VM_STATUS_ISOLATED {
 			return nil
 		}
 
