@@ -80,6 +80,7 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 		} else {
 			logrus.Infof("plguin[%v]-action[%v] completed", pluginRequest.Name, pluginRequest.Action)
 			pluginResponse.ResultCode = "0"
+			pluginResponse.ResultMsg = "success"
 		}
 	}()
 
