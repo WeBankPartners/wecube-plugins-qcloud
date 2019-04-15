@@ -1,20 +1,18 @@
 FROM alpine:latest
 LABEL maintainer = "Webank CTB Team"
 
-ARG DEPLOY_PATH=/home/app/wecube-plugins
+ENV APP_HOME=/home/app/wecube-plugins
+ENV APP_CONF=$APP_HOME/conf
+ENV LOG_PATH=$APP_HOME/logs
 
-RUN mkdir -p /home/app
-ENV LOG_PATH=/home/app/logs
+RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
-COPY wecube-plugins /home/app
-ADD conf /home/app/conf
+ADD wecube-plugins $APP_HOME/
+ADD *.sh $APP_HOME/
+ADD conf $APP_CONF/
 
-RUN cd /home/app && chmod +x wecube-plugins
+RUN chmod +x $APP_HOME/*.*
 
-RUN apk upgrade && apk add --no-cache ca-certificates
-RUN apk add --update curl && rm -rf /var/cache/apk/*
+WORKDIR $APP_HOME
 
-WORKDIR /home/app
-
-ENTRYPOINT ["./wecube-plugins"]
-
+ENTRYPOINT ["/bin/sh", "start.sh"]
