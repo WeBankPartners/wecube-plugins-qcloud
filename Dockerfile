@@ -13,6 +13,9 @@ ADD conf $APP_CONF/
 
 RUN chmod +x $APP_HOME/*.*
 
+RUN apk upgrade && apk add --no-cache ca-certificates
+RUN apk add --update curl && rm -rf /var/cache/apk/*
+
 WORKDIR $APP_HOME
 
 ENTRYPOINT ["/bin/sh", "start.sh"]
