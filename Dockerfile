@@ -1,14 +1,18 @@
 FROM alpine:latest
 LABEL maintainer = "Webank CTB Team"
 
-RUN mkdir -p /home/app
-ENV LOG_PATH=/home/app/logs
+ENV APP_HOME=/home/app/wecube-plugins
+ENV APP_CONF=$APP_HOME/conf
+ENV LOG_PATH=$APP_HOME/logs
 
-COPY wecube-plugins /home/app
-ADD conf /home/app/conf
-RUN cd /home/app && chmod +x wecube-plugins
+RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
-WORKDIR /home/app
+ADD wecube-plugins $APP_HOME/
+ADD *.sh $APP_HOME/
+ADD conf $APP_CONF/
 
-ENTRYPOINT ["./wecube-plugins"]
+RUN chmod +x $APP_HOME/*.*
 
+WORKDIR $APP_HOME
+
+ENTRYPOINT ["/bin/sh", "start.sh"]
