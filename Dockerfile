@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine-wecube:v1
 LABEL maintainer = "Webank CTB Team"
 
 ENV APP_HOME=/home/app/wecube-plugins
@@ -12,9 +12,6 @@ ADD *.sh $APP_HOME/
 ADD conf $APP_CONF/
 
 RUN chmod +x $APP_HOME/*.*
-
-RUN apk upgrade && apk add --no-cache ca-certificates
-RUN apk add --update curl && rm -rf /var/cache/apk/*
 
 WORKDIR $APP_HOME
 
