@@ -80,6 +80,33 @@ func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
 	return action, nil
 }
 
+type VMAction struct {
+}
+
+func (action *VMAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMAction) CheckParam(input interface{}) error {
+	vms, ok := input.(VmInputs)
+	if !ok {
+		return INVALID_PARAMETERS
+	}
+
+	for _, vm := range vms.Inputs {
+		if vm.InstanceId == "" {
+			return errors.New("input instance_id is empty")
+		}
+	}
+
+	return nil
+}
+
 type QcloudRunInstanceStruct struct {
 	Placement             PlacementStruct
 	ImageId               string
@@ -227,49 +254,22 @@ func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) err
 	return nil
 }
 
-type VMCreateAction struct{}
-
-func (action *VMCreateAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
+type VMCreateAction struct {
+	VMAction
 }
 
 func (action *VMCreateAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
 	_, ok := input.(VmInputs)
 	if !ok {
-		err = INVALID_PARAMETERS
-		return err
+		return INVALID_PARAMETERS
 	}
 
 	return nil
 }
 
 func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	vms, ok := input.(VmInputs)
+	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
-	if !ok {
-		err = INVALID_PARAMETERS
-		return nil, err
-	}
-
 	for _, vm := range vms.Inputs {
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		logrus.Debugf("actionParam:%v", vm)
@@ -346,33 +346,8 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	return &outputs, nil
 }
 
-type VMTerminateAction struct{}
-
-func (action *VMTerminateAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func (action *VMTerminateAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
-	_, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return err
-	}
-
-	return nil
+type VMTerminateAction struct {
+	VMAction
 }
 
 func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
@@ -418,33 +393,8 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 	return "", nil
 }
 
-type VMStartAction struct{}
-
-func (action *VMStartAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func (action *VMStartAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
-	_, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return err
-	}
-
-	return nil
+type VMStartAction struct {
+	VMAction
 }
 
 func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
@@ -483,33 +433,8 @@ func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
 	return *response.Response.RequestId, nil
 }
 
-type VMStopAction struct{}
-
-func (action *VMStopAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func (action *VMStopAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
-	_, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return err
-	}
-
-	return nil
+type VMStopAction struct {
+	VMAction
 }
 
 func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
