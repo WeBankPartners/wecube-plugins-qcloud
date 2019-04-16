@@ -2,4 +2,5 @@
 
 IMAGEID=`docker ps -aqf 'name=wecube-plugins-smoke'`
 sudo docker stop $IMAGEID
+sleep 6s
 sudo docker rm $IMAGEID
