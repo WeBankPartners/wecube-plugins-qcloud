@@ -53,6 +53,7 @@ type VmOutputs struct {
 }
 
 type VmOutput struct {
+	RequestId         string `json:"request_id,omitempty"`
 	InstanceId        string `json:"instance_id,omitempty"`
 	Cpu               string `json:"cpu,omitempty"`
 	Memory            string `json:"memory,omitempty"`
@@ -67,6 +68,8 @@ var VMActions = make(map[string]Action)
 func init() {
 	VMActions["create"] = new(VMCreateAction)
 	VMActions["terminate"] = new(VMTerminateAction)
+	VMActions["start"] = new(VMStartAction)
+	VMActions["stop"] = new(VMStopAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
@@ -413,4 +416,134 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	return "", nil
+}
+
+type VMStartAction struct{}
+
+func (action *VMStartAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMStartAction) CheckParam(input interface{}) error {
+	logrus.Debugf("param=%#v", input)
+	var err error
+	defer func() {
+		if err != nil {
+			logrus.Error(err)
+		}
+	}()
+
+	_, ok := input.(VmInputs)
+	if !ok {
+		err = INVALID_PARAMETERS
+		return err
+	}
+
+	return nil
+}
+
+func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
+	for _, vm := range vms.Inputs {
+		requestId, err := action.startInstance(vm)
+		if err != nil {
+			return nil, err
+		}
+
+		output := VmOutput{}
+		output.RequestId = requestId
+		output.InstanceId = vm.InstanceId
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	return &outputs, nil
+}
+
+func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
+
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return "", err
+	}
+
+	request := cvm.NewStartInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+
+	response, err := client.StartInstances(request)
+	if err != nil {
+		return "", err
+	}
+	return *response.Response.RequestId, nil
+}
+
+type VMStopAction struct{}
+
+func (action *VMStopAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMStopAction) CheckParam(input interface{}) error {
+	logrus.Debugf("param=%#v", input)
+	var err error
+	defer func() {
+		if err != nil {
+			logrus.Error(err)
+		}
+	}()
+
+	_, ok := input.(VmInputs)
+	if !ok {
+		err = INVALID_PARAMETERS
+		return err
+	}
+
+	return nil
+}
+
+func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
+	for _, vm := range vms.Inputs {
+		requestId, err := action.stopInstance(vm)
+		if err != nil {
+			return nil, err
+		}
+
+		output := VmOutput{}
+		output.RequestId = requestId
+		output.InstanceId = vm.InstanceId
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	return &outputs, nil
+}
+
+func (action *VMStopAction) stopInstance(vm VmInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
+
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return "", err
+	}
+
+	request := cvm.NewStopInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+
+	response, err := client.StopInstances(request)
+	if err != nil {
+		return "", err
+	}
+	return *response.Response.RequestId, nil
 }
