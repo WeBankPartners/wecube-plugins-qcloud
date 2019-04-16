@@ -15,4 +15,6 @@ RUN chmod +x $APP_HOME/*.*
 
 WORKDIR $APP_HOME
 
-ENTRYPOINT ["/bin/sh", "start.sh"]
+ENTRYPOINT ["./wecube-plugins", ">>", "../logs/wecube-plugins.log", "2>&1", "&"]
+
+# ENTRYPOINT ["/bin/sh", "start.sh"]
