@@ -44,6 +44,7 @@ type NatGatewayInputs struct {
 }
 
 type NatGatewayInput struct {
+	Guid            string `json:"guid,omitempty"`
 	ProviderParams  string `json:"provider_params,omitempty"`
 	Name            string `json:"name,omitempty"`
 	VpcId           string `json:"vpc_id,omitempty"`
@@ -59,7 +60,9 @@ type NatGatewayOutputs struct {
 }
 
 type NatGatewayOutput struct {
-	Id string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{}, error) {
@@ -89,9 +92,9 @@ func (action *NatGatewayCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *NatGatewayCreateAction) createNatGateway(natGateway NatGatewayInput) (string, error) {
+func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInput) (*NatGatewayOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
-	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	createReq := vpc.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
@@ -104,25 +107,29 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway NatGatewayInpu
 		createReq.AssignedEipSet = []*string{&natGateway.AssignedEipSet}
 	}
 
-	createResp, err := c.CreateNatGateway(createReq)
+	createResp, err := client.CreateNatGateway(createReq)
 	if err != nil || createResp.NatGatewayId == nil {
-		return "", err
+		return nil, err
 	}
 
-	return *(createResp.NatGatewayId), nil
+	output := NatGatewayOutput{}
+	output.Guid = natGateway.Guid
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
+	output.Id = *createResp.NatGatewayId
+
+	return &output, nil
 }
 
 func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error) {
 	natGateways, _ := input.(NatGatewayInputs)
 	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
-		natGatewayId, err := action.createNatGateway(natGateway)
+		output, err := action.createNatGateway(&natGateway)
 		if err != nil {
 			return nil, err
 		}
 
-		output := NatGatewayOutput{Id: natGatewayId}
-		outputs.Outputs = append(outputs.Outputs, output)
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
 	logrus.Infof("all natGateways = %v are created", natGateways)
@@ -156,7 +163,7 @@ func (action *NatGatewayTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway NatGatewayInput) error {
+func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGatewayInput) (*NatGatewayOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -165,7 +172,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway NatGatew
 	deleteReq.NatId = &natGateway.Id
 	deleteResp, err := c.DeleteNatGateway(deleteReq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	taskReq := vpc.NewDescribeVpcTaskResultRequest()
@@ -174,7 +181,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway NatGatew
 	for {
 		taskResp, err := c.DescribeVpcTaskResult(taskReq)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if *taskResp.Data.Status == 0 {
@@ -183,28 +190,34 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway NatGatew
 		}
 		if *taskResp.Data.Status == 1 {
 			// fail, need retry delete
-			return errors.New("terminateNatGateway execute failed ,need retry")
+			return nil, errors.New("terminateNatGateway execute failed ,need retry")
 		}
 
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			return errors.New("terminateNatGateway query result timeout")
+			return nil, errors.New("terminateNatGateway query result timeout")
 		}
 	}
 
-	return nil
+	output := NatGatewayOutput{}
+	output.Guid = natGateway.Guid
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
+	output.Id = natGateway.Id
+
+	return &output, nil
 }
 
 func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, error) {
 	natGateways, _ := input.(NatGatewayInputs)
-
+	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
-		err := action.terminateNatGateway(natGateway)
+		output, err := action.terminateNatGateway(&natGateway)
 		if err != nil {
 			return nil, err
 		}
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }

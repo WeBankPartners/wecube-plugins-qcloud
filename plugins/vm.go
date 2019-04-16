@@ -35,6 +35,7 @@ type VmInputs struct {
 }
 
 type VmInput struct {
+	Guid                 string `json:"guid,omitempty"`
 	ProviderParams       string `json:"provider_params,omitempty"`
 	VpcId                string `json:"vpc_id,omitempty"`
 	SubnetId             string `json:"subnet_id,omitempty"`
@@ -53,6 +54,7 @@ type VmOutputs struct {
 }
 
 type VmOutput struct {
+	Guid              string `json:"guid,omitempty"`
 	RequestId         string `json:"request_id,omitempty"`
 	InstanceId        string `json:"instance_id,omitempty"`
 	Cpu               string `json:"cpu,omitempty"`
@@ -335,6 +337,8 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		output := VmOutput{}
+		output.RequestId = *describeInstancesResponse.Response.RequestId
+		output.Guid = vm.Guid
 		output.InstanceId = vm.InstanceId
 		output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
 		output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
@@ -351,17 +355,8 @@ type VMTerminateAction struct {
 }
 
 func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	vms, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return nil, err
-	}
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
 
 	for _, vm := range vms.Inputs {
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
@@ -378,19 +373,26 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 		byteTerminateInstancesRequestData, _ := json.Marshal(terminateInstancesRequestData)
 		terminateInstancesRequest.FromJsonString(string(byteTerminateInstancesRequestData))
 
-		resp, err := client.TerminateInstances(terminateInstancesRequest)
+		response, err := client.TerminateInstances(terminateInstancesRequest)
 		if err != nil {
 			return nil, err
 		}
-		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.InstanceId, *resp.Response.RequestId)
+		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.InstanceId, *response.Response.RequestId)
 
 		if err = waitVmTerminateDone(client, vm.InstanceId, 600); err != nil {
 			return nil, err
 		}
+		output := VmOutput{}
+		output.RequestId = *response.Response.RequestId
+		output.Guid = vm.Guid
+		output.InstanceId = vm.InstanceId
+
+		outputs.Outputs = append(outputs.Outputs, output)
+
 		logrus.Infof("Terminated VM[%v] has been done", vm.InstanceId)
 	}
 
-	return "", nil
+	return &outputs, nil
 }
 
 type VMStartAction struct {
@@ -408,6 +410,7 @@ func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
 
 		output := VmOutput{}
 		output.RequestId = requestId
+		output.Guid = vm.Guid
 		output.InstanceId = vm.InstanceId
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -441,26 +444,23 @@ func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
 	for _, vm := range vms.Inputs {
-		requestId, err := action.stopInstance(vm)
+		output, err := action.stopInstance(&vm)
 		if err != nil {
 			return nil, err
 		}
 
-		output := VmOutput{}
-		output.RequestId = requestId
-		output.InstanceId = vm.InstanceId
-		outputs.Outputs = append(outputs.Outputs, output)
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
 	return &outputs, nil
 }
 
-func (action *VMStopAction) stopInstance(vm VmInput) (string, error) {
+func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
 
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	request := cvm.NewStopInstancesRequest()
@@ -468,7 +468,13 @@ func (action *VMStopAction) stopInstance(vm VmInput) (string, error) {
 
 	response, err := client.StopInstances(request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return *response.Response.RequestId, nil
+
+	output := VmOutput{}
+	output.RequestId = *response.Response.RequestId
+	output.Guid = vm.Guid
+	output.InstanceId = vm.InstanceId
+
+	return &output, nil
 }

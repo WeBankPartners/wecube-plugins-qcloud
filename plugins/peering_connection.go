@@ -32,6 +32,7 @@ type PeeringConnectionInputs struct {
 }
 
 type PeeringConnectionInput struct {
+	Guid               string `json:"guid,omitempty"`
 	ProviderParams     string `json:"provider_params,omitempty"`
 	Name               string `json:"name,omitempty"`
 	PeerProviderParams string `json:"peer_provider_params,omitempty"`
@@ -47,7 +48,9 @@ type PeeringConnectionOutputs struct {
 }
 
 type PeeringConnectionOutput struct {
-	Id string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 func (plugin *PeeringConnectionPlugin) GetActionByName(actionName string) (Action, error) {
@@ -166,6 +169,8 @@ func (action *PeeringConnectionCreateAction) Do(input interface{}) (interface{},
 		}
 		output := PeeringConnectionOutput{}
 		output.Id = peeringConnectionId
+		output.Guid = peeringConnection.Guid
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
@@ -261,13 +266,18 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 
 func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface{}, error) {
 	peeringConnections, _ := input.([]PeeringConnectionInput)
-
+	outputs := PeeringConnectionOutputs{}
 	for _, peeringConnection := range peeringConnections {
 		err := action.terminatePeeringConnection(peeringConnection)
 		if err != nil {
 			return nil, err
 		}
+		output := PeeringConnectionOutput{}
+		output.Guid = peeringConnection.Guid
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		output.Id = peeringConnection.Id
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }

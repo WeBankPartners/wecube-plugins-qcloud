@@ -32,17 +32,14 @@ type RouteTableInputs struct {
 }
 
 type RouteTableInput struct {
-	ProviderParams string  `json:"provider_params,omitempty"`
-	Id             string  `json:"id,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	VpcId          string  `json:"vpc_id,omitempty"`
-	Routes         []Route `json:"routes,omitempty"`
-}
-
-type Route struct {
-	DestinationCidrBlock string `json:"destination_cidr_block,omitempty"`
-	NextType             string `json:"next_type,omitempty"`
-	NextId               string `json:"next_id,omitempty"`
+	Guid                      string `json:"guid,omitempty"`
+	ProviderParams            string `json:"provider_params,omitempty"`
+	Id                        string `json:"id,omitempty"`
+	Name                      string `json:"name,omitempty"`
+	VpcId                     string `json:"vpc_id,omitempty"`
+	RouteDestinationCidrBlock string `json:"route_destination_cidr_block,omitempty"`
+	RouteNextType             string `json:"route_next_type,omitempty"`
+	RouteId                   string `json:"route_next_id,omitempty"`
 }
 
 type RouteTableOutputs struct {
@@ -50,7 +47,28 @@ type RouteTableOutputs struct {
 }
 
 type RouteTableOutput struct {
-	Id string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
+}
+
+type RouteTableDelegateInputs struct {
+	Inputs []RouteTableDelegateInput
+}
+
+type RouteTableDelegateInput struct {
+	Guid           string
+	ProviderParams string
+	Id             string
+	Name           string
+	VpcId          string
+	Routes         []Route
+}
+
+type Route struct {
+	DestinationCidrBlock string
+	NextType             string
+	NextId               string
 }
 
 type RouteTablePlugin struct {
@@ -75,7 +93,46 @@ func (action *RouteTableCreateAction) ReadParam(param interface{}) (interface{},
 	if err != nil {
 		return nil, err
 	}
+
 	return inputs, nil
+}
+
+func (action *RouteTableCreateAction) convertParam(inputs *RouteTableInputs) (*RouteTableDelegateInputs, error) {
+	routeTableDelegateInputs := RouteTableDelegateInputs{}
+	for _, input := range inputs.Inputs {
+		delegateInput := RouteTableDelegateInput{}
+		delegateInput.Guid = input.Guid
+		delegateInput.Id = input.Id
+		delegateInput.Name = input.Name
+		delegateInput.ProviderParams = input.ProviderParams
+		delegateInput.VpcId = input.VpcId
+
+		route := Route{}
+		route.DestinationCidrBlock = input.RouteDestinationCidrBlock
+		route.NextType = input.RouteNextType
+		route.NextId = input.RouteId
+
+		delegateInput.Routes = append(delegateInput.Routes, route)
+
+		index, exist := isRouteTableExist(routeTableDelegateInputs.Inputs, delegateInput)
+
+		if exist {
+			routeTableDelegateInputs.Inputs[index].Routes = append(routeTableDelegateInputs.Inputs[index].Routes, route)
+		} else {
+			routeTableDelegateInputs.Inputs = append(routeTableDelegateInputs.Inputs, delegateInput)
+
+		}
+	}
+	return &routeTableDelegateInputs, nil
+}
+
+func isRouteTableExist(inputs []RouteTableDelegateInput, input RouteTableDelegateInput) (int, bool) {
+	for i := 0; i < len(inputs); i++ {
+		if inputs[i].Name == input.Name {
+			return i, true
+		}
+	}
+	return -1, false
 }
 
 func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
@@ -91,10 +148,8 @@ func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
 		if routeTable.Name == "" {
 			return errors.New("routeTableCreateAtion input name is empty")
 		}
-		for _, route := range routeTable.Routes {
-			if _, _, err := net.ParseCIDR(route.DestinationCidrBlock); err != nil {
-				return fmt.Errorf("routeTableCreateAtion invalid DestinationCidrBlock[%s]", route.DestinationCidrBlock)
-			}
+		if _, _, err := net.ParseCIDR(routeTable.RouteDestinationCidrBlock); err != nil {
+			return fmt.Errorf("routeTableCreateAtion invalid RouteDestinationCidrBlock[%s]", routeTable.RouteDestinationCidrBlock)
 		}
 
 	}
@@ -102,9 +157,12 @@ func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *RouteTableCreateAction) createRouteTable(routeTable RouteTableInput) (string, error) {
-	paramsMap, err := GetMapFromProviderParams(routeTable.ProviderParams)
-	client, _ := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+func (action *RouteTableCreateAction) createRouteTable(routeTable *RouteTableDelegateInput) (*RouteTableOutput, error) {
+	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
+	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
 
 	request := vpc.NewCreateRouteTableRequest()
 	request.VpcId = &routeTable.VpcId
@@ -112,7 +170,7 @@ func (action *RouteTableCreateAction) createRouteTable(routeTable RouteTableInpu
 
 	response, err := client.CreateRouteTable(request)
 	if err != nil {
-		return "", fmt.Errorf("failed to CreateRouteTable, error=%s", err)
+		return nil, fmt.Errorf("failed to CreateRouteTable, error=%s", err)
 	}
 
 	routeTableId := *response.Response.RouteTable.RouteTableId
@@ -129,24 +187,34 @@ func (action *RouteTableCreateAction) createRouteTable(routeTable RouteTableInpu
 
 	routesResponse, err := client.CreateRoutes(routesRequest)
 	if err != nil {
-		return "", fmt.Errorf("failed to add routesRequest = %v, error=%s", routesRequest, err)
+		return nil, fmt.Errorf("failed to add routesRequest = %v, error=%s", routesRequest, err)
 	}
-	logrus.Infof("add routes are completed with request id = %v", routesResponse.Response.RequestId)
+	logrus.Infof("add routes are completed with request id = %v", *routesResponse.Response.RequestId)
 
-	return routeTableId, nil
+	output := RouteTableOutput{}
+	output.Guid = routeTable.Guid
+	output.RequestId = *routesResponse.Response.RequestId
+	output.Id = routeTableId
+
+	return &output, nil
 }
 
 func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error) {
-	routeTables, _ := input.(RouteTableInputs)
+	inputs, _ := input.(RouteTableInputs)
+
+	routeTables, err := action.convertParam(&inputs)
+	if err != nil {
+		return nil, err
+	}
+
 	outputs := RouteTableOutputs{}
 	for _, routeTable := range routeTables.Inputs {
-		routeTableId, err := action.createRouteTable(routeTable)
+		output, err := action.createRouteTable(&routeTable)
 		if err != nil {
 			return nil, err
 		}
 
-		output := RouteTableOutput{Id: routeTableId}
-		outputs.Outputs = append(outputs.Outputs, output)
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
 	logrus.Infof("all routeTable = %v are created", routeTables)
@@ -179,30 +247,39 @@ func (action *RouteTableTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *RouteTableTerminateAction) terminateRouteTable(routeTable RouteTableInput) error {
-	paramsMap, err := GetMapFromProviderParams(routeTable.ProviderParams)
-	client, _ := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTableInput) (*RouteTableOutput, error) {
+	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
+	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	if err != nil {
+		return nil, err
+	}
 
 	request := vpc.NewDeleteRouteTableRequest()
 	request.RouteTableId = &routeTable.Id
 
-	_, err = client.DeleteRouteTable(request)
+	response, err := client.DeleteRouteTable(request)
 	if err != nil {
-		logrus.Errorf("Failed to DeleteRouteTable(routeTableId=%v), error=%s", routeTable.Id, err)
-		return err
+		return nil, fmt.Errorf("Failed to DeleteRouteTable(routeTableId=%v), error=%s", routeTable.Id, err)
 	}
+	output := RouteTableOutput{}
+	output.Guid = routeTable.Guid
+	output.RequestId = *response.Response.RequestId
+	output.Id = routeTable.Id
 
-	return nil
+	return &output, nil
 }
 
 func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, error) {
 	routeTables, _ := input.(RouteTableInputs)
+	outputs := RouteTableOutputs{}
 	for _, routeTable := range routeTables.Inputs {
-		err := action.terminateRouteTable(routeTable)
+		output, err := action.terminateRouteTable(&routeTable)
 		if err != nil {
 			return nil, err
 		}
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }
