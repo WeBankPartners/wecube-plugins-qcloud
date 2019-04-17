@@ -50,6 +50,61 @@ type AccountInfo struct {
 	CreateTime *string `json:"CreateTime,omitempty" name:"CreateTime"`
 }
 
+type AddTimeWindowRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID，格式如：cdb-c1nl9rpv或者cdbro-c1nl9rpv，与云数据库控制台页面中显示的实例ID相同。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 星期一的可维护时间段，其中每一个时间段的格式形如：10:00-12:00；起始时间按半个小时对齐；最短半个小时，最长三个小时；最多设置两个时间段；下同。
+	Monday []*string `json:"Monday,omitempty" name:"Monday" list`
+
+	// 星期二的可维护时间窗口。
+	Tuesday []*string `json:"Tuesday,omitempty" name:"Tuesday" list`
+
+	// 星期三的可维护时间窗口。
+	Wednesday []*string `json:"Wednesday,omitempty" name:"Wednesday" list`
+
+	// 星期四的可维护时间窗口。
+	Thursday []*string `json:"Thursday,omitempty" name:"Thursday" list`
+
+	// 星期五的可维护时间窗口。
+	Friday []*string `json:"Friday,omitempty" name:"Friday" list`
+
+	// 星期六的可维护时间窗口。
+	Saturday []*string `json:"Saturday,omitempty" name:"Saturday" list`
+
+	// 星期日的可维护时间窗口。
+	Sunday []*string `json:"Sunday,omitempty" name:"Sunday" list`
+}
+
+func (r *AddTimeWindowRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *AddTimeWindowRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type AddTimeWindowResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *AddTimeWindowResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *AddTimeWindowResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type AssociateSecurityGroupsRequest struct {
 	*tchttp.BaseRequest
 
@@ -99,7 +154,7 @@ type BackupConfig struct {
 	Vip *string `json:"Vip,omitempty" name:"Vip"`
 
 	// 第二个从库访问端口
-	Vport *string `json:"Vport,omitempty" name:"Vport"`
+	Vport *uint64 `json:"Vport,omitempty" name:"Vport"`
 }
 
 type BackupInfo struct {
@@ -133,6 +188,15 @@ type BackupInfo struct {
 
 	// 备份的创建者，可能的值：SYSTEM - 系统创建，Uin - 发起者Uin值
 	Creator *string `json:"Creator,omitempty" name:"Creator"`
+}
+
+type BackupItem struct {
+
+	// 需要备份的库名
+	Db *string `json:"Db,omitempty" name:"Db"`
+
+	// 需要备份的表名。 如果传该参数，表示备份该库中的指定表。如果不传该参数则备份该db库
+	Table *string `json:"Table,omitempty" name:"Table"`
 }
 
 type BinlogInfo struct {
@@ -262,6 +326,10 @@ type CreateBackupRequest struct {
 
 	// 目标备份方法，可选的值：logical - 逻辑冷备，physical - 物理冷备。
 	BackupMethod *string `json:"BackupMethod,omitempty" name:"BackupMethod"`
+
+	// 需要备份的库表信息，如果不设置该参数，则默认整实例备份。在 BackupMethod=logical 逻辑备份中才可设置该参数。指定的库表必须存在，否则可能导致备份失败。
+	// 例：如果需要备份 db1 库的 tb1、tb2表 和 db2 库。则该参数设置为 [{"Db": "db1", "Table": "tb1"}, {"Db": "db1", "Table": "tb2"}, {"Db": "db2"} ]
+	BackupDBTableList []*BackupItem `json:"BackupDBTableList,omitempty" name:"BackupDBTableList" list`
 }
 
 func (r *CreateBackupRequest) ToJsonString() string {
@@ -739,6 +807,40 @@ func (r *DeleteParamTemplateResponse) ToJsonString() string {
 }
 
 func (r *DeleteParamTemplateResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DeleteTimeWindowRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID，格式如：cdb-c1nl9rpv或者cdbro-c1nl9rpv，与云数据库控制台页面中显示的实例ID相同。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+func (r *DeleteTimeWindowRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DeleteTimeWindowRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DeleteTimeWindowResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DeleteTimeWindowResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DeleteTimeWindowResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -2277,6 +2379,61 @@ func (r *DescribeTasksResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DescribeTimeWindowRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID，格式如：cdb-c1nl9rpv或者cdbro-c1nl9rpv，与云数据库控制台页面中显示的实例ID相同。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+func (r *DescribeTimeWindowRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeTimeWindowRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeTimeWindowResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 星期一的可维护时间列表。
+		Monday []*string `json:"Monday,omitempty" name:"Monday" list`
+
+		// 星期二的可维护时间列表。
+		Tuesday []*string `json:"Tuesday,omitempty" name:"Tuesday" list`
+
+		// 星期三的可维护时间列表。
+		Wednesday []*string `json:"Wednesday,omitempty" name:"Wednesday" list`
+
+		// 星期四的可维护时间列表。
+		Thursday []*string `json:"Thursday,omitempty" name:"Thursday" list`
+
+		// 星期五的可维护时间列表。
+		Friday []*string `json:"Friday,omitempty" name:"Friday" list`
+
+		// 星期六的可维护时间列表。
+		Saturday []*string `json:"Saturday,omitempty" name:"Saturday" list`
+
+		// 星期日的可维护时间列表。
+		Sunday []*string `json:"Sunday,omitempty" name:"Sunday" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeTimeWindowResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeTimeWindowResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DescribeUploadedFilesRequest struct {
 	*tchttp.BaseRequest
 
@@ -3338,6 +3495,46 @@ func (r *ModifyParamTemplateResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type ModifyTimeWindowRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID，格式如：cdb-c1nl9rpv或者cdbro-c1nl9rpv，与云数据库控制台页面中显示的实例ID相同。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 修改后的可维护时间段，其中每一个时间段的格式形如：10:00-12:00；起止时间按半个小时对齐；最短半个小时，最长三个小时；最多设置两个时间段；起止时间范围为：[00:00, 24:00]。
+	TimeRanges []*string `json:"TimeRanges,omitempty" name:"TimeRanges" list`
+
+	// 指定修改哪一天的客户时间段，可能的取值为：monday, tuesday, wednesday, thursday, friday, saturday, sunday。如果不指定该值或者为空，则默认一周七天都修改。
+	Weekdays []*string `json:"Weekdays,omitempty" name:"Weekdays" list`
+}
+
+func (r *ModifyTimeWindowRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyTimeWindowRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifyTimeWindowResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ModifyTimeWindowResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyTimeWindowResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type OpenDBInstanceGTIDRequest struct {
 	*tchttp.BaseRequest
 
@@ -4101,7 +4298,7 @@ type UpgradeDBInstanceEngineVersionRequest struct {
 	// 主实例数据库引擎版本，支持值包括：5.6和5.7
 	EngineVersion *string `json:"EngineVersion,omitempty" name:"EngineVersion"`
 
-	// 切换访问新实例的方式，默认为0，升级主实例时，可指定该参数，升级只读实例或者灾备实例时指定该参数无意义，支持值包括：0-立刻切换，1-时间窗切换；当该值为1时，升级中过程中，切换访问新实例的流程将会在时间窗内进行，或者用户主动调用接口[切换访问新实例](https://cloud.tencent.com/document/product/236/15864)触发该流程
+	// 切换访问新实例的方式，默认为0。支持值包括：0-立刻切换，1-时间窗切换；当该值为1时，升级中过程中，切换访问新实例的流程将会在时间窗内进行，或者用户主动调用接口[切换访问新实例](https://cloud.tencent.com/document/product/236/15864)触发该流程
 	WaitSwitch *int64 `json:"WaitSwitch,omitempty" name:"WaitSwitch"`
 }
 
@@ -4159,7 +4356,7 @@ type UpgradeDBInstanceRequest struct {
 	// 主实例数据库引擎版本，支持值包括：5.5、5.6和5.7
 	EngineVersion *string `json:"EngineVersion,omitempty" name:"EngineVersion"`
 
-	// 切换访问新实例的方式，默认为0，升级主实例时，可指定该参数，升级只读实例或者灾备实例时指定该参数无意义，支持值包括：0-立刻切换，1-时间窗切换；当该值为1时，升级中过程中，切换访问新实例的流程将会在时间窗内进行，或者用户主动调用接口[切换访问新实例](https://cloud.tencent.com/document/product/236/15864)触发该流程
+	// 切换访问新实例的方式，默认为0。支持值包括：0-立刻切换，1-时间窗切换；当该值为1时，升级中过程中，切换访问新实例的流程将会在时间窗内进行，或者用户主动调用接口[切换访问新实例](https://cloud.tencent.com/document/product/236/15864)触发该流程
 	WaitSwitch *int64 `json:"WaitSwitch,omitempty" name:"WaitSwitch"`
 
 	// 备库2的可用区ID，默认为0，升级主实例时可指定该参数，升级只读实例或者灾备实例时指定该参数无意义

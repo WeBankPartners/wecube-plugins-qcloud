@@ -32,6 +32,7 @@ type SubnetInputs struct {
 }
 
 type SubnetInput struct {
+	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Name           string `json:"name,omitempty"`
@@ -45,7 +46,9 @@ type SubnetOutputs struct {
 }
 
 type SubnetOutput struct {
-	Id string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 type SubnetPlugin struct {
@@ -81,22 +84,25 @@ func (action *SubnetCreateAction) CheckParam(input interface{}) error {
 
 	for _, subnet := range subnets.Inputs {
 		if subnet.VpcId == "" {
-			return errors.New("subnetCreateAtion input vpcId is empty")
+			return errors.New("subnetCreateAtion input vpc_id is empty")
 		}
 		if subnet.Name == "" {
 			return errors.New("subnetCreateAtion input name is empty")
 		}
 		if _, _, err := net.ParseCIDR(subnet.CidrBlock); err != nil {
-			return fmt.Errorf("subnetCreateAtion invalid subnetCidr[%s]", subnet.CidrBlock)
+			return fmt.Errorf("subnetCreateAtion invalid cidr_block [%s]", subnet.CidrBlock)
 		}
 	}
 
 	return nil
 }
 
-func (action *SubnetCreateAction) createSubnet(subnet SubnetInput) (string, error) {
-	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
-	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (*SubnetOutput, error) {
+	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
+	client, err := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
 
 	request := vpc.NewCreateSubnetRequest()
 	request.VpcId = &subnet.VpcId
@@ -107,24 +113,27 @@ func (action *SubnetCreateAction) createSubnet(subnet SubnetInput) (string, erro
 
 	response, err := client.CreateSubnet(request)
 	if err != nil {
-		logrus.Errorf("Failed to CreateSubnet, error=%s", err)
-		return "", err
+		return nil, fmt.Errorf("failed to CreateSubnet, error=%s", err)
 	}
 
-	return *response.Response.Subnet.SubnetId, nil
+	output := SubnetOutput{}
+	output.Guid = subnet.Guid
+	output.RequestId = *response.Response.RequestId
+	output.Id = *response.Response.Subnet.SubnetId
+
+	return &output, nil
 }
 
 func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
 	subnets, _ := input.(SubnetInputs)
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
-		subnetId, err := action.createSubnet(subnet)
+		output, err := action.createSubnet(&subnet)
 		if err != nil {
 			return nil, err
 		}
 
-		output := SubnetOutput{Id: subnetId}
-		outputs.Outputs = append(outputs.Outputs, output)
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
 	logrus.Infof("all subnet = %v are created", subnets)
@@ -157,30 +166,36 @@ func (action *SubnetTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *SubnetTerminateAction) terminateSubnet(subnet SubnetInput) error {
+func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (*SubnetOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewDeleteSubnetRequest()
 	request.SubnetId = &subnet.Id
 
-	_, err = client.DeleteSubnet(request)
+	response, err := client.DeleteSubnet(request)
 	if err != nil {
-		logrus.Errorf("Failed to DeleteSubnet(subnetId=%v), error=%s", subnet.Id, err)
-		return err
+		return nil, fmt.Errorf("Failed to DeleteSubnet(subnetId=%v), error=%s", subnet.Id, err)
 	}
 
-	return nil
+	output := SubnetOutput{}
+	output.Guid = subnet.Guid
+	output.RequestId = *response.Response.RequestId
+	output.Id = subnet.Id
+
+	return &output, nil
 }
 
 func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) {
 	subnets, _ := input.(SubnetInputs)
+	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
-		err := action.terminateSubnet(subnet)
+		output, err := action.terminateSubnet(&subnet)
 		if err != nil {
 			return nil, err
 		}
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }

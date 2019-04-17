@@ -70,7 +70,9 @@ type SecurityGroupOutputs struct {
 }
 
 type SecurityGroupOutput struct {
-	SecurityGroupId string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 type SecurityGroupCreation struct{}
@@ -85,18 +87,9 @@ func (action *SecurityGroupCreation) ReadParam(param interface{}) (interface{}, 
 }
 
 func (action *SecurityGroupCreation) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
 	_, ok := input.(SecurityGroupInputs)
 	if !ok {
-		err = INVALID_PARAMETERS
-		return err
+		return INVALID_PARAMETERS
 	}
 
 	return nil
@@ -138,39 +131,29 @@ type SecurityGroupParam struct {
 }
 
 func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	securityGroups, ok := input.(SecurityGroupInputs)
+	securityGroups, _ := input.(SecurityGroupInputs)
 	outputs := SecurityGroupOutputs{}
-	if !ok {
-		err = INVALID_PARAMETERS
+
+	SecurityGroups, err := groupingPolicysBySecurityGroup(securityGroups.Inputs)
+	if err != nil {
 		return nil, err
 	}
 
-	SecurityGroups, err := groupingPolicysBySecurityGroup(securityGroups.Inputs)
-
 	for _, securityGroup := range SecurityGroups {
-		logrus.Debugf("securityGroup:%v", securityGroup)
-
-		ProviderParamsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
+		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 
 		createSecurityGroupRequest := CreateSecurityGroupRequest{
 			GroupName:        securityGroup.GroupName,
 			GroupDescription: securityGroup.GroupDescription,
 		}
 
-		client, err := createVpcClient(ProviderParamsMap["Region"], ProviderParamsMap["SecretID"], ProviderParamsMap["SecretKey"])
+		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
 			return nil, err
 		}
 
 		createSecurityGroup := vpc.NewCreateSecurityGroupRequest()
 		bytecreateSecurityGroupRequestData, _ := json.Marshal(createSecurityGroupRequest)
-		logrus.Debugf("bytecreateSecurityGroupRequestData=%v", string(bytecreateSecurityGroupRequestData))
 		createSecurityGroup.FromJsonString(string(bytecreateSecurityGroupRequestData))
 
 		createSecurityGroupresp, err := client.CreateSecurityGroup(createSecurityGroup)
@@ -179,7 +162,7 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 		}
 
 		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
-		logrus.Infof("Create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
+		logrus.Infof("create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
 
 		if len(securityGroup.SecurityGroupPolicySet.Ingress) > 0 {
 			createSecurityGroupPolicyRequest := CreateSecurityGroupPolicyRequest{
@@ -224,7 +207,9 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 		}
 
 		output := SecurityGroupOutput{}
-		output.SecurityGroupId = securityGroup.SecurityGroupId
+		output.Guid = securityGroup.Guid
+		output.RequestId = *createSecurityGroupresp.Response.RequestId
+		output.Id = securityGroup.SecurityGroupId
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
@@ -249,9 +234,7 @@ func groupingPolicysBySecurityGroup(actionParams []SecurityGroupInput) (security
 				return securityGroups, err
 			}
 			securityGroups = append(securityGroups, SecurityGroup)
-
 		} else {
-
 			if actionParams[i].RuleType == "Egress" {
 				securityGroups[index].SecurityGroupPolicySet.Egress = append(securityGroups[index].SecurityGroupPolicySet.Egress, policy)
 			} else if actionParams[i].RuleType == "Ingress" {
@@ -307,35 +290,17 @@ func (action *SecurityGroupTermination) ReadParam(param interface{}) (interface{
 }
 
 func (action *SecurityGroupTermination) CheckParam(input interface{}) error {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
 	_, ok := input.(SecurityGroupInputs)
 	if !ok {
-		err = INVALID_PARAMETERS
-		return err
+		return INVALID_PARAMETERS
 	}
 
 	return nil
 }
 
 func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	securityGroups, ok := input.(SecurityGroupInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return nil, err
-	}
-
+	securityGroups, _ := input.(SecurityGroupInputs)
+	outputs := SecurityGroupOutputs{}
 	var deletedSecurityGroups []string
 
 	for _, securityGroup := range securityGroups.Inputs {
@@ -349,9 +314,9 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 			continue
 		}
 
-		ProviderParamsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
+		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 
-		client, err := createVpcClient(ProviderParamsMap["Region"], ProviderParamsMap["SecretID"], ProviderParamsMap["SecretKey"])
+		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
 			return nil, err
 		}
@@ -371,7 +336,14 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", securityGroup.Id, *resp.Response.RequestId)
 		logrus.Infof("Terminated SecurityGroup[%v] has been done", securityGroup.Id)
 		deletedSecurityGroups = append(deletedSecurityGroups, securityGroup.Id)
+
+		output := SecurityGroupOutput{}
+		output.Guid = securityGroup.Guid
+		output.RequestId = *resp.Response.RequestId
+		output.Id = securityGroup.Id
+
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }

@@ -54,8 +54,10 @@ func initConfig() {
 }
 
 func initRouter() {
-	//path should be define as "/[version]/[provider]/[plugin]/[action]"
+	//path should be defined as "/[version]/[provider]/[plugin]/[action]"
 	http.HandleFunc("/v1/qcloud/vm/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/vm/start", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/vm/stop", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/vm/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/storage/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/storage/terminate", routeDispatcher)

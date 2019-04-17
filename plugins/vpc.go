@@ -32,6 +32,7 @@ type VpcInputs struct {
 }
 
 type VpcInput struct {
+	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Name           string `json:"name,omitempty"`
@@ -43,7 +44,9 @@ type VpcOutputs struct {
 }
 
 type VpcOutput struct {
-	Id string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 type VpcPlugin struct {
@@ -89,7 +92,7 @@ func (action *VpcCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *VpcCreateAction) createVpc(vpcInput VpcInput) (string, error) {
+func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (*VpcOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -100,23 +103,26 @@ func (action *VpcCreateAction) createVpc(vpcInput VpcInput) (string, error) {
 	response, err := client.CreateVpc(request)
 	if err != nil {
 		logrus.Errorf("failed to create vpc, error=%s", err)
-		return "", err
+		return nil, err
 	}
 
-	return *response.Response.Vpc.VpcId, nil
+	output := VpcOutput{}
+	output.RequestId = *response.Response.RequestId
+	output.Guid = vpcInput.Guid
+	output.Id = *response.Response.Vpc.VpcId
+
+	return &output, nil
 }
 
 func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
 	vpcs, _ := input.(VpcInputs)
 	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
-		vpcId, err := action.createVpc(vpc)
+		vpcOutput, err := action.createVpc(&vpc)
 		if err != nil {
 			return nil, err
 		}
-
-		vpcOutput := VpcOutput{Id: vpcId}
-		outputs.Outputs = append(outputs.Outputs, vpcOutput)
+		outputs.Outputs = append(outputs.Outputs, *vpcOutput)
 	}
 
 	logrus.Infof("all vpcs = %v are created", vpcs)
@@ -143,36 +149,41 @@ func (action *VpcTerminateAction) CheckParam(input interface{}) error {
 
 	for _, vpc := range vpcs.Inputs {
 		if vpc.Id == "" {
-			return errors.New("vpcTerminateAtion input vpcId is empty")
+			return errors.New("vpcTerminateAtion input vpc_id is empty")
 		}
 	}
 	return nil
 }
 
-func (action *VpcTerminateAction) terminateVpc(vpcInput VpcInput) error {
+func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (*VpcOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := vpc.NewDeleteVpcRequest()
 	request.VpcId = &vpcInput.Id
 
-	_, err = client.DeleteVpc(request)
+	response, err := client.DeleteVpc(request)
 	if err != nil {
-		logrus.Errorf("Failed to DeleteVpc(vpcId=%v), error=%s", vpcInput.Id, err)
-		return err
+		return nil, fmt.Errorf("Failed to DeleteVpc(vpcId=%v), error=%s", vpcInput.Id, err)
 	}
+	output := VpcOutput{}
+	output.RequestId = *response.Response.RequestId
+	output.Guid = vpcInput.Guid
+	output.Id = vpcInput.Id
 
-	return nil
+	return &output, nil
 }
 
 func (action *VpcTerminateAction) Do(input interface{}) (interface{}, error) {
 	vpcs, _ := input.(VpcInputs)
+	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
-		err := action.terminateVpc(vpc)
+		output, err := action.terminateVpc(&vpc)
 		if err != nil {
 			return nil, err
 		}
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }

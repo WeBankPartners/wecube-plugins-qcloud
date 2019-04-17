@@ -32,11 +32,12 @@ type StorageInputs struct {
 }
 
 type StorageInput struct {
+	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
 	DiskSize         uint64 `json:"disk_size,omitempty"`
 	DiskName         string `json:"disk_name,omitempty"`
-	DiskId           string `json:"disk_id,omitempty"`
+	Id               string `json:"id,omitempty"`
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -47,7 +48,9 @@ type StorageOutputs struct {
 }
 
 type StorageOutput struct {
-	DiskId string `json:"disk_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	Id        string `json:"id,omitempty"`
 }
 
 type StoragePlugin struct {
@@ -76,37 +79,39 @@ func (action *StorageCreateAction) ReadParam(param interface{}) (interface{}, er
 }
 
 func (action *StorageCreateAction) CheckParam(input interface{}) error {
+	_, ok := input.(StorageInputs)
+	if !ok {
+		return fmt.Errorf("storageCreateAtion:input type=%T not right", input)
+	}
+
 	return nil
 }
 
 func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
-	storages, ok := input.(StorageInputs)
+	storages, _ := input.(StorageInputs)
 	outputs := StorageOutputs{}
-	if !ok {
-		return nil, fmt.Errorf("storageCreateAtion:input type=%T not right", input)
-	}
 
 	for _, storage := range storages.Inputs {
-		diskId, err := action.createStorage(storage)
+		output, err := action.createStorage(&storage)
 		if err != nil {
 			return nil, err
 		}
-		storage.DiskId = diskId
 
-		err = action.attachStorage(storage)
+		storage.Id = output.Id
+
+		err = action.attachStorage(&storage)
 		if err != nil {
 			return nil, err
 		}
-		output := StorageOutput{}
-		output.DiskId = storage.DiskId
-		outputs.Outputs = append(outputs.Outputs, output)
+
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
 	logrus.Infof("all storages = %v are created", storages)
 	return &outputs, nil
 }
 
-func (action *StorageCreateAction) attachStorage(storage StorageInput) error {
+func (action *StorageCreateAction) attachStorage(storage *StorageInput) error {
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -115,17 +120,17 @@ func (action *StorageCreateAction) attachStorage(storage StorageInput) error {
 		time.Sleep(time.Duration(5) * time.Second)
 
 		request := cbs.NewAttachDisksRequest()
-		request.DiskIds = []*string{&storage.DiskId}
+		request.DiskIds = []*string{&storage.Id}
 		request.InstanceId = &storage.InstanceId
 		deleteWithInstance := true
 		request.DeleteWithInstance = &deleteWithInstance
 		response, err := client.AttachDisks(request)
 		if err != nil {
 			if i == tryTimes {
-				logrus.Errorf("attach storage (diskId = %v,instanceId = %v) in cloud meet err = %v, try times = %v",
-					storage.DiskId, storage.InstanceId, err, i)
+				logrus.Errorf("attach storage (id = %v,instanceId = %v) in cloud meet err = %v, try times = %v",
+					storage.Id, storage.InstanceId, err, i)
 			} else {
-				logrus.Infof("waiting for storage(diskId = %v) to be attached, try times = %v", storage.DiskId, i)
+				logrus.Infof("waiting for storage(id = %v) to be attached, try times = %v", storage.Id, i)
 			}
 			continue
 		}
@@ -136,7 +141,7 @@ func (action *StorageCreateAction) attachStorage(storage StorageInput) error {
 	return nil
 }
 
-func (action *StorageCreateAction) createStorage(storage StorageInput) (string, error) {
+func (action *StorageCreateAction) createStorage(storage *StorageInput) (*StorageOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -161,10 +166,19 @@ func (action *StorageCreateAction) createStorage(storage StorageInput) (string, 
 
 	response, err := client.CreateDisks(request)
 	if err != nil {
-		return "", fmt.Errorf("create storage in cloud meet err = %v", err)
+		return nil, fmt.Errorf("create storage in cloud meet err = %v", err)
 	}
 
-	return *response.Response.DiskIdSet[0], nil
+	if len(response.Response.DiskIdSet) == 0 {
+		return nil, fmt.Errorf("no storage is created")
+	}
+
+	output := StorageOutput{}
+	output.Guid = storage.Guid
+	output.RequestId = *response.Response.RequestId
+	output.Id = *response.Response.DiskIdSet[0]
+
+	return &output, nil
 }
 
 type StorageTerminateAction struct {
@@ -180,68 +194,86 @@ func (action *StorageTerminateAction) ReadParam(param interface{}) (interface{},
 }
 
 func (action *StorageTerminateAction) CheckParam(input interface{}) error {
+	storages, ok := input.(StorageInputs)
+	if !ok {
+		return fmt.Errorf("storageTerminationAtion:input type=%T not right", input)
+	}
+
+	for _, storage := range storages.Inputs {
+		if storage.Id == "" {
+			return fmt.Errorf("storageTerminateAction storage_id is empty")
+		}
+	}
+
 	return nil
 }
 
 func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error) {
-	storages, ok := input.(StorageInputs)
-	if !ok {
-		return nil, fmt.Errorf("storageTerminationAtion:input type=%T not right", input)
-	}
+	storages, _ := input.(StorageInputs)
+	outputs := StorageOutputs{}
 
 	for _, storage := range storages.Inputs {
-		err := action.detachStorage(storage)
+		err := action.detachStorage(&storage)
 		if err != nil {
 			return nil, err
 		}
 
-		err = action.terminateStorage(storage)
+		output, err := action.terminateStorage(&storage)
 		if err != nil {
 			return nil, err
 		}
+
+		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	return "", nil
+	return &outputs, nil
 }
 
-func (action *StorageTerminateAction) detachStorage(storage StorageInput) error {
+func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error {
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := cbs.NewDetachDisksRequest()
-	request.DiskIds = []*string{&storage.DiskId}
+	request.DiskIds = []*string{&storage.Id}
 	response, err := client.DetachDisks(request)
 	if err != nil {
-		return fmt.Errorf("detach storage(diskId = %v) in cloud meet error = %v", storage.DiskId, err)
+		return fmt.Errorf("detach storage(id = %v) in cloud meet error = %v", storage.Id, err)
 	}
 	logrus.Infof("detach storage request id = %v", response.Response.RequestId)
 	return nil
 }
 
-func (action *StorageTerminateAction) terminateStorage(storage StorageInput) error {
+func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*StorageOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := cbs.NewTerminateDisksRequest()
-	request.DiskIds = []*string{&storage.DiskId}
+	request.DiskIds = []*string{&storage.Id}
 
 	tryTimes := 10
+	requestId := ""
 	for i := 1; i <= tryTimes; i++ {
 		time.Sleep(time.Duration(5) * time.Second)
 
 		response, err := client.TerminateDisks(request)
 		if err != nil {
 			if i == tryTimes {
-				logrus.Errorf("terminate storage(diskId = %v) meet error = %v, try times = %v",
-					storage.DiskId, err, i)
+				logrus.Errorf("terminate storage(id = %v) meet error = %v, try times = %v",
+					storage.Id, err, i)
 			} else {
-				logrus.Infof("waiting for storage(diskId = %v) to be detached, try times = %v", storage.DiskId, i)
+				logrus.Infof("waiting for storage(id = %v) to be detached, try times = %v", storage.Id, i)
 			}
 			continue
 		}
+		requestId = *response.Response.RequestId
 		logrus.Infof("terminate storage request id = %v", response.Response.RequestId)
 		break
 	}
-	return nil
+
+	output := StorageOutput{}
+	output.Guid = storage.Guid
+	output.RequestId = requestId
+
+	return &output, nil
 }

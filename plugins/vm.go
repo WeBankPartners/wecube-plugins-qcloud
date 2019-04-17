@@ -35,6 +35,7 @@ type VmInputs struct {
 }
 
 type VmInput struct {
+	Guid                 string `json:"guid,omitempty"`
 	ProviderParams       string `json:"provider_params,omitempty"`
 	VpcId                string `json:"vpc_id,omitempty"`
 	SubnetId             string `json:"subnet_id,omitempty"`
@@ -53,6 +54,8 @@ type VmOutputs struct {
 }
 
 type VmOutput struct {
+	Guid              string `json:"guid,omitempty"`
+	RequestId         string `json:"request_id,omitempty"`
 	InstanceId        string `json:"instance_id,omitempty"`
 	Cpu               string `json:"cpu,omitempty"`
 	Memory            string `json:"memory,omitempty"`
@@ -67,6 +70,8 @@ var VMActions = make(map[string]Action)
 func init() {
 	VMActions["create"] = new(VMCreateAction)
 	VMActions["terminate"] = new(VMTerminateAction)
+	VMActions["start"] = new(VMStartAction)
+	VMActions["stop"] = new(VMStopAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
@@ -75,6 +80,33 @@ func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
 		return nil, fmt.Errorf("vmplugin,action[%s] not found", actionName)
 	}
 	return action, nil
+}
+
+type VMAction struct {
+}
+
+func (action *VMAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMAction) CheckParam(input interface{}) error {
+	vms, ok := input.(VmInputs)
+	if !ok {
+		return INVALID_PARAMETERS
+	}
+
+	for _, vm := range vms.Inputs {
+		if vm.InstanceId == "" {
+			return errors.New("input instance_id is empty")
+		}
+	}
+
+	return nil
 }
 
 type QcloudRunInstanceStruct struct {
@@ -224,49 +256,22 @@ func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) err
 	return nil
 }
 
-type VMCreateAction struct{}
-
-func (action *VMCreateAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
+type VMCreateAction struct {
+	VMAction
 }
 
 func (action *VMCreateAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
 	_, ok := input.(VmInputs)
 	if !ok {
-		err = INVALID_PARAMETERS
-		return err
+		return INVALID_PARAMETERS
 	}
 
 	return nil
 }
 
 func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	vms, ok := input.(VmInputs)
+	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
-	if !ok {
-		err = INVALID_PARAMETERS
-		return nil, err
-	}
-
 	for _, vm := range vms.Inputs {
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		logrus.Debugf("actionParam:%v", vm)
@@ -332,6 +337,8 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		output := VmOutput{}
+		output.RequestId = *describeInstancesResponse.Response.RequestId
+		output.Guid = vm.Guid
 		output.InstanceId = vm.InstanceId
 		output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
 		output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
@@ -343,47 +350,13 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	return &outputs, nil
 }
 
-type VMTerminateAction struct{}
-
-func (action *VMTerminateAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func (action *VMTerminateAction) CheckParam(input interface{}) error {
-	logrus.Debugf("param=%#v", input)
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-
-	_, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return err
-	}
-
-	return nil
+type VMTerminateAction struct {
+	VMAction
 }
 
 func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
-	var err error
-	defer func() {
-		if err != nil {
-			logrus.Error(err)
-		}
-	}()
-	vms, ok := input.(VmInputs)
-	if !ok {
-		err = INVALID_PARAMETERS
-		return nil, err
-	}
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
 
 	for _, vm := range vms.Inputs {
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
@@ -400,17 +373,108 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 		byteTerminateInstancesRequestData, _ := json.Marshal(terminateInstancesRequestData)
 		terminateInstancesRequest.FromJsonString(string(byteTerminateInstancesRequestData))
 
-		resp, err := client.TerminateInstances(terminateInstancesRequest)
+		response, err := client.TerminateInstances(terminateInstancesRequest)
 		if err != nil {
 			return nil, err
 		}
-		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.InstanceId, *resp.Response.RequestId)
+		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.InstanceId, *response.Response.RequestId)
 
 		if err = waitVmTerminateDone(client, vm.InstanceId, 600); err != nil {
 			return nil, err
 		}
+		output := VmOutput{}
+		output.RequestId = *response.Response.RequestId
+		output.Guid = vm.Guid
+		output.InstanceId = vm.InstanceId
+
+		outputs.Outputs = append(outputs.Outputs, output)
+
 		logrus.Infof("Terminated VM[%v] has been done", vm.InstanceId)
 	}
 
-	return "", nil
+	return &outputs, nil
+}
+
+type VMStartAction struct {
+	VMAction
+}
+
+func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
+	for _, vm := range vms.Inputs {
+		requestId, err := action.startInstance(vm)
+		if err != nil {
+			return nil, err
+		}
+
+		output := VmOutput{}
+		output.RequestId = requestId
+		output.Guid = vm.Guid
+		output.InstanceId = vm.InstanceId
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	return &outputs, nil
+}
+
+func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
+	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
+
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return "", err
+	}
+
+	request := cvm.NewStartInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+
+	response, err := client.StartInstances(request)
+	if err != nil {
+		return "", err
+	}
+	return *response.Response.RequestId, nil
+}
+
+type VMStopAction struct {
+	VMAction
+}
+
+func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmInputs)
+	outputs := VmOutputs{}
+	for _, vm := range vms.Inputs {
+		output, err := action.stopInstance(&vm)
+		if err != nil {
+			return nil, err
+		}
+
+		outputs.Outputs = append(outputs.Outputs, *output)
+	}
+
+	return &outputs, nil
+}
+
+func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
+	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
+
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
+
+	request := cvm.NewStopInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+
+	response, err := client.StopInstances(request)
+	if err != nil {
+		return nil, err
+	}
+
+	output := VmOutput{}
+	output.RequestId = *response.Response.RequestId
+	output.Guid = vm.Guid
+	output.InstanceId = vm.InstanceId
+
+	return &output, nil
 }
