@@ -16,7 +16,7 @@ archive:
 	rm -rf source.tar.gz
 	cd $(APP_HOME) && CGO_ENABLED=0 GOOS=linux go build
 	cp -R $(APP_HOME)/conf target
-	cp start.sh stop.sh docker_run.sh docker_stop.sh makefile Dockerfile target
+	cp start.sh stop.sh docker_run.sh docker_stop.sh makefile dockerfile target
 	cd target && chmod 755 *.sh
 	cp $(APP_HOME)/wecube-plugins target
 	cd target && tar cvfz $(PKG_NAME) *
