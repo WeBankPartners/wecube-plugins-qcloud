@@ -1,4 +1,4 @@
-// Copyright 1999-2018 Tencent Ltd.
+// Copyright (c) 2017-2018 THL A29 Limited, a Tencent company. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,16 +26,18 @@ type Client struct {
     common.Client
 }
 
+// Deprecated
 func NewClientWithSecretId(secretId, secretKey, region string) (client *Client, err error) {
+    cpf := profile.NewClientProfile()
     client = &Client{}
-    client.Init(region).WithSecretId(secretId, secretKey)
+    client.Init(region).WithSecretId(secretId, secretKey).WithProfile(cpf)
     return
 }
 
 func NewClient(credential *common.Credential, region string, clientProfile *profile.ClientProfile) (client *Client, err error) {
     client = &Client{}
     client.Init(region).
-        WithSecretId(credential.SecretId, credential.SecretKey).
+        WithCredential(credential).
         WithProfile(clientProfile)
     return
 }
@@ -97,6 +99,56 @@ func (c *Client) AssociateInstancesKeyPairs(request *AssociateInstancesKeyPairsR
     return
 }
 
+func NewAssociateSecurityGroupsRequest() (request *AssociateSecurityGroupsRequest) {
+    request = &AssociateSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "AssociateSecurityGroups")
+    return
+}
+
+func NewAssociateSecurityGroupsResponse() (response *AssociateSecurityGroupsResponse) {
+    response = &AssociateSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (AssociateSecurityGroups) 用于绑定安全组到指定实例。
+func (c *Client) AssociateSecurityGroups(request *AssociateSecurityGroupsRequest) (response *AssociateSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewAssociateSecurityGroupsRequest()
+    }
+    response = NewAssociateSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewCreateDisasterRecoverGroupRequest() (request *CreateDisasterRecoverGroupRequest) {
+    request = &CreateDisasterRecoverGroupRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "CreateDisasterRecoverGroup")
+    return
+}
+
+func NewCreateDisasterRecoverGroupResponse() (response *CreateDisasterRecoverGroupResponse) {
+    response = &CreateDisasterRecoverGroupResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (CreateDisasterRecoverGroup)用于创建[分散置放群组](https://cloud.tencent.com/document/product/213/15486)。创建好的置放群组，可在[创建实例](https://cloud.tencent.com/document/api/213/15730)时指定。
+func (c *Client) CreateDisasterRecoverGroup(request *CreateDisasterRecoverGroupRequest) (response *CreateDisasterRecoverGroupResponse, err error) {
+    if request == nil {
+        request = NewCreateDisasterRecoverGroupRequest()
+    }
+    response = NewCreateDisasterRecoverGroupResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCreateImageRequest() (request *CreateImageRequest) {
     request = &CreateImageRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -148,6 +200,31 @@ func (c *Client) CreateKeyPair(request *CreateKeyPairRequest) (response *CreateK
         request = NewCreateKeyPairRequest()
     }
     response = NewCreateKeyPairResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDeleteDisasterRecoverGroupsRequest() (request *DeleteDisasterRecoverGroupsRequest) {
+    request = &DeleteDisasterRecoverGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "DeleteDisasterRecoverGroups")
+    return
+}
+
+func NewDeleteDisasterRecoverGroupsResponse() (response *DeleteDisasterRecoverGroupsResponse) {
+    response = &DeleteDisasterRecoverGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (DeleteDisasterRecoverGroups)用于删除[分散置放群组](https://cloud.tencent.com/document/product/213/15486)。只有空的置放群组才能被删除，非空的群组需要先销毁组内所有云主机，才能执行删除操作，不然会产生删除置放群组失败的错误。
+func (c *Client) DeleteDisasterRecoverGroups(request *DeleteDisasterRecoverGroupsRequest) (response *DeleteDisasterRecoverGroupsResponse, err error) {
+    if request == nil {
+        request = NewDeleteDisasterRecoverGroupsRequest()
+    }
+    response = NewDeleteDisasterRecoverGroupsResponse()
     err = c.Send(request, response)
     return
 }
@@ -205,6 +282,56 @@ func (c *Client) DeleteKeyPairs(request *DeleteKeyPairsRequest) (response *Delet
         request = NewDeleteKeyPairsRequest()
     }
     response = NewDeleteKeyPairsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeDisasterRecoverGroupQuotaRequest() (request *DescribeDisasterRecoverGroupQuotaRequest) {
+    request = &DescribeDisasterRecoverGroupQuotaRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "DescribeDisasterRecoverGroupQuota")
+    return
+}
+
+func NewDescribeDisasterRecoverGroupQuotaResponse() (response *DescribeDisasterRecoverGroupQuotaResponse) {
+    response = &DescribeDisasterRecoverGroupQuotaResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (DescribeDisasterRecoverGroupQuota)用于查询[分散置放群组](https://cloud.tencent.com/document/product/213/15486)配额。
+func (c *Client) DescribeDisasterRecoverGroupQuota(request *DescribeDisasterRecoverGroupQuotaRequest) (response *DescribeDisasterRecoverGroupQuotaResponse, err error) {
+    if request == nil {
+        request = NewDescribeDisasterRecoverGroupQuotaRequest()
+    }
+    response = NewDescribeDisasterRecoverGroupQuotaResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeDisasterRecoverGroupsRequest() (request *DescribeDisasterRecoverGroupsRequest) {
+    request = &DescribeDisasterRecoverGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "DescribeDisasterRecoverGroups")
+    return
+}
+
+func NewDescribeDisasterRecoverGroupsResponse() (response *DescribeDisasterRecoverGroupsResponse) {
+    response = &DescribeDisasterRecoverGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (DescribeDisasterRecoverGroups)用于查询[分散置放群组](https://cloud.tencent.com/document/product/213/15486)信息。
+func (c *Client) DescribeDisasterRecoverGroups(request *DescribeDisasterRecoverGroupsRequest) (response *DescribeDisasterRecoverGroupsResponse, err error) {
+    if request == nil {
+        request = NewDescribeDisasterRecoverGroupsRequest()
+    }
+    response = NewDescribeDisasterRecoverGroupsResponse()
     err = c.Send(request, response)
     return
 }
@@ -274,7 +401,7 @@ func NewDescribeImageSharePermissionResponse() (response *DescribeImageSharePerm
     return
 }
 
-// 本接口（ModifyImageSharePermission）用于修改镜像分享信息。
+// 本接口（DescribeImageSharePermission）用于查询镜像分享信息。
 func (c *Client) DescribeImageSharePermission(request *DescribeImageSharePermissionRequest) (response *DescribeImageSharePermissionResponse, err error) {
     if request == nil {
         request = NewDescribeImageSharePermissionRequest()
@@ -414,6 +541,44 @@ func (c *Client) DescribeInstanceTypeConfigs(request *DescribeInstanceTypeConfig
         request = NewDescribeInstanceTypeConfigsRequest()
     }
     response = NewDescribeInstanceTypeConfigsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceVncUrlRequest() (request *DescribeInstanceVncUrlRequest) {
+    request = &DescribeInstanceVncUrlRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "DescribeInstanceVncUrl")
+    return
+}
+
+func NewDescribeInstanceVncUrlResponse() (response *DescribeInstanceVncUrlResponse) {
+    response = &DescribeInstanceVncUrlResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 ( DescribeInstanceVncUrl ) 用于查询实例管理终端地址。
+// 
+// * 处于 `STOPPED` 状态的机器无法使用此功能。
+// * 管理终端地址的有效期为 15 秒，调用接口成功后如果 15 秒内不使用该链接进行访问，管理终端地址自动失效，您需要重新查询。
+// * 管理终端地址一旦被访问，将自动失效，您需要重新查询。
+// * 如果连接断开，每分钟内重新连接的次数不能超过 30 次。
+// * 获取到 `InstanceVncUrl` 后，您需要在在链接 <https://img.qcloud.com/qcloud/app/active_vnc/index.html?> 末尾加上参数 `InstanceVncUrl=xxxx`  。
+//   - 参数 `InstanceVncUrl` ：调用接口成功后会返回的 `InstanceVncUrl` 的值。
+// 
+//     最后组成的 URL 格式如下：
+// 
+// ```
+// https://img.qcloud.com/qcloud/app/active_vnc/index.html?InstanceVncUrl=wss%3A%2F%2Fbjvnc.qcloud.com%3A26789%2Fvnc%3Fs%3DaHpjWnRVMFNhYmxKdDM5MjRHNlVTSVQwajNUSW0wb2tBbmFtREFCTmFrcy8vUUNPMG0wSHZNOUUxRm5PMmUzWmFDcWlOdDJIbUJxSTZDL0RXcHZxYnZZMmRkWWZWcEZia2lyb09XMzdKNmM9
+// ```
+func (c *Client) DescribeInstanceVncUrl(request *DescribeInstanceVncUrlRequest) (response *DescribeInstanceVncUrlResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceVncUrlRequest()
+    }
+    response = NewDescribeInstanceVncUrlResponse()
     err = c.Send(request, response)
     return
 }
@@ -620,13 +785,38 @@ func NewDisassociateInstancesKeyPairsResponse() (response *DisassociateInstances
 // 
 // * 只支持[`STOPPED`](https://cloud.tencent.com/document/api/213/9452#INSTANCE_STATE)状态的`Linux`操作系统的实例。
 // * 解绑密钥后，实例可以通过原来设置的密码登录。
-// * 如果原来没有设置密码，解绑后将无法使用 `SSH` 登录。可以调用 [ResetInstancesPassword](https://cloud.tencent.com/document/api/213/9397) 接口来设置登陆密码。
+// * 如果原来没有设置密码，解绑后将无法使用 `SSH` 登录。可以调用 [ResetInstancesPassword](https://cloud.tencent.com/document/api/213/15736) 接口来设置登录密码。
 // * 支持批量操作。每次请求批量实例的上限为100。如果批量实例存在不允许操作的实例，操作会以特定错误码返回。
 func (c *Client) DisassociateInstancesKeyPairs(request *DisassociateInstancesKeyPairsRequest) (response *DisassociateInstancesKeyPairsResponse, err error) {
     if request == nil {
         request = NewDisassociateInstancesKeyPairsRequest()
     }
     response = NewDisassociateInstancesKeyPairsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDisassociateSecurityGroupsRequest() (request *DisassociateSecurityGroupsRequest) {
+    request = &DisassociateSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "DisassociateSecurityGroups")
+    return
+}
+
+func NewDisassociateSecurityGroupsResponse() (response *DisassociateSecurityGroupsResponse) {
+    response = &DisassociateSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (DisassociateSecurityGroups) 用于解绑实例的指定安全组。
+func (c *Client) DisassociateSecurityGroups(request *DisassociateSecurityGroupsRequest) (response *DisassociateSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewDisassociateSecurityGroupsRequest()
+    }
+    response = NewDisassociateSecurityGroupsResponse()
     err = c.Send(request, response)
     return
 }
@@ -681,6 +871,34 @@ func (c *Client) ImportKeyPair(request *ImportKeyPairRequest) (response *ImportK
         request = NewImportKeyPairRequest()
     }
     response = NewImportKeyPairResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewInquiryPriceModifyInstancesChargeTypeRequest() (request *InquiryPriceModifyInstancesChargeTypeRequest) {
+    request = &InquiryPriceModifyInstancesChargeTypeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "InquiryPriceModifyInstancesChargeType")
+    return
+}
+
+func NewInquiryPriceModifyInstancesChargeTypeResponse() (response *InquiryPriceModifyInstancesChargeTypeResponse) {
+    response = &InquiryPriceModifyInstancesChargeTypeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (InquiryPriceModifyInstancesChargeType) 用于切换实例的计费模式询价。
+// 
+// * 只支持从 `POSTPAID_BY_HOUR` 计费模式切换为`PREPAID`计费模式。
+// * 关机不收费的实例、`BC1`和`BS1`机型族的实例、设置定时销毁的实例不支持该操作。
+func (c *Client) InquiryPriceModifyInstancesChargeType(request *InquiryPriceModifyInstancesChargeTypeRequest) (response *InquiryPriceModifyInstancesChargeTypeResponse, err error) {
+    if request == nil {
+        request = NewInquiryPriceModifyInstancesChargeTypeRequest()
+    }
+    response = NewInquiryPriceModifyInstancesChargeTypeResponse()
     err = c.Send(request, response)
     return
 }
@@ -788,7 +1006,6 @@ func NewInquiryPriceResetInstancesTypeResponse() (response *InquiryPriceResetIns
 // 
 // * 目前只支持[系统盘类型](https://cloud.tencent.com/document/api/213/9452#block_device)是`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`类型的实例使用该接口进行调整机型询价。
 // * 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口调整机型询价。
-// * 目前不支持跨机型系统来调整机型，即使用该接口时指定的`InstanceType`和实例原来的机型需要属于同一系列。
 // * 对于包年包月实例，使用该接口会涉及扣费，请确保账户余额充足。可通过[`DescribeAccountBalance`](https://cloud.tencent.com/document/product/378/4397)接口查询账户余额。
 func (c *Client) InquiryPriceResetInstancesType(request *InquiryPriceResetInstancesTypeRequest) (response *InquiryPriceResetInstancesTypeResponse, err error) {
     if request == nil {
@@ -816,7 +1033,7 @@ func NewInquiryPriceResizeInstanceDisksResponse() (response *InquiryPriceResizeI
 
 // 本接口 (InquiryPriceResizeInstanceDisks) 用于扩容实例的数据盘询价。
 // 
-// * 目前只支持扩容随实例购买的数据盘询价，且[数据盘类型](/document/api/213/9452#block_device)为：`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`。
+// * 目前只支持扩容非弹性数据盘（[`DescribeDisks`](https://cloud.tencent.com/document/api/362/16315)接口返回值中的`Portable`为`false`表示非弹性）询价，且[数据盘类型](/document/api/213/9452#block_device)为：`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`。
 // * 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口扩容数据盘询价。* 仅支持包年包月实例随机器购买的数据盘。* 目前只支持扩容一块数据盘询价。
 func (c *Client) InquiryPriceResizeInstanceDisks(request *InquiryPriceResizeInstanceDisksRequest) (response *InquiryPriceResizeInstanceDisksResponse, err error) {
     if request == nil {
@@ -848,6 +1065,31 @@ func (c *Client) InquiryPriceRunInstances(request *InquiryPriceRunInstancesReque
         request = NewInquiryPriceRunInstancesRequest()
     }
     response = NewInquiryPriceRunInstancesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyDisasterRecoverGroupAttributeRequest() (request *ModifyDisasterRecoverGroupAttributeRequest) {
+    request = &ModifyDisasterRecoverGroupAttributeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "ModifyDisasterRecoverGroupAttribute")
+    return
+}
+
+func NewModifyDisasterRecoverGroupAttributeResponse() (response *ModifyDisasterRecoverGroupAttributeResponse) {
+    response = &ModifyDisasterRecoverGroupAttributeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (ModifyDisasterRecoverGroupAttribute)用于修改[分散置放群组](https://cloud.tencent.com/document/product/213/15486)属性。
+func (c *Client) ModifyDisasterRecoverGroupAttribute(request *ModifyDisasterRecoverGroupAttributeRequest) (response *ModifyDisasterRecoverGroupAttributeResponse, err error) {
+    if request == nil {
+        request = NewModifyDisasterRecoverGroupAttributeRequest()
+    }
+    response = NewModifyDisasterRecoverGroupAttributeResponse()
     err = c.Send(request, response)
     return
 }
@@ -949,15 +1191,44 @@ func NewModifyInstancesAttributeResponse() (response *ModifyInstancesAttributeRe
     return
 }
 
-// 本接口 (ModifyInstancesAttribute) 用于修改实例的属性（目前只支持修改实例的名称）。
+// 本接口 (ModifyInstancesAttribute) 用于修改实例的属性（目前只支持修改实例的名称和关联的安全组）。
 // 
 // * “实例名称”仅为方便用户自己管理之用，腾讯云并不以此名称作为提交工单或是进行实例管理操作的依据。
 // * 支持批量操作。每次请求批量实例的上限为100。
+// * 修改关联安全组时，子机原来关联的安全组会被解绑。
 func (c *Client) ModifyInstancesAttribute(request *ModifyInstancesAttributeRequest) (response *ModifyInstancesAttributeResponse, err error) {
     if request == nil {
         request = NewModifyInstancesAttributeRequest()
     }
     response = NewModifyInstancesAttributeResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyInstancesChargeTypeRequest() (request *ModifyInstancesChargeTypeRequest) {
+    request = &ModifyInstancesChargeTypeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "ModifyInstancesChargeType")
+    return
+}
+
+func NewModifyInstancesChargeTypeResponse() (response *ModifyInstancesChargeTypeResponse) {
+    response = &ModifyInstancesChargeTypeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (ModifyInstancesChargeType) 用于切换实例的计费模式。
+// 
+// * 只支持从 `POSTPAID_BY_HOUR` 计费模式切换为`PREPAID`计费模式。
+// * 关机不收费的实例、`BC1`和`BS1`机型族的实例、设置定时销毁的实例不支持该操作。
+func (c *Client) ModifyInstancesChargeType(request *ModifyInstancesChargeTypeRequest) (response *ModifyInstancesChargeTypeResponse, err error) {
+    if request == nil {
+        request = NewModifyInstancesChargeTypeRequest()
+    }
+    response = NewModifyInstancesChargeTypeResponse()
     err = c.Send(request, response)
     return
 }
@@ -1016,6 +1287,33 @@ func (c *Client) ModifyInstancesRenewFlag(request *ModifyInstancesRenewFlagReque
         request = NewModifyInstancesRenewFlagRequest()
     }
     response = NewModifyInstancesRenewFlagResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyInstancesVpcAttributeRequest() (request *ModifyInstancesVpcAttributeRequest) {
+    request = &ModifyInstancesVpcAttributeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cvm", APIVersion, "ModifyInstancesVpcAttribute")
+    return
+}
+
+func NewModifyInstancesVpcAttributeResponse() (response *ModifyInstancesVpcAttributeResponse) {
+    response = &ModifyInstancesVpcAttributeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(ModifyInstancesVpcAttribute)用于修改实例vpc属性，如私有网络ip。
+// * 此操作默认会关闭实例，完成后再启动。
+// * 当指定私有网络ID和子网ID（子网必须在实例所在的可用区）与指定实例所在私有网络不一致时，会将实例迁移至指定的私有网络的子网下。执行此操作前请确保指定的实例上没有绑定[弹性网卡](https://cloud.tencent.com/document/product/576)和[负载均衡](https://cloud.tencent.com/document/product/214)。
+func (c *Client) ModifyInstancesVpcAttribute(request *ModifyInstancesVpcAttributeRequest) (response *ModifyInstancesVpcAttributeResponse, err error) {
+    if request == nil {
+        request = NewModifyInstancesVpcAttributeRequest()
+    }
+    response = NewModifyInstancesVpcAttributeResponse()
     err = c.Send(request, response)
     return
 }
@@ -1245,7 +1543,7 @@ func NewResetInstancesTypeResponse() (response *ResetInstancesTypeResponse) {
 
 // 本接口 (ResetInstancesType) 用于调整实例的机型。
 // * 目前只支持[系统盘类型](/document/api/213/9452#block_device)是`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`类型的实例使用该接口进行机型调整。
-// * 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口调整机型。* 目前不支持跨机型系统来调整机型，即使用该接口时指定的`InstanceType`和实例原来的机型需要属于同一系列。* 对于包年包月实例，使用该接口会涉及扣费，请确保账户余额充足。可通过[`DescribeAccountBalance`](https://cloud.tencent.com/document/product/378/4397)接口查询账户余额。
+// * 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口调整机型。对于包年包月实例，使用该接口会涉及扣费，请确保账户余额充足。可通过[`DescribeAccountBalance`](https://cloud.tencent.com/document/product/378/4397)接口查询账户余额。
 func (c *Client) ResetInstancesType(request *ResetInstancesTypeRequest) (response *ResetInstancesTypeResponse, err error) {
     if request == nil {
         request = NewResetInstancesTypeRequest()
@@ -1272,7 +1570,8 @@ func NewResizeInstanceDisksResponse() (response *ResizeInstanceDisksResponse) {
 
 // 本接口 (ResizeInstanceDisks) 用于扩容实例的数据盘。
 // 
-// * 目前只支持扩容随实例购买的数据盘，且[数据盘类型](/document/api/213/9452#block_device)为：`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`。* 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口扩容数据盘。
+// * 目前只支持扩容非弹性数据盘（[`DescribeDisks`](https://cloud.tencent.com/document/api/362/16315)接口返回值中的`Portable`为`false`表示非弹性），且[数据盘类型](/document/api/213/9452#block_device)为：`CLOUD_BASIC`、`CLOUD_PREMIUM`、`CLOUD_SSD`。
+// * 目前不支持[CDH](https://cloud.tencent.com/document/product/416)实例使用该接口扩容数据盘。
 // * 对于包年包月实例，使用该接口会涉及扣费，请确保账户余额充足。可通过[`DescribeAccountBalance`](https://cloud.tencent.com/document/product/378/4397)接口查询账户余额。
 // * 目前只支持扩容一块数据盘。
 func (c *Client) ResizeInstanceDisks(request *ResizeInstanceDisksRequest) (response *ResizeInstanceDisksResponse, err error) {
@@ -1304,7 +1603,7 @@ func NewRunInstancesResponse() (response *RunInstancesResponse) {
 // * 实例创建成功后将自动开机启动，[实例状态](/document/api/213/9452#instance_state)变为“运行中”。
 // * 预付费实例的购买会预先扣除本次实例购买所需金额，按小时后付费实例购买会预先冻结本次实例购买一小时内所需金额，在调用本接口前请确保账户余额充足。
 // * 本接口允许购买的实例数量遵循[CVM实例购买限制](https://cloud.tencent.com/document/product/213/2664)，所创建的实例和官网入口创建的实例共用配额。
-// * 本接口为异步接口，当创建请求下发成功后会返回一个实例`ID`列表，此时实例的创建并立即未完成。在此期间实例的状态将会处于“准备中”，可以通过调用 [DescribeInstancesStatus](https://cloud.tencent.com/document/api/213/15738) 接口查询对应实例的状态，来判断生产有没有最终成功。如果实例的状态由“准备中”变为“运行中”，则为创建成功。
+// * 本接口为异步接口，当创建请求下发成功后会返回一个实例`ID`列表，此时实例的创建并立即未完成。在此期间实例的状态将会处于“准备中”，可以通过调用 [DescribeInstances](https://cloud.tencent.com/document/api/213/15728) 接口查询对应实例的状态，来判断创建有没有最终成功。如果实例的状态由“准备中”变为“运行中”，则为创建成功。
 func (c *Client) RunInstances(request *RunInstancesRequest) (response *RunInstancesResponse, err error) {
     if request == nil {
         request = NewRunInstancesRequest()

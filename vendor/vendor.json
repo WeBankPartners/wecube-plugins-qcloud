@@ -15,8 +15,13 @@
 			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
-			"checksumSHA1": "qVQEqcIKNRSUapmsOLwP2DopLFo=",
+			"checksumSHA1": "plNHpYBtD1s+7+bOAxLiS8Tv7NU=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "4QpNpb9zzfWrcs8LjGV05TsmZ2Q=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320",
 			"revision": ""
 		},
 		{
@@ -32,7 +37,7 @@
 			"revisionTime": "2018-06-08T07:14:49Z"
 		},
 		{
-			"checksumSHA1": "mbhvYLpzCTN8ZPCIxHVuBSLwCmA=",
+			"checksumSHA1": "ALHGDh6LqFsSPSBlciTaRBza+CM=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http",
 			"revision": "ce1ae1a278d8cf58325363f8c4cfa6592fc99187",
 			"revisionTime": "2018-06-08T07:14:49Z"
@@ -44,13 +49,13 @@
 			"revisionTime": "2018-06-08T07:14:49Z"
 		},
 		{
-			"checksumSHA1": "ndT05oq9auKfMyiKlyKahdchXpI=",
+			"checksumSHA1": "4N06/29ni/ZRCTgfCk2MlNP2jn0=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312",
 			"revision": "ce1ae1a278d8cf58325363f8c4cfa6592fc99187",
 			"revisionTime": "2018-06-08T07:14:49Z"
 		},
 		{
-			"checksumSHA1": "3u48jaF15/CdsOwcQyyAStWwdDY=",
+			"checksumSHA1": "ArwCkAoM6C0zag6KGgAgIuX3ptI=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
 			"revision": "ce1ae1a278d8cf58325363f8c4cfa6592fc99187",
 			"revisionTime": "2018-06-08T07:14:49Z"
