@@ -15,6 +15,11 @@
 			"revisionTime": "2019-03-11T16:20:41Z"
 		},
 		{
+			"checksumSHA1": "162BZV7nIgqzmfYoYFqXVBLoZ/k=",
+			"path": "github.com/snowzach/rotatefilehook",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "qVQEqcIKNRSUapmsOLwP2DopLFo=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
 			"revision": ""
@@ -72,6 +77,11 @@
 			"path": "golang.org/x/sys/windows",
 			"revision": "83801418e1b59fb1880e363299581ee543af32ca",
 			"revisionTime": "2017-12-22T10:59:23Z"
+		},
+		{
+			"checksumSHA1": "GD/tP00KmteOc9TsOtTcrfKw3KA=",
+			"path": "gopkg.in/natefinch/lumberjack.v2",
+			"revision": ""
 		}
 	],
 	"rootPath": "git.webank.io/wecube-plugins"
