@@ -33,13 +33,13 @@ type RedisInputs struct {
 type RedisInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
-	ZoneID         int    `json:"zone_id,omitempty"`
-	TypeID         int    `json:"type_id,omitempty"`
-	MemSize        int    `json:"mem_size,omitempty"`
-	GoodsNum       int    `json:"goods_num,omitempty"`
-	Period         int    `json:"period,omitempty"`
+	ZoneID         uint64 `json:"zone_id,omitempty"`
+	TypeID         uint64 `json:"type_id,omitempty"`
+	MemSize        uint64 `json:"mem_size,omitempty"`
+	GoodsNum       uint64 `json:"goods_num,omitempty"`
+	Period         uint64 `json:"period,omitempty"`
 	Password       string `json:"password,omitempty"`
-	BillingMode    int    `json:"billing_mode,omitempty"`
+	BillingMode    int64  `json:"billing_mode,omitempty"`
 	VpcID          string `json:"vpc_id,omitempty"`
 	SubnetID       string `json:"subnet_id,omitempty"`
 	InstanceID     string `json:"instance_id,omitempty"`
@@ -53,7 +53,7 @@ type RedisOutput struct {
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	DealID    string `json:"deal_id,omitempty"`
-	TaskID    int    `json:"task_id,omitempty"`
+	TaskID    int64  `json:"task_id,omitempty"`
 }
 
 type RedisPlugin struct {
@@ -119,7 +119,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		request.VpcId = &redisInput.VpcID
 	}
 
-	if (*redisInput).SubnetId != "" {
+	if (*redisInput).SubnetID != "" {
 		request.SubnetId = &redisInput.SubnetID
 	}
 
@@ -132,7 +132,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	output := RedisOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = redisInput.Guid
-	output.DealId = *response.Response.DealId
+	output.DealID = *response.Response.DealId
 
 	return &output, nil
 }
