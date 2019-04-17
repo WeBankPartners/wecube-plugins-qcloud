@@ -1,7 +1,7 @@
 FROM alpine-wecube:v1
 LABEL maintainer = "Webank CTB Team"
 
-ENV APP_HOME=/home/app/wecube-plugins
+ENV APP_HOME=/home/app
 ENV APP_CONF=$APP_HOME/conf
 ENV LOG_PATH=$APP_HOME/logs
 
@@ -16,5 +16,3 @@ RUN chmod +x $APP_HOME/*.*
 WORKDIR $APP_HOME
 
 ENTRYPOINT ["/bin/sh", "start.sh"]
-
-# ENTRYPOINT ["./wecube-plugins", ">>", "../logs/wecube-plugins.log", "2>&1", "&"]
