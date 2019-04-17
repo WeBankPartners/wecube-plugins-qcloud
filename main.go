@@ -3,29 +3,50 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"git.webank.io/wecube-plugins/conf"
 	"git.webank.io/wecube-plugins/plugins"
 	"github.com/sirupsen/logrus"
+	"github.com/snowzach/rotatefilehook"
 )
 
 const (
 	CONF_FILE_PATH = "./conf/app.conf"
 )
 
+func init() {
+	initConfig()
+	initLogger()
+	initRouter()
+}
+
 func main() {
 	logrus.Infof("Start WeCube-Plungins Service ... ")
-	logrus.SetReportCaller(true)
-	logrus.SetLevel(logrus.DebugLevel)
-
-	initConfig()
-
-	initRouter()
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
 	}
+}
+
+func initLogger() {
+	fileName := "logs/wecube-plugins.log"
+	logrus.SetReportCaller(true)
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, 0666)
+	if err == nil {
+		logrus.SetOutput(file)
+	}
+
+	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
+		Filename:   fileName,
+		MaxSize:    100,
+		MaxBackups: 7,
+		MaxAge:     7,
+		Level:      logrus.InfoLevel,
+		Formatter:  &logrus.TextFormatter{DisableTimestamp: false, DisableColors: false},
+	})
+	logrus.AddHook(rotateFileHook)
 }
 
 func initConfig() {
