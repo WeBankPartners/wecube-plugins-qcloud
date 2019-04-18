@@ -190,7 +190,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 		if *taskResp.Data.Status == 1 {
 			// fail, need retry delete
-			return nil, errors.New("terminateNatGateway execute failed ,need retry")
+			return nil, errors.New("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 
 		time.Sleep(10 * time.Second)
