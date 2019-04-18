@@ -265,9 +265,9 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 }
 
 func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface{}, error) {
-	peeringConnections, _ := input.([]PeeringConnectionInput)
+	peeringConnections, _ := input.(PeeringConnectionInputs)
 	outputs := PeeringConnectionOutputs{}
-	for _, peeringConnection := range peeringConnections {
+	for _, peeringConnection := range peeringConnections.Inputs {
 		err := action.terminatePeeringConnection(peeringConnection)
 		if err != nil {
 			return nil, err
