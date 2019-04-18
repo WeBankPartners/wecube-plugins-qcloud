@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package name="qcloud" version="v1">
-    <docker-image>qloud.image</docker-image>
+    <docker-image>wecube-plugins</docker-image>
     <container-port>8080</container-port>
-    <container-config-directory>/home/app/conf</container-config-directory>
-    <container-log-directory>/home/app/log</container-log-directory>
+    <container-config-directory>/home/app/wecube-plugins/conf</container-config-directory>
+    <container-log-directory>/home/app/wecube-plugins/log</container-log-directory>
     <plugin name="vpc" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+    	        <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">cidr_block</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/vpc/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="peering-connection">
         <interface name="create" path="/v1/qcloud/peering-connection/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">vpc_id</parameter>
@@ -45,27 +45,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/peering-connection/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="security-group">
         <interface name="create" path="/v1/qcloud/security-group/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">description</parameter>
@@ -79,27 +79,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/security-group/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="route-table">
         <interface name="create" path="/v1/qcloud/route-table/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="number">vpc_id</parameter>
@@ -109,27 +109,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/route-table/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="subnet">
         <interface name="create" path="/v1/qcloud/subnet/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">cidr_block</parameter>
@@ -138,27 +138,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/subnet/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="vm">
         <interface name="create" path="/v1/qcloud/vm/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
@@ -170,9 +170,9 @@
                 <parameter datatype="number">instance_charge_period</parameter>
             </input-parameters>
             <output-parameters>
-			    <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
                 <parameter datatype="string">cpu</parameter>
                 <parameter datatype="string">memory</parameter>
                 <parameter datatype="string">instance_state</parameter>
@@ -181,21 +181,21 @@
         </interface>
         <interface name="terminate" path="/v1/qcloud/vm/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="storage">
         <interface name="create" path="/v1/qcloud/storage/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">disk_type</parameter>
                 <parameter datatype="number">disk_size</parameter>
@@ -207,27 +207,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/storage/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="nat-gateway">
         <interface name="create" path="/v1/qcloud/nat-gateway/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">id</parameter>
@@ -239,27 +239,27 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/nat-gateway/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
     <plugin name="mysql-vm">
         <interface name="create" path="/v1/qcloud/mysql-vm/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">engine_version</parameter>
                 <parameter datatype="number">memory</parameter>
@@ -273,32 +273,32 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/mysql-vm/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="restart" path="/v1/qcloud/mysql-vm/restart">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
