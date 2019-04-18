@@ -1,0 +1,14 @@
+{
+  "nateGatewayId": "nat-r6wlt71h",
+  "peerConnId": "pcx-dmbh7jjf",
+  "routeTableAId": "rtb-2r03c25t",
+  "routeTableBId": "rtb-olh6x9zp",
+  "securityGroupAId": "sg-rjyj6dab",
+  "storageAId": "disk-r5gqmdin",
+  "subnetAId": "subnet-it1822w9",
+  "subnetBId": "subnet-o2sgnotp",
+  "vmAId": "ins-afq4poox",
+  "vmBId": "ins-rfu1b2sp",
+  "vpcAId": "vpc-h30rg4b4",
+  "vpcBId": "vpc-gfvu5es0"
+}
