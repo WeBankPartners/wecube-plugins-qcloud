@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	zone "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/postgres/v20170312"
 	redis "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412"
 )
 
@@ -33,7 +34,7 @@ type RedisInputs struct {
 type RedisInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
-	ZoneID         uint64 `json:"zone_id,omitempty"`
+	ZoneID         string `json:"zone_id,omitempty"`
 	TypeID         uint64 `json:"type_id,omitempty"`
 	MemSize        uint64 `json:"mem_size,omitempty"`
 	GoodsNum       uint64 `json:"goods_num,omitempty"`
@@ -106,8 +107,19 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	zonemap, err := GetAvaliableZoneInfo(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
+
 	request := redis.NewCreateInstancesRequest()
-	request.ZoneId = &redisInput.ZoneID
+	if _, found := zonemap[paramsMap["SecretID"]]; !found {
+		err = errors.New("not found available zone info")
+		return nil, err
+	}
+
+	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
+	request.ZoneId = &zoneid
 	request.TypeId = &redisInput.TypeID
 	request.MemSize = &redisInput.MemSize
 	request.GoodsNum = &redisInput.GoodsNum
@@ -213,4 +225,38 @@ func (action *RedisTerminateAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	return &outputs, nil
+}
+
+func CreateDescribeZonesClient(region, secretId, secretKey string) (client *zone.Client, err error) {
+	credential := common.NewCredential(secretId, secretKey)
+
+	clientProfile := profile.NewClientProfile()
+	clientProfile.HttpProfile.Endpoint = "cvm.tencentcloudapi.com"
+
+	return zone.NewClient(credential, region, clientProfile)
+}
+
+func GetAvaliableZoneInfo(region, secretid, secretkey string) (map[string]int, error) {
+	ZoneMap := make(map[string]int)
+	//获取redis zoneid
+	zonerequest := zone.NewDescribeZonesRequest()
+	zoneClient, _ := CreateDescribeZonesClient(region, secretid, secretkey)
+	zoneresponse, err := zoneClient.DescribeZones(zonerequest)
+	if err != nil {
+		logrus.Errorf("failed to get availablezone list, error=%s", err)
+		return nil, err
+	}
+
+	if *zoneresponse.Response.TotalCount == 0 {
+		err = errors.New("availablezone count is zero")
+		return nil, err
+	}
+
+	for _, zoneinfo := range zoneresponse.Response.ZoneSet {
+		if *zoneinfo.ZoneState == "AVAILABLE" {
+			ZoneMap[*zoneinfo.Zone] = int(*zoneinfo.ZoneId)
+		}
+	}
+
+	return ZoneMap, nil
 }
