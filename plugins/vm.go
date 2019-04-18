@@ -40,7 +40,7 @@ type VmInput struct {
 	VpcId                string `json:"vpc_id,omitempty"`
 	SubnetId             string `json:"subnet_id,omitempty"`
 	InstanceName         string `json:"instance_name,omitempty"`
-	InstanceId           string `json:"instance_id,omitempty"`
+	Id                   string `json:"id,omitempty"`
 	InstanceType         string `json:"instance_type,omitempty"`
 	ImageId              string `json:"image_id,omitempty"`
 	SystemDiskSize       int64  `json:"system_disk_size,omitempty"`
@@ -56,7 +56,7 @@ type VmOutputs struct {
 type VmOutput struct {
 	Guid              string `json:"guid,omitempty"`
 	RequestId         string `json:"request_id,omitempty"`
-	InstanceId        string `json:"instance_id,omitempty"`
+	Id                string `json:"id,omitempty"`
 	Cpu               string `json:"cpu,omitempty"`
 	Memory            string `json:"memory,omitempty"`
 	InstanceState     string `json:"instance_state,omitempty"`
@@ -101,7 +101,7 @@ func (action *VMAction) CheckParam(input interface{}) error {
 	}
 
 	for _, vm := range vms.Inputs {
-		if vm.InstanceId == "" {
+		if vm.Id == "" {
 			return errors.New("input instance_id is empty")
 		}
 	}
@@ -319,16 +319,16 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			return nil, err
 		}
 
-		vm.InstanceId = *resp.Response.InstanceIdSet[0]
-		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", vm.InstanceId, *resp.Response.RequestId)
+		vm.Id = *resp.Response.InstanceIdSet[0]
+		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", vm.Id, *resp.Response.RequestId)
 
-		if err = waitVmInDesireState(client, vm.InstanceId, INSTANCE_STATE_RUNNING, 120); err != nil {
+		if err = waitVmInDesireState(client, vm.Id, INSTANCE_STATE_RUNNING, 120); err != nil {
 			return nil, err
 		}
 		logrus.Infof("Created VM's state is [%v] now", INSTANCE_STATE_RUNNING)
 
 		describeInstancesParams := cvm.DescribeInstancesRequest{
-			InstanceIds: []*string{&vm.InstanceId},
+			InstanceIds: []*string{&vm.Id},
 		}
 
 		describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
@@ -339,7 +339,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		output := VmOutput{}
 		output.RequestId = *describeInstancesResponse.Response.RequestId
 		output.Guid = vm.Guid
-		output.InstanceId = vm.InstanceId
+		output.Id = vm.Id
 		output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
 		output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
 		output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
@@ -362,7 +362,7 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 
 		terminateInstancesRequestData := cvm.TerminateInstancesRequest{
-			InstanceIds: []*string{&vm.InstanceId},
+			InstanceIds: []*string{&vm.Id},
 		}
 
 		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -377,19 +377,19 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.InstanceId, *response.Response.RequestId)
+		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.Id, *response.Response.RequestId)
 
-		if err = waitVmTerminateDone(client, vm.InstanceId, 600); err != nil {
+		if err = waitVmTerminateDone(client, vm.Id, 600); err != nil {
 			return nil, err
 		}
 		output := VmOutput{}
 		output.RequestId = *response.Response.RequestId
 		output.Guid = vm.Guid
-		output.InstanceId = vm.InstanceId
+		output.Id = vm.Id
 
 		outputs.Outputs = append(outputs.Outputs, output)
 
-		logrus.Infof("Terminated VM[%v] has been done", vm.InstanceId)
+		logrus.Infof("Terminated VM[%v] has been done", vm.Id)
 	}
 
 	return &outputs, nil
@@ -411,7 +411,7 @@ func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
 		output := VmOutput{}
 		output.RequestId = requestId
 		output.Guid = vm.Guid
-		output.InstanceId = vm.InstanceId
+		output.Id = vm.Id
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
@@ -427,7 +427,7 @@ func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
 	}
 
 	request := cvm.NewStartInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+	request.InstanceIds = append(request.InstanceIds, &vm.Id)
 
 	response, err := client.StartInstances(request)
 	if err != nil {
@@ -464,7 +464,7 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	}
 
 	request := cvm.NewStopInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &vm.InstanceId)
+	request.InstanceIds = append(request.InstanceIds, &vm.Id)
 
 	response, err := client.StopInstances(request)
 	if err != nil {
@@ -474,7 +474,7 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	output := VmOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = vm.Guid
-	output.InstanceId = vm.InstanceId
+	output.Id = vm.Id
 
 	return &output, nil
 }
