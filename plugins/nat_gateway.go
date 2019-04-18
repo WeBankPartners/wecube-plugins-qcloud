@@ -190,13 +190,13 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 		if *taskResp.Data.Status == 1 {
 			// fail, need retry delete
-			return nil, errors.New("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			return nil, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			return nil, errors.New("terminateNatGateway query result timeout")
+			return nil, fmt.Errorf("terminateNatGateway query result timeout")
 		}
 	}
 
