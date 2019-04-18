@@ -274,6 +274,7 @@ func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*
 	output := StorageOutput{}
 	output.Guid = storage.Guid
 	output.RequestId = requestId
+	output.Id = storage.Id
 
 	return &output, nil
 }
