@@ -302,4 +302,39 @@
             </output-parameters>
         </interface>
     </plugin>
+    <plugin name="redis">
+        <interface name="create" path="/v1/qcloud/redis/create">
+            <input-parameters>
+			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="int">zone_id</parameter>
+                <parameter datatype="int">type_id</parameter>
+                <parameter datatype="int">mem_size</parameter>
+                <parameter datatype="int">goods_num</parameter>
+                <parameter datatype="int">period</parameter>
+                <parameter datatype="string">password</parameter>
+                <parameter datatype="int">billing_mode</parameter>
+                <parameter datatype="string">vpc_id</parameter>
+                <parameter datatype="string">subnet_id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+				<parameter datatype="string">guid</parameter>
+				<parameter datatype="string">deal_id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="terminate" path="/v1/qcloud/redis/terminate">
+            <input-parameters>
+			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">password</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+				<parameter datatype="string">guid</parameter>
+				<parameter datatype="int">task_id</parameter>
+            </output-parameters>
+        </interface>
+    </plugin>
 </package>
