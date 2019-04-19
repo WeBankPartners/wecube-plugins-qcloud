@@ -114,7 +114,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	}
 
 	request := redis.NewCreateInstancesRequest()
-	if _, found := zonemap[paramsMap["SecretID"]]; !found {
+	if _, found := zonemap[paramsMap["AvailableZone"]]; !found {
 		err = errors.New("not found available zone info")
 		return nil, err
 	}
