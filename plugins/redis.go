@@ -4,12 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	redis "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412"
+)
+
+const (
+	REDIS_STATUS_RUNNING  = 4
+	REDIS_STATUS_ISOLATED = 5
 )
 
 var RedisActions = make(map[string]Action)
@@ -35,7 +41,6 @@ type RedisInputs struct {
 type RedisInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
-	ZoneID         string `json:"zone_id,omitempty"`
 	TypeID         uint64 `json:"type_id,omitempty"`
 	MemSize        uint64 `json:"mem_size,omitempty"`
 	GoodsNum       uint64 `json:"goods_num,omitempty"`
@@ -44,7 +49,7 @@ type RedisInput struct {
 	BillingMode    int64  `json:"billing_mode,omitempty"`
 	VpcID          string `json:"vpc_id,omitempty"`
 	SubnetID       string `json:"subnet_id,omitempty"`
-	InstanceID     string `json:"instance_id,omitempty"`
+	ID             string `json:"id,omitempty"`
 }
 
 type RedisOutputs struct {
@@ -56,6 +61,7 @@ type RedisOutput struct {
 	Guid      string `json:"guid,omitempty"`
 	DealID    string `json:"deal_id,omitempty"`
 	TaskID    int64  `json:"task_id,omitempty"`
+	ID        string `json:"id,omitempty"`
 }
 
 type RedisPlugin struct {
@@ -142,10 +148,16 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		return nil, err
 	}
 
+	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
+	if err != nil {
+		return nil, err
+	}
+
 	output := RedisOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = redisInput.Guid
 	output.DealID = *response.Response.DealId
+	output.ID = instanceid
 
 	return &output, nil
 }
@@ -163,6 +175,40 @@ func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 
 	logrus.Infof("all rediss = %v are created", rediss)
 	return &outputs, nil
+}
+
+func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *redis.Client, dealid string) (string, error) {
+	request := redis.NewDescribeInstanceDealDetailRequest()
+	request.DealIds = append(request.DealIds, &dealid)
+	var instanceids string
+	count := 0
+	for {
+		response, err := client.DescribeInstanceDealDetail(request)
+		if err != nil {
+			return "", err
+		}
+
+		if len(response.Response.DealDetails) == 0 {
+			return "", fmt.Errorf("the redis (dealid = %v) not found", dealid)
+		}
+
+		if *response.Response.DealDetails[0].Status == REDIS_STATUS_RUNNING {
+			for _, instanceid := range response.Response.DealDetails[0].InstanceIds {
+				if instanceids == "" {
+					instanceids = *instanceid
+				} else {
+					instanceids = instanceids + "," + *instanceid
+				}
+			}
+			return instanceids, nil
+		}
+
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			return "", errors.New("waitForRedisInstancesCreationToFinish timeout")
+		}
+	}
 }
 
 type RedisTerminateAction struct {
@@ -184,8 +230,8 @@ func (action *RedisTerminateAction) CheckParam(input interface{}) error {
 	}
 
 	for _, redis := range rediss.Inputs {
-		if redis.InstanceID == "" {
-			return errors.New("RedisTerminateAtion input InstanceID is empty")
+		if redis.ID == "" {
+			return errors.New("RedisTerminateAtion input id is empty")
 		}
 		if redis.Password == "" {
 			return errors.New("RedisTerminateAtion input Password is empty")
@@ -199,12 +245,12 @@ func (action *RedisTerminateAction) terminateRedis(redisInput *RedisInput) (*Red
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := redis.NewClearInstanceRequest()
-	request.InstanceId = &redisInput.InstanceID
+	request.InstanceId = &redisInput.ID
 	request.Password = &redisInput.Password
 
 	response, err := client.ClearInstance(request)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to ClearInstance(InstanceId=%v), error=%s", redisInput.InstanceID, err)
+		return nil, fmt.Errorf("Failed to ClearInstance(InstanceId=%v), error=%s", redisInput.ID, err)
 	}
 	output := RedisOutput{}
 	output.RequestId = *response.Response.RequestId
