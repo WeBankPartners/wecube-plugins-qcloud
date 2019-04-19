@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package name="qcloud" version="v1">
-    <docker-image>wecube-plugins</docker-image>
-    <container-port>8080</container-port>
+    <docker-image-file>wecube-plugins.image</docker-image-file>
+	<docker-image-repository>wecube-plugins</docker-image-repository>
+    <docker-image-tag>{{IMAGE_TAG}}</docker-image-tag>
+    <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins/conf</container-config-directory>
     <container-log-directory>/home/app/wecube-plugins/log</container-log-directory>
     <plugin name="vpc" >
@@ -307,33 +309,32 @@
             <input-parameters>
 			    <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="int">zone_id</parameter>
-                <parameter datatype="int">type_id</parameter>
-                <parameter datatype="int">mem_size</parameter>
-                <parameter datatype="int">goods_num</parameter>
-                <parameter datatype="int">period</parameter>
+                <parameter datatype="number">type_id</parameter>
+                <parameter datatype="number">mem_size</parameter>
+                <parameter datatype="number">goods_num</parameter>
+                <parameter datatype="number">period</parameter>
                 <parameter datatype="string">password</parameter>
-                <parameter datatype="int">billing_mode</parameter>
+                <parameter datatype="number">billing_mode</parameter>
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
 				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">deal_id</parameter>
+				<parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/redis/terminate">
             <input-parameters>
 			    <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">id</parameter>
                 <parameter datatype="string">password</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
 				<parameter datatype="string">guid</parameter>
-				<parameter datatype="int">task_id</parameter>
+				<parameter datatype="number">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
