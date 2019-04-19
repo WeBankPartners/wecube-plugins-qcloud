@@ -3,11 +3,12 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
-	zone "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/postgres/v20170312"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	redis "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412"
 )
 
@@ -227,19 +228,19 @@ func (action *RedisTerminateAction) Do(input interface{}) (interface{}, error) {
 	return &outputs, nil
 }
 
-func CreateDescribeZonesClient(region, secretId, secretKey string) (client *zone.Client, err error) {
+func CreateDescribeZonesClient(region, secretId, secretKey string) (client *cvm.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
 
 	clientProfile := profile.NewClientProfile()
 	clientProfile.HttpProfile.Endpoint = "cvm.tencentcloudapi.com"
 
-	return zone.NewClient(credential, region, clientProfile)
+	return cvm.NewClient(credential, region, clientProfile)
 }
 
 func GetAvaliableZoneInfo(region, secretid, secretkey string) (map[string]int, error) {
 	ZoneMap := make(map[string]int)
 	//获取redis zoneid
-	zonerequest := zone.NewDescribeZonesRequest()
+	zonerequest := cvm.NewDescribeZonesRequest()
 	zoneClient, _ := CreateDescribeZonesClient(region, secretid, secretkey)
 	zoneresponse, err := zoneClient.DescribeZones(zonerequest)
 	if err != nil {
@@ -254,7 +255,7 @@ func GetAvaliableZoneInfo(region, secretid, secretkey string) (map[string]int, e
 
 	for _, zoneinfo := range zoneresponse.Response.ZoneSet {
 		if *zoneinfo.ZoneState == "AVAILABLE" {
-			ZoneMap[*zoneinfo.Zone] = int(*zoneinfo.ZoneId)
+			ZoneMap[*zoneinfo.Zone], _ = strconv.Atoi(*zoneinfo.ZoneId)
 		}
 	}
 
