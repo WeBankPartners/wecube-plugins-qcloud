@@ -185,7 +185,7 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 	for {
 		response, err := client.DescribeInstanceDealDetail(request)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("call DescribeInstanceDealDetail with dealid = %v meet error = %v", dealid, err)
 		}
 
 		if len(response.Response.DealDetails) == 0 {
