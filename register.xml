@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package name="qcloud" version="v1">
-    <docker-image-file>wecube-plugins.image</docker-image-file>
-	<docker-image-repository>wecube-plugins</docker-image-repository>
+    <docker-image-file>wecube-plugins.image.tar</docker-image-file>
+    <docker-image-repository>wecube-plugins</docker-image-repository>
     <docker-image-tag>{{IMAGE_TAG}}</docker-image-tag>
     <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins/conf</container-config-directory>
@@ -9,7 +9,7 @@
     <plugin name="vpc" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
-    	        <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">cidr_block</parameter>
@@ -307,7 +307,7 @@
     <plugin name="redis">
         <interface name="create" path="/v1/qcloud/redis/create">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="number">type_id</parameter>
                 <parameter datatype="number">mem_size</parameter>
@@ -320,21 +320,21 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="string">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/redis/terminate">
             <input-parameters>
-			    <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
                 <parameter datatype="string">password</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
-				<parameter datatype="string">guid</parameter>
-				<parameter datatype="number">id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="number">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
