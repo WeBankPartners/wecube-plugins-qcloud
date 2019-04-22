@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -24,6 +25,8 @@ func init() {
 
 func main() {
 	logrus.Infof("Start WeCube-Plungins Service ... ")
+
+	go LogTest()
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
@@ -107,4 +110,8 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 	pluginInput.Parameters = r.Body
 	logrus.Infof("parsed request = %v", pluginInput)
 	return &pluginInput
+}
+
+func LogTest() {
+	fmt.Println("this is a test for log file, through this function we can see the new log finename is what")
 }
