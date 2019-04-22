@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -113,5 +112,5 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 }
 
 func LogTest() {
-	fmt.Println("this is a test for log file, through this function we can see the new log finename is what")
+	logrus.Info("this is a test for log file, through this function we can see the new log finename is what")
 }
