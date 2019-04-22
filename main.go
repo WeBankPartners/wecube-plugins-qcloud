@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"git.webank.io/wecube-plugins/conf"
 	"git.webank.io/wecube-plugins/plugins"
@@ -113,7 +114,7 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 
 func LogTest() {
 	for {
-		sleep 1
+		time.Sleep(1 * time.Second)
 		logrus.Info("this is a test for log file, through this function we can see the new log finename is what \n")
 	}
 }
