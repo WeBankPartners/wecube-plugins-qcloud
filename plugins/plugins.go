@@ -53,6 +53,7 @@ func init() {
 	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
 	registerPlugin("route-table", new(RouteTablePlugin))
 	registerPlugin("mysql-vm", new(MysqlVmPlugin))
+	registerPlugin("redis", new(RedisPlugin))
 }
 
 type PluginRequest struct {

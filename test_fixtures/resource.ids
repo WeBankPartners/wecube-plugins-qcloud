@@ -1,14 +1,3 @@
 {
-  "nateGatewayId": "",
-  "peerConnId": "",
-  "routeTableAId": "",
-  "routeTableBId": "",
-  "securityGroupAId": "",
-  "storageAId": "",
-  "subnetAId": "",
-  "subnetBId": "",
-  "vmAId": "",
-  "vmBId": "",
-  "vpcAId": "",
-  "vpcBId": ""
+  "redis": ""
 }

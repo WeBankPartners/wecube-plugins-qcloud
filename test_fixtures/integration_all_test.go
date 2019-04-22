@@ -7,13 +7,11 @@ import (
 	"time"
 )
 
-var resourceIds = make(map[string]string)
-
 func TestAllPlugins(t *testing.T) {
 	//-------CREATION-------//
-	createResources()
+	//createResources()
 	//-------TERMINATION-------//
-	terminateResources()
+	//terminateResources()
 
 }
 

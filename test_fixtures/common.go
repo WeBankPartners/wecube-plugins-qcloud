@@ -17,6 +17,8 @@ const (
 	PLUGIN_HOST_URL = "http://10.107.117.154:8081"
 )
 
+var resourceIds = make(map[string]string)
+
 type Outputs struct {
 	Outputs []Output `json:"outputs,omitempty"`
 }
