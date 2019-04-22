@@ -112,5 +112,7 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 }
 
 func LogTest() {
-	logrus.Info("this is a test for log file, through this function we can see the new log finename is what")
+	for {
+		logrus.Info("this is a test for log file, through this function we can see the new log finename is what \n")
+	}
 }
