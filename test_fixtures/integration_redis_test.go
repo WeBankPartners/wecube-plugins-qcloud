@@ -7,8 +7,8 @@ import (
 )
 
 func TestRedisPlugin(t *testing.T) {
-	createRedis()
-	terminateRedis()
+	//createRedis()
+	//terminateRedis()
 }
 
 func createRedis() {
@@ -17,7 +17,6 @@ func createRedis() {
 	{
 		"Inputs":[{
 			"guid":"` + guid_1 + `",
-			"zone_id":"ap-chongqing-1",
 			"type_id":2,
 			"mem_size":1024,
 			"goods_num":1,
