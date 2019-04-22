@@ -74,7 +74,7 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	logOutput, err := action.GetKeyWord(&log)
+	logOutput, err := action.GetKeyWordLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +104,54 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput) (interface{}, err
 	}
 	// sh += " -C " + input.LineNumber
 
+	cmd := exec.Command("/bin/sh", "-c", sh)
+
+	//创建获取命令输出管道
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
+		return []string{}, err
+	}
+
+	//执行命令
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("conmand start is error: %s \n", err)
+		return []string{}, err
+	}
+
+	//读取输出
+	bytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		fmt.Printf("ReadAll stdout error: %s \n", err)
+		return []string{}, err
+	}
+
+	var outputs LogOutputs
+	outputs.Outputs = append(outputs.Outputs, string(bytes))
+
+	return outputs, nil
+}
+
+//GetKeyWord .
+func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interface{}, error) {
+	// if input.LineNumber == "" {
+	// 	input.LineNumber = "10"
+	// }
+
+	keystring := []string{}
+	if strings.Contains(input.KeyWord, ",") {
+		keystring = strings.Split(input.KeyWord, ",")
+	}
+
+	sh := "cat logs/wecube-plugins.log "
+	if len(keystring) > 1 {
+		for _, key := range keystring {
+			sh += "|grep " + key
+		}
+	} else {
+		sh += "|grep " + input.KeyWord
+	}
+	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	//创建获取命令输出管道
