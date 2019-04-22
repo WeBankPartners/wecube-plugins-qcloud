@@ -42,7 +42,7 @@ func initLogger() {
 
 	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
 		Filename:   fileName,
-		MaxSize:    100,
+		MaxSize:    1,
 		MaxBackups: 7,
 		MaxAge:     7,
 		Level:      logrus.InfoLevel,
@@ -113,6 +113,7 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 
 func LogTest() {
 	for {
+		sleep 1
 		logrus.Info("this is a test for log file, through this function we can see the new log finename is what \n")
 	}
 }
