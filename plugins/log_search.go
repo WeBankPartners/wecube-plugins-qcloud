@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -88,8 +89,21 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput) (interface{}, err
 		input.LineNumber = "10"
 	}
 
-	sh := "cat logs/wecube-plugins.log |grep " + input.KeyWord + " -C " + input.LineNumber
-	fmt.Println("command shell==============>", sh)
+	keystring := []string{}
+	if strings.Contains(input.KeyWord, ",") {
+		keystring = strings.Split(input.KeyWord, ",")
+	}
+
+	sh := "cat logs/wecube-plugins.log "
+	if len(keystring) > 1 {
+		for _, key := range keystring {
+			sh += "|grep " + key
+		}
+	} else {
+		sh += "|grep " + input.KeyWord
+	}
+	// sh += " -C " + input.LineNumber
+
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	//创建获取命令输出管道
