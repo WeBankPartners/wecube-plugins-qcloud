@@ -26,7 +26,7 @@ func init() {
 func main() {
 	logrus.Infof("Start WeCube-Plungins Service ... ")
 
-	go LogTest()
+	// go LogTest()
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
