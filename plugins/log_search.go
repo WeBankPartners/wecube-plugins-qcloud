@@ -88,9 +88,9 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput) (interface{}, err
 		input.LineNumber = "10"
 	}
 
-	sh := "logs/wecube-plugins.log |grep " + input.KeyWord + " -C " + input.LineNumber
+	sh := "cat logs/wecube-plugins.log |grep " + input.KeyWord + " -C " + input.LineNumber
 	fmt.Println("command shell==============>", sh)
-	cmd := exec.Command("cat", sh)
+	cmd := exec.Command("/bin/bash", "-c", sh)
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
