@@ -13,7 +13,7 @@ import (
 var LogActions = make(map[string]Action)
 
 func init() {
-	LogActions["getkeywpord"] = new(LogGetKeyWordAction)
+	LogActions["getkeyword"] = new(LogGetKeyWordAction)
 }
 
 //LogInput .
