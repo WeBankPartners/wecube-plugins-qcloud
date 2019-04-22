@@ -22,7 +22,6 @@ var RedisActions = make(map[string]Action)
 
 func init() {
 	RedisActions["create"] = new(RedisCreateAction)
-	RedisActions["terminate"] = new(RedisTerminateAction)
 }
 
 func CreateRedisClient(region, secretId, secretKey string) (client *redis.Client, err error) {
@@ -209,69 +208,6 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 			return "", errors.New("waitForRedisInstancesCreationToFinish timeout")
 		}
 	}
-}
-
-type RedisTerminateAction struct {
-}
-
-func (action *RedisTerminateAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs RedisInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func (action *RedisTerminateAction) CheckParam(input interface{}) error {
-	rediss, ok := input.(RedisInputs)
-	if !ok {
-		return fmt.Errorf("redisTerminateAtion:input type=%T not right", input)
-	}
-
-	for _, redis := range rediss.Inputs {
-		if redis.ID == "" {
-			return errors.New("RedisTerminateAtion input id is empty")
-		}
-		if redis.Password == "" {
-			return errors.New("RedisTerminateAtion input Password is empty")
-		}
-	}
-	return nil
-}
-
-func (action *RedisTerminateAction) terminateRedis(redisInput *RedisInput) (*RedisOutput, error) {
-	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
-	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
-	request := redis.NewClearInstanceRequest()
-	request.InstanceId = &redisInput.ID
-	request.Password = &redisInput.Password
-
-	response, err := client.ClearInstance(request)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to ClearInstance(InstanceId=%v), error=%s", redisInput.ID, err)
-	}
-	output := RedisOutput{}
-	output.RequestId = *response.Response.RequestId
-	output.Guid = redisInput.Guid
-	output.TaskID = *response.Response.TaskId
-
-	return &output, nil
-}
-
-func (action *RedisTerminateAction) Do(input interface{}) (interface{}, error) {
-	rediss, _ := input.(RedisInputs)
-	outputs := RedisOutputs{}
-	for _, redis := range rediss.Inputs {
-		output, err := action.terminateRedis(&redis)
-		if err != nil {
-			return nil, err
-		}
-		outputs.Outputs = append(outputs.Outputs, *output)
-	}
-
-	return &outputs, nil
 }
 
 func CreateDescribeZonesClient(region, secretId, secretKey string) (client *cvm.Client, err error) {

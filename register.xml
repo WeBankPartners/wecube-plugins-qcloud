@@ -324,18 +324,5 @@
                 <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
-        <interface name="terminate" path="/v1/qcloud/redis/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">password</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">request_id</parameter>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="number">id</parameter>
-            </output-parameters>
-        </interface>
     </plugin>
 </package>
