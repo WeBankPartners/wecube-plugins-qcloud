@@ -81,84 +81,80 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	logOutput, err := action.GetKeyWord(&log, output)
-	if err != nil {
-		return nil, err
+	logrus.Info("line number count ==>>>", len(output))
+
+	var logoutputs []LogOutputs
+	if len(output) > 0 {
+		for i := 0; i < len(output); i++ {
+			lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
+			if err != nil {
+				return nil, err
+			}
+			logrus.Info("line information ==>>>", lineinfo)
+			var out LogOutputs
+			out.Outputs = lineinfo
+			logoutputs = append(logoutputs, out)
+		}
 	}
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
-	return &logOutput, nil
+	return &logoutputs, nil
 }
 
 //GetKeyWord .
-func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []string) (interface{}, error) {
-	if input.LineNumber == "" {
-		input.LineNumber = "10"
+func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber string) ([]string, error) {
+	if searchLine == "" {
+		searchLine = "10"
 	}
 
-	var outputs []LogOutputs
+	sh := "cat -n wecube-plugins.log |tail -n +"
+	startLine, needLine := CountLineNumber(searchLine, LineNumber)
+	sh += startLine + " | head -n " + needLine
 
-	for i := 0; i < len(LineNumber); i++ {
+	cmd := exec.Command("/bin/sh", "-c", sh)
 
-		sh := "cat -n wecube-plugins.log |tail -n +"
+	//创建获取命令输出管道
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
+		return []string{}, err
+	}
 
-		startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
+	//执行命令
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("conmand start is error: %s \n", err)
+		return []string{}, err
+	}
 
-		sh += startLine + " | head -n " + needLine
+	//按行读取
+	// output, err := LogReadLine(cmd, stdout)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-		logrus.Info("commandsss =================> ", sh)
+	var output []string
+	outputBuf := bufio.NewReader(stdout)
 
-		cmd := exec.Command("/bin/sh", "-c", sh)
-
-		//创建获取命令输出管道
-		stdout, err := cmd.StdoutPipe()
+	for {
+		lineinfo, _, err := outputBuf.ReadLine()
 		if err != nil {
-			fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
-			return []string{}, err
-		}
-
-		//执行命令
-		if err := cmd.Start(); err != nil {
-			fmt.Printf("conmand start is error: %s \n", err)
-			return []string{}, err
-		}
-
-		//按行读取
-		// output, err := LogReadLine(cmd, stdout)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		var output []string
-		outputBuf := bufio.NewReader(stdout)
-
-		for {
-			lineinfo, _, err := outputBuf.ReadLine()
-			if err != nil {
-				if err.Error() == "EOF" {
-					break
-				}
-				if err.Error() != "EOF" {
-					logrus.Info("readline is error")
-					return []string{}, err
-				}
+			if err.Error() == "EOF" {
+				break
 			}
-
-			output = append(output, string(lineinfo))
+			if err.Error() != "EOF" {
+				logrus.Info("readline is error")
+				return []string{}, err
+			}
 		}
 
-		if err := cmd.Wait(); err != nil {
-			return []string{}, err
-		}
-
-		if len(output) > 0 {
-			var out LogOutputs
-			out.Outputs = output
-			outputs = append(outputs, out)
-		}
+		output = append(output, string(lineinfo))
 	}
 
-	return outputs, nil
+	if err := cmd.Wait(); err != nil {
+		return []string{}, err
+	}
+
+	return output, nil
 }
 
 //GetKeyWordLineNumber .
