@@ -1,8 +1,10 @@
 package plugins
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os/exec"
 	"strings"
@@ -168,14 +170,41 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interf
 	}
 
 	//读取输出
-	bytes, err := ioutil.ReadAll(stdout)
+	// bytes, err := ioutil.ReadAll(stdout)
+	// if err != nil {
+	// 	fmt.Printf("ReadAll stdout error: %s \n", err)
+	// 	return []string{}, err
+	// }
+
+	output, err := LogReadLine(stdout)
 	if err != nil {
-		fmt.Printf("ReadAll stdout error: %s \n", err)
-		return []string{}, err
+		return nil, err
 	}
 
 	var outputs LogOutputs
-	outputs.Outputs = append(outputs.Outputs, string(bytes))
+	outputs.Outputs = output
+	// outputs.Outputs = append(outputs.Outputs, string(bytes))
 
 	return outputs, nil
+}
+
+//LogReadLine .
+func LogReadLine(stdout io.ReadCloser) ([]string, error) {
+
+	var linelist []string
+	outputBuf := bufio.NewReader(stdout)
+
+	for {
+		output, _, err := outputBuf.ReadLine()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			logrus.Info("readline is error")
+			return []string{}, err
+		}
+		linelist = append(linelist, string(output))
+	}
+
+	return linelist, nil
 }
