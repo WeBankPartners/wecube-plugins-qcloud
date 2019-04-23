@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -77,12 +76,12 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	// output, err := action.GetKeyWordLineNumber(&log)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	output, err := action.GetKeyWordLineNumber(&log)
+	if err != nil {
+		return nil, err
+	}
 
-	// logrus.Info("line number count ==>>>", len(output))
+	logrus.Info("line number count ==>>>", len(output))
 
 	// var logoutputs []LogOutputs
 	// if len(output) > 0 {
@@ -98,13 +97,8 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	// 	}
 	// }
 
-	lineinfo, err := action.GetKeyWord(log.LineNumber, "2119")
-	if err != nil {
-		return nil, err
-	}
-
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
-	return &lineinfo, nil
+	return &output, nil
 }
 
 //GetKeyWord .
@@ -132,38 +126,23 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 		return []string{}, err
 	}
 
-	//按行读取
-	// output, err := LogReadLine(cmd, stdout)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	var output []string
-	// outputBuf := bufio.NewReader(stdout)
+	outputBuf := bufio.NewReader(stdout)
 
-	// for {
-	// 	lineinfo, _, err := outputBuf.ReadLine()
-	// 	if err != nil {
-	// 		if err.Error() == "EOF" {
-	// 			break
-	// 			logrus.Info("line information rrun here ??? ")
-	// 		}
-	// 		if err.Error() != "EOF" {
-	// 			logrus.Info("readline is error")
-	// 			return []string{}, err
-	// 		}
-	// 	}
+	for {
+		lineinfo, _, err := outputBuf.ReadLine()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			if err.Error() != "EOF" {
+				logrus.Info("readline is error")
+				return []string{}, err
+			}
+		}
 
-	// 	output = append(output, string(lineinfo))
-	// }
-
-	//读取所有
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		return nil, err
+		output = append(output, string(lineinfo))
 	}
-
-	output = append(output, string(bytes))
 
 	return output, nil
 }
@@ -199,12 +178,6 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]stri
 		fmt.Printf("conmand start is error: %s \n", err)
 		return []string{}, err
 	}
-
-	//按行读取
-	// output, err := LogReadLine(cmd, stdout)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	var output []string
 	outputBuf := bufio.NewReader(stdout)
