@@ -83,19 +83,23 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 
 	logrus.Info("line number count ==>>>", len(output))
 
-	// var logoutputs []LogOutputs
-	// if len(output) > 0 {
-	// 	for i := 0; i < len(output); i++ {
-	// 		lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
+	var logoutputs []LogOutputs
+	if len(output) > 0 {
+		for i := 0; i < len(output); i++ {
+			if output[i] == "" {
+				continue
+			}
 
-	// 		var out LogOutputs
-	// 		out.Outputs = lineinfo
-	// 		logoutputs = append(logoutputs, out)
-	// 	}
-	// }
+			lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
+			if err != nil {
+				return nil, err
+			}
+
+			var out LogOutputs
+			out.Outputs = lineinfo
+			logoutputs = append(logoutputs, out)
+		}
+	}
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &output, nil
@@ -107,7 +111,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 		searchLine = "10"
 	}
 
-	sh := "cat -n wecube-plugins.log |tail -n +"
+	sh := "cat -n logs/wecube-plugins.log |tail -n +"
 	startLine, needLine := CountLineNumber(searchLine, LineNumber)
 	sh += startLine + " | head -n " + needLine
 
