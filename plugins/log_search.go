@@ -132,7 +132,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput) (interface{}, err
 	return outputs, nil
 }
 
-//GetKeyWord .
+//GetKeyWordLineNumber .
 func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interface{}, error) {
 	// if input.LineNumber == "" {
 	// 	input.LineNumber = "10"
