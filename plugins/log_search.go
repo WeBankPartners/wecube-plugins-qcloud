@@ -16,13 +16,13 @@ import (
 var LogActions = make(map[string]Action)
 
 func init() {
-	LogActions["getkeyword"] = new(LogGetKeyWordAction)
+	LogActions["search"] = new(LogSearchAction)
 }
 
 //LogInput .
 type LogInput struct {
 	KeyWord    string `json:"key_word,omitempty"`
-	LineNumber string `json:"line_number,omitempty"`
+	LineNumber int    `json:"line_number,omitempty"`
 }
 
 //LogOutputs .
@@ -45,12 +45,12 @@ func (plugin *LogPlugin) GetActionByName(actionName string) (Action, error) {
 	return action, nil
 }
 
-//LogGetKeyWordAction .
-type LogGetKeyWordAction struct {
+//LogSearchAction .
+type LogSearchAction struct {
 }
 
 //ReadParam .
-func (action *LogGetKeyWordAction) ReadParam(param interface{}) (interface{}, error) {
+func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs LogInput
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
@@ -60,23 +60,23 @@ func (action *LogGetKeyWordAction) ReadParam(param interface{}) (interface{}, er
 }
 
 //CheckParam .
-func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
+func (action *LogSearchAction) CheckParam(input interface{}) error {
 	log, ok := input.(LogInput)
 	if !ok {
-		return fmt.Errorf("LogGetKeyWordAction:input type=%T not right", input)
+		return fmt.Errorf("LogSearchAAction:input type=%T not right", input)
 	}
 
 	if log.KeyWord == "" {
-		return errors.New("LogGetKeyWordAction input KeyWord can not be empty")
+		return errors.New("LogSearchAAction input KeyWord can not be empty")
 	}
 
 	return nil
 }
 
 //Do .
-func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
+func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	output, err := action.GetKeyWordLineNumber(&log)
+	output, err := action.SearchLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 				continue
 			}
 
-			lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
+			lineinfo, err := action.Search(log.LineNumber, output[i])
 			if err != nil {
 				return nil, err
 			}
@@ -105,10 +105,10 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	return &logoutputs, nil
 }
 
-//GetKeyWord .
-func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber string) ([]string, error) {
-	if searchLine == "" {
-		searchLine = "10"
+//Search .
+func (action *LogSearchAction) Search(searchLine int, LineNumber string) ([]string, error) {
+	if searchLine == 0 {
+		searchLine = 10
 	}
 
 	sh := "cat -n logs/wecube-plugins.log |tail -n +"
@@ -130,29 +130,16 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 		return []string{}, err
 	}
 
-	var output []string
-	outputBuf := bufio.NewReader(stdout)
-
-	for {
-		lineinfo, _, err := outputBuf.ReadLine()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			if err.Error() != "EOF" {
-				logrus.Info("readline is error")
-				return []string{}, err
-			}
-		}
-
-		output = append(output, string(lineinfo))
+	output, err := LogReadLine(cmd, stdout)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
-//GetKeyWordLineNumber .
-func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]string, error) {
+//SearchLineNumber .
+func (action *LogSearchAction) SearchLineNumber(input *LogInput) ([]string, error) {
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
@@ -183,26 +170,9 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]stri
 		return []string{}, err
 	}
 
-	var output []string
-	outputBuf := bufio.NewReader(stdout)
-
-	for {
-		lineinfo, _, err := outputBuf.ReadLine()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			if err.Error() != "EOF" {
-				logrus.Info("readline is error")
-				return []string{}, err
-			}
-		}
-
-		output = append(output, string(lineinfo))
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return []string{}, err
+	output, err := LogReadLine(cmd, stdout)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -237,18 +207,17 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 }
 
 //CountLineNumber .
-func CountLineNumber(wLine string, rLine string) (string, string) {
+func CountLineNumber(wLine int, rLine string) (string, string) {
 
-	wline, _ := strconv.Atoi(wLine)
 	rline, _ := strconv.Atoi(rLine)
 
-	num := 2 * wline
+	num := 2 * wLine
 
 	var startLineNumber int
-	if rline <= wline {
+	if rline <= wLine {
 		startLineNumber = 1
 	} else {
-		startLineNumber = rline - wline
+		startLineNumber = rline - wLine
 	}
 
 	line1 := strconv.Itoa(startLineNumber)

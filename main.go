@@ -80,7 +80,7 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/mysql-vm/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mysql-vm/restart", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/redis/create", routeDispatcher)
-	http.HandleFunc("/v1/qcloud/log/getkeyword", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/log/search", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
