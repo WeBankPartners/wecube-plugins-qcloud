@@ -76,17 +76,15 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	logOutput, err := action.GetKeyWordLineNumber(&log)
+	output, err := action.GetKeyWordLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
 
-	logrus.Info("linenumber is ====================>", len(logOutput))
-
-	// logOutput, err := action.GetKeyWord(&log, output)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	logOutput, err := action.GetKeyWord(&log, output)
+	if err != nil {
+		return nil, err
+	}
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &logOutput, nil
@@ -101,15 +99,14 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 	var outputs []LogOutputs
 
 	for i := 0; i < len(LineNumber); i++ {
-		sh := "cat -n wecube-plugins.log |tail -n +1 | head -n 10"
 
-		// sh := "cat -n wecube-plugins.log |tail -n +"
+		sh := "cat -n wecube-plugins.log |tail -n +"
 
-		// startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
+		startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
 
-		// sh += startLine + " | head -n " + needLine
+		sh += startLine + " | head -n " + needLine
 
-		// logrus.Info("commandsss =================> ", sh)
+		logrus.Info("commandsss =================> ", sh)
 
 		cmd := exec.Command("/bin/sh", "-c", sh)
 
@@ -127,7 +124,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 		}
 
 		//按行读取
-		output, err := LogReadLine(stdout)
+		output, err := LogReadLine(cmd, stdout)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +172,7 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]stri
 	}
 
 	//按行读取
-	output, err := LogReadLine(stdout)
+	output, err := LogReadLine(cmd, stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +181,7 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]stri
 }
 
 //LogReadLine .
-func LogReadLine(stdout io.ReadCloser) ([]string, error) {
+func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
@@ -195,11 +192,19 @@ func LogReadLine(stdout io.ReadCloser) ([]string, error) {
 			if err.Error() == "EOF" {
 				break
 			}
-			logrus.Info("readline is error")
-			return []string{}, err
+			if err.Error() != "EOF" {
+				logrus.Info("readline is error")
+				return []string{}, err
+			}
 		}
 		linelist = append(linelist, string(output))
 	}
+
+	if err := cmd.Wait(); err != nil {
+		return []string{}, err
+	}
+
+	logrus.Info("keywork message ===================== > ", linelist)
 
 	return linelist, nil
 }
