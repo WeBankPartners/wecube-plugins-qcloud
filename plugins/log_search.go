@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -97,11 +96,11 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 		input.LineNumber = "10"
 	}
 
-	sh := "cat -n wecube-plugins.log |tail -n +"
-
 	var outputs []LogOutputs
 
 	for i := 0; i < len(LineNumber); i++ {
+
+		sh := "cat -n wecube-plugins.log |tail -n +"
 
 		startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
 
@@ -125,20 +124,14 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 		}
 
 		//按行读取
-		// output, err := LogReadLine(stdout)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		bytes, err := ioutil.ReadAll(stdout)
+		output, err := LogReadLine(stdout)
 		if err != nil {
 			return nil, err
 		}
 
-		if string(bytes) != "" {
+		if len(output) > 0 {
 			var out LogOutputs
-			// out.Outputs = output
-			out.Outputs = append(out.Outputs, string(bytes))
+			out.Outputs = output
 			outputs = append(outputs, out)
 		}
 	}
