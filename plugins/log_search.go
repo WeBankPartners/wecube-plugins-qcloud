@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -124,14 +125,20 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 		}
 
 		//按行读取
-		output, err := LogReadLine(stdout)
+		// output, err := LogReadLine(stdout)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		bytes, err := ioutil.ReadAll(stdout)
 		if err != nil {
 			return nil, err
 		}
 
-		if len(output) > 0 {
+		if string(bytes) != "" {
 			var out LogOutputs
-			out.Outputs = output
+			// out.Outputs = output
+			out.Outputs = append(out.Outputs, string(bytes))
 			outputs = append(outputs, out)
 		}
 	}
