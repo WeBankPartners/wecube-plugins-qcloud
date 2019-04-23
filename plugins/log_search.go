@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -133,23 +134,31 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 	// }
 
 	var output []string
-	outputBuf := bufio.NewReader(stdout)
+	// outputBuf := bufio.NewReader(stdout)
 
-	for {
-		lineinfo, _, err := outputBuf.ReadLine()
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-				logrus.Info("line information rrun here ??? ")
-			}
-			if err.Error() != "EOF" {
-				logrus.Info("readline is error")
-				return []string{}, err
-			}
-		}
+	// for {
+	// 	lineinfo, _, err := outputBuf.ReadLine()
+	// 	if err != nil {
+	// 		if err.Error() == "EOF" {
+	// 			break
+	// 			logrus.Info("line information rrun here ??? ")
+	// 		}
+	// 		if err.Error() != "EOF" {
+	// 			logrus.Info("readline is error")
+	// 			return []string{}, err
+	// 		}
+	// 	}
 
-		output = append(output, string(lineinfo))
+	// 	output = append(output, string(lineinfo))
+	// }
+
+	//读取所有
+	bytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		return nil, err
 	}
+
+	output = append(output, string(bytes))
 
 	if err := cmd.Wait(); err != nil {
 		return []string{}, err
