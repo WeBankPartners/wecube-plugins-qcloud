@@ -102,7 +102,7 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
-	return &output, nil
+	return &logoutputs, nil
 }
 
 //GetKeyWord .
