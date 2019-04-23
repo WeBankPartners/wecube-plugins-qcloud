@@ -143,7 +143,7 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interf
 		keystring = strings.Split(input.KeyWord, ",")
 	}
 
-	sh := "cat logs/wecube-plugins.log "
+	sh := "cat -n logs/wecube-plugins.log "
 	if len(keystring) > 1 {
 		for _, key := range keystring {
 			sh += "|grep " + key
