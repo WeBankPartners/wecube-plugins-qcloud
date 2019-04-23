@@ -99,14 +99,15 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 	var outputs []LogOutputs
 
 	for i := 0; i < len(LineNumber); i++ {
+		sh := "cat -n wecube-plugins.log |tail -n +1 | head -n 10"
 
-		sh := "cat -n wecube-plugins.log |tail -n +"
+		// sh := "cat -n wecube-plugins.log |tail -n +"
 
-		startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
+		// startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
 
-		sh += startLine + " | head -n " + needLine
+		// sh += startLine + " | head -n " + needLine
 
-		logrus.Info("commandsss =================> %s", sh)
+		// logrus.Info("commandsss =================> ", sh)
 
 		cmd := exec.Command("/bin/sh", "-c", sh)
 
