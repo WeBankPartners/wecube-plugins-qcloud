@@ -76,15 +76,15 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	logOutput, err := action.GetKeyWordLineNumber(&log)
+	output, err := action.GetKeyWordLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
 
-	// logOutput, err := action.GetKeyWord(log, output)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	logOutput, err := action.GetKeyWord(&log, output)
+	if err != nil {
+		return nil, err
+	}
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &logOutput, nil
@@ -102,9 +102,9 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 
 	for i := 0; i < len(LineNumber); i++ {
 
-		getLine := CountLineNumber(input.LineNumber, LineNumber[i])
+		startLine, needLine := CountLineNumber(input.LineNumber, LineNumber[i])
 
-		sh += LineNumber[i] + " | head -n " + getLine
+		sh += startLine + " | head -n " + needLine
 
 		cmd := exec.Command("/bin/sh", "-c", sh)
 
@@ -200,19 +200,23 @@ func LogReadLine(stdout io.ReadCloser) ([]string, error) {
 }
 
 //CountLineNumber .
-func CountLineNumber(wLine string, rLine string) string {
+func CountLineNumber(wLine string, rLine string) (string, string) {
 
 	wline, _ := strconv.Atoi(wLine)
 	rline, _ := strconv.Atoi(rLine)
 
+	num := 2 * wline
+
 	var startLineNumber int
-	if rline < wline {
+	if rline <= wline {
 		startLineNumber = 1
 	} else {
 		startLineNumber = rline - wline
 	}
 
-	line := strconv.Itoa(startLineNumber)
+	line1 := strconv.Itoa(startLineNumber)
 
-	return line
+	line2 := strconv.Itoa(num)
+
+	return line1, line2
 }
