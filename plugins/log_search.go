@@ -76,22 +76,22 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	output, err := action.GetKeyWordLineNumber(log)
+	logOutput, err := action.GetKeyWordLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
 
-	logOutput, err := action.GetKeyWord(log, output)
-	if err != nil {
-		return nil, err
-	}
+	// logOutput, err := action.GetKeyWord(log, output)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &logOutput, nil
 }
 
 //GetKeyWord .
-func (action *LogGetKeyWordAction) GetKeyWord(input LogInput, LineNumber []string) (interface{}, error) {
+func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []string) (interface{}, error) {
 	if input.LineNumber == "" {
 		input.LineNumber = "10"
 	}
@@ -138,7 +138,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(input LogInput, LineNumber []strin
 }
 
 //GetKeyWordLineNumber .
-func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input LogInput) ([]string, error) {
+func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]string, error) {
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
@@ -205,7 +205,12 @@ func CountLineNumber(wLine string, rLine string) string {
 	wline, _ := strconv.Atoi(wLine)
 	rline, _ := strconv.Atoi(rLine)
 
-	startLineNumber := rline - wline
+	var startLineNumber int
+	if rline < wline {
+		startLineNumber = 1
+	} else {
+		startLineNumber = rline - wline
+	}
 
 	line := strconv.Itoa(startLineNumber)
 
