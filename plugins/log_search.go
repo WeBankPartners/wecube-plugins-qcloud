@@ -197,14 +197,14 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 				return []string{}, err
 			}
 		}
+
+		logrus.Info("keywork message ===================== > ", string(output))
 		linelist = append(linelist, string(output))
 	}
 
 	if err := cmd.Wait(); err != nil {
 		return []string{}, err
 	}
-
-	logrus.Info("keywork message ===================== > ", linelist)
 
 	return linelist, nil
 }
