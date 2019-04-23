@@ -106,6 +106,8 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 
 		sh += startLine + " | head -n " + needLine
 
+		logrus.Info("commandsss =================> %s", sh)
+
 		cmd := exec.Command("/bin/sh", "-c", sh)
 
 		//创建获取命令输出管道
