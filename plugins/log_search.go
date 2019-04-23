@@ -165,10 +165,6 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 
 	output = append(output, string(bytes))
 
-	if err := cmd.Wait(); err != nil {
-		return []string{}, err
-	}
-
 	return output, nil
 }
 
