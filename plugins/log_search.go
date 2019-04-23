@@ -76,7 +76,12 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	logOutput, err := action.GetKeyWordLineNumber(&log)
+	output, err := action.GetKeyWordLineNumber(&log)
+	if err != nil {
+		return nil, err
+	}
+
+	logOutput, err := action.GetKeyWord(&log, output)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +138,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 }
 
 //GetKeyWordLineNumber .
-func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interface{}, error) {
+func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]string, error) {
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
@@ -170,10 +175,7 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interf
 		return nil, err
 	}
 
-	var outputs LogOutputs
-	outputs.Outputs = output
-
-	return outputs, nil
+	return output, nil
 }
 
 //LogReadLine .
