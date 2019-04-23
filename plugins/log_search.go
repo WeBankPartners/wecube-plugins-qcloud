@@ -90,7 +90,7 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			logrus.Info("line information ==>>>", lineinfo)
+
 			var out LogOutputs
 			out.Outputs = lineinfo
 			logoutputs = append(logoutputs, out)
@@ -140,6 +140,7 @@ func (action *LogGetKeyWordAction) GetKeyWord(searchLine string, LineNumber stri
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
+				logrus.Info("line information rrun here ??? ")
 			}
 			if err.Error() != "EOF" {
 				logrus.Info("readline is error")
