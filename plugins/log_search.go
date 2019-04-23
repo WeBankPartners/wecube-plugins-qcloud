@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -86,59 +86,54 @@ func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 }
 
 //GetKeyWord .
-func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput) (interface{}, error) {
+func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []string) (interface{}, error) {
 	if input.LineNumber == "" {
 		input.LineNumber = "10"
 	}
 
-	keystring := []string{}
-	if strings.Contains(input.KeyWord, ",") {
-		keystring = strings.Split(input.KeyWord, ",")
-	}
+	sh := "cat -n wecube-plugins.log |tail -n +"
 
-	sh := "cat logs/wecube-plugins.log "
-	if len(keystring) > 1 {
-		for _, key := range keystring {
-			sh += "|grep " + key
+	var outputs []LogOutputs
+
+	for i := 0; i < len(LineNumber); i++ {
+
+		getLine := CountLineNumber(input.LineNumber, LineNumber[i])
+
+		sh += LineNumber[i] + " | head -n " + getLine
+
+		cmd := exec.Command("/bin/sh", "-c", sh)
+
+		//创建获取命令输出管道
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
+			return []string{}, err
 		}
-	} else {
-		sh += "|grep " + input.KeyWord
+
+		//执行命令
+		if err := cmd.Start(); err != nil {
+			fmt.Printf("conmand start is error: %s \n", err)
+			return []string{}, err
+		}
+
+		//按行读取
+		output, err := LogReadLine(stdout)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(output) > 0 {
+			var out LogOutputs
+			out.Outputs = output
+			outputs = append(outputs, out)
+		}
 	}
-	// sh += " -C " + input.LineNumber
-
-	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	//创建获取命令输出管道
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
-		return []string{}, err
-	}
-
-	//执行命令
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("conmand start is error: %s \n", err)
-		return []string{}, err
-	}
-
-	//读取输出
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		fmt.Printf("ReadAll stdout error: %s \n", err)
-		return []string{}, err
-	}
-
-	var outputs LogOutputs
-	outputs.Outputs = append(outputs.Outputs, string(bytes))
 
 	return outputs, nil
 }
 
 //GetKeyWordLineNumber .
 func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interface{}, error) {
-	// if input.LineNumber == "" {
-	// 	input.LineNumber = "10"
-	// }
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
@@ -169,13 +164,7 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interf
 		return []string{}, err
 	}
 
-	//读取输出
-	// bytes, err := ioutil.ReadAll(stdout)
-	// if err != nil {
-	// 	fmt.Printf("ReadAll stdout error: %s \n", err)
-	// 	return []string{}, err
-	// }
-
+	//按行读取
 	output, err := LogReadLine(stdout)
 	if err != nil {
 		return nil, err
@@ -183,7 +172,6 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) (interf
 
 	var outputs LogOutputs
 	outputs.Outputs = output
-	// outputs.Outputs = append(outputs.Outputs, string(bytes))
 
 	return outputs, nil
 }
@@ -207,4 +195,17 @@ func LogReadLine(stdout io.ReadCloser) ([]string, error) {
 	}
 
 	return linelist, nil
+}
+
+//CountLineNumber .
+func CountLineNumber(wLine string, rLine string) string {
+
+	wline, _ := strconv.Atoi(wLine)
+	rline, _ := strconv.Atoi(rLine)
+
+	startLineNumber := rline - wline
+
+	line := strconv.Itoa(startLineNumber)
+
+	return line
 }
