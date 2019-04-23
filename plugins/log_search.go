@@ -77,29 +77,34 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	output, err := action.GetKeyWordLineNumber(&log)
+	// output, err := action.GetKeyWordLineNumber(&log)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// logrus.Info("line number count ==>>>", len(output))
+
+	// var logoutputs []LogOutputs
+	// if len(output) > 0 {
+	// 	for i := 0; i < len(output); i++ {
+	// 		lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+
+	// 		var out LogOutputs
+	// 		out.Outputs = lineinfo
+	// 		logoutputs = append(logoutputs, out)
+	// 	}
+	// }
+
+	lineinfo, err := action.GetKeyWord(log.LineNumber, "2119")
 	if err != nil {
 		return nil, err
 	}
 
-	logrus.Info("line number count ==>>>", len(output))
-
-	var logoutputs []LogOutputs
-	if len(output) > 0 {
-		for i := 0; i < len(output); i++ {
-			lineinfo, err := action.GetKeyWord(log.LineNumber, output[i])
-			if err != nil {
-				return nil, err
-			}
-
-			var out LogOutputs
-			out.Outputs = lineinfo
-			logoutputs = append(logoutputs, out)
-		}
-	}
-
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
-	return &logoutputs, nil
+	return &lineinfo, nil
 }
 
 //GetKeyWord .
