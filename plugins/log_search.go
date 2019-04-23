@@ -124,9 +124,31 @@ func (action *LogGetKeyWordAction) GetKeyWord(input *LogInput, LineNumber []stri
 		}
 
 		//按行读取
-		output, err := LogReadLine(cmd, stdout)
-		if err != nil {
-			return nil, err
+		// output, err := LogReadLine(cmd, stdout)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		var output []string
+		outputBuf := bufio.NewReader(stdout)
+
+		for {
+			lineinfo, _, err := outputBuf.ReadLine()
+			if err != nil {
+				if err.Error() == "EOF" {
+					break
+				}
+				if err.Error() != "EOF" {
+					logrus.Info("readline is error")
+					return []string{}, err
+				}
+			}
+
+			output = append(output, string(lineinfo))
+		}
+
+		if err := cmd.Wait(); err != nil {
+			return []string{}, err
 		}
 
 		if len(output) > 0 {
@@ -172,9 +194,31 @@ func (action *LogGetKeyWordAction) GetKeyWordLineNumber(input *LogInput) ([]stri
 	}
 
 	//按行读取
-	output, err := LogReadLine(cmd, stdout)
-	if err != nil {
-		return nil, err
+	// output, err := LogReadLine(cmd, stdout)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	var output []string
+	outputBuf := bufio.NewReader(stdout)
+
+	for {
+		lineinfo, _, err := outputBuf.ReadLine()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			if err.Error() != "EOF" {
+				logrus.Info("readline is error")
+				return []string{}, err
+			}
+		}
+
+		output = append(output, string(lineinfo))
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return []string{}, err
 	}
 
 	return output, nil
@@ -198,7 +242,6 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 			}
 		}
 
-		logrus.Info("keywork message ===================== > ", string(output))
 		linelist = append(linelist, string(output))
 	}
 
