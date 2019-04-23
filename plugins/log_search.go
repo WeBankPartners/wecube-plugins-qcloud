@@ -76,15 +76,17 @@ func (action *LogGetKeyWordAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogGetKeyWordAction) Do(input interface{}) (interface{}, error) {
 	log, _ := input.(LogInput)
-	output, err := action.GetKeyWordLineNumber(&log)
+	logOutput, err := action.GetKeyWordLineNumber(&log)
 	if err != nil {
 		return nil, err
 	}
 
-	logOutput, err := action.GetKeyWord(&log, output)
-	if err != nil {
-		return nil, err
-	}
+	logrus.Info("linenumber is ====================>", len(logOutput))
+
+	// logOutput, err := action.GetKeyWord(&log, output)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &logOutput, nil
