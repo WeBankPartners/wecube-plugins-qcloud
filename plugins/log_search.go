@@ -98,7 +98,7 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 			return nil, err
 		}
 
-		logrus.Info("output count =====>", output)
+		logrus.Info("output count =====>", len(output))
 
 		var out LogOutput
 		out.Guid = logs.Inputs[k].Guid
