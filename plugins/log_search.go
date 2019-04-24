@@ -63,7 +63,7 @@ type LogSearchAction struct {
 
 //ReadParam .
 func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs LogInput
+	var inputs LogInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -73,13 +73,15 @@ func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error)
 
 //CheckParam .
 func (action *LogSearchAction) CheckParam(input interface{}) error {
-	log, ok := input.(LogInput)
+	logs, ok := input.(LogInputs)
 	if !ok {
 		return fmt.Errorf("LogSearchAAction:input type=%T not right", input)
 	}
 
-	if log.KeyWord == "" {
-		return errors.New("LogSearchAAction input KeyWord can not be empty")
+	for _, log := range logs.Inputs {
+		if log.KeyWord == "" {
+			return errors.New("LogSearchAAction input KeyWord can not be empty")
+		}
 	}
 
 	return nil
