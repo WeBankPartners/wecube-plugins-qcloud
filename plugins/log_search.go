@@ -42,6 +42,12 @@ type LogOutput struct {
 	Logs [][]string `json:"logs,omitempty"`
 }
 
+//LogFileNameLineInfo .
+type LogFileNameLineInfo struct {
+	FileName string   `json:"name,omitempty"`
+	Line     []string `json:"line,omitempty"`
+}
+
 //LogPlugin .
 type LogPlugin struct {
 }
@@ -93,23 +99,37 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 	var logoutputs LogOutputs
 
 	for k := 0; k < len(logs.Inputs); k++ {
-		output, err := action.SearchLineNumber(&logs.Inputs[k])
+		// output, err := action.SearchLineNumber(&logs.Inputs[k])
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// logrus.Info("output count =====>", len(output))
+
+		//获取到文件名和行号的信息
+		output, err := action.GetLogFileNameAndLineNumberByKeyword(&logs.Inputs[k])
 		if err != nil {
 			return nil, err
 		}
 
-		logrus.Info("output count =====>", len(output))
-
 		var out LogOutput
 		out.Guid = logs.Inputs[k].Guid
 
-		if len(output) > 0 {
-			for i := 0; i < len(output); i++ {
-				if output[i] == "" {
-					continue
-				}
+		if len(output) == 0 {
+			continue
+		}
 
-				lineinfo, err := action.Search(logs.Inputs[k].LineNumber, output[i])
+		for i := 0; i < len(output); i++ {
+			if output[i].FileName == "" {
+				continue
+			}
+
+			if len(output[i].Line) == 0 {
+				continue
+			}
+
+			for j := 0; j < len(output[i].Line); j++ {
+				lineinfo, err := action.Search(output[i].FileName, logs.Inputs[k].LineNumber, output[i].Line[j])
 				if err != nil {
 					return nil, err
 				}
@@ -117,7 +137,11 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 				out.Logs = append(out.Logs, lineinfo)
 			}
 		}
-		logoutputs.Outputs = append(logoutputs.Outputs, out)
+
+		if len(out.Logs) > 0 {
+			logoutputs.Outputs = append(logoutputs.Outputs, out)
+		}
+
 		logrus.Infof("all keyword relate information = %v are getted", logs.Inputs[k].KeyWord)
 	}
 
@@ -125,12 +149,13 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 }
 
 //Search .
-func (action *LogSearchAction) Search(searchLine int, LineNumber string) ([]string, error) {
+func (action *LogSearchAction) Search(filename string, searchLine int, LineNumber string) ([]string, error) {
 	if searchLine == 0 {
 		searchLine = 10
 	}
 
-	sh := "cat -n logs/wecube-plugins.log |tail -n +"
+	// sh := "cat -n logs/wecube-plugins.log |tail -n +"
+	sh := "cat -n logs/" + filename + " |tail -n +"
 	startLine, needLine := CountLineNumber(searchLine, LineNumber)
 	sh += startLine + " | head -n " + needLine
 
@@ -249,4 +274,65 @@ func CountLineNumber(wLine int, rLine string) (string, string) {
 	line2 := strconv.Itoa(num)
 
 	return line1, line2
+}
+
+//GetLogFileNameAndLineNumberByKeyword .
+func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogInput) (info []LogFileNameLineInfo, err error) {
+
+	keystring := []string{}
+	if strings.Contains(input.KeyWord, ",") {
+		keystring = strings.Split(input.KeyWord, ",")
+	}
+
+	sh := ""
+	if len(keystring) > 1 {
+		sh = "grep -rin '" + keystring[0] + "' *"
+		for i := 1; i <= len(keystring); i++ {
+			sh += "|grep " + keystring[i]
+		}
+	} else {
+		sh = "grep -rin '" + input.KeyWord + "' *"
+	}
+	sh += " |awk '{print $1}';echo $1 "
+	cmd := exec.Command("/bin/sh", "-c", sh)
+
+	//创建获取命令输出管道
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("can not obtain stdout pipe for command when get log filename: %s \n", err)
+		return []LogFileNameLineInfo{}, err
+	}
+
+	//执行命令
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("conmand start is error when get log filename: %s \n", err)
+		return []LogFileNameLineInfo{}, err
+	}
+
+	output, err := LogReadLine(cmd, stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	//获取输出中的文件名和行号
+	var infos []LogFileNameLineInfo
+	if len(output) > 0 {
+		for k := 0; k < len(output); k++ {
+			if !strings.Contains(output[k], ":") {
+				continue
+			}
+
+			fileline := strings.Split(output[k], ":")
+			if len(fileline) < 2 {
+				continue
+			}
+			var info LogFileNameLineInfo
+			info.FileName = fileline[0]
+			info.Line = append(info.Line, fileline[1])
+
+			infos = append(infos, info)
+		}
+	}
+
+	return infos, nil
 }
