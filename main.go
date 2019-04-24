@@ -25,7 +25,7 @@ func init() {
 func main() {
 	logrus.Infof("Start WeCube-Plungins Service ... ")
 
-	go LogTest()
+	// go LogTest()
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
@@ -42,7 +42,7 @@ func initLogger() {
 
 	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
 		Filename:   fileName,
-		MaxSize:    5,
+		MaxSize:    100,
 		MaxBackups: 1,
 		MaxAge:     7,
 		Level:      logrus.InfoLevel,
