@@ -98,6 +98,9 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 			return nil, err
 		}
 
+		var out LogOutput
+		out.Guid = logs.Inputs[k].Guid
+
 		if len(output) > 0 {
 			for i := 0; i < len(output); i++ {
 				if output[i] == "" {
@@ -109,12 +112,10 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 					return nil, err
 				}
 
-				var out LogOutput
-				out.Guid = logs.Inputs[k].Guid
 				out.Logs = append(out.Logs, lineinfo)
-				logoutputs.Outputs = append(logoutputs.Outputs, out)
 			}
 		}
+		logoutputs.Outputs = append(logoutputs.Outputs, out)
 		logrus.Infof("all keyword relate information = %v are getted", logs.Inputs[k].KeyWord)
 	}
 
