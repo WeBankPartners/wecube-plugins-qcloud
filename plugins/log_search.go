@@ -326,11 +326,15 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 			if !strings.Contains(output[k], ":") {
 				continue
 			}
+			if !strings.Contains(output[k], "logs") {
+				continue
+			}
 
 			fileline := strings.Split(output[k], ":")
 			if len(fileline) < 2 {
 				continue
 			}
+
 			var info LogFileNameLineInfo
 			info.FileName = fileline[0]
 			info.Line = append(info.Line, fileline[1])
