@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"git.webank.io/wecube-plugins/conf"
 	"git.webank.io/wecube-plugins/plugins"
@@ -26,7 +25,7 @@ func init() {
 func main() {
 	logrus.Infof("Start WeCube-Plungins Service ... ")
 
-	// go LogTest()
+	go LogTest()
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
@@ -115,7 +114,6 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 
 func LogTest() {
 	for {
-		time.Sleep(1 * time.Second)
-		logrus.Info("this is a test for log file, through this function we can see the new log finename is what \n")
+		logrus.Info("this is a test for log file, through this function we can see the new log finename is what")
 	}
 }
