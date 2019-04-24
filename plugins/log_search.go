@@ -213,7 +213,10 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 			}
 		}
 
-		linelist = append(linelist, string(output))
+		str := string(output)
+		str1 := strings.Replace(str, "\t", "  ", -1)
+
+		linelist = append(linelist, str1)
 	}
 
 	if err := cmd.Wait(); err != nil {
