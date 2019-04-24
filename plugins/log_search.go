@@ -19,15 +19,27 @@ func init() {
 	LogActions["search"] = new(LogSearchAction)
 }
 
+//LogInputs .
+type LogInputs struct {
+	Inputs []LogInput `json:"inputs,omitempty"`
+}
+
 //LogInput .
 type LogInput struct {
+	Guid       string `json:"guid,omitempty"`
 	KeyWord    string `json:"key_word,omitempty"`
 	LineNumber int    `json:"line_number,omitempty"`
 }
 
 //LogOutputs .
 type LogOutputs struct {
-	Outputs []string `json:"outputs,omitempty"`
+	Outputs []LogOutput `json:"outputs,omitempty"`
+}
+
+//LogOutput .
+type LogOutput struct {
+	Guid string     `json:"guid,omitempty"`
+	Logs [][]string `json:"logs,omitempty"`
 }
 
 //LogPlugin .
@@ -75,33 +87,35 @@ func (action *LogSearchAction) CheckParam(input interface{}) error {
 
 //Do .
 func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
-	log, _ := input.(LogInput)
-	output, err := action.SearchLineNumber(&log)
-	if err != nil {
-		return nil, err
-	}
+	logs, _ := input.(LogInputs)
+	var logoutputs LogOutputs
 
-	logrus.Info("line number count ==>>>", len(output))
-
-	var logoutputs []LogOutputs
-	if len(output) > 0 {
-		for i := 0; i < len(output); i++ {
-			if output[i] == "" {
-				continue
-			}
-
-			lineinfo, err := action.Search(log.LineNumber, output[i])
-			if err != nil {
-				return nil, err
-			}
-
-			var out LogOutputs
-			out.Outputs = lineinfo
-			logoutputs = append(logoutputs, out)
+	for k := 0; k < len(logs.Inputs); k++ {
+		output, err := action.SearchLineNumber(&logs.Inputs[k])
+		if err != nil {
+			return nil, err
 		}
+
+		if len(output) > 0 {
+			for i := 0; i < len(output); i++ {
+				if output[i] == "" {
+					continue
+				}
+
+				lineinfo, err := action.Search(logs.Inputs[k].LineNumber, output[i])
+				if err != nil {
+					return nil, err
+				}
+
+				var out LogOutput
+				out.Guid = logs.Inputs[k].Guid
+				out.Logs = append(out.Logs, lineinfo)
+				logoutputs.Outputs = append(logoutputs.Outputs, out)
+			}
+		}
+		logrus.Infof("all keyword relate information = %v are getted", logs.Inputs[k].KeyWord)
 	}
 
-	logrus.Infof("all keyword relate information = %v are getted", log.KeyWord)
 	return &logoutputs, nil
 }
 
