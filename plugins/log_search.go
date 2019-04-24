@@ -211,13 +211,15 @@ func CountLineNumber(wLine int, rLine string) (string, string) {
 
 	rline, _ := strconv.Atoi(rLine)
 
-	num := 2 * wLine
+	var num int
 
 	var startLineNumber int
 	if rline <= wLine {
 		startLineNumber = 1
+		num = wLine + rline
 	} else {
 		startLineNumber = rline - wLine
+		num = 2*wLine + 1
 	}
 
 	line1 := strconv.Itoa(startLineNumber)
