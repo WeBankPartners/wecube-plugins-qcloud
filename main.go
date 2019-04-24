@@ -42,8 +42,8 @@ func initLogger() {
 
 	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
 		Filename:   fileName,
-		MaxSize:    1,
-		MaxBackups: 7,
+		MaxSize:    5,
+		MaxBackups: 0,
 		MaxAge:     7,
 		Level:      logrus.InfoLevel,
 		Formatter:  &logrus.TextFormatter{DisableTimestamp: false, DisableColors: false},
