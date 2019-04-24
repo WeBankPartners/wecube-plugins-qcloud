@@ -119,6 +119,8 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 			continue
 		}
 
+		logrus.Info("output info ================>", output)
+
 		for i := 0; i < len(output); i++ {
 			if output[i].FileName == "" {
 				continue
@@ -318,6 +320,9 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 	var infos []LogFileNameLineInfo
 	if len(output) > 0 {
 		for k := 0; k < len(output); k++ {
+			if output[k] == "" {
+				continue
+			}
 			if !strings.Contains(output[k], ":") {
 				continue
 			}
