@@ -99,13 +99,6 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 	var logoutputs LogOutputs
 
 	for k := 0; k < len(logs.Inputs); k++ {
-		// output, err := action.SearchLineNumber(&logs.Inputs[k])
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		// logrus.Info("output count =====>", len(output))
-
 		//获取到文件名和行号的信息
 		output, err := action.GetLogFileNameAndLineNumberByKeyword(&logs.Inputs[k])
 		if err != nil {
@@ -118,8 +111,6 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 		if len(output) == 0 {
 			continue
 		}
-
-		// logrus.Info("output info ================>", output)
 
 		for i := 0; i < len(output); i++ {
 			if output[i].FileName == "" {
@@ -285,20 +276,25 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
+		logrus.Info("come here  111====>>>>>>>")
 		keystring = strings.Split(input.KeyWord, ",")
 
 		sh += "grep -rin '" + keystring[0] + "' *.log"
 		for i := 1; i <= len(keystring); i++ {
 			sh += "|grep '" + keystring[i] + "'"
 		}
+		logrus.Info("come here  22222====>>>>>>>")
 	} else {
+		logrus.Info("come here  3333====>>>>>>>")
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
+
+	logrus.Info("come here  4444====>>>>>>>", sh)
 
 	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
-	logrus.Info("command info ================>", sh)
+	logrus.Info("come here  5555====>>>>>>>")
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
