@@ -98,18 +98,18 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 		return &pluginResponse, err
 	}
 
-	logrus.Infof("read parameters from http request = %v", pluginRequest.Parameters)
+	// logrus.Infof("read parameters from http request = %v", pluginRequest.Parameters)
 	actionParam, err := action.ReadParam(pluginRequest.Parameters)
 	if err != nil {
 		return &pluginResponse, err
 	}
 
-	logrus.Infof("check parameters = %v", actionParam)
+	// logrus.Infof("check parameters = %v", actionParam)
 	if err = action.CheckParam(actionParam); err != nil {
 		return &pluginResponse, err
 	}
 
-	logrus.Infof("action do with parameters = %v", actionParam)
+	// logrus.Infof("action do with parameters = %v", actionParam)
 	outputs, err := action.Do(actionParam)
 	if err != nil {
 		return &pluginResponse, err

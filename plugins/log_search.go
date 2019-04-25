@@ -286,14 +286,14 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 		keystring = strings.Split(input.KeyWord, ",")
 	}
 
-	sh := ""
+	sh := "cd logs && "
 	if len(keystring) > 1 {
-		sh = "grep -rin '" + keystring[0] + "' *"
+		sh += "grep -rin '" + keystring[0] + "' *.log"
 		for i := 1; i <= len(keystring); i++ {
 			sh += "|grep " + keystring[i]
 		}
 	} else {
-		sh = "grep -rin '" + input.KeyWord + "' *"
+		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
@@ -318,29 +318,49 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 	//获取输出中的文件名和行号
 	var infos []LogFileNameLineInfo
+
+	lineinfos := make(map[string][]string)
+
 	if len(output) > 0 {
 		for k := 0; k < len(output); k++ {
+			// var info LogFileNameLineInfo
+
 			if output[k] == "" {
 				continue
 			}
 			if !strings.Contains(output[k], ":") {
 				continue
 			}
-			if !strings.Contains(output[k], "logs") {
-				continue
-			}
 
 			fileline := strings.Split(output[k], ":")
-			if len(fileline) < 2 {
-				continue
+
+			//单个日志文件的情况，不会输出文件名
+			if !strings.Contains(output[k], "log") {
+
+				// fileline := strings.Split(output[k], ":")
+				lineinfos["wecube-plugins.log"] = append(lineinfos["wecube-plugins.log"], fileline[0])
+				// info.FileName = "wecube-plugins.log"
+				// info.Line = appen(info.Line, fileline[0])
+				// infos = append(infos, info)
+			} else {
+				//多个日志文件的情况，会输出文件名
+				// fileline := strings.Split(output[k], ":")
+				lineinfos[fileline[0]] = append(lineinfos[fileline[0]], fileline[1])
 			}
 
-			var info LogFileNameLineInfo
-			info.FileName = fileline[0]
-			info.Line = append(info.Line, fileline[1])
+			// info.FileName = fileline[0]
+			// info.Line = append(info.Line, fileline[1])
 
-			infos = append(infos, info)
+			// infos = append(infos, info)
 		}
+	}
+
+	for filename, message := range lineinfos {
+		var info LogFileNameLineInfo
+		info.FileName = filename
+		info.Line = message
+
+		infos = append(infos, info)
 	}
 
 	return infos, nil
