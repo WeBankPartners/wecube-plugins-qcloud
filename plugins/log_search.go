@@ -136,8 +136,6 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 					return nil, err
 				}
 
-				logrus.Info("lineinfo info ================>", lineinfo)
-
 				out.Logs = append(out.Logs, lineinfo)
 			}
 		}
@@ -283,22 +281,24 @@ func CountLineNumber(wLine int, rLine string) (string, string) {
 //GetLogFileNameAndLineNumberByKeyword .
 func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogInput) (info []LogFileNameLineInfo, err error) {
 
+	sh := "cd logs && "
+
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
 		keystring = strings.Split(input.KeyWord, ",")
-	}
 
-	sh := "cd logs && "
-	if len(keystring) > 1 {
 		sh += "grep -rin '" + keystring[0] + "' *.log"
 		for i := 1; i <= len(keystring); i++ {
-			sh += "|grep " + keystring[i]
+			sh += "|grep '" + keystring[i]
 		}
 	} else {
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
-	sh += " |awk '{print $1}';echo $1 "
+
+	sh += "' |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
+
+	logrus.Info("command info ================>", sh)
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
