@@ -278,14 +278,16 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 	if strings.Contains(input.KeyWord, ",") {
 		logrus.Info("come here  111====>>>>>>>")
 		keystring = strings.Split(input.KeyWord, ",")
+		logrus.Info("come here  22222====>>>>>>>", keystring)
 
 		sh += "grep -rin '" + keystring[0] + "' *.log"
+		logrus.Info("come here  3333====>>>>>>>", sh)
+
 		for i := 1; i <= len(keystring); i++ {
 			sh += "|grep '" + keystring[i] + "'"
 		}
-		logrus.Info("come here  22222====>>>>>>>")
+
 	} else {
-		logrus.Info("come here  3333====>>>>>>>")
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
@@ -293,8 +295,6 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	logrus.Info("come here  5555====>>>>>>>")
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
