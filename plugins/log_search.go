@@ -136,7 +136,7 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 		}
 	}
 
-	logrus.Infof("all keyword relate information = %v are getted", logs.Inputs[k].KeyWord)
+	logrus.Infof("all keyword relate information = %v are getted", logs.Inputs)
 
 	return &logoutputs, nil
 }
