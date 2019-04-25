@@ -289,13 +289,13 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 		sh += "grep -rin '" + keystring[0] + "' *.log"
 		for i := 1; i <= len(keystring); i++ {
-			sh += "|grep '" + keystring[i]
+			sh += "|grep '" + keystring[i] + "'"
 		}
 	} else {
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
-	sh += "' |awk '{print $1}';echo $1 "
+	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	logrus.Info("command info ================>", sh)
