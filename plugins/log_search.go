@@ -156,7 +156,7 @@ func (action *LogSearchAction) Search(filename string, searchLine int, LineNumbe
 		searchLine = 10
 	}
 
-	// sh := "cat -n logs/wecube-plugins.log |tail -n +"
+	// sh := "cat -n wecube-plugins.log |tail -n +"
 	sh := "cat -n " + filename + " |tail -n +"
 	startLine, needLine := CountLineNumber(searchLine, LineNumber)
 	sh += startLine + " | head -n " + needLine
