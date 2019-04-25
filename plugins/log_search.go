@@ -119,7 +119,7 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 			continue
 		}
 
-		logrus.Info("output info ================>", output)
+		// logrus.Info("output info ================>", output)
 
 		for i := 0; i < len(output); i++ {
 			if output[i].FileName == "" {
@@ -135,6 +135,8 @@ func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 				if err != nil {
 					return nil, err
 				}
+
+				logrus.Info("lineinfo info ================>", lineinfo)
 
 				out.Logs = append(out.Logs, lineinfo)
 			}
