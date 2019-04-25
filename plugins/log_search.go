@@ -276,22 +276,17 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 	keystring := []string{}
 	if strings.Contains(input.KeyWord, ",") {
-		logrus.Info("come here  111====>>>>>>>")
 		keystring = strings.Split(input.KeyWord, ",")
-		logrus.Info("come here  22222====>>>>>>>", keystring)
 
 		sh += "grep -rin '" + keystring[0] + "' *.log"
-		logrus.Info("come here  3333====>>>>>>>", sh)
 
-		for i := 1; i <= len(keystring); i++ {
+		for i := 1; i < len(keystring); i++ {
 			sh += "|grep '" + keystring[i] + "'"
 		}
 
 	} else {
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
-
-	logrus.Info("come here  4444====>>>>>>>", sh)
 
 	sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
