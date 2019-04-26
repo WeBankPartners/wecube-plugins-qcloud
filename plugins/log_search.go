@@ -228,6 +228,16 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	// 	return []string{}, nil
 	// }
 
+	// num, _ := outputBuf.Read(output)
+	// if num == 0 {
+	// 	return []string{}, nil
+	// }
+
+	num := outputBuf.Buffered()
+	if num == 0 {
+		return []string{}, nil
+	}
+
 	for {
 		output, _, err := outputBuf.ReadLine()
 		if err != nil {
@@ -238,11 +248,6 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 				logrus.Info("readline is error")
 				return []string{}, err
 			}
-		}
-
-		num, _ := outputBuf.Read(output)
-		if num == 0 {
-			return []string{}, nil
 		}
 
 		linelist = append(linelist, string(output))
@@ -454,8 +459,6 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
-	logrus.Info("plugin SEARCH LOG === 111 ====>>")
-
 	// sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
@@ -522,8 +525,6 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 			infos.Outputs = append(infos.Outputs, info)
 		}
 	}
-
-	logrus.Info("plugin SEARCH LOG === 444 ====>>")
 
 	return infos, nil
 }
