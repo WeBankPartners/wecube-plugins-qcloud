@@ -318,7 +318,6 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 
 	if len(output) > 0 {
 		for k := 0; k < len(output); k++ {
-			// var info LogFileNameLineInfo
 
 			if output[k] == "" {
 				continue
@@ -332,21 +331,12 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 			//单个日志文件的情况，不会输出文件名
 			if !strings.Contains(output[k], "log") {
 
-				// fileline := strings.Split(output[k], ":")
 				lineinfos["wecube-plugins.log"] = append(lineinfos["wecube-plugins.log"], fileline[0])
-				// info.FileName = "wecube-plugins.log"
-				// info.Line = appen(info.Line, fileline[0])
-				// infos = append(infos, info)
+
 			} else {
 				//多个日志文件的情况，会输出文件名
-				// fileline := strings.Split(output[k], ":")
 				lineinfos[fileline[0]] = append(lineinfos[fileline[0]], fileline[1])
 			}
-
-			// info.FileName = fileline[0]
-			// info.Line = append(info.Line, fileline[1])
-
-			// infos = append(infos, info)
 		}
 	}
 
@@ -488,25 +478,35 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 			if output[k] == "" {
 				continue
 			}
-			if !strings.Contains(output[k], ":") {
+
+			if !strings.Contains(output[k], ":time=") {
 				continue
 			}
 
-			fileline := strings.Split(output[k], ":")
+			fileline := strings.Split(output[k], ":time=")
 
-			if len(fileline) < 3 {
+			if fileline[1] == "" {
 				continue
 			}
 
 			//单个日志文件的情况，不会输出文件名
-			if !strings.Contains(output[k], "log") {
+			if !strings.Contains(fileline[0], ":") {
 				info.FileName = "wecube-plugins.log"
 				info.Line = fileline[0]
-				info.Log = fileline[1]
 			} else {
-				info.FileName = fileline[0]
-				info.Line = fileline[1]
-				info.Log = fileline[2]
+				f := strings.Split(fileline[0], ":")
+				info.FileName = f[0]
+				info.Line = f[1]
+			}
+
+			if len(fileline) == 2 {
+				info.Log = "time=" + fileline[1]
+			}
+			if len(fileline) > 2 {
+				info.Log = "time="
+				for j := 1; j < len(fileline); j++ {
+					info.Log += fileline[j]
+				}
 			}
 
 			infos.Outputs = append(infos.Outputs, info)
