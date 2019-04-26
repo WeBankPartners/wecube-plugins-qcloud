@@ -447,10 +447,9 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
-	logrus.Info("plugin SEARCH LOG =======>>", sh)
+	logrus.Info("plugin SEARCH LOG === 111 ====>>")
 
 	// sh += " |awk '{print $1}';echo $1 "
-	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
@@ -470,7 +469,7 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		return nil, err
 	}
 
-	logrus.Info("plugin SEARCH LOG === here ====>>")
+	logrus.Info("plugin SEARCH LOG === 222 ====>>")
 
 	//获取输出中的文件名和行号
 	var infos SearchLogOutputs
@@ -517,6 +516,8 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 			infos.Outputs = append(infos.Outputs, info)
 		}
 	}
+
+	logrus.Info("plugin SEARCH LOG === 333 ====>>")
 
 	return infos, nil
 }

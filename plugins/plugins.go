@@ -3,7 +3,6 @@ package plugins
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -111,12 +110,10 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	}
 
 	// logrus.Infof("action do with parameters = %v", actionParam)
-	logrus.Info("plugin start time ==>>", time.Now().Format("2006-01-02 15:04:05"))
 	outputs, err := action.Do(actionParam)
 	if err != nil {
 		return &pluginResponse, err
 	}
-	logrus.Info("plugin end time ==>>", time.Now().Format("2006-01-02 15:04:05"))
 
 	pluginResponse.Results = outputs
 
