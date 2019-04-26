@@ -227,7 +227,8 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 		output, _, err := outputBuf.ReadLine()
 		if err != nil {
 			if err.Error() == "EOF" {
-				break
+				return linelist, nil
+				// break
 			}
 			if err.Error() != "EOF" {
 				logrus.Info("readline is error")
@@ -238,11 +239,11 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 		linelist = append(linelist, string(output))
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return []string{}, err
-	}
+	// if err := cmd.Wait(); err != nil {
+	// 	return []string{}, err
+	// }
 
-	return linelist, nil
+	// return linelist, nil
 }
 
 //CountLineNumber .
