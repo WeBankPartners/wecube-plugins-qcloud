@@ -18,7 +18,7 @@ var LogActions = make(map[string]Action)
 func init() {
 	LogActions["search"] = new(LogSearchAction)
 	LogActions["searchlog"] = new(LogSearchLogAction)
-	// LogActions["searchdetail"] = new(LogSearchDetailAction)
+	LogActions["searchlogdetail"] = new(LogSearchLogDetailAction)
 }
 
 //LogInputs .
@@ -393,12 +393,12 @@ func (action *LogSearchLogAction) ReadParam(param interface{}) (interface{}, err
 func (action *LogSearchLogAction) CheckParam(input interface{}) error {
 	logs, ok := input.(SearchLogInputs)
 	if !ok {
-		return fmt.Errorf("LogSearchAction:input type=%T not right", input)
+		return fmt.Errorf("LogSearchLogAction:input type=%T not right", input)
 	}
 
 	for _, log := range logs.Inputs {
 		if log.KeyWord == "" {
-			return errors.New("LogSearchAction input KeyWord can not be empty")
+			return errors.New("LogSearchLogAction input KeyWord can not be empty")
 		}
 	}
 
@@ -515,4 +515,120 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 	}
 
 	return infos, nil
+}
+
+//LogSearchLogDetailAction .
+type LogSearchLogDetailAction struct {
+}
+
+//SearchLogDetailInputs .
+type SearchLogDetailInputs struct {
+	Inputs []SearchLogDetailInput `json:"inputs,omitempty"`
+}
+
+//SearchLogDetailInput .
+type SearchLogDetailInput struct {
+	FileName        string `json:"file_name,omitempty"`
+	LineNumber      string `json:"line_number,omitempty"`
+	RelateLineCount int    `json:"relate_line_count,omitempty"`
+}
+
+//SearchLogDetailOutputs .
+type SearchLogDetailOutputs struct {
+	Outputs []SearchLogDetailOutput `json:"outputs,omitempty"`
+}
+
+//SearchLogDetailOutput .
+type SearchLogDetailOutput struct {
+	FileName   string   `json:"outputs,omitempty"`
+	LineNumber string   `json:"line_number,omitempty"`
+	Logs       []string `json:"logs,omitempty"`
+}
+
+//ReadParam .
+func (action *LogSearchLogDetailAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SearchLogDetailInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+//CheckParam .
+func (action *LogSearchLogDetailAction) CheckParam(input interface{}) error {
+	logs, ok := input.(SearchLogDetailInputs)
+	if !ok {
+		return fmt.Errorf("LogSearchLogDetailAction:input type=%T not right", input)
+	}
+
+	for _, log := range logs.Inputs {
+		if log.FileName == "" {
+			return errors.New("LogSearchLogDetailAction input finename can not be empty")
+		}
+		if log.LineNumber == "" {
+			return errors.New("LogSearchLogDetailAction input LineNumber can not be empty")
+		}
+	}
+
+	return nil
+}
+
+//Do .
+func (action *LogSearchLogDetailAction) Do(input interface{}) (interface{}, error) {
+	logs, _ := input.(SearchLogDetailInputs)
+
+	var logoutputs SearchLogDetailOutputs
+
+	for i := 0; i < len(logs.Inputs); i++ {
+		output, err := action.SearchLogDetail(&logs.Inputs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		info, _ := output.(SearchLogDetailOutput)
+
+		logoutputs.Outputs = append(logoutputs.Outputs, info)
+	}
+
+	return &logoutputs, nil
+}
+
+//SearchLogDetail .
+func (action *LogSearchLogDetailAction) SearchLogDetail(input *SearchLogDetailInput) (interface{}, error) {
+
+	if input.RelateLineCount == 0 {
+		input.RelateLineCount = 10
+	}
+
+	sh := "cd logs && cat -n " + input.FileName + " |tail -n +"
+	startLine, needLine := CountLineNumber(input.RelateLineCount, input.LineNumber)
+	sh += startLine + " | head -n " + needLine
+
+	cmd := exec.Command("/bin/sh", "-c", sh)
+
+	//创建获取命令输出管道
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
+		return []string{}, err
+	}
+
+	//执行命令
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("conmand start is error: %s \n", err)
+		return []string{}, err
+	}
+
+	output, err := LogReadLine(cmd, stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	var outputs SearchLogDetailOutput
+	outputs.FileName = input.FileName
+	outputs.LineNumber = input.LineNumber
+	outputs.Logs = output
+
+	return outputs, nil
 }
