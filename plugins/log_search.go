@@ -233,8 +233,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	// 	return []string{}, nil
 	// }
 
-	num := outputBuf.Buffered()
-	if num == 0 {
+	if outputBuf.UnreadByte() != nil {
 		return []string{}, nil
 	}
 
