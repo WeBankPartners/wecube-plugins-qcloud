@@ -499,18 +499,19 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 				info.Line = f[1]
 			}
 
-			logrus.Info("fileline info ==========>>>>>", fileline[1])
+			logrus.Info("fileline log info ==========>>>>>", fileline[1])
 
 			if len(fileline) == 2 {
 				info.Log = "time=" + fileline[1]
-				logrus.Info("fileline = 2 =====here=====>>>>>")
+				logrus.Info("return log info ===== 111 =====>>>>>", fileline[1])
+				logrus.Info("return log info ===== 222 =====>>>>>", info.Log)
 			}
+
 			if len(fileline) > 2 {
 				info.Log = "time="
 				for j := 1; j < len(fileline); j++ {
 					info.Log += fileline[j]
 				}
-				logrus.Info("fileline > 2 =====here=====>>>>>")
 			}
 
 			infos.Outputs = append(infos.Outputs, info)
