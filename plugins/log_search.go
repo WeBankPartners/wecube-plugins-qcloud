@@ -233,7 +233,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 			}
 			if err.Error() != "EOF" {
 				logrus.Info("readline is error")
-				return []string{}, err
+				return []string{}, nil
 			}
 		}
 
