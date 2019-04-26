@@ -223,22 +223,12 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
 
-	// _, err := outputBuf.ReadByte()
-	// if err != nil {
-	// 	return []string{}, nil
-	// }
-
-	// num, _ := outputBuf.Read(output)
-	// if num == 0 {
-	// 	return []string{}, nil
-	// }
-
-	logrus.Info("hello i am here 111 ===>>>")
-	if outputBuf.UnreadByte() != nil {
+	first, err := outputBuf.ReadByte()
+	if err != nil {
 		return []string{}, nil
 	}
 
-	logrus.Info("hello i am here 222 ===>>>")
+	logrus.Info("first byte is =====>>>", first)
 
 	for {
 		output, _, err := outputBuf.ReadLine()
