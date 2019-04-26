@@ -450,6 +450,7 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 	logrus.Info("plugin SEARCH LOG === 111 ====>>")
 
 	// sh += " |awk '{print $1}';echo $1 "
+	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	//创建获取命令输出管道
 	stdout, err := cmd.StdoutPipe()
