@@ -222,6 +222,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
+	logrus.Info("plugin SEARCH LOG === 222 ====>>")
 
 	for {
 		output, _, err := outputBuf.ReadLine()
@@ -237,6 +238,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 		// str := string(output)
 		// str1 := strings.Replace(str, "\t", "  ", -1)
+		logrus.Info("plugin SEARCH LOG === 333 ====>>")
 
 		linelist = append(linelist, string(output))
 	}
@@ -470,8 +472,6 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		return nil, err
 	}
 
-	logrus.Info("plugin SEARCH LOG === 222 ====>>")
-
 	//获取输出中的文件名和行号
 	var infos SearchLogOutputs
 
@@ -518,7 +518,7 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		}
 	}
 
-	logrus.Info("plugin SEARCH LOG === 333 ====>>")
+	logrus.Info("plugin SEARCH LOG === 444 ====>>")
 
 	return infos, nil
 }
