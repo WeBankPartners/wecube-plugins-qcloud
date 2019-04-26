@@ -236,6 +236,8 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 			}
 		}
 
+		logrus.Info("plugin SEARCH LOG === 222 ====>>", string(output))
+
 		// str := string(output)
 		// str1 := strings.Replace(str, "\t", "  ", -1)
 		logrus.Info("plugin SEARCH LOG === 333 ====>>")
