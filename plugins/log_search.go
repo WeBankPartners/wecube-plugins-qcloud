@@ -222,7 +222,13 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
+
 	logrus.Info("plugin SEARCH LOG === 222 ====>>")
+
+	_, err := outputBuf.ReadByte()
+	if err != nil {
+		return []string{}, nil
+	}
 
 	for {
 		output, _, err := outputBuf.ReadLine()
