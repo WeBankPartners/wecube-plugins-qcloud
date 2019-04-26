@@ -225,6 +225,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 	for {
 		output, _, err := outputBuf.ReadLine()
+		logrus.Info("[logs info] ==========111===>>", err.Error(), len(err.Error()))
 		if err != nil {
 			if err.Error() == "EOF" {
 				return linelist, nil
