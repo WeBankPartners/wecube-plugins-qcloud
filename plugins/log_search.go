@@ -447,6 +447,8 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
+	logrus.Info("plugin SEARCH LOG =======>>", sh)
+
 	// sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
@@ -467,6 +469,8 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 	if err != nil {
 		return nil, err
 	}
+
+	logrus.Info("plugin SEARCH LOG === here ====>>")
 
 	//获取输出中的文件名和行号
 	var infos SearchLogOutputs
