@@ -233,9 +233,12 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	// 	return []string{}, nil
 	// }
 
+	logrus.Info("hello i am here 111 ===>>>")
 	if outputBuf.UnreadByte() != nil {
 		return []string{}, nil
 	}
+
+	logrus.Info("hello i am here 222 ===>>>")
 
 	for {
 		output, _, err := outputBuf.ReadLine()
