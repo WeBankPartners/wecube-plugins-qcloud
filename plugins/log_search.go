@@ -246,6 +246,8 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 		return []string{}, err
 	}
 
+	logrus.Info("[log info] ==== >>>  4444")
+
 	return linelist, nil
 }
 
