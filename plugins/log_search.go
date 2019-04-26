@@ -240,9 +240,10 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 		linelist = append(linelist, string(output))
 	}
 
-	// if err := cmd.Wait(); err != nil {
-	// 	return []string{}, err
-	// }
+	if err := cmd.Wait(); err != nil {
+		return []string{}, err
+	}
+
 	logrus.Info("[logs info] ==========3333===>>")
 	return linelist, nil
 }
