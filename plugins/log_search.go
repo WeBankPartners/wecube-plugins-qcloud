@@ -226,6 +226,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
 	for {
 		output, _, err := outputBuf.ReadLine()
+		logrus.Info("plugin SEARCH LOG === 222 ====>>", string(output))
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
@@ -235,8 +236,6 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 				return []string{}, err
 			}
 		}
-
-		logrus.Info("plugin SEARCH LOG === 222 ====>>", string(output))
 
 		// str := string(output)
 		// str1 := strings.Replace(str, "\t", "  ", -1)
