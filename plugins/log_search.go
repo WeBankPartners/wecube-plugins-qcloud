@@ -223,17 +223,12 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
 
-	newBuf := *outputBuf
-
-	first, err := newBuf.ReadByte()
-	if err != nil {
-		return []string{}, nil
-	}
-
-	logrus.Info("first byte is =====>>>", first)
+	logrus.Info("first byte is === 111 ==>>>")
 
 	for {
+		logrus.Info("first byte is === 222 ==>>>")
 		output, _, err := outputBuf.ReadLine()
+		logrus.Info("first byte is === 333 ==>>>")
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
@@ -243,6 +238,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 				return []string{}, err
 			}
 		}
+		logrus.Info("first byte is === 444 ==>>>")
 
 		linelist = append(linelist, string(output))
 	}
