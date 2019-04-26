@@ -489,6 +489,8 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 				continue
 			}
 
+			logrus.Info("fileline info === >>>  ", fileline[1])
+
 			//单个日志文件的情况，不会输出文件名
 			if !strings.Contains(fileline[0], ":") {
 				info.FileName = "wecube-plugins.log"
@@ -497,21 +499,6 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 				f := strings.Split(fileline[0], ":")
 				info.FileName = f[0]
 				info.Line = f[1]
-			}
-
-			logrus.Info("fileline log info ==========>>>>>", fileline[1])
-
-			if len(fileline) == 2 {
-				info.Log = "time=" + fileline[1]
-				logrus.Info("return log info ===== 111 =====>>>>>", fileline[1])
-				logrus.Info("return log info ===== 222 =====>>>>>", info.Log)
-			}
-
-			if len(fileline) > 2 {
-				info.Log = "time="
-				for j := 1; j < len(fileline); j++ {
-					info.Log += fileline[j]
-				}
 			}
 
 			infos.Outputs = append(infos.Outputs, info)
