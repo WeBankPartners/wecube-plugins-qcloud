@@ -46,7 +46,7 @@ type LogOutput struct {
 
 //LogFileNameLineInfo .
 type LogFileNameLineInfo struct {
-	FileName string   `json:"name,omitempty"`
+	FileName string   `json:"file_name,omitempty"`
 	Line     []string `json:"line,omitempty"`
 }
 
@@ -374,7 +374,7 @@ type SearchLogOutputs struct {
 
 //SearchLogOutput .
 type SearchLogOutput struct {
-	FileName string `json:"name,omitempty"`
+	FileName string `json:"file_name,omitempty"`
 	Line     string `json:"line,omitempty"`
 	Log      string `json:"log,omitempty"`
 }
@@ -540,7 +540,7 @@ type SearchLogDetailOutputs struct {
 
 //SearchLogDetailOutput .
 type SearchLogDetailOutput struct {
-	FileName   string   `json:"outputs,omitempty"`
+	FileName   string   `json:"file_name,omitempty"`
 	LineNumber string   `json:"line_number,omitempty"`
 	Logs       []string `json:"logs,omitempty"`
 }
