@@ -228,7 +228,7 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	for {
 		logrus.Info("first byte is === 222 ==>>>")
 		output, _, err := outputBuf.ReadLine()
-		logrus.Info("first byte is === 333 ==>>>")
+		logrus.Info("first byte is === 333 ==>>>", err.Error())
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
