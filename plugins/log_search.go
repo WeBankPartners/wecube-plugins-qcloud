@@ -220,7 +220,7 @@ func (action *LogSearchAction) SearchLineNumber(input *LogInput) ([]string, erro
 //LogReadLine .
 func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 
-	var linelist []string
+	linelist := []string{}
 	outputBuf := bufio.NewReader(stdout)
 
 	for {
@@ -228,8 +228,8 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 		logrus.Info("[logs info] ==========111===>>", err.Error(), len(err.Error()))
 		if err != nil {
 			if err.Error() == "EOF" {
-				return linelist, nil
-				// break
+				logrus.Info("[logs info] ==========222===>>", err.Error(), len(err.Error()))
+				break
 			}
 			if err.Error() != "EOF" {
 				logrus.Info("readline is error")
@@ -243,8 +243,8 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	// if err := cmd.Wait(); err != nil {
 	// 	return []string{}, err
 	// }
-
-	// return linelist, nil
+	logrus.Info("[logs info] ==========3333===>>")
+	return linelist, nil
 }
 
 //CountLineNumber .
