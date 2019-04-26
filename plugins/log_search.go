@@ -223,12 +223,10 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
 
-	logrus.Info("plugin SEARCH LOG === 222 ====>>")
-
-	_, err := outputBuf.ReadByte()
-	if err != nil {
-		return []string{}, nil
-	}
+	// _, err := outputBuf.ReadByte()
+	// if err != nil {
+	// 	return []string{}, nil
+	// }
 
 	for {
 		output, _, err := outputBuf.ReadLine()
@@ -242,9 +240,10 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 			}
 		}
 
-		// str := string(output)
-		// str1 := strings.Replace(str, "\t", "  ", -1)
-		logrus.Info("plugin SEARCH LOG === 333 ====>>")
+		num, _ := outputBuf.Read(output)
+		if num == 0 {
+			return []string{}, nil
+		}
 
 		linelist = append(linelist, string(output))
 	}
