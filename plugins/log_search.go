@@ -223,7 +223,9 @@ func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
 	var linelist []string
 	outputBuf := bufio.NewReader(stdout)
 
-	first, err := outputBuf.ReadByte()
+	newBuf := *outputBuf
+
+	first, err := newBuf.ReadByte()
 	if err != nil {
 		return []string{}, nil
 	}
