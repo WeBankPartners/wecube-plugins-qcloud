@@ -17,6 +17,8 @@ var LogActions = make(map[string]Action)
 
 func init() {
 	LogActions["search"] = new(LogSearchAction)
+	LogActions["searchlog"] = new(LogSearchLogAction)
+	// LogActions["searchdetail"] = new(LogSearchDetailAction)
 }
 
 //LogInputs .
@@ -81,12 +83,12 @@ func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error)
 func (action *LogSearchAction) CheckParam(input interface{}) error {
 	logs, ok := input.(LogInputs)
 	if !ok {
-		return fmt.Errorf("LogSearchAAction:input type=%T not right", input)
+		return fmt.Errorf("LogSearchAction:input type=%T not right", input)
 	}
 
 	for _, log := range logs.Inputs {
 		if log.KeyWord == "" {
-			return errors.New("LogSearchAAction input KeyWord can not be empty")
+			return errors.New("LogSearchAction input KeyWord can not be empty")
 		}
 	}
 
@@ -354,6 +356,161 @@ func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogIn
 		info.Line = message
 
 		infos = append(infos, info)
+	}
+
+	return infos, nil
+}
+
+//LogSearchLogAction .
+type LogSearchLogAction struct {
+}
+
+//SearchLogInputs .
+type SearchLogInputs struct {
+	Inputs []SearchLogInput `json:"inputs,omitempty"`
+}
+
+//SearchLogInput .
+type SearchLogInput struct {
+	Guid       string `json:"guid,omitempty"`
+	KeyWord    string `json:"key_word,omitempty"`
+	LineNumber int    `json:"line_number,omitempty"`
+}
+
+//SearchLogOutputs .
+type SearchLogOutputs struct {
+	Outputs []SearchLogOutput `json:"outputs,omitempty"`
+}
+
+//SearchLogOutput .
+type SearchLogOutput struct {
+	FileName string `json:"name,omitempty"`
+	Line     string `json:"line,omitempty"`
+	Log      string `json:"log,omitempty"`
+}
+
+//ReadParam .
+func (action *LogSearchLogAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SearchLogInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+//CheckParam .
+func (action *LogSearchLogAction) CheckParam(input interface{}) error {
+	logs, ok := input.(SearchLogInputs)
+	if !ok {
+		return fmt.Errorf("LogSearchAction:input type=%T not right", input)
+	}
+
+	for _, log := range logs.Inputs {
+		if log.KeyWord == "" {
+			return errors.New("LogSearchAction input KeyWord can not be empty")
+		}
+	}
+
+	return nil
+}
+
+//Do .
+func (action *LogSearchLogAction) Do(input interface{}) (interface{}, error) {
+	logs, _ := input.(SearchLogInputs)
+
+	var logoutputs SearchLogOutputs
+
+	for i := 0; i < len(logs.Inputs); i++ {
+		output, err := action.SearchLog(&logs.Inputs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		loginfo, _ := output.(SearchLogOutputs)
+
+		for k := 0; k < len(loginfo.Outputs); k++ {
+			logoutputs.Outputs = append(logoutputs.Outputs, loginfo.Outputs[k])
+		}
+
+	}
+
+	return &logoutputs, nil
+}
+
+//SearchLog .
+func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{}, error) {
+
+	sh := "cd logs && "
+
+	keystring := []string{}
+	if strings.Contains(input.KeyWord, ",") {
+		keystring = strings.Split(input.KeyWord, ",")
+
+		sh += "grep -rin '" + keystring[0] + "' *.log"
+
+		for i := 1; i < len(keystring); i++ {
+			sh += "|grep '" + keystring[i] + "'"
+		}
+
+	} else {
+		sh += "grep -rin '" + input.KeyWord + "' *.log"
+	}
+
+	sh += " |awk '{print $1}';echo $1 "
+	cmd := exec.Command("/bin/sh", "-c", sh)
+
+	//创建获取命令输出管道
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("can not obtain stdout pipe for command when get log filename: %s \n", err)
+		return nil, err
+	}
+
+	//执行命令
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("conmand start is error when get log filename: %s \n", err)
+		return nil, err
+	}
+
+	output, err := LogReadLine(cmd, stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	//获取输出中的文件名和行号
+	var infos SearchLogOutputs
+
+	if len(output) > 0 {
+		for k := 0; k < len(output); k++ {
+			var info SearchLogOutput
+
+			if output[k] == "" {
+				continue
+			}
+			if !strings.Contains(output[k], ":") {
+				continue
+			}
+
+			fileline := strings.Split(output[k], ":")
+
+			if len(fileline) < 3 {
+				continue
+			}
+
+			//单个日志文件的情况，不会输出文件名
+			if !strings.Contains(output[k], "log") {
+				info.FileName = "wecube-plugins.log"
+				info.Line = fileline[0]
+				info.Log = fileline[1]
+			} else {
+				info.FileName = fileline[0]
+				info.Line = fileline[1]
+				info.Log = fileline[2]
+			}
+
+			infos.Outputs = append(infos.Outputs, info)
+		}
 	}
 
 	return infos, nil
