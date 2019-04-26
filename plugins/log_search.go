@@ -375,7 +375,7 @@ type SearchLogOutputs struct {
 //SearchLogOutput .
 type SearchLogOutput struct {
 	FileName string `json:"file_name,omitempty"`
-	Line     string `json:"line,omitempty"`
+	Line     string `json:"line_number,omitempty"`
 	Log      string `json:"log,omitempty"`
 }
 
