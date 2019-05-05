@@ -17,37 +17,7 @@ var LogActions = make(map[string]Action)
 
 func init() {
 	LogActions["search"] = new(LogSearchAction)
-	LogActions["searchlog"] = new(LogSearchLogAction)
-	LogActions["searchlogdetail"] = new(LogSearchLogDetailAction)
-}
-
-//LogInputs .
-type LogInputs struct {
-	Inputs []LogInput `json:"inputs,omitempty"`
-}
-
-//LogInput .
-type LogInput struct {
-	Guid       string `json:"guid,omitempty"`
-	KeyWord    string `json:"key_word,omitempty"`
-	LineNumber int    `json:"line_number,omitempty"`
-}
-
-//LogOutputs .
-type LogOutputs struct {
-	Outputs []LogOutput `json:"outputs,omitempty"`
-}
-
-//LogOutput .
-type LogOutput struct {
-	Guid string     `json:"guid,omitempty"`
-	Logs [][]string `json:"logs,omitempty"`
-}
-
-//LogFileNameLineInfo .
-type LogFileNameLineInfo struct {
-	FileName string   `json:"file_name,omitempty"`
-	Line     []string `json:"line,omitempty"`
+	LogActions["searchdetail"] = new(LogSearchDetailAction)
 }
 
 //LogPlugin .
@@ -69,9 +39,33 @@ func (plugin *LogPlugin) GetActionByName(actionName string) (Action, error) {
 type LogSearchAction struct {
 }
 
+//SearchInputs .
+type SearchInputs struct {
+	Inputs []SearchInput `json:"inputs,omitempty"`
+}
+
+//SearchInput .
+type SearchInput struct {
+	Guid       string `json:"guid,omitempty"`
+	KeyWord    string `json:"key_word,omitempty"`
+	LineNumber int    `json:"line_number,omitempty"`
+}
+
+//SearchOutputs .
+type SearchOutputs struct {
+	Outputs []SearchOutput `json:"outputs,omitempty"`
+}
+
+//SearchOutput .
+type SearchOutput struct {
+	FileName string `json:"file_name,omitempty"`
+	Line     string `json:"line_number,omitempty"`
+	Log      string `json:"log,omitempty"`
+}
+
 //ReadParam .
 func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs LogInputs
+	var inputs SearchInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -81,7 +75,7 @@ func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error)
 
 //CheckParam .
 func (action *LogSearchAction) CheckParam(input interface{}) error {
-	logs, ok := input.(LogInputs)
+	logs, ok := input.(SearchInputs)
 	if !ok {
 		return fmt.Errorf("LogSearchAction:input type=%T not right", input)
 	}
@@ -97,330 +91,17 @@ func (action *LogSearchAction) CheckParam(input interface{}) error {
 
 //Do .
 func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
-	logs, _ := input.(LogInputs)
-	var logoutputs LogOutputs
+	logs, _ := input.(SearchInputs)
 
-	for k := 0; k < len(logs.Inputs); k++ {
-		//获取到文件名和行号的信息
-		output, err := action.GetLogFileNameAndLineNumberByKeyword(&logs.Inputs[k])
-		if err != nil {
-			return nil, err
-		}
-
-		var out LogOutput
-		out.Guid = logs.Inputs[k].Guid
-
-		if len(output) == 0 {
-			continue
-		}
-
-		for i := 0; i < len(output); i++ {
-			if output[i].FileName == "" {
-				continue
-			}
-
-			if len(output[i].Line) == 0 {
-				continue
-			}
-
-			for j := 0; j < len(output[i].Line); j++ {
-				lineinfo, err := action.Search(output[i].FileName, logs.Inputs[k].LineNumber, output[i].Line[j])
-				if err != nil {
-					return nil, err
-				}
-
-				out.Logs = append(out.Logs, lineinfo)
-			}
-		}
-
-		if len(out.Logs) > 0 {
-			logoutputs.Outputs = append(logoutputs.Outputs, out)
-		}
-	}
-
-	logrus.Infof("all keyword relate information = %v are getted", logs.Inputs)
-
-	return &logoutputs, nil
-}
-
-//Search .
-func (action *LogSearchAction) Search(filename string, searchLine int, LineNumber string) ([]string, error) {
-	if searchLine == 0 {
-		searchLine = 10
-	}
-
-	// sh := "cat -n wecube-plugins.log |tail -n +"
-	sh := "cd logs && cat -n " + filename + " |tail -n +"
-	startLine, needLine := CountLineNumber(searchLine, LineNumber)
-	sh += startLine + " | head -n " + needLine
-
-	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	//创建获取命令输出管道
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
-		return []string{}, err
-	}
-
-	//执行命令
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("conmand start is error: %s \n", err)
-		return []string{}, err
-	}
-
-	output, err := LogReadLine(cmd, stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-//SearchLineNumber .
-func (action *LogSearchAction) SearchLineNumber(input *LogInput) ([]string, error) {
-
-	keystring := []string{}
-	if strings.Contains(input.KeyWord, ",") {
-		keystring = strings.Split(input.KeyWord, ",")
-	}
-
-	sh := "cat -n logs/wecube-plugins.log "
-	if len(keystring) > 1 {
-		for _, key := range keystring {
-			sh += "|grep " + key
-		}
-	} else {
-		sh += "|grep " + input.KeyWord
-	}
-	sh += " |awk '{print $1}';echo $1 "
-	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	//创建获取命令输出管道
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
-		return []string{}, err
-	}
-
-	//执行命令
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("conmand start is error: %s \n", err)
-		return []string{}, err
-	}
-
-	output, err := LogReadLine(cmd, stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-//LogReadLine .
-func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
-
-	linelist := []string{}
-	outputBuf := bufio.NewReader(stdout)
-
-	for {
-		output, _, err := outputBuf.ReadLine()
-		logrus.Info("[log info] ==== >>>  111111")
-		if err != nil {
-			if err.Error() == "EOF" {
-				logrus.Info("[log info] ==== >>>  22222")
-				break
-			}
-			if err.Error() != "EOF" {
-				logrus.Info("readline is error")
-				return []string{}, nil
-			}
-		}
-
-		linelist = append(linelist, string(output))
-	}
-
-	logrus.Info("[log info] ==== >>>  33333")
-
-	if err := cmd.Wait(); err != nil {
-		return []string{}, nil
-	}
-
-	logrus.Info("[log info] ==== >>>  4444")
-
-	return linelist, nil
-}
-
-//CountLineNumber .
-func CountLineNumber(wLine int, rLine string) (string, string) {
-
-	rline, _ := strconv.Atoi(rLine)
-
-	var num int
-
-	var startLineNumber int
-	if rline <= wLine {
-		startLineNumber = 1
-		num = wLine + rline
-	} else {
-		startLineNumber = rline - wLine
-		num = 2*wLine + 1
-	}
-
-	line1 := strconv.Itoa(startLineNumber)
-
-	line2 := strconv.Itoa(num)
-
-	return line1, line2
-}
-
-//GetLogFileNameAndLineNumberByKeyword .
-func (action *LogSearchAction) GetLogFileNameAndLineNumberByKeyword(input *LogInput) (info []LogFileNameLineInfo, err error) {
-
-	sh := "cd logs && "
-
-	keystring := []string{}
-	if strings.Contains(input.KeyWord, ",") {
-		keystring = strings.Split(input.KeyWord, ",")
-
-		sh += "grep -rin '" + keystring[0] + "' *.log"
-
-		for i := 1; i < len(keystring); i++ {
-			sh += "|grep '" + keystring[i] + "'"
-		}
-
-	} else {
-		sh += "grep -rin '" + input.KeyWord + "' *.log"
-	}
-
-	sh += " |awk '{print $1}';echo $1 "
-	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	//创建获取命令输出管道
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Printf("can not obtain stdout pipe for command when get log filename: %s \n", err)
-		return []LogFileNameLineInfo{}, err
-	}
-
-	//执行命令
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("conmand start is error when get log filename: %s \n", err)
-		return []LogFileNameLineInfo{}, err
-	}
-
-	output, err := LogReadLine(cmd, stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	//获取输出中的文件名和行号
-	var infos []LogFileNameLineInfo
-
-	lineinfos := make(map[string][]string)
-
-	if len(output) > 0 {
-		for k := 0; k < len(output); k++ {
-
-			if output[k] == "" {
-				continue
-			}
-			if !strings.Contains(output[k], ":") {
-				continue
-			}
-
-			fileline := strings.Split(output[k], ":")
-
-			//单个日志文件的情况，不会输出文件名
-			if !strings.Contains(output[k], "log") {
-
-				lineinfos["wecube-plugins.log"] = append(lineinfos["wecube-plugins.log"], fileline[0])
-
-			} else {
-				//多个日志文件的情况，会输出文件名
-				lineinfos[fileline[0]] = append(lineinfos[fileline[0]], fileline[1])
-			}
-		}
-	}
-
-	for filename, message := range lineinfos {
-		var info LogFileNameLineInfo
-		info.FileName = filename
-		info.Line = message
-
-		infos = append(infos, info)
-	}
-
-	return infos, nil
-}
-
-//LogSearchLogAction .
-type LogSearchLogAction struct {
-}
-
-//SearchLogInputs .
-type SearchLogInputs struct {
-	Inputs []SearchLogInput `json:"inputs,omitempty"`
-}
-
-//SearchLogInput .
-type SearchLogInput struct {
-	Guid       string `json:"guid,omitempty"`
-	KeyWord    string `json:"key_word,omitempty"`
-	LineNumber int    `json:"line_number,omitempty"`
-}
-
-//SearchLogOutputs .
-type SearchLogOutputs struct {
-	Outputs []SearchLogOutput `json:"outputs,omitempty"`
-}
-
-//SearchLogOutput .
-type SearchLogOutput struct {
-	FileName string `json:"file_name,omitempty"`
-	Line     string `json:"line_number,omitempty"`
-	Log      string `json:"log,omitempty"`
-}
-
-//ReadParam .
-func (action *LogSearchLogAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs SearchLogInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-//CheckParam .
-func (action *LogSearchLogAction) CheckParam(input interface{}) error {
-	logs, ok := input.(SearchLogInputs)
-	if !ok {
-		return fmt.Errorf("LogSearchLogAction:input type=%T not right", input)
-	}
-
-	for _, log := range logs.Inputs {
-		if log.KeyWord == "" {
-			return errors.New("LogSearchLogAction input KeyWord can not be empty")
-		}
-	}
-
-	return nil
-}
-
-//Do .
-func (action *LogSearchLogAction) Do(input interface{}) (interface{}, error) {
-	logs, _ := input.(SearchLogInputs)
-
-	var logoutputs SearchLogOutputs
+	var logoutputs SearchOutputs
 
 	for i := 0; i < len(logs.Inputs); i++ {
-		output, err := action.SearchLog(&logs.Inputs[i])
+		output, err := action.Search(&logs.Inputs[i])
 		if err != nil {
 			return nil, err
 		}
 
-		loginfo, _ := output.(SearchLogOutputs)
+		loginfo, _ := output.(SearchOutputs)
 
 		for k := 0; k < len(loginfo.Outputs); k++ {
 			logoutputs.Outputs = append(logoutputs.Outputs, loginfo.Outputs[k])
@@ -431,8 +112,8 @@ func (action *LogSearchLogAction) Do(input interface{}) (interface{}, error) {
 	return &logoutputs, nil
 }
 
-//SearchLog .
-func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{}, error) {
+//Search .
+func (action *LogSearchAction) Search(input *SearchInput) (interface{}, error) {
 
 	sh := "cd logs && "
 
@@ -450,7 +131,6 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		sh += "grep -rin '" + input.KeyWord + "' *.log"
 	}
 
-	// sh += " |awk '{print $1}';echo $1 "
 	cmd := exec.Command("/bin/sh", "-c", sh)
 
 	//创建获取命令输出管道
@@ -471,12 +151,12 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 		return nil, err
 	}
 
-	//获取输出中的文件名和行号
-	var infos SearchLogOutputs
+	//get filename and lineinfo
+	var infos SearchOutputs
 
 	if len(output) > 0 {
 		for k := 0; k < len(output); k++ {
-			var info SearchLogOutput
+			var info SearchOutput
 
 			if output[k] == "" {
 				continue
@@ -492,7 +172,7 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 				continue
 			}
 
-			//单个日志文件的情况，不会输出文件名
+			//single log file
 			if !strings.Contains(fileline[0], ":") {
 				info.FileName = "wecube-plugins.log"
 				info.Line = fileline[0]
@@ -520,37 +200,37 @@ func (action *LogSearchLogAction) SearchLog(input *SearchLogInput) (interface{},
 	return infos, nil
 }
 
-//LogSearchLogDetailAction .
-type LogSearchLogDetailAction struct {
+//LogSearchDetailAction .
+type LogSearchDetailAction struct {
 }
 
-//SearchLogDetailInputs .
-type SearchLogDetailInputs struct {
-	Inputs []SearchLogDetailInput `json:"inputs,omitempty"`
+//SearchDetailInputs .
+type SearchDetailInputs struct {
+	Inputs []SearchDetailInput `json:"inputs,omitempty"`
 }
 
-//SearchLogDetailInput .
-type SearchLogDetailInput struct {
+//SearchDetailInput .
+type SearchDetailInput struct {
 	FileName        string `json:"file_name,omitempty"`
 	LineNumber      string `json:"line_number,omitempty"`
 	RelateLineCount int    `json:"relate_line_count,omitempty"`
 }
 
-//SearchLogDetailOutputs .
-type SearchLogDetailOutputs struct {
-	Outputs []SearchLogDetailOutput `json:"outputs,omitempty"`
+//SearchDetailOutputs .
+type SearchDetailOutputs struct {
+	Outputs []SearchDetailOutput `json:"outputs,omitempty"`
 }
 
-//SearchLogDetailOutput .
-type SearchLogDetailOutput struct {
+//SearchDetailOutput .
+type SearchDetailOutput struct {
 	FileName   string   `json:"file_name,omitempty"`
 	LineNumber string   `json:"line_number,omitempty"`
 	Logs       []string `json:"logs,omitempty"`
 }
 
 //ReadParam .
-func (action *LogSearchLogDetailAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs SearchLogDetailInputs
+func (action *LogSearchDetailAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SearchDetailInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -559,18 +239,18 @@ func (action *LogSearchLogDetailAction) ReadParam(param interface{}) (interface{
 }
 
 //CheckParam .
-func (action *LogSearchLogDetailAction) CheckParam(input interface{}) error {
-	logs, ok := input.(SearchLogDetailInputs)
+func (action *LogSearchDetailAction) CheckParam(input interface{}) error {
+	logs, ok := input.(SearchDetailInputs)
 	if !ok {
-		return fmt.Errorf("LogSearchLogDetailAction:input type=%T not right", input)
+		return fmt.Errorf("LogSearchDetailAction:input type=%T not right", input)
 	}
 
 	for _, log := range logs.Inputs {
 		if log.FileName == "" {
-			return errors.New("LogSearchLogDetailAction input finename can not be empty")
+			return errors.New("LogSearchDetailAction input finename can not be empty")
 		}
 		if log.LineNumber == "" {
-			return errors.New("LogSearchLogDetailAction input LineNumber can not be empty")
+			return errors.New("LogSearchDetailAction input LineNumber can not be empty")
 		}
 	}
 
@@ -578,18 +258,18 @@ func (action *LogSearchLogDetailAction) CheckParam(input interface{}) error {
 }
 
 //Do .
-func (action *LogSearchLogDetailAction) Do(input interface{}) (interface{}, error) {
-	logs, _ := input.(SearchLogDetailInputs)
+func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) {
+	logs, _ := input.(SearchDetailInputs)
 
-	var logoutputs SearchLogDetailOutputs
+	var logoutputs SearchDetailOutputs
 
 	for i := 0; i < len(logs.Inputs); i++ {
-		output, err := action.SearchLogDetail(&logs.Inputs[i])
+		output, err := action.SearchDetail(&logs.Inputs[i])
 		if err != nil {
 			return nil, err
 		}
 
-		info, _ := output.(SearchLogDetailOutput)
+		info, _ := output.(SearchDetailOutput)
 
 		logoutputs.Outputs = append(logoutputs.Outputs, info)
 	}
@@ -597,8 +277,8 @@ func (action *LogSearchLogDetailAction) Do(input interface{}) (interface{}, erro
 	return &logoutputs, nil
 }
 
-//SearchLogDetail .
-func (action *LogSearchLogDetailAction) SearchLogDetail(input *SearchLogDetailInput) (interface{}, error) {
+//SearchDetail .
+func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (interface{}, error) {
 
 	if input.RelateLineCount == 0 {
 		input.RelateLineCount = 10
@@ -628,10 +308,61 @@ func (action *LogSearchLogDetailAction) SearchLogDetail(input *SearchLogDetailIn
 		return nil, err
 	}
 
-	var outputs SearchLogDetailOutput
+	var outputs SearchDetailOutput
 	outputs.FileName = input.FileName
 	outputs.LineNumber = input.LineNumber
 	outputs.Logs = output
 
 	return outputs, nil
+}
+
+//LogReadLine .
+func LogReadLine(cmd *exec.Cmd, stdout io.ReadCloser) ([]string, error) {
+
+	linelist := []string{}
+	outputBuf := bufio.NewReader(stdout)
+
+	for {
+		output, _, err := outputBuf.ReadLine()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			if err.Error() != "EOF" {
+				logrus.Info("readline is error")
+				return []string{}, nil
+			}
+		}
+
+		linelist = append(linelist, string(output))
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return []string{}, nil
+	}
+
+	return linelist, nil
+}
+
+//CountLineNumber .
+func CountLineNumber(wLine int, rLine string) (string, string) {
+
+	rline, _ := strconv.Atoi(rLine)
+
+	var num int
+
+	var startLineNumber int
+	if rline <= wLine {
+		startLineNumber = 1
+		num = wLine + rline
+	} else {
+		startLineNumber = rline - wLine
+		num = 2*wLine + 1
+	}
+
+	line1 := strconv.Itoa(startLineNumber)
+
+	line2 := strconv.Itoa(num)
+
+	return line1, line2
 }

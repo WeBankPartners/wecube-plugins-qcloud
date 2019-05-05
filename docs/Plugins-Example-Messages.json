@@ -2,6 +2,7 @@ VPC Plugin: /v1/qcloud/vpc/create
 Input:
 {
 	"inputs":[{
+		"guid": "1234",
 		"name": "VPC-A",
 		"id": "vpc-ahhd5uuy",
 		"cidr_block": "10.3.0.0/16",
@@ -208,4 +209,41 @@ Output:
             }
         ]
     }
+}
+
+LOG Plugin: /v1/qcloud/log/search
+Input:
+{
+	"inputs":[{
+		"guid": "1234",
+		"key_word": "Service",
+		"line_number": 2
+	}]
+}
+Output:
+{
+    "result_code": "0",
+    "result_message": "",
+    "results": [
+		{
+			"outputs":[
+				{
+					"guid": "1234",
+					"logs":[
+						[
+							"4\ttime=\"2019-04-24T02:32:45Z\" level=info msg=\"plguin[log]-action[search] start...\" func=git.webank.io/wecube-plugins/plugins.Process file=\"/data/jenkins/workspace/wego-sub-1039400004923709/src/git.webank.io/wecube-plugins/plugins/plugins.go:89\"",
+							"5\ttime=\"2019-04-24T02:32:45Z\" level=info msg=\"read parameters from http request = &{0xc42016c060 <nil> <nil> false true {0 0} false false false 0x633230}\" func=git.webank.io/wecube-plugins/plugins.Process file=\"/data/jenkins/workspace/wego-sub-1039400004923709/src/git.webank.io/wecube-plugins/plugins/plugins.go:101\"",
+							"6\ttime=\"2019-04-24T02:32:45Z\" level=info msg=\"check parameters = {bbbbbbbbbb 2}\" func=git.webank.io/wecube-plugins/plugins.Process file=\"/data/jenkins/workspace/wego-sub-1039400004923709/src/git.webank.io/wecube-plugins/plugins/plugins.go:107\"",
+							"7\ttime=\"2019-04-24T02:32:45Z\" level=info msg=\"action do with parameters = {bbbbbbbbbb 2}\" func=git.webank.io/wecube-plugins/plugins.Process file=\"/data/jenkins/workspace/wego-sub-1039400004923709/src/git.webank.io/wecube-plugins/plugins/plugins.go:112\"",
+							"8\ttime=\"2019-04-24T02:32:45Z\" level=info msg=\"line number count ==>>>27\" func=\"git.webank.io/wecube-plugins/plugins.(*LogSearchAction).Do\" file=\"/data/jenkins/workspace/wego-sub-1039400004923709/src/git.webank.io/wecube-plugins/plugins/log_search.go:84\""
+						],
+						[
+							.....
+						]
+					]
+				}
+			]
+			
+		},
+	]    
 }
