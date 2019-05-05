@@ -223,9 +223,9 @@ type SearchDetailOutputs struct {
 
 //SearchDetailOutput .
 type SearchDetailOutput struct {
-	FileName   string   `json:"file_name,omitempty"`
-	LineNumber string   `json:"line_number,omitempty"`
-	Logs       []string `json:"logs,omitempty"`
+	FileName   string `json:"file_name,omitempty"`
+	LineNumber string `json:"line_number,omitempty"`
+	Logs       string `json:"logs,omitempty"`
 }
 
 //ReadParam .
@@ -308,10 +308,15 @@ func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (int
 		return nil, err
 	}
 
+	logstr := ""
+	for i := 0; i < len(output); i++ {
+		logstr = output[i] + "\n"
+	}
+
 	var outputs SearchDetailOutput
 	outputs.FileName = input.FileName
 	outputs.LineNumber = input.LineNumber
-	outputs.Logs = output
+	outputs.Logs = logstr
 
 	return outputs, nil
 }
