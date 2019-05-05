@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package name="qcloud" version="v1">
-    <docker-image-file>wecube-plugins.image.tar</docker-image-file>
-    <docker-image-repository>wecube-plugins</docker-image-repository>
+    <docker-image-file>wecube-plugins-qcloud.image.tar</docker-image-file>
+    <docker-image-repository>wecube-plugins-qcloud</docker-image-repository>
     <docker-image-tag>{{IMAGE_TAG}}</docker-image-tag>
     <container-port>8081</container-port>
-    <container-config-directory>/home/app/wecube-plugins/conf</container-config-directory>
-    <container-log-directory>/home/app/wecube-plugins/log</container-log-directory>
+    <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
+    <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
     <plugin name="vpc" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>

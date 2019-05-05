@@ -174,7 +174,7 @@ func (action *LogSearchAction) Search(input *SearchInput) (interface{}, error) {
 
 			//single log file
 			if !strings.Contains(fileline[0], ":") {
-				info.FileName = "wecube-plugins.log"
+				info.FileName = "wecube-plugins-qcloud.log"
 				info.Line = fileline[0]
 			} else {
 				f := strings.Split(fileline[0], ":")
