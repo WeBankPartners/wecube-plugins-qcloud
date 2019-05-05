@@ -310,7 +310,7 @@ func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (int
 
 	logstr := ""
 	for i := 0; i < len(output); i++ {
-		logstr = output[i] + "\n"
+		logstr += output[i] + "\n"
 	}
 
 	var outputs SearchDetailOutput
