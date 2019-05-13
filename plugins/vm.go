@@ -273,8 +273,15 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
 	for _, vm := range vms.Inputs {
+		output := VmOutput{}
+
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		logrus.Debugf("actionParam:%v", vm)
+		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		if err != nil {
+			return nil, err
+		}
+
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
 				Zone: paramsMap["AvailableZone"],
@@ -304,9 +311,35 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				RenewFlag: RENEW_FLAG_NOTIFY_AND_AUTO_RENEW,
 			}
 		}
-		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		if err != nil {
-			return nil, err
+
+		//check resources exsit
+		if vm.Id != "" {
+			describeInstancesParams := cvm.DescribeInstancesRequest{
+				InstanceIds: []*string{&vm.Id},
+			}
+
+			describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(describeInstancesResponse.Response.InstanceSet) > 1 {
+				logrus.Errorf("check vm exsit found vm[%s] have %d instance", vm.Id, len(describeInstancesResponse.Response.InstanceSet))
+				return nil, VM_NOT_FOUND_ERROR
+			}
+
+			if len(describeInstancesResponse.Response.InstanceSet) == 1 {
+				output.RequestId = *describeInstancesResponse.Response.RequestId
+				output.Guid = vm.Guid
+				output.Id = vm.Id
+				output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
+				output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
+				output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
+				output.InstancePrivateIp = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
+				outputs.Outputs = append(outputs.Outputs, output)
+
+				continue
+			}
 		}
 
 		request := cvm.NewRunInstancesRequest()
@@ -336,7 +369,6 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			return nil, err
 		}
 
-		output := VmOutput{}
 		output.RequestId = *describeInstancesResponse.Response.RequestId
 		output.Guid = vm.Guid
 		output.Id = vm.Id
