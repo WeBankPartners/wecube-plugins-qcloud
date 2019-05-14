@@ -1,6 +1,6 @@
 export GOPATH=$(PWD)
 
-APP_HOME=src/git.webank.io/wecube-plugins
+APP_HOME=src/git.webank.io/wecube-plugins-qcloud
 
 ifndef RUN_MODE
   RUN_MODE=dev
@@ -18,5 +18,5 @@ archive:
 	cp -R $(APP_HOME)/conf target
 	cp start.sh stop.sh docker_run.sh docker_stop.sh makefile dockerfile register.xml target
 	cd target && chmod 755 *.sh
-	cp $(APP_HOME)/wecube-plugins target
+	cp $(APP_HOME)/wecube-plugins-qcloud target
 	cd target && tar cvfz $(PKG_NAME) *

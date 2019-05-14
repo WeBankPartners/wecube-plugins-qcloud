@@ -54,6 +54,7 @@ func init() {
 	registerPlugin("route-table", new(RouteTablePlugin))
 	registerPlugin("mysql-vm", new(MysqlVmPlugin))
 	registerPlugin("redis", new(RedisPlugin))
+	registerPlugin("log", new(LogPlugin))
 }
 
 type PluginRequest struct {

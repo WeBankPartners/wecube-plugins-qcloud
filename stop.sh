@@ -1,3 +1,3 @@
 #!/bin/bash
 
-kill -9 `pidof wecube-plugins`
+kill -9 `pidof wecube-plugins-qcloud`

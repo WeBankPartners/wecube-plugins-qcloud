@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"git.webank.io/wecube-plugins/conf"
-	"git.webank.io/wecube-plugins/plugins"
+	"git.webank.io/wecube-plugins-qcloud/conf"
+	"git.webank.io/wecube-plugins-qcloud/plugins"
 	"github.com/sirupsen/logrus"
 	"github.com/snowzach/rotatefilehook"
 )
@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	logrus.Infof("Start WeCube-Plungins Service ... ")
+	logrus.Infof("Start WeCube-Plungins-Qcloud Service ... ")
 
 	if err := http.ListenAndServe(":"+conf.GobalAppConfig.HttpPort, nil); err != nil {
 		logrus.Fatalf("ListenAndServe meet err = %v", err)
@@ -31,7 +31,7 @@ func main() {
 }
 
 func initLogger() {
-	fileName := "logs/wecube-plugins.log"
+	fileName := "logs/wecube-plugins-qcloud.log"
 	logrus.SetReportCaller(true)
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, 0666)
 	if err == nil {
@@ -41,7 +41,7 @@ func initLogger() {
 	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
 		Filename:   fileName,
 		MaxSize:    100,
-		MaxBackups: 7,
+		MaxBackups: 1,
 		MaxAge:     7,
 		Level:      logrus.InfoLevel,
 		Formatter:  &logrus.TextFormatter{DisableTimestamp: false, DisableColors: false},
@@ -77,6 +77,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/mysql-vm/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mysql-vm/restart", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/redis/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/log/search", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/log/searchdetail", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
