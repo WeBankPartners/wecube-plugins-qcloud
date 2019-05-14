@@ -1,7 +1,7 @@
 FROM alpine-wecube:v1
 LABEL maintainer = "Webank CTB Team"
 
-ENV APP_HOME=/home/app/wecube-plugins
+ENV APP_HOME=/home/app/wecube-plugins-qcloud
 ENV APP_CONF=$APP_HOME/conf
 ENV LOG_PATH=$APP_HOME/logs
 

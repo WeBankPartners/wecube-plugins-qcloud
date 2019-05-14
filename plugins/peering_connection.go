@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	vpcExtend "git.webank.io/wecube-plugins/extend/qcloud"
+	vpcExtend "git.webank.io/wecube-plugins-qcloud/extend/qcloud"
 	"github.com/sirupsen/logrus"
 )
 
