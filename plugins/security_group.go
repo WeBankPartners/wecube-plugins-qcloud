@@ -152,6 +152,19 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 			return nil, err
 		}
 
+		//check resource exsit
+		if securityGroup.SecurityGroupId != "" {
+			querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, &securityGroup)
+			if err != nil && flag == false {
+				return nil, err
+			}
+
+			if err == nil && flag == true {
+				outputs.Outputs = append(outputs.Outputs, querySecurityGroupResponse)
+				continue
+			}
+		}
+
 		createSecurityGroup := vpc.NewCreateSecurityGroupRequest()
 		bytecreateSecurityGroupRequestData, _ := json.Marshal(createSecurityGroupRequest)
 		createSecurityGroup.FromJsonString(string(bytecreateSecurityGroupRequestData))
@@ -346,4 +359,30 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 	}
 
 	return &outputs, nil
+}
+
+func querySecurityGroupsInfo(client *vpc.Client, input *SecurityGroupParam) (SecurityGroupOutput, bool, error) {
+	output := SecurityGroupOutput{}
+
+	request := vpc.NewDescribeSecurityGroupsRequest()
+	request.SecurityGroupIds = append(request.SecurityGroupIds, &input.SecurityGroupId)
+	response, err := client.DescribeSecurityGroups(request)
+	if err != nil {
+		return SecurityGroupOutput{}, false, err
+	}
+
+	if len(response.Response.SecurityGroupSet) == 0 {
+		return SecurityGroupOutput{}, false, nil
+	}
+
+	if len(response.Response.SecurityGroupSet) > 1 {
+		logrus.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
+		return SecurityGroupOutput{}, false, fmt.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.SecurityGroupId
+	output.RequestId = *response.Response.RequestId
+
+	return output, true, nil
 }
