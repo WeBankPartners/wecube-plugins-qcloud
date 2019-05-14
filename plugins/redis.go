@@ -127,7 +127,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	output := RedisOutput{}
 
 	if redisInput.ID != "" {
-		queryRedisInstanceResponse, err, flag := queryRedisInstancesInfo(client, redisInput)
+		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
 		if err != nil && flag == false {
 			return nil, err
 		}
@@ -256,7 +256,7 @@ func GetAvaliableZoneInfo(region, secretid, secretkey string) (map[string]int, e
 	return ZoneMap, nil
 }
 
-func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOutput, error, bool) {
+func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOutput, bool, error) {
 	output := RedisOutput{}
 
 	var limit uint64
@@ -272,20 +272,20 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	queryRedisInfoResponse, err := client.DescribeInstances(&request)
 	if err != nil {
 		logrus.Errorf("query redis instance info meet error: %s", err)
-		return nil, err, false
+		return nil, false, err
 	}
 
 	if len(queryRedisInfoResponse.Response.InstanceSet) == 0 {
-		return nil, nil, false
+		return nil, false, nil
 	}
 
 	if len(queryRedisInfoResponse.Response.InstanceSet) > 1 {
 		logrus.Errorf("query redis instance id=%s info find more than 1", input.ID)
-		return nil, fmt.Errorf("query redis instance id=%s info find more than 1", input.ID), false
+		return nil, false, fmt.Errorf("query redis instance id=%s info find more than 1", input.ID)
 	}
 
 	output.Guid = input.Guid
 	output.ID = input.ID
 
-	return &output, nil, true
+	return &output, true, nil
 }

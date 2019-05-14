@@ -145,6 +145,18 @@ func (action *StorageCreateAction) createStorage(storage *StorageInput) (*Storag
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if storage.Id != "" {
+		queryStorageResponse, flag, err := queryStorageInfo(client, storage)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryStorageResponse, nil
+		}
+	}
+
 	request := cbs.NewCreateDisksRequest()
 	request.DiskName = &storage.DiskName
 	request.DiskType = &storage.DiskType
@@ -277,4 +289,30 @@ func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*
 	output.Id = storage.Id
 
 	return &output, nil
+}
+
+func queryStorageInfo(client *cbs.Client, input *StorageInput) (*StorageOutput, bool, error) {
+	output := StorageOutput{}
+
+	request := cbs.NewDescribeDisksRequest()
+	request.DiskIds = append(request.DiskIds, &input.Id)
+	response, err := client.DescribeDisks(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.DiskSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.DiskSet) > 1 {
+		logrus.Errorf("query storage disk id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query storage disk id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = *response.Response.RequestId
+
+	return &output, true, nil
 }

@@ -146,6 +146,17 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	if mysqlVmInput.Id != "" {
+		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryMysqlVmInstanceInfoResponse, nil
+		}
+	}
+
 	var instanceId, requestId, privateIp string
 	var err error
 	if mysqlVmInput.ChargeType == CHARGE_TYPE_PREPAID {
@@ -381,4 +392,31 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	return "", nil
+}
+
+func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlVmOutput, bool, error) {
+	output := MysqlVmOutput{}
+
+	request := cdb.NewDescribeDBInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &input.Id)
+	response, err := client.DescribeDBInstances(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.Items) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.Items) > 1 {
+		logrus.Errorf("query mysql instance id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query mysql instance id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.PrivateIp = *response.Response.Items[0].Vip
+	output.RequestId = *response.Response.RequestId
+
+	return &output, true, nil
 }

@@ -104,6 +104,18 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (*SubnetOutp
 		return nil, err
 	}
 
+	//check resource exist
+	if subnet.Id != "" {
+		querysubnetresponse, flag, err := querySubnetsInfo(client, subnet)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return querysubnetresponse, nil
+		}
+	}
+
 	request := vpc.NewCreateSubnetRequest()
 	request.VpcId = &subnet.VpcId
 	request.SubnetName = &subnet.Name
@@ -198,4 +210,30 @@ func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) 
 	}
 
 	return &outputs, nil
+}
+
+func querySubnetsInfo(client *vpc.Client, input *SubnetInput) (*SubnetOutput, bool, error) {
+	output := SubnetOutput{}
+
+	request := vpc.NewDescribeSubnetsRequest()
+	request.SubnetIds = append(request.SubnetIds, &input.Id)
+	response, err := client.DescribeSubnets(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.SubnetSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.SubnetSet) > 1 {
+		logrus.Errorf("query security group id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query security group id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = *response.Response.RequestId
+
+	return &output, true, nil
 }

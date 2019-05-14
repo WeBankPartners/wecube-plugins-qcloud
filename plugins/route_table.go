@@ -164,6 +164,18 @@ func (action *RouteTableCreateAction) createRouteTable(routeTable *RouteTableDel
 		return nil, err
 	}
 
+	//check resource exist
+	if routeTable.Id != "" {
+		queryroutetableresponse, flag, err := queryRouteTablesInfo(client, routeTable)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryroutetableresponse, nil
+		}
+	}
+
 	request := vpc.NewCreateRouteTableRequest()
 	request.VpcId = &routeTable.VpcId
 	request.RouteTableName = &routeTable.Name
@@ -282,4 +294,30 @@ func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, err
 	}
 
 	return &outputs, nil
+}
+
+func queryRouteTablesInfo(client *vpc.Client, input *RouteTableDelegateInput) (*RouteTableOutput, bool, error) {
+	output := RouteTableOutput{}
+
+	request := vpc.NewDescribeRouteTablesRequest()
+	request.RouteTableIds = append(request.RouteTableIds, &input.Id)
+	response, err := client.DescribeRouteTables(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.RouteTableSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.RouteTableSet) > 1 {
+		logrus.Errorf("query route table id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query route table id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = *response.Response.RequestId
+
+	return &output, true, nil
 }
