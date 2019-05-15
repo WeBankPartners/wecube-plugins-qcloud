@@ -154,7 +154,6 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 
 		//check resource exsit
 		if securityGroup.SecurityGroupId != "" {
-			logrus.Info("check security group resource exist start......")
 			querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, &securityGroup)
 			if err != nil && flag == false {
 				return nil, err
@@ -164,7 +163,6 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 				outputs.Outputs = append(outputs.Outputs, querySecurityGroupResponse)
 				continue
 			}
-			logrus.Info("check security group resource exist end......")
 		}
 
 		createSecurityGroup := vpc.NewCreateSecurityGroupRequest()
