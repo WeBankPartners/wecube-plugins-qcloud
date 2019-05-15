@@ -121,7 +121,7 @@ type PeerConnectSet struct {
 	PeeringConnectionName *string `json:"peeringConnectionName,omitempty"`
 	State                 *int    `json:"state,omitempty"`
 	CreateTime            *string `json:"createTime,omitempty"`
-	Uin                   *string `json:"uin,omitempty"`
+	Uin                   *int    `json:"uin,omitempty"`
 	PeerUin               *int    `json:"peerUin,omitempty"`
 	UniqVpcId             *string `json:"uniqVpcId,omitempty"`
 	UniqPeerVpcId         *string `json:"uniqPeerVpcId,omitempty"`
