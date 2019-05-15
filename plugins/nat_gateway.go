@@ -255,6 +255,7 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewa
 
 	output.Guid = input.Guid
 	output.Id = input.Id
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return &output, true, nil
 }
