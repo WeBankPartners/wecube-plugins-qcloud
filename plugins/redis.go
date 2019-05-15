@@ -159,6 +159,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		return nil, err
 	}
 
+	logrus.Info("create redis instance response = %s", *response)
+
+	logrus.Info("new redis instance dealid = %s", *response.Response.DealId)
+
 	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
 	if err != nil {
 		return nil, err

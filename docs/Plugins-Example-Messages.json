@@ -9,6 +9,7 @@ Input:
 		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX"
 	},
 	{
+		"guid": "1235",
 		"name": "VPC-B",
 		"id": "vpc-7s4zumm6",
 		"cidr_block": "10.4.0.0/16",
@@ -22,9 +23,11 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "id": "vpc-mnlhoc4a"
             },
             {
+				"guid": "1235",
                 "id": "vpc-7bkezmf2"
             }
         ]
@@ -35,6 +38,7 @@ SUBNET plugin: /v1/qcloud/subnet/create
 Input:
 {
 	"inputs":[{
+		"guid": "1234",
 		"name": "SUBNET1",
 		"id": "xxx",
 		"cidr_block": "10.3.1.0/24",
@@ -50,6 +54,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "id": "subnet-rppczm79"
             }
         ]
@@ -61,6 +66,7 @@ Input:
 {
  "inputs": [
  	    {
+			"guid": "1234",
 			"instance_name": "VM1",
 			"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=XXXXXX;SecretKey=XXXXXX",
 			"instance_type": "S2.SMALL1",
@@ -82,6 +88,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "instance_id": "ins-1o8z54xz",
                 "cpu": "1",
                 "memory": "1",
@@ -97,6 +104,7 @@ Input:
 {
    "inputs": [
 	   {
+			"guid": "1234",
 			"disk_size": 10,
 			"disk_name": "DISK1",
 			"disk_type": "CLOUD_BASIC",
@@ -115,6 +123,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "disk_id": "disk-jgqqm3id"
             }
         ]
@@ -125,6 +134,7 @@ NAT-GATEWAY plugin: /v1/qcloud/nat-gateway/create
 Input:
 {
 	"inputs":[{
+		"guid": "1234",
 		"name": "NAT-GATEWAY-1",
 		"id": "id",
 		"vpc_id": "vpc-mnlhoc4a",
@@ -143,6 +153,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "id": "nat-ajmijt1n"
             }
         ]
@@ -154,6 +165,7 @@ Input:
 {
   "inputs": [
   	    {
+			"guid": "1234",
 			"name": "Group1",
 			"rule_description": null,
 			"rule_priority": 1,
@@ -176,6 +188,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "id": "sg-ey3xte5r"
             }
         ]
@@ -186,6 +199,7 @@ PEERING-CONNECTION plugin: /v1/qcloud/peering-connection/create
 Input:
 {
     "inputs": [{
+			"guid": "1234",
 			"name": "PeerConnA-B-01",
 			"bandwidth": null,
 			"zone_node_link_type": "Type1",
@@ -205,6 +219,7 @@ Output:
     "results": {
         "outputs": [
             {
+				"guid": "1234",
                 "id": "pcx-6u0hfvf3"
             }
         ]
