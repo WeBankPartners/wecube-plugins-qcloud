@@ -148,6 +148,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 
 	//check resource exist
 	if mysqlVmInput.Id != "" {
+		logrus.Info("start to check mysql resource ===============")
 		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
 		if err != nil && flag == false {
 			return nil, err
@@ -156,13 +157,16 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 		if err == nil && flag == true {
 			return queryMysqlVmInstanceInfoResponse, nil
 		}
+		logrus.Info("end to check mysql resource ===============")
 	}
 
 	var instanceId, requestId, privateIp string
 	var err error
 	if mysqlVmInput.ChargeType == CHARGE_TYPE_PREPAID {
+		logrus.Info("start to create mysql with prepaid ===============")
 		instanceId, requestId, err = action.createMysqlVmWithPrepaid(client, mysqlVmInput)
 	} else {
+		logrus.Info("start to create mysql by hour ===============")
 		instanceId, requestId, err = action.createMysqlVmWithPostByHour(client, mysqlVmInput)
 	}
 
