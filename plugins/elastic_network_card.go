@@ -144,7 +144,7 @@ func (action *ElasticNetworkCardCreateAction) createElasticNetworkCard(ElasticNe
 	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
 		for i := 0; i < len(response.Response.NetworkInterface.PrivateIpAddressSet); i++ {
 			logrus.Info("get PrivateIpAddressSet info ========>>>>>>>> i = ", i)
-			output.PrivateIpList = append(output.PrivateIpList, *response.Response.NetworkInterface.PrivateIpAddressSet[i].AddressId)
+			output.PrivateIpList = append(output.PrivateIpList, *(response.Response.NetworkInterface.PrivateIpAddressSet[i]).AddressId)
 			logrus.Info("get PrivateIpAddressSet info ========>>>>>>>> 222")
 		}
 	}
