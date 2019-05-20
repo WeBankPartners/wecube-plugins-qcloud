@@ -113,6 +113,18 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if redisInput.ID != "" {
+		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryRedisInstanceResponse, nil
+		}
+	}
+
 	zonemap, err := GetAvaliableZoneInfo(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
@@ -146,6 +158,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		logrus.Errorf("failed to create redis, error=%s", err)
 		return nil, err
 	}
+
+	logrus.Info("create redis instance response = ", *response.Response.RequestId)
+
+	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
 
 	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
 	if err != nil {
@@ -242,4 +258,38 @@ func GetAvaliableZoneInfo(region, secretid, secretkey string) (map[string]int, e
 	}
 
 	return ZoneMap, nil
+}
+
+func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOutput, bool, error) {
+	output := RedisOutput{}
+
+	var limit uint64
+	limit = 10
+	var offset uint64
+	offset = 0
+	request := redis.DescribeInstancesRequest{
+		Limit:      &limit,
+		Offset:     &offset,
+		InstanceId: &input.ID,
+	}
+
+	queryRedisInfoResponse, err := client.DescribeInstances(&request)
+	if err != nil {
+		logrus.Errorf("query redis instance info meet error: %s", err)
+		return nil, false, err
+	}
+
+	if len(queryRedisInfoResponse.Response.InstanceSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(queryRedisInfoResponse.Response.InstanceSet) > 1 {
+		logrus.Errorf("query redis instance id=%s info find more than 1", input.ID)
+		return nil, false, fmt.Errorf("query redis instance id=%s info find more than 1", input.ID)
+	}
+
+	output.Guid = input.Guid
+	output.ID = input.ID
+
+	return &output, true, nil
 }

@@ -96,6 +96,18 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (*VpcOutput, error)
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if vpcInput.Id != "" {
+		queryVpcsResponse, flag, err := queryVpcsInfo(client, vpcInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryVpcsResponse, nil
+		}
+	}
+
 	request := vpc.NewCreateVpcRequest()
 	request.VpcName = &vpcInput.Name
 	request.CidrBlock = &vpcInput.CidrBlock
@@ -186,4 +198,30 @@ func (action *VpcTerminateAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	return &outputs, nil
+}
+
+func queryVpcsInfo(client *vpc.Client, input *VpcInput) (*VpcOutput, bool, error) {
+	output := VpcOutput{}
+
+	request := vpc.NewDescribeVpcsRequest()
+	request.VpcIds = append(request.VpcIds, &input.Id)
+	response, err := client.DescribeVpcs(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.VpcSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.VpcSet) > 1 {
+		logrus.Errorf("query vpcs id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query vpcs id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = *response.Response.RequestId
+
+	return &output, true, nil
 }

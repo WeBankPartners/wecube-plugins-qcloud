@@ -96,6 +96,18 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if natGateway.Id != "" {
+		queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryNatGatewayResponse, nil
+		}
+	}
+
 	createReq := vpc.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
@@ -220,4 +232,30 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	}
 
 	return &outputs, nil
+}
+
+func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewayOutput, bool, error) {
+	output := NatGatewayOutput{}
+
+	request := vpc.NewDescribeNatGatewayRequest()
+	request.NatId = &input.Id
+	response, err := client.DescribeNatGateway(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Data) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Data) > 1 {
+		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
+
+	return &output, true, nil
 }
