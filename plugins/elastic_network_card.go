@@ -53,9 +53,11 @@ type ElasticNetworkCardOutputs struct {
 
 //ElasticNetworkCardOutput .
 type ElasticNetworkCardOutput struct {
-	RequestId string `json:"request_id,omitempty"`
-	Guid      string `json:"guid,omitempty"`
-	ID        string `json:"id,omitempty"`
+	RequestId       string   `json:"request_id,omitempty"`
+	Guid            string   `json:"guid,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	PrivateIpList   []string `json:"private_ip_list"`
+	AttachGroupList []string `json:"attach_group_list"`
 }
 
 //ElasticNetworkCardPlugin .
@@ -137,6 +139,18 @@ func (action *ElasticNetworkCardCreateAction) createElasticNetworkCard(ElasticNe
 	output.RequestId = *response.Response.RequestId
 	output.Guid = ElasticNetworkCardInput.Guid
 	output.ID = *response.Response.NetworkInterface.NetworkInterfaceId
+
+	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
+		for i := 0; i < len(response.Response.NetworkInterface.PrivateIpAddressSet); i++ {
+			output.PrivateIpList = append(output.PrivateIpList, *response.Response.NetworkInterface.PrivateIpAddressSet[i].AddressId)
+		}
+	}
+
+	if len(response.Response.NetworkInterface.GroupSet) > 0 {
+		for i := 0; i < len(response.Response.NetworkInterface.GroupSet); i++ {
+			output.AttachGroupList = append(output.AttachGroupList, *response.Response.NetworkInterface.GroupSet[i])
+		}
+	}
 
 	return &output, nil
 }
