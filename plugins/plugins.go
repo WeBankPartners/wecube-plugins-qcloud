@@ -55,6 +55,7 @@ func init() {
 	registerPlugin("mysql-vm", new(MysqlVmPlugin))
 	registerPlugin("redis", new(RedisPlugin))
 	registerPlugin("log", new(LogPlugin))
+	registerPlugin("elastic-network-card", new(ElasticNetworkCardPlugin))
 }
 
 type PluginRequest struct {
