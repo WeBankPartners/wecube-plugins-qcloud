@@ -118,6 +118,7 @@ func (action *ElasticNetworkCardCreateAction) createElasticNetworkCard(ElasticNe
 
 	request.VpcId = &ElasticNetworkCardInput.VpcID
 	request.SubnetId = &ElasticNetworkCardInput.SubnetID
+	request.NetworkInterfaceName = &ElasticNetworkCardInput.Name
 	if len(ElasticNetworkCardInput.SecurityGroupId) > 0 {
 		for i := 0; i < len(ElasticNetworkCardInput.SecurityGroupId); i++ {
 			request.SecurityGroupIds = append(request.SecurityGroupIds, &ElasticNetworkCardInput.SecurityGroupId[i])
