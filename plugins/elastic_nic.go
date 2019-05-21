@@ -42,9 +42,9 @@ type ElasticNicInput struct {
 	Description        string   `json:"description,omitempty"`
 	SecurityGroupId    []string `json:"security_group_id,omitempty"`
 	PrivateIpAddresses []string `json:"private_ip_addr,omitempty"`
-	VpcID              string   `json:"vpc_id,omitempty"`
-	SubnetID           string   `json:"subnet_id,omitempty"`
-	ID                 string   `json:"id,omitempty"`
+	VpcId              string   `json:"vpc_id,omitempty"`
+	SubnetId           string   `json:"subnet_id,omitempty"`
+	Id                 string   `json:"id,omitempty"`
 }
 
 //ElasticNicOutputs .
@@ -56,7 +56,7 @@ type ElasticNicOutputs struct {
 type ElasticNicOutput struct {
 	RequestId       string   `json:"request_id,omitempty"`
 	Guid            string   `json:"guid,omitempty"`
-	ID              string   `json:"id,omitempty"`
+	Id              string   `json:"id,omitempty"`
 	PrivateIpList   []string `json:"private_ip_list,omitempty"`
 	AttachGroupList []string `json:"attach_group_list,omitempty"`
 }
@@ -98,11 +98,11 @@ func (action *ElasticNicCreateAction) CheckParam(input interface{}) error {
 	}
 
 	for _, elasticNic := range elasticNics.Inputs {
-		if elasticNic.SubnetID == "" {
-			return errors.New("ElasticNicCreateAction input SubnetID is empty")
+		if elasticNic.SubnetId == "" {
+			return errors.New("ElasticNicCreateAction input SubnetId is empty")
 		}
-		if elasticNic.VpcID == "" {
-			return errors.New("ElasticNicCreateAction input VpcID is empty")
+		if elasticNic.VpcId == "" {
+			return errors.New("ElasticNicCreateAction input VpcId is empty")
 		}
 		if elasticNic.Name == "" {
 			return errors.New("ElasticNicCreateAction input Name is empty")
@@ -117,10 +117,22 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if ElasticNicInput.Id != "" {
+		queryElasticNiResponse, flag, err := queryElasticNicInfo(client, ElasticNicInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryElasticNiResponse, nil
+		}
+	}
+
 	request := vpc.NewCreateNetworkInterfaceRequest()
 
-	request.VpcId = &ElasticNicInput.VpcID
-	request.SubnetId = &ElasticNicInput.SubnetID
+	request.VpcId = &ElasticNicInput.VpcId
+	request.SubnetId = &ElasticNicInput.SubnetId
 	request.NetworkInterfaceName = &ElasticNicInput.Name
 	if len(ElasticNicInput.SecurityGroupId) > 0 {
 		for i := 0; i < len(ElasticNicInput.SecurityGroupId); i++ {
@@ -137,7 +149,7 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	output := ElasticNicOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = ElasticNicInput.Guid
-	output.ID = *response.Response.NetworkInterface.NetworkInterfaceId
+	output.Id = *response.Response.NetworkInterface.NetworkInterfaceId
 
 	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
 		for i := 0; i < len(response.Response.NetworkInterface.PrivateIpAddressSet); i++ {
@@ -192,8 +204,8 @@ func (action *ElasticNicTerminateAction) CheckParam(input interface{}) error {
 	}
 
 	for _, elasticNic := range elasticNics.Inputs {
-		if elasticNic.ID == "" {
-			return errors.New("ElasticNicTerminateAction input ID is empty")
+		if elasticNic.Id == "" {
+			return errors.New("ElasticNicTerminateAction input Id is empty")
 		}
 	}
 
@@ -207,7 +219,7 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 
 	request := vpc.NewDeleteNetworkInterfaceRequest()
 
-	request.NetworkInterfaceId = &ElasticNicInput.ID
+	request.NetworkInterfaceId = &ElasticNicInput.Id
 
 	response, err := client.DeleteNetworkInterface(request)
 	if err != nil {
@@ -236,4 +248,42 @@ func (action *ElasticNicTerminateAction) Do(input interface{}) (interface{}, err
 
 	logrus.Infof("all elasticNics = %v are created", elasticNics)
 	return &outputs, nil
+}
+
+func queryElasticNicInfo(client *vpc.Client, input *ElasticNicInput) (*ElasticNicOutput, bool, error) {
+	output := ElasticNicOutput{}
+
+	request := vpc.NewDescribeNetworkInterfacesRequest()
+	request.NetworkInterfaceIds = append(request.NetworkInterfaceIds, &input.Id)
+	response, err := client.DescribeNetworkInterfaces(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if len(response.Response.NetworkInterfaceSet) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Response.NetworkInterfaceSet) > 1 {
+		logrus.Errorf("query elastic nic id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query elastic nic id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = *response.Response.RequestId
+
+	if len(response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet) > 0 {
+		for i := 0; i < len(response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet); i++ {
+			output.PrivateIpList = append(output.PrivateIpList, *response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet[i].PrivateIpAddress)
+		}
+	}
+
+	if len(response.Response.NetworkInterfaceSet[0].GroupSet) > 0 {
+		for i := 0; i < len(response.Response.NetworkInterfaceSet[0].GroupSet); i++ {
+			output.AttachGroupList = append(output.AttachGroupList, *response.Response.NetworkInterfaceSet[0].GroupSet[i])
+		}
+	}
+
+	return &output, true, nil
 }
