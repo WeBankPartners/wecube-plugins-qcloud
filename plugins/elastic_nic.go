@@ -57,8 +57,8 @@ type ElasticNicOutput struct {
 	RequestId       string   `json:"request_id,omitempty"`
 	Guid            string   `json:"guid,omitempty"`
 	ID              string   `json:"id,omitempty"`
-	PrivateIpList   []string `json:"private_ip_list,omitempry"`
-	AttachGroupList []string `json:"attach_group_list,omitempry"`
+	PrivateIpList   []string `json:"private_ip_list,omitempty"`
+	AttachGroupList []string `json:"attach_group_list,omitempty"`
 }
 
 //ElasticNicPlugin .
@@ -130,7 +130,7 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 
 	response, err := client.CreateNetworkInterface(request)
 	if err != nil {
-		logrus.Errorf("failed to create redis, error=%s", err)
+		logrus.Errorf("failed to create elastic nic, error=%s", err)
 		return nil, err
 	}
 
@@ -211,7 +211,7 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 
 	response, err := client.DeleteNetworkInterface(request)
 	if err != nil {
-		logrus.Errorf("failed to terminate redis, error=%s", err)
+		logrus.Errorf("failed to terminate elastic nic, error=%s", err)
 		return nil, err
 	}
 
