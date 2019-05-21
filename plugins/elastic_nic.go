@@ -216,6 +216,7 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 	}
 
 	output := ElasticNicOutput{}
+	output.Guid = ElasticNicInput.Guid
 	output.RequestId = *response.Response.RequestId
 
 	return &output, nil
