@@ -315,6 +315,9 @@ func (action *ElasticNicAttachAction) CheckParam(input interface{}) error {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicAttachAction input Id is empty")
 		}
+		if elasticNic.VmId == "" {
+			return errors.New("ElasticNicAttachAction input VmId is empty")
+		}
 	}
 
 	return nil
