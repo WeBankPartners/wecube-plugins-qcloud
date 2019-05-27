@@ -18,6 +18,7 @@ func init() {
 	ElasticNicActions["create"] = new(ElasticNicCreateAction)
 	ElasticNicActions["terminate"] = new(ElasticNicTerminateAction)
 	ElasticNicActions["attach"] = new(ElasticNicAttachAction)
+	ElasticNicActions["detach"] = new(ElasticNicDetachAction)
 }
 
 //CreateElasticNicClient .
@@ -359,5 +360,77 @@ func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error)
 	}
 
 	logrus.Infof("all elasticNics = %v are attach", elasticNics)
+	return &outputs, nil
+}
+
+//ElasticNicDetachAction .
+type ElasticNicDetachAction struct {
+}
+
+//ReadParam .
+func (action *ElasticNicDetachAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs ElasticNicInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+//CheckParam .
+func (action *ElasticNicDetachAction) CheckParam(input interface{}) error {
+	elasticNics, ok := input.(ElasticNicInputs)
+	if !ok {
+		return fmt.Errorf("ElasticNicDetachAction:input type=%T not right", input)
+	}
+
+	for _, elasticNic := range elasticNics.Inputs {
+		if elasticNic.Id == "" {
+			return errors.New("ElasticNicDetachAction input Id is empty")
+		}
+		if elasticNic.VmId == "" {
+			return errors.New("ElasticNicDetachAction input VmId is empty")
+		}
+	}
+
+	return nil
+}
+
+//attachElasticNic .
+func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
+	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpc.NewDetachNetworkInterfaceRequest()
+
+	request.NetworkInterfaceId = &ElasticNicInput.Id
+	request.InstanceId = &ElasticNicInput.VmId
+
+	response, err := client.DetachNetworkInterface(request)
+	if err != nil {
+		logrus.Errorf("failed to detach elastic nic, error=%s", err)
+		return nil, err
+	}
+
+	output := ElasticNicOutput{}
+	output.Guid = ElasticNicInput.Guid
+	output.RequestId = *response.Response.RequestId
+
+	return &output, nil
+}
+
+//Do .
+func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error) {
+	elasticNics, _ := input.(ElasticNicInputs)
+	outputs := ElasticNicOutputs{}
+	for _, elasticNic := range elasticNics.Inputs {
+		ElasticNicOutput, err := action.detachElasticNic(&elasticNic)
+		if err != nil {
+			return nil, err
+		}
+		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
+	}
+
+	logrus.Infof("all elasticNics = %v are detach", elasticNics)
 	return &outputs, nil
 }

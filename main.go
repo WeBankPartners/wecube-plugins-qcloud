@@ -82,7 +82,7 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/elastic-nic/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/elastic-nic/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/elastic-nic/attach", routeDispatcher)
-
+	http.HandleFunc("/v1/qcloud/elastic-nic/detach", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
