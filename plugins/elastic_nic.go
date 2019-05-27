@@ -219,17 +219,18 @@ func (action *ElasticNicTerminateAction) CheckParam(input interface{}) error {
 func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
+	//check elastic nic status can detach
+	err = ensureElasticNicDetach(client, ElasticNicInput)
+	if err != nil {
+		return nil, err
+	}
 	request := vpc.NewDeleteNetworkInterfaceRequest()
-
 	request.NetworkInterfaceId = &ElasticNicInput.Id
-
 	response, err := client.DeleteNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to terminate elastic nic, error=%s", err)
 		return nil, err
 	}
-
 	output := ElasticNicOutput{}
 	output.Guid = ElasticNicInput.Guid
 	output.RequestId = *response.Response.RequestId
@@ -433,4 +434,28 @@ func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error)
 
 	logrus.Infof("all elasticNics = %v are detach", elasticNics)
 	return &outputs, nil
+}
+
+func ensureElasticNicDetach(client *vpc.Client, input *ElasticNicInput) error {
+	request := vpc.NewDescribeNetworkInterfacesRequest()
+	request.NetworkInterfaceIds = append(request.NetworkInterfaceIds, &input.Id)
+	response, err := client.DescribeNetworkInterfaces(request)
+	if err != nil {
+		return err
+	}
+
+	if len(response.Response.NetworkInterfaceSet) == 0 {
+		return fmt.Errorf("don't find elastic nic %s ", input.Id)
+	}
+
+	if len(response.Response.NetworkInterfaceSet) > 1 {
+		logrus.Errorf("query elastic nic id=%s info find more than 1", input.Id)
+		return fmt.Errorf("query elastic nic id=%s info find more than 1", input.Id)
+	}
+
+	if *response.Response.NetworkInterfaceSet[0].State != "AVAILABLE" {
+		return fmt.Errorf("elastic nic %s status is %s, cann't to detach", input.Id, *response.Response.NetworkInterfaceSet[0].State)
+	}
+
+	return nil
 }
