@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -15,6 +16,8 @@ var EIPActions = make(map[string]Action)
 func init() {
 	EIPActions["create"] = new(EIPCreateAction)
 	EIPActions["terminate"] = new(EIPTerminateAction)
+	EIPActions["attach"] = new(EIPAttachAction)
+	EIPActions["detach"] = new(EIPDetachAction)
 }
 
 func CreateEIPClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
@@ -34,6 +37,7 @@ type EIPInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	AddressCount   string `json:"address_count,omitempty"`
+	InstanceId     string `json:"instance_id,omitempty"`
 	Id             string `json:"id,omitempty"`
 }
 
@@ -189,7 +193,7 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (*EIPOutput, error
 
 	response, err := client.ReleaseAddresses(request)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to release EIP(subnetId=%v), error=%s", eip.Id, err)
+		return nil, fmt.Errorf("Failed to release EIP(Id=%v), error=%s", eip.Id, err)
 	}
 
 	output := EIPOutput{}
@@ -201,10 +205,10 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (*EIPOutput, error
 
 //Do .
 func (action *EIPTerminateAction) Do(input interface{}) (interface{}, error) {
-	subnets, _ := input.(EIPInputs)
+	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
-	for _, subnet := range subnets.Inputs {
-		output, err := action.terminateEIP(&subnet)
+	for _, eip := range eips.Inputs {
+		output, err := action.terminateEIP(&eip)
 		if err != nil {
 			return nil, err
 		}
@@ -241,4 +245,130 @@ func queryEIPInfo(client *vpc.Client, eip *EIPInput) error {
 	}
 
 	return nil
+}
+
+type EIPAttachAction struct {
+}
+
+func (action *EIPAttachAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs EIPInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *EIPAttachAction) CheckParam(input interface{}) error {
+	eips, ok := input.(EIPInputs)
+	if !ok {
+		return fmt.Errorf("EIPAttachAction:input type=%T not right", input)
+	}
+
+	for _, eip := range eips.Inputs {
+		if eip.Id == "" {
+			return errors.New("EIPAttachAction param Id is empty")
+		}
+		if eip.InstanceId == "" {
+			return errors.New("EIPAttachAction param InstanceId is empty")
+		}
+	}
+
+	return nil
+}
+
+//terminateEIP .
+func (action *EIPAttachAction) attachEIP(eip *EIPInput) (*EIPOutput, error) {
+	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
+	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpc.NewAssociateAddressRequest()
+	request.AddressId = &eip.Id
+	request.InstanceId = &eip.InstanceId
+	response, err := client.AssociateAddress(request)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to attach EIP(Id=%v), error=%s", eip.Id, err)
+	}
+
+	output := EIPOutput{}
+	output.Guid = eip.Guid
+	output.RequestId = *response.Response.RequestId
+
+	return &output, nil
+}
+
+//Do .
+func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
+	eips, _ := input.(EIPInputs)
+	outputs := EIPOutputs{}
+	for _, eip := range eips.Inputs {
+		output, err := action.attachEIP(&eip)
+		if err != nil {
+			return nil, err
+		}
+		outputs.Outputs = append(outputs.Outputs, *output)
+	}
+
+	return &outputs, nil
+}
+
+type EIPDetachAction struct {
+}
+
+func (action *EIPDetachAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs EIPInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *EIPDetachAction) CheckParam(input interface{}) error {
+	eips, ok := input.(EIPInputs)
+	if !ok {
+		return fmt.Errorf("EIPDetachAction:input type=%T not right", input)
+	}
+
+	for _, eip := range eips.Inputs {
+		if eip.Id == "" {
+			return errors.New("EIPDetachAction param Id is empty")
+		}
+	}
+
+	return nil
+}
+
+//detachEIP .
+func (action *EIPDetachAction) detachEIP(eip *EIPInput) (*EIPOutput, error) {
+	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
+	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpc.NewDisassociateAddressRequest()
+	request.AddressId = &eip.Id
+	response, err := client.DisassociateAddress(request)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to detach EIP(Id=%v), error=%s", eip.Id, err)
+	}
+
+	output := EIPOutput{}
+	output.Guid = eip.Guid
+	output.RequestId = *response.Response.RequestId
+
+	return &output, nil
+}
+
+//Do .
+func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
+	eips, _ := input.(EIPInputs)
+	outputs := EIPOutputs{}
+	for _, eip := range eips.Inputs {
+		output, err := action.detachEIP(&eip)
+		if err != nil {
+			return nil, err
+		}
+		outputs.Outputs = append(outputs.Outputs, *output)
+	}
+
+	return &outputs, nil
 }

@@ -46,7 +46,7 @@ type ElasticNicInput struct {
 	PrivateIpAddresses []string `json:"private_ip_addr,omitempty"`
 	VpcId              string   `json:"vpc_id,omitempty"`
 	SubnetId           string   `json:"subnet_id,omitempty"`
-	VmId               string   `json:"vm_id,omitempty"`
+	InstanceId         string   `json:"instance_id,omitempty"`
 	Id                 string   `json:"id,omitempty"`
 }
 
@@ -317,8 +317,8 @@ func (action *ElasticNicAttachAction) CheckParam(input interface{}) error {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicAttachAction input Id is empty")
 		}
-		if elasticNic.VmId == "" {
-			return errors.New("ElasticNicAttachAction input VmId is empty")
+		if elasticNic.InstanceId == "" {
+			return errors.New("ElasticNicAttachAction input InstanceId is empty")
 		}
 	}
 
@@ -333,7 +333,7 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 	request := vpc.NewAttachNetworkInterfaceRequest()
 
 	request.NetworkInterfaceId = &ElasticNicInput.Id
-	request.InstanceId = &ElasticNicInput.VmId
+	request.InstanceId = &ElasticNicInput.InstanceId
 
 	response, err := client.AttachNetworkInterface(request)
 	if err != nil {
@@ -389,8 +389,8 @@ func (action *ElasticNicDetachAction) CheckParam(input interface{}) error {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicDetachAction input Id is empty")
 		}
-		if elasticNic.VmId == "" {
-			return errors.New("ElasticNicDetachAction input VmId is empty")
+		if elasticNic.InstanceId == "" {
+			return errors.New("ElasticNicDetachAction input InstanceId is empty")
 		}
 	}
 
@@ -405,7 +405,7 @@ func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticN
 	request := vpc.NewDetachNetworkInterfaceRequest()
 
 	request.NetworkInterfaceId = &ElasticNicInput.Id
-	request.InstanceId = &ElasticNicInput.VmId
+	request.InstanceId = &ElasticNicInput.InstanceId
 
 	response, err := client.DetachNetworkInterface(request)
 	if err != nil {
