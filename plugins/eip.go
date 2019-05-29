@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+	vpcb "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
 var EIPActions = make(map[string]Action)
@@ -18,6 +20,8 @@ func init() {
 	EIPActions["terminate"] = new(EIPTerminateAction)
 	EIPActions["attach"] = new(EIPAttachAction)
 	EIPActions["detach"] = new(EIPDetachAction)
+	EIPActions["bindnat"] = new(EIPBindNatAction)
+	EIPActions["unbindnat"] = new(EIPUnBindNatAction)
 }
 
 func CreateEIPClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
@@ -38,6 +42,9 @@ type EIPInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	AddressCount   string `json:"address_count,omitempty"`
 	InstanceId     string `json:"instance_id,omitempty"`
+	VpcId          string `json:"vpc_id,omitempty"`
+	NatId          string `json:"nat_id,omitempty"`
+	Eip            string `json:"eip,omitempty"`
 	Id             string `json:"id,omitempty"`
 }
 
@@ -183,7 +190,6 @@ func (action *EIPTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//terminateEIP .
 func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (*EIPOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -203,7 +209,6 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (*EIPOutput, error
 	return &output, nil
 }
 
-//Do .
 func (action *EIPTerminateAction) Do(input interface{}) (interface{}, error) {
 	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
@@ -277,7 +282,6 @@ func (action *EIPAttachAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//terminateEIP .
 func (action *EIPAttachAction) attachEIP(eip *EIPInput) (*EIPOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -297,7 +301,6 @@ func (action *EIPAttachAction) attachEIP(eip *EIPInput) (*EIPOutput, error) {
 	return &output, nil
 }
 
-//Do .
 func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
 	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
@@ -339,7 +342,6 @@ func (action *EIPDetachAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//detachEIP .
 func (action *EIPDetachAction) detachEIP(eip *EIPInput) (*EIPOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -358,12 +360,187 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (*EIPOutput, error) {
 	return &output, nil
 }
 
-//Do .
 func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
 	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.detachEIP(&eip)
+		if err != nil {
+			return nil, err
+		}
+		outputs.Outputs = append(outputs.Outputs, *output)
+	}
+
+	return &outputs, nil
+}
+
+type EIPBindNatAction struct {
+}
+
+func (action *EIPBindNatAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs EIPInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *EIPBindNatAction) CheckParam(input interface{}) error {
+	eips, ok := input.(EIPInputs)
+	if !ok {
+		return fmt.Errorf("EIPBindNatAction:input type=%T not right", input)
+	}
+
+	for _, eip := range eips.Inputs {
+		if eip.Eip == "" {
+			return errors.New("EIPBindNatAction param Eip is empty")
+		}
+		if eip.NatId == "" {
+			return errors.New("EIPBindNatAction param NatId is empty")
+		}
+		if eip.VpcId == "" {
+			return errors.New("EIPBindNatAction param VpcId is empty")
+		}
+	}
+
+	return nil
+}
+
+func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (*EIPOutput, error) {
+	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
+	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpcb.NewEipBindNatGatewayRequest()
+	request.VpcId = &eip.VpcId
+	request.NatId = &eip.NatId
+	request.AssignedEipSet = []*string{
+		&eip.Eip,
+	}
+	response, err := client.EipBindNatGateway(request)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to bind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
+	}
+
+	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
+	taskReq.TaskId = response.TaskId
+	count := 0
+	for {
+		taskResp, err := client.DescribeVpcTaskResult(taskReq)
+		if err != nil {
+			return nil, err
+		}
+		if *taskResp.Data.Status == 0 {
+			break
+		}
+		if *taskResp.Data.Status == 1 {
+			return nil, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+		}
+		time.Sleep(5 * time.Second)
+		count++
+		if count >= 20 {
+			return nil, fmt.Errorf("terminateNatGateway query result timeout")
+		}
+	}
+	output := EIPOutput{}
+	output.Guid = eip.Guid
+
+	return &output, nil
+}
+
+func (action *EIPBindNatAction) Do(input interface{}) (interface{}, error) {
+	eips, _ := input.(EIPInputs)
+	outputs := EIPOutputs{}
+	for _, eip := range eips.Inputs {
+		output, err := action.bindNatGateway(&eip)
+		if err != nil {
+			return nil, err
+		}
+		outputs.Outputs = append(outputs.Outputs, *output)
+	}
+
+	return &outputs, nil
+}
+
+type EIPUnBindNatAction struct {
+}
+
+func (action *EIPUnBindNatAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs EIPInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *EIPUnBindNatAction) CheckParam(input interface{}) error {
+	eips, ok := input.(EIPInputs)
+	if !ok {
+		return fmt.Errorf("EIPUnBindNatAction:input type=%T not right", input)
+	}
+
+	for _, eip := range eips.Inputs {
+		if eip.Eip == "" {
+			return errors.New("EIPUnBindNatAction param Eip is empty")
+		}
+		if eip.NatId == "" {
+			return errors.New("EIPUnBindNatAction param NatId is empty")
+		}
+		if eip.VpcId == "" {
+			return errors.New("EIPUnBindNatAction param VpcId is empty")
+		}
+	}
+
+	return nil
+}
+
+func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (*EIPOutput, error) {
+	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
+	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpcb.NewEipUnBindNatGatewayRequest()
+	request.VpcId = &eip.VpcId
+	request.NatId = &eip.NatId
+	request.AssignedEipSet = []*string{
+		&eip.Eip,
+	}
+	response, err := client.EipUnBindNatGateway(request)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to unbind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
+	}
+
+	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
+	taskReq.TaskId = response.TaskId
+	count := 0
+	for {
+		taskResp, err := client.DescribeVpcTaskResult(taskReq)
+		if err != nil {
+			return nil, err
+		}
+		if *taskResp.Data.Status == 0 {
+			break
+		}
+		if *taskResp.Data.Status == 1 {
+			return nil, fmt.Errorf("eip unbind nat gateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+		}
+		time.Sleep(5 * time.Second)
+		count++
+		if count >= 20 {
+			return nil, fmt.Errorf("eip unbind nat gateway query result timeout")
+		}
+	}
+	output := EIPOutput{}
+	output.Guid = eip.Guid
+
+	return &output, nil
+}
+
+func (action *EIPUnBindNatAction) Do(input interface{}) (interface{}, error) {
+	eips, _ := input.(EIPInputs)
+	outputs := EIPOutputs{}
+	for _, eip := range eips.Inputs {
+		output, err := action.unbindNatGateway(&eip)
 		if err != nil {
 			return nil, err
 		}

@@ -87,6 +87,8 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/eip/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/eip/attach", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/eip/detach", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/bindnat", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/unbindnat", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
