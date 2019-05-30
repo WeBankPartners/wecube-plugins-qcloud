@@ -134,26 +134,35 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 	for i := 0; i < len(response.Response.AddressSet); i++ {
 		req.AddressIds = append(req.AddressIds, response.Response.AddressSet[i])
 	}
-	// time.Sleep(5 * time.Second)
 	//query eips info get eip ip
-	queryEIPResponse, err := client.DescribeAddresses(req)
-	if err != nil {
-		return nil, fmt.Errorf("query eip info meet error : %s", err)
+	for {
+		queryEIPResponse, err := client.DescribeAddresses(req)
+		if err != nil {
+			return nil, fmt.Errorf("query eip info meet error : %s", err)
+		}
+		if len(queryEIPResponse.Response.AddressSet) == 0 {
+			return nil, fmt.Errorf("after create eip can't get eip info")
+		}
+		count := 0
+		for _, info := range queryEIPResponse.Response.AddressSet {
+			if *info.AddressStatus == "CREATING" {
+				count++
+				break
+			}
+		}
+		if count == 0 {
+			for _, info := range queryEIPResponse.Response.AddressSet {
+				logrus.Info("info.AddressStatus == >>>> ", *info.AddressStatus)
+				logrus.Info("info.AddressIp == >>>> ", *info.AddressIp)
+				var eipInfo EIPInfo
+				eipInfo.Id = *info.AddressId
+				eipInfo.EIP = *info.AddressIp
+				output.EIPS = append(output.EIPS, eipInfo)
+			}
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
-	if len(queryEIPResponse.Response.AddressSet) == 0 {
-		return nil, fmt.Errorf("after create eip can't get eip info")
-	}
-	logrus.Info("DescribeAddresses == >>>> 11111")
-	for _, info := range queryEIPResponse.Response.AddressSet {
-		logrus.Info("info.AddressId == >>>> ", *info.AddressId)
-		logrus.Info("info.AddressStatus == >>>> ", *info.AddressStatus)
-		logrus.Info("info.AddressIp == >>>> ", *info.AddressIp)
-		var eipInfo EIPInfo
-		eipInfo.Id = *info.AddressId
-		eipInfo.EIP = *info.AddressIp
-		output.EIPS = append(output.EIPS, eipInfo)
-	}
-	logrus.Info("DescribeAddresses == >>>> 22222")
 
 	return &output, nil
 }
