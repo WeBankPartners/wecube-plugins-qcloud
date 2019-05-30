@@ -5865,7 +5865,7 @@ type Quota struct {
 	QuotaCurrent *int64 `json:"QuotaCurrent,omitempty" name:"QuotaCurrent"`
 
 	// 配额数量
-	QuotaLimit *int64 `json:"QuotaLimit,omitempty" name:"QuotaLimit"`
+	QuotaLimit *int `json:"QuotaLimit,omitempty" name:"QuotaLimit"`
 }
 
 type RejectAttachCcnInstancesRequest struct {
