@@ -124,6 +124,7 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 		return nil, fmt.Errorf("failed to CreateEIP, error=%s", err)
 	}
 
+	logrus.Info("DescribeAddresses == >>>> 11111")
 	req := vpc.NewDescribeAddressesRequest()
 	output := EIPOutput{}
 	output.Guid = eip.Guid
@@ -131,18 +132,21 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 	if len(response.Response.AddressSet) == 0 {
 		return nil, fmt.Errorf("allocate eip meet error, the return eip is zero")
 	}
+	logrus.Info("DescribeAddresses == >>>> 222222")
 	for i := 0; i < len(response.Response.AddressSet); i++ {
 		req.AddressIds = append(req.AddressIds, response.Response.AddressSet[i])
 	}
 	//query eips info get eip ip
+	logrus.Info("DescribeAddresses == >>>> 333333")
 	queryEIPResponse, err := client.DescribeAddresses(req)
 	if err != nil {
 		return nil, fmt.Errorf("query eip info meet error : %s", err)
 	}
-
+	logrus.Info("DescribeAddresses == >>>> 44444")
 	if len(queryEIPResponse.Response.AddressSet) == 0 {
 		return nil, fmt.Errorf("after create eip can't get eip info")
 	}
+	logrus.Info("DescribeAddresses == >>>> 55555")
 	for _, info := range queryEIPResponse.Response.AddressSet {
 		var eipInfo EIPInfo
 		eipInfo.Id = *info.AddressId
