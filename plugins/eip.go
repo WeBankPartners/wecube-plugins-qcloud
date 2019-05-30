@@ -152,8 +152,6 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 		}
 		if count == 0 {
 			for _, info := range queryEIPResponse.Response.AddressSet {
-				logrus.Info("info.AddressStatus == >>>> ", *info.AddressStatus)
-				logrus.Info("info.AddressIp == >>>> ", *info.AddressIp)
 				var eipInfo EIPInfo
 				eipInfo.Id = *info.AddressId
 				eipInfo.EIP = *info.AddressIp
