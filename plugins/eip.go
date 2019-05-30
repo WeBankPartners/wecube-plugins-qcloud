@@ -136,6 +136,7 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 	}
 	//query eips info get eip ip
 	queryEIPResponse, err := client.DescribeAddresses(req)
+	logrus.Info("queryEIPResponse == >>>> %v", queryEIPResponse)
 	if err != nil {
 		return nil, fmt.Errorf("query eip info meet error : %s", err)
 	}
