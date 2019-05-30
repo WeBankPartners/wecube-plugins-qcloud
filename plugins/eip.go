@@ -105,10 +105,10 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 	}
 
 	//check resource
-	err = queryEIPInfo(client, eip)
-	if err != nil {
-		return nil, err
-	}
+	// err = queryEIPInfo(client, eip)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	var count int64
 	request := vpc.NewAllocateAddressesRequest()
