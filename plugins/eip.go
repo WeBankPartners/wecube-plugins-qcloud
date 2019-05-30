@@ -143,10 +143,9 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 		return nil, fmt.Errorf("after create eip can't get eip info")
 	}
 	logrus.Info("DescribeAddresses == >>>> 11111")
-	logrus.Info("len(queryEIPResponse.Response.AddressSet) == >>>> ", len(queryEIPResponse.Response.AddressSet))
 	for _, info := range queryEIPResponse.Response.AddressSet {
-		logrus.Info("info.AddressId == >>>> ", *info.AddressId)
-		logrus.Info("info.AddressIp == >>>> ", *info.AddressIp)
+		// logrus.Info("info.AddressId == >>>> ", *info.AddressId)
+		// logrus.Info("info.AddressIp == >>>> ", *info.AddressIp)
 		var eipInfo EIPInfo
 		eipInfo.Id = *info.AddressId
 		eipInfo.EIP = *info.AddressIp
