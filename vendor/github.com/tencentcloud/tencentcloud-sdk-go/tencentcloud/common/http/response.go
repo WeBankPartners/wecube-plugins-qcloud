@@ -63,7 +63,7 @@ func ParseFromHttpResponse(hr *http.Response, response Response) (err error) {
 	if hr.StatusCode != 200 {
 		return fmt.Errorf("Request fail with status: %s, with body: %s", hr.Status, body)
 	}
-	//log.Printf("[DEBUG] Response Body=%s", body)
+	log.Printf("[DEBUG] Response Body=%s", body)
 	err = response.ParseErrorFromHTTPResponse(body)
 	if err != nil {
 		return
