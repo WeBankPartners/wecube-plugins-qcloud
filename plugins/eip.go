@@ -134,7 +134,7 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 	for i := 0; i < len(response.Response.AddressSet); i++ {
 		req.AddressIds = append(req.AddressIds, response.Response.AddressSet[i])
 	}
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 	//query eips info get eip ip
 	queryEIPResponse, err := client.DescribeAddresses(req)
 	if err != nil {
