@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	vpcb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
@@ -270,7 +269,6 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 		if *response.Data[0].State == 0 {
 			logrus.Info("=================== 222222 >>>>>>>>>>>> ")
 			if len(response.Data[0].EipSet) > 0 {
-				if 
 				output.Guid = input.Guid
 				output.Id = input.Id
 				output.Eip = *response.Data[0].EipSet[0]
