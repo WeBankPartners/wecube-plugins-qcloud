@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	vpcb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
@@ -102,7 +103,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 
 	//check resource exist
 	if natGateway.Id != "" {
-		queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway, paramsMap)
+		queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway)
 		if err != nil && flag == false {
 			return nil, err
 		}
@@ -127,22 +128,32 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err != nil || createResp.NatGatewayId == nil {
 		return nil, err
 	}
+	output := NatGatewayOutput{}
+	output.Guid = natGateway.Guid
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
+	output.Id = *createResp.NatGatewayId
 
-	natGateway.Id = *createResp.NatGatewayId
-	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", natGateway.Id)
-	queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway, paramsMap)
-	if err != nil && flag == false {
+	//query eip infp
+	req := vpcb.NewDescribeAddressesRequest()
+	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
 		return nil, err
 	}
+	queryEIPResponse, err := Client.DescribeAddresses(req)
+	if err != nil {
+		return nil, fmt.Errorf("query eip info meet error : %s", err)
+	}
+	if len(queryEIPResponse.Response.AddressSet) == 0 {
+		return nil, fmt.Errorf("can't found nat eip info")
+	}
+	for _, eip := range queryEIPResponse.Response.AddressSet {
+		if *eip.AddressStatus == "BIND" && *eip.InstanceId == output.Id {
+			output.Eip = *eip.AddressIp
+			output.EipId = *eip.AddressId
+		}
+	}
 
-	return queryNatGatewayResponse, nil
-
-	// output := NatGatewayOutput{}
-	// output.Guid = natGateway.Guid
-	// output.RequestId = "legacy qcloud API doesn't support returnning request id"
-	// output.Id = *createResp.NatGatewayId
-
-	// return &output, nil
+	return &output, nil
 }
 
 func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error) {
@@ -247,59 +258,28 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	return &outputs, nil
 }
 
-func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap map[string]string) (*NatGatewayOutput, bool, error) {
+func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewayOutput, bool, error) {
 	output := NatGatewayOutput{}
 
 	request := vpc.NewDescribeNatGatewayRequest()
 	request.NatId = &input.Id
-	for {
-		response, err := client.DescribeNatGateway(request)
-		logrus.Info("=================== 1111111 >>>>>>>>>>>> ")
-		if err != nil {
-			return nil, false, err
-		}
-		if len(response.Data) == 0 {
-			return nil, false, nil
-		}
-		if len(response.Data) > 1 {
-			logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
-			return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
-		}
-
-		if *response.Data[0].State == 0 {
-			if len(response.Data[0].EipSet) > 0 {
-				logrus.Info("=================== 222222 >>>>>>>>>>>> ", len(response.Data[0].EipSet))
-				logrus.Info("=================== 222222 >>>>>>>>>>>> ", len(response.Data))
-				output.Guid = input.Guid
-				output.Id = input.Id
-				output.Eip = *response.Data[0].EipSet[0]
-				output.RequestId = "legacy qcloud API doesn't support returnning request id"
-				logrus.Info("Nat Eip =================== >>>>>>>>>>>> ", output.Eip)
-				break
-			}
-		}
-		time.Sleep(1 * time.Second)
+	response, err := client.DescribeNatGateway(request)
+	if err != nil {
+		return nil, false, err
 	}
 
-	//query eip infp
-	// req := vpcb.NewDescribeAddressesRequest()
-	// s := "address-ip"
-	// req.Filters[0].Name = &s
-	// req.Filters[0].Values = append(req.Filters[0].Values, &output.Eip)
-	// Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	// if err != nil {
-	// 	return nil, false, err
-	// }
-	// logrus.Info("=================== 33332 >>>>>>>>>>>> ")
-	// queryEIPResponse, err := Client.DescribeAddresses(req)
-	// if err != nil {
-	// 	return nil, false, fmt.Errorf("query eip info meet error : %s", err)
-	// }
-	// if len(queryEIPResponse.Response.AddressSet) == 0 {
-	// 	return nil, false, fmt.Errorf("can't found nat eip info")
-	// }
-	// logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
-	// output.EipId = *queryEIPResponse.Response.AddressSet[0].AddressId
+	if len(response.Data) == 0 {
+		return nil, false, nil
+	}
+
+	if len(response.Data) > 1 {
+		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
+	}
+
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return &output, true, nil
 }
