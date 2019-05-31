@@ -271,7 +271,7 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 			logrus.Info("=================== 222222 >>>>>>>>>>>> ")
 			output.Guid = input.Guid
 			output.Id = input.Id
-			output.Eip = *response.Data[0].BlockedEipSet[0]
+			output.Eip = *response.Data[0].EipSet[0]
 			output.RequestId = "legacy qcloud API doesn't support returnning request id"
 			logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
 			break
