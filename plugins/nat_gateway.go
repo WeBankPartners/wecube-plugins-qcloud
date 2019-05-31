@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	vpcb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
@@ -53,6 +54,8 @@ type NatGatewayInput struct {
 	AssignedEipSet  string `json:"assigned_eip_set,omitempty"`
 	AutoAllocEipNum int    `json:"auto_alloc_eip_num,omitempty"`
 	Id              string `json:"id,omitempty"`
+	Eip             string `json:"eip,omitempty"`
+	EipId           string `json:"eip_id,omitempty"`
 }
 
 type NatGatewayOutputs struct {
@@ -63,6 +66,8 @@ type NatGatewayOutput struct {
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
+	Eip       string `json:"eip,omitempty"`
+	EipId     string `json:"eip_id,omitempty"`
 }
 
 func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{}, error) {
@@ -98,7 +103,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 
 	//check resource exist
 	if natGateway.Id != "" {
-		queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway)
+		queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway, paramsMap)
 		if err != nil && flag == false {
 			return nil, err
 		}
@@ -124,12 +129,20 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 		return nil, err
 	}
 
-	output := NatGatewayOutput{}
-	output.Guid = natGateway.Guid
-	output.RequestId = "legacy qcloud API doesn't support returnning request id"
-	output.Id = *createResp.NatGatewayId
+	natGateway.Id = *createResp.NatGatewayId
+	queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway, paramsMap)
+	if err != nil && flag == false {
+		return nil, err
+	}
 
-	return &output, nil
+	return queryNatGatewayResponse, nil
+
+	// output := NatGatewayOutput{}
+	// output.Guid = natGateway.Guid
+	// output.RequestId = "legacy qcloud API doesn't support returnning request id"
+	// output.Id = *createResp.NatGatewayId
+
+	// return &output, nil
 }
 
 func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error) {
@@ -234,7 +247,7 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	return &outputs, nil
 }
 
-func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewayOutput, bool, error) {
+func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap map[string]string) (*NatGatewayOutput, bool, error) {
 	output := NatGatewayOutput{}
 
 	request := vpc.NewDescribeNatGatewayRequest()
@@ -243,19 +256,37 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewa
 	if err != nil {
 		return nil, false, err
 	}
-
 	if len(response.Data) == 0 {
 		return nil, false, nil
 	}
-
 	if len(response.Data) > 1 {
 		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
 		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
 	}
-
 	output.Guid = input.Guid
 	output.Id = input.Id
+	output.Eip = *response.Data[0].BlockedEipSet[0]
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
+	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
+
+	//query eip infp
+	req := vpcb.NewDescribeAddressesRequest()
+	s := "address-ip"
+	req.Filters[0].Name = &s
+	req.Filters[0].Values = append(req.Filters[0].Values, response.Data[0].BlockedEipSet[0])
+	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, false, err
+	}
+	queryEIPResponse, err := Client.DescribeAddresses(req)
+	if err != nil {
+		return nil, false, fmt.Errorf("query eip info meet error : %s", err)
+	}
+	if len(queryEIPResponse.Response.AddressSet) == 0 {
+		return nil, false, fmt.Errorf("can't found nat eip info")
+	}
+	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
+	output.EipId = *queryEIPResponse.Response.AddressSet[0].AddressId
 
 	return &output, true, nil
 }
