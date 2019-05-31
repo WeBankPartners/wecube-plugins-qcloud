@@ -253,28 +253,37 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 
 	request := vpc.NewDescribeNatGatewayRequest()
 	request.NatId = &input.Id
-	response, err := client.DescribeNatGateway(request)
-	if err != nil {
-		return nil, false, err
+	for {
+		response, err := client.DescribeNatGateway(request)
+		logrus.Info("=================== 1111111 >>>>>>>>>>>> ")
+		if err != nil {
+			return nil, false, err
+		}
+		if len(response.Data) == 0 {
+			return nil, false, nil
+		}
+		if len(response.Data) > 1 {
+			logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
+			return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
+		}
+
+		if *response.Data[0].State == 0 {
+			logrus.Info("=================== 222222 >>>>>>>>>>>> ")
+			output.Guid = input.Guid
+			output.Id = input.Id
+			output.Eip = *response.Data[0].BlockedEipSet[0]
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
-	if len(response.Data) == 0 {
-		return nil, false, nil
-	}
-	if len(response.Data) > 1 {
-		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
-	}
-	output.Guid = input.Guid
-	output.Id = input.Id
-	output.Eip = *response.Data[0].BlockedEipSet[0]
-	output.RequestId = "legacy qcloud API doesn't support returnning request id"
-	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
 
 	//query eip infp
 	req := vpcb.NewDescribeAddressesRequest()
 	s := "address-ip"
 	req.Filters[0].Name = &s
-	req.Filters[0].Values = append(req.Filters[0].Values, response.Data[0].BlockedEipSet[0])
+	req.Filters[0].Values = append(req.Filters[0].Values, &output.Eip)
 	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, false, err
