@@ -104,12 +104,6 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (*EIPOutput, error) {
 		return nil, err
 	}
 
-	//check resource
-	// err = queryEIPInfo(client, eip)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	var count int64
 	request := vpc.NewAllocateAddressesRequest()
 	if eip.AddressCount == "" {
@@ -336,6 +330,7 @@ func (action *EIPDetachAction) ReadParam(param interface{}) (interface{}, error)
 	if err != nil {
 		return nil, err
 	}
+
 	return inputs, nil
 }
 
@@ -344,7 +339,6 @@ func (action *EIPDetachAction) CheckParam(input interface{}) error {
 	if !ok {
 		return fmt.Errorf("EIPDetachAction:input type=%T not right", input)
 	}
-
 	for _, eip := range eips.Inputs {
 		if eip.Id == "" {
 			return errors.New("EIPDetachAction param Id is empty")
@@ -364,7 +358,6 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (*EIPOutput, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to detach EIP(Id=%v), error=%s", eip.Id, err)
 	}
-
 	output := EIPOutput{}
 	output.Guid = eip.Guid
 	output.RequestId = *response.Response.RequestId
@@ -395,6 +388,7 @@ func (action *EIPBindNatAction) ReadParam(param interface{}) (interface{}, error
 	if err != nil {
 		return nil, err
 	}
+
 	return inputs, nil
 }
 
@@ -403,7 +397,6 @@ func (action *EIPBindNatAction) CheckParam(input interface{}) error {
 	if !ok {
 		return fmt.Errorf("EIPBindNatAction:input type=%T not right", input)
 	}
-
 	for _, eip := range eips.Inputs {
 		if eip.Eip == "" {
 			return errors.New("EIPBindNatAction param Eip is empty")
@@ -433,7 +426,6 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (*EIPOutput, error
 	if err != nil {
 		return nil, fmt.Errorf("Failed to bind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
 	}
-
 	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = response.TaskId
 	count := 0
@@ -483,6 +475,7 @@ func (action *EIPUnBindNatAction) ReadParam(param interface{}) (interface{}, err
 	if err != nil {
 		return nil, err
 	}
+
 	return inputs, nil
 }
 
@@ -521,7 +514,6 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (*EIPOutput, e
 	if err != nil {
 		return nil, fmt.Errorf("Failed to unbind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
 	}
-
 	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = response.TaskId
 	count := 0

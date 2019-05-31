@@ -10,10 +10,8 @@ import (
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
-//ElasticNicActions .
 var ElasticNicActions = make(map[string]Action)
 
-//init .
 func init() {
 	ElasticNicActions["create"] = new(ElasticNicCreateAction)
 	ElasticNicActions["terminate"] = new(ElasticNicTerminateAction)
@@ -21,7 +19,6 @@ func init() {
 	ElasticNicActions["detach"] = new(ElasticNicDetachAction)
 }
 
-//CreateElasticNicClient .
 func CreateElasticNicClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
 
@@ -31,12 +28,10 @@ func CreateElasticNicClient(region, secretId, secretKey string) (client *vpc.Cli
 	return vpc.NewClient(credential, region, clientProfile)
 }
 
-//ElasticNicInputs .
 type ElasticNicInputs struct {
 	Inputs []ElasticNicInput `json:"inputs,omitempty"`
 }
 
-//ElasticNicInput .
 type ElasticNicInput struct {
 	Guid               string   `json:"guid,omitempty"`
 	ProviderParams     string   `json:"provider_params,omitempty"`
@@ -50,12 +45,10 @@ type ElasticNicInput struct {
 	Id                 string   `json:"id,omitempty"`
 }
 
-//ElasticNicOutputs .
 type ElasticNicOutputs struct {
 	Outputs []ElasticNicOutput `json:"outputs,omitempty"`
 }
 
-//ElasticNicOutput .
 type ElasticNicOutput struct {
 	RequestId       string   `json:"request_id,omitempty"`
 	Guid            string   `json:"guid,omitempty"`
@@ -64,11 +57,9 @@ type ElasticNicOutput struct {
 	AttachGroupList []string `json:"attach_group_list,omitempty"`
 }
 
-//ElasticNicPlugin .
 type ElasticNicPlugin struct {
 }
 
-//GetActionByName .
 func (plugin *ElasticNicPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := ElasticNicActions[actionName]
 
@@ -79,11 +70,9 @@ func (plugin *ElasticNicPlugin) GetActionByName(actionName string) (Action, erro
 	return action, nil
 }
 
-//ElasticNicCreateAction .
 type ElasticNicCreateAction struct {
 }
 
-//ReadParam .
 func (action *ElasticNicCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs ElasticNicInputs
 	err := UnmarshalJson(param, &inputs)
@@ -93,7 +82,6 @@ func (action *ElasticNicCreateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-//CheckParam .
 func (action *ElasticNicCreateAction) CheckParam(input interface{}) error {
 	elasticNics, ok := input.(ElasticNicInputs)
 	if !ok {
@@ -115,7 +103,6 @@ func (action *ElasticNicCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//createElasticNic .
 func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -131,9 +118,7 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 			return queryElasticNiResponse, nil
 		}
 	}
-
 	request := vpc.NewCreateNetworkInterfaceRequest()
-
 	request.VpcId = &ElasticNicInput.VpcId
 	request.SubnetId = &ElasticNicInput.SubnetId
 	request.NetworkInterfaceName = &ElasticNicInput.Name
@@ -142,22 +127,18 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 			request.SecurityGroupIds = append(request.SecurityGroupIds, &ElasticNicInput.SecurityGroupId[i])
 		}
 	}
-
 	response, err := client.CreateNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to create elastic nic, error=%s", err)
 		return nil, err
 	}
-
 	output := ElasticNicOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = ElasticNicInput.Guid
 	output.Id = *response.Response.NetworkInterface.NetworkInterfaceId
-
 	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
 		output.PrivateIp = *response.Response.NetworkInterface.PrivateIpAddressSet[0].PrivateIpAddress
 	}
-
 	if len(response.Response.NetworkInterface.GroupSet) > 0 {
 		for i := 0; i < len(response.Response.NetworkInterface.GroupSet); i++ {
 			output.AttachGroupList = append(output.AttachGroupList, *response.Response.NetworkInterface.GroupSet[i])
@@ -167,7 +148,6 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	return &output, nil
 }
 
-//Do .
 func (action *ElasticNicCreateAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
@@ -183,27 +163,24 @@ func (action *ElasticNicCreateAction) Do(input interface{}) (interface{}, error)
 	return &outputs, nil
 }
 
-//ElasticNicTerminateAction .
 type ElasticNicTerminateAction struct {
 }
 
-//ReadParam .
 func (action *ElasticNicTerminateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs ElasticNicInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
+
 	return inputs, nil
 }
 
-//CheckParam .
 func (action *ElasticNicTerminateAction) CheckParam(input interface{}) error {
 	elasticNics, ok := input.(ElasticNicInputs)
 	if !ok {
 		return fmt.Errorf("ElasticNicTerminateAction:input type=%T not right", input)
 	}
-
 	for _, elasticNic := range elasticNics.Inputs {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicTerminateAction input Id is empty")
@@ -213,7 +190,6 @@ func (action *ElasticNicTerminateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//terminateElasticNic .
 func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -236,7 +212,6 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 	return &output, nil
 }
 
-//Do .
 func (action *ElasticNicTerminateAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
@@ -288,11 +263,9 @@ func queryElasticNicInfo(client *vpc.Client, input *ElasticNicInput) (*ElasticNi
 	return &output, true, nil
 }
 
-//ElasticNicAttachAction .
 type ElasticNicAttachAction struct {
 }
 
-//ReadParam .
 func (action *ElasticNicAttachAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs ElasticNicInputs
 	err := UnmarshalJson(param, &inputs)
@@ -302,7 +275,6 @@ func (action *ElasticNicAttachAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-//CheckParam .
 func (action *ElasticNicAttachAction) CheckParam(input interface{}) error {
 	elasticNics, ok := input.(ElasticNicInputs)
 	if !ok {
@@ -321,7 +293,6 @@ func (action *ElasticNicAttachAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//attachElasticNic .
 func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -344,7 +315,6 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 	return &output, nil
 }
 
-//Do .
 func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
@@ -360,11 +330,9 @@ func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error)
 	return &outputs, nil
 }
 
-//ElasticNicDetachAction .
 type ElasticNicDetachAction struct {
 }
 
-//ReadParam .
 func (action *ElasticNicDetachAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs ElasticNicInputs
 	err := UnmarshalJson(param, &inputs)
@@ -374,7 +342,6 @@ func (action *ElasticNicDetachAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-//CheckParam .
 func (action *ElasticNicDetachAction) CheckParam(input interface{}) error {
 	elasticNics, ok := input.(ElasticNicInputs)
 	if !ok {
@@ -393,7 +360,6 @@ func (action *ElasticNicDetachAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-//attachElasticNic .
 func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -416,7 +382,6 @@ func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticN
 	return &output, nil
 }
 
-//Do .
 func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}

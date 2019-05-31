@@ -234,11 +234,9 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 
 		if *taskResp.Data.Status == 0 {
-			//success
 			break
 		}
 		if *taskResp.Data.Status == 1 {
-			// fail, need retry delete
 			return nil, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 
@@ -280,18 +278,17 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewa
 	if err != nil {
 		return nil, false, err
 	}
-
 	if len(response.Data) == 0 {
 		return nil, false, nil
 	}
-
 	if len(response.Data) > 1 {
 		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
 		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
 	}
-
 	output.Guid = input.Guid
 	output.Id = input.Id
+	output.Eip = input.Eip
+	output.EipId = input.EipId
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return &output, true, nil
