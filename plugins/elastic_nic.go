@@ -60,7 +60,7 @@ type ElasticNicOutput struct {
 	RequestId       string   `json:"request_id,omitempty"`
 	Guid            string   `json:"guid,omitempty"`
 	Id              string   `json:"id,omitempty"`
-	PrivateIpList   []string `json:"private_ip_list,omitempty"`
+	PrivateIp       string   `json:"private_ip,omitempty"`
 	AttachGroupList []string `json:"attach_group_list,omitempty"`
 }
 
@@ -155,9 +155,7 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	output.Id = *response.Response.NetworkInterface.NetworkInterfaceId
 
 	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
-		for i := 0; i < len(response.Response.NetworkInterface.PrivateIpAddressSet); i++ {
-			output.PrivateIpList = append(output.PrivateIpList, *response.Response.NetworkInterface.PrivateIpAddressSet[i].PrivateIpAddress)
-		}
+		output.PrivateIp = *response.Response.NetworkInterface.PrivateIpAddressSet[0].PrivateIpAddress
 	}
 
 	if len(response.Response.NetworkInterface.GroupSet) > 0 {
@@ -278,9 +276,7 @@ func queryElasticNicInfo(client *vpc.Client, input *ElasticNicInput) (*ElasticNi
 	output.RequestId = *response.Response.RequestId
 
 	if len(response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet) > 0 {
-		for i := 0; i < len(response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet); i++ {
-			output.PrivateIpList = append(output.PrivateIpList, *response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet[i].PrivateIpAddress)
-		}
+		output.PrivateIp = *response.Response.NetworkInterfaceSet[0].PrivateIpAddressSet[0].PrivateIpAddress
 	}
 
 	if len(response.Response.NetworkInterfaceSet[0].GroupSet) > 0 {
