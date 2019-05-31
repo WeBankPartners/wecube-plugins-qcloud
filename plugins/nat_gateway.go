@@ -130,6 +130,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	}
 
 	natGateway.Id = *createResp.NatGatewayId
+	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", natGateway.Id)
 	queryNatGatewayResponse, flag, err := queryNatGatewayInfo(client, natGateway, paramsMap)
 	if err != nil && flag == false {
 		return nil, err
