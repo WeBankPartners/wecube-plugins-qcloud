@@ -139,18 +139,31 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err != nil {
 		return nil, err
 	}
-	queryEIPResponse, err := Client.DescribeAddresses(req)
-	if err != nil {
-		return nil, fmt.Errorf("query eip info meet error : %s", err)
-	}
-	if len(queryEIPResponse.Response.AddressSet) == 0 {
-		return nil, fmt.Errorf("can't found nat eip info")
-	}
-	for _, eip := range queryEIPResponse.Response.AddressSet {
-		if *eip.AddressStatus == "BIND" && *eip.InstanceId == output.Id {
-			output.Eip = *eip.AddressIp
-			output.EipId = *eip.AddressId
+	count := 0
+	for {
+		queryEIPResponse, err := Client.DescribeAddresses(req)
+		if err != nil {
+			return nil, fmt.Errorf("query eip info meet error : %s", err)
 		}
+		if len(queryEIPResponse.Response.AddressSet) == 0 {
+			continue
+		}
+		flag := false
+		for _, eip := range queryEIPResponse.Response.AddressSet {
+			if *eip.AddressStatus == "BIND" && *eip.InstanceId == output.Id {
+				output.Eip = *eip.AddressIp
+				output.EipId = *eip.AddressId
+				flag = true
+				break
+			}
+		}
+		if flag {
+			break
+		}
+		if count > 20 {
+			return nil, fmt.Errorf("query nat eip info timeout")
+		}
+		count++
 	}
 
 	return &output, nil
