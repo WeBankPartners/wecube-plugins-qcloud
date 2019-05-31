@@ -448,6 +448,7 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (*EIPOutput, error
 	}
 	output := EIPOutput{}
 	output.Guid = eip.Guid
+	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return &output, nil
 }
