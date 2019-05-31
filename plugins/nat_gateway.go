@@ -267,8 +267,9 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 		}
 
 		if *response.Data[0].State == 0 {
-			logrus.Info("=================== 222222 >>>>>>>>>>>> ")
 			if len(response.Data[0].EipSet) > 0 {
+				logrus.Info("=================== 222222 >>>>>>>>>>>> ", len(response.Data[0].EipSet))
+				logrus.Info("=================== 222222 >>>>>>>>>>>> ", len(response.Data)
 				output.Guid = input.Guid
 				output.Id = input.Id
 				output.Eip = *response.Data[0].EipSet[0]
