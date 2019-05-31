@@ -270,11 +270,12 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 		if *response.Data[0].State == 0 {
 			logrus.Info("=================== 222222 >>>>>>>>>>>> ")
 			if len(response.Data[0].EipSet) > 0 {
+				if 
 				output.Guid = input.Guid
 				output.Id = input.Id
 				output.Eip = *response.Data[0].EipSet[0]
 				output.RequestId = "legacy qcloud API doesn't support returnning request id"
-				logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
+				logrus.Info("Nat Eip =================== >>>>>>>>>>>> ", output.Eip)
 				break
 			}
 		}
@@ -282,23 +283,24 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput, paramsMap m
 	}
 
 	//query eip infp
-	req := vpcb.NewDescribeAddressesRequest()
-	s := "address-ip"
-	req.Filters[0].Name = &s
-	req.Filters[0].Values = append(req.Filters[0].Values, &output.Eip)
-	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	if err != nil {
-		return nil, false, err
-	}
-	queryEIPResponse, err := Client.DescribeAddresses(req)
-	if err != nil {
-		return nil, false, fmt.Errorf("query eip info meet error : %s", err)
-	}
-	if len(queryEIPResponse.Response.AddressSet) == 0 {
-		return nil, false, fmt.Errorf("can't found nat eip info")
-	}
-	logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
-	output.EipId = *queryEIPResponse.Response.AddressSet[0].AddressId
+	// req := vpcb.NewDescribeAddressesRequest()
+	// s := "address-ip"
+	// req.Filters[0].Name = &s
+	// req.Filters[0].Values = append(req.Filters[0].Values, &output.Eip)
+	// Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	// if err != nil {
+	// 	return nil, false, err
+	// }
+	// logrus.Info("=================== 33332 >>>>>>>>>>>> ")
+	// queryEIPResponse, err := Client.DescribeAddresses(req)
+	// if err != nil {
+	// 	return nil, false, fmt.Errorf("query eip info meet error : %s", err)
+	// }
+	// if len(queryEIPResponse.Response.AddressSet) == 0 {
+	// 	return nil, false, fmt.Errorf("can't found nat eip info")
+	// }
+	// logrus.Info("output.Eip =================== >>>>>>>>>>>> ", output.Eip)
+	// output.EipId = *queryEIPResponse.Response.AddressSet[0].AddressId
 
 	return &output, true, nil
 }
