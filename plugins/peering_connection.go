@@ -152,6 +152,18 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if peeringConnection.Id != "" {
+		PeeringConnectionId, err := queryPeeringConnectionsInfo(client, peeringConnection)
+		if err != nil && PeeringConnectionId == "" {
+			return "", err
+		}
+
+		if err == nil && PeeringConnectionId != "" {
+			return PeeringConnectionId, nil
+		}
+	}
+
 	if paramsMap["Region"] == peerParamsMap["Region"] {
 		return action.createPeeringConnectionAtSameRegion(client, peeringConnection, paramsMap)
 	} else {
@@ -280,4 +292,26 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 	}
 
 	return &outputs, nil
+}
+
+func queryPeeringConnectionsInfo(client *vpcExtend.Client, input PeeringConnectionInput) (string, error) {
+
+	request := vpcExtend.NewDescribeVpcPeeringConnectionRequest()
+	request.PeeringConnectionId = &input.Id
+	response, err := client.DescribeVpcPeeringConnections(request)
+	if err != nil {
+		logrus.Errorf("query peeringconnections id=%s meet error:", err)
+		return "", err
+	}
+
+	if len(response.Data) == 0 {
+		return "", nil
+	}
+
+	if len(response.Data) > 1 {
+		logrus.Errorf("query peeringconnections id=%s info find more than 1", input.Id)
+		return "", fmt.Errorf("query peeringconnections id=%s info find more than 1", input.Id)
+	}
+
+	return input.Id, nil
 }

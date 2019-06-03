@@ -1,4 +1,4 @@
 #!/bin/bash
 
 mkdir -p logs
-./wecube-plugins
+./wecube-plugins-qcloud

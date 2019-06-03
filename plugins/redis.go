@@ -113,6 +113,18 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
+	if redisInput.ID != "" {
+		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryRedisInstanceResponse, nil
+		}
+	}
+
 	zonemap, err := GetAvaliableZoneInfo(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
@@ -159,6 +171,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		logrus.Errorf("failed to create redis, error=%s", err)
 		return nil, err
 	}
+
+	logrus.Info("create redis instance response = ", *response.Response.RequestId)
+
+	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
 
 	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
 	if err != nil {

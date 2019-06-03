@@ -342,6 +342,36 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			}
 		}
 
+		//check resources exsit
+		if vm.Id != "" {
+			describeInstancesParams := cvm.DescribeInstancesRequest{
+				InstanceIds: []*string{&vm.Id},
+			}
+
+			describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(describeInstancesResponse.Response.InstanceSet) > 1 {
+				logrus.Errorf("check vm exsit found vm[%s] have %d instance", vm.Id, len(describeInstancesResponse.Response.InstanceSet))
+				return nil, VM_NOT_FOUND_ERROR
+			}
+
+			if len(describeInstancesResponse.Response.InstanceSet) == 1 {
+				output.RequestId = *describeInstancesResponse.Response.RequestId
+				output.Guid = vm.Guid
+				output.Id = vm.Id
+				output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
+				output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
+				output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
+				output.InstancePrivateIp = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
+				outputs.Outputs = append(outputs.Outputs, output)
+
+				continue
+			}
+		}
+
 		request := cvm.NewRunInstancesRequest()
 		byteRunInstancesRequestData, _ := json.Marshal(runInstanceRequest)
 		logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRunInstancesRequestData))

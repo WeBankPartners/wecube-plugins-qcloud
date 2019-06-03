@@ -266,6 +266,7 @@ func buildNewSecurityGroup(actionParam SecurityGroupInput, policy SecurityGroupP
 		Guid:             actionParam.Guid,
 		ProviderParams:   actionParam.ProviderParams,
 		GroupName:        actionParam.Name,
+		SecurityGroupId:  actionParam.Id,
 		GroupDescription: actionParam.Description,
 		SecurityGroupPolicySet: SecurityGroupPolicySet{
 			Egress:  []SecurityGroupPolicy{},

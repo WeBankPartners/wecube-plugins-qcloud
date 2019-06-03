@@ -7,7 +7,7 @@ ENV LOG_PATH=$APP_HOME/logs
 
 RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
-ADD wecube-plugins $APP_HOME/
+ADD wecube-plugins-qcloud $APP_HOME/
 ADD start.sh $APP_HOME/
 ADD stop.sh $APP_HOME/
 ADD conf $APP_CONF/

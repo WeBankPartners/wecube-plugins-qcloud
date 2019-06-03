@@ -146,6 +146,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	//check resource exist
 	if mysqlVmInput.Id != "" {
 		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
 		if err != nil && flag == false {
@@ -175,6 +176,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	output := MysqlVmOutput{}
 	output.Guid = mysqlVmInput.Guid
 	output.PrivateIp = privateIp
+	output.Id = instanceId
 	output.RequestId = requestId
 
 	return &output, nil

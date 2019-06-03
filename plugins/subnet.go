@@ -227,8 +227,8 @@ func querySubnetsInfo(client *vpc.Client, input *SubnetInput) (*SubnetOutput, bo
 	}
 
 	if len(response.Response.SubnetSet) > 1 {
-		logrus.Errorf("query security group id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query security group id=%s info find more than 1", input.Id)
+		logrus.Errorf("query subnet id=%s info find more than 1", input.Id)
+		return nil, false, fmt.Errorf("query subnet id=%s info find more than 1", input.Id)
 	}
 
 	output.Guid = input.Guid
