@@ -136,6 +136,19 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		return nil, err
 	}
 
+	output := RedisOutput{}
+
+	if redisInput.ID != "" {
+		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
+		if err != nil && flag == false {
+			return nil, err
+		}
+
+		if err == nil && flag == true {
+			return queryRedisInstanceResponse, nil
+		}
+	}
+
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid
 	request.TypeId = &redisInput.TypeID
@@ -168,7 +181,6 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		return nil, err
 	}
 
-	output := RedisOutput{}
 	output.RequestId = *response.Response.RequestId
 	output.Guid = redisInput.Guid
 	output.DealID = *response.Response.DealId
