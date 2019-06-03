@@ -79,6 +79,16 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/redis/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/log/search", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/log/searchdetail", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/elastic-nic/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/elastic-nic/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/elastic-nic/attach", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/elastic-nic/detach", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/attach", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/detach", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/bindnat", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/eip/unbindnat", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	vpcb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
@@ -53,6 +54,8 @@ type NatGatewayInput struct {
 	AssignedEipSet  string `json:"assigned_eip_set,omitempty"`
 	AutoAllocEipNum int    `json:"auto_alloc_eip_num,omitempty"`
 	Id              string `json:"id,omitempty"`
+	Eip             string `json:"eip,omitempty"`
+	EipId           string `json:"eip_id,omitempty"`
 }
 
 type NatGatewayOutputs struct {
@@ -63,6 +66,8 @@ type NatGatewayOutput struct {
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
+	Eip       string `json:"eip,omitempty"`
+	EipId     string `json:"eip_id,omitempty"`
 }
 
 func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{}, error) {
@@ -123,11 +128,43 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err != nil || createResp.NatGatewayId == nil {
 		return nil, err
 	}
-
 	output := NatGatewayOutput{}
 	output.Guid = natGateway.Guid
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 	output.Id = *createResp.NatGatewayId
+
+	//query eip infp
+	req := vpcb.NewDescribeAddressesRequest()
+	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
+	count := 0
+	for {
+		queryEIPResponse, err := Client.DescribeAddresses(req)
+		if err != nil {
+			return nil, fmt.Errorf("query eip info meet error : %s", err)
+		}
+		if len(queryEIPResponse.Response.AddressSet) == 0 {
+			continue
+		}
+		flag := false
+		for _, eip := range queryEIPResponse.Response.AddressSet {
+			if *eip.AddressStatus == "BIND" && *eip.InstanceId == output.Id {
+				output.Eip = *eip.AddressIp
+				output.EipId = *eip.AddressId
+				flag = true
+				break
+			}
+		}
+		if flag {
+			break
+		}
+		if count > 20 {
+			return nil, fmt.Errorf("query nat eip info timeout")
+		}
+		count++
+	}
 
 	return &output, nil
 }
@@ -197,11 +234,9 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 
 		if *taskResp.Data.Status == 0 {
-			//success
 			break
 		}
 		if *taskResp.Data.Status == 1 {
-			// fail, need retry delete
 			return nil, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 
@@ -243,18 +278,17 @@ func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewa
 	if err != nil {
 		return nil, false, err
 	}
-
 	if len(response.Data) == 0 {
 		return nil, false, nil
 	}
-
 	if len(response.Data) > 1 {
 		logrus.Errorf("query natgateway id=%s info find more than 1", input.Id)
 		return nil, false, fmt.Errorf("query natgateway id=%s info find more than 1", input.Id)
 	}
-
 	output.Guid = input.Guid
 	output.Id = input.Id
+	output.Eip = input.Eip
+	output.EipId = input.EipId
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return &output, true, nil
