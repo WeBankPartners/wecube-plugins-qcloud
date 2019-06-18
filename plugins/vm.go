@@ -148,6 +148,7 @@ type DataDisksStruct struct {
 type VirtualPrivateCloudStruct struct {
 	VpcId    string
 	SubnetId string
+	PrivateIpAddresses []string `json:"PrivateIpAddresses,omitempty"`
 }
 type LoginSettingsStruct struct {
 	Password string
@@ -303,6 +304,10 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			InternetAccessible: InternetAccessible{
 				PublicIpAssigned: false,
 			},
+		}
+
+		if vm.InstancePrivateIp != "" {
+			runInstanceRequest.VirtualPrivateCloud.PrivateIpAddresses = []string{vm.InstancePrivateIp}
 		}
 
 		if vm.InstanceChargeType == INSTANCE_CHARGE_TYPE_PREPAID {
