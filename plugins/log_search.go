@@ -265,12 +265,14 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 	var logoutputs SearchDetailOutputs
 
 	for i := 0; i < len(logs.Inputs); i++ {
-		output, err := action.SearchDetail(&logs.Inputs[i])
+		text, err := action.SearchDetail(&logs.Inputs[i])
 		if err != nil {
 			return nil, err
 		}
-
-		info, _ := output.(SearchDetailOutput)
+		var info SearchDetailOutput
+		info.FileName = logs.Inputs[i].FileName
+		info.LineNumber = logs.Inputs[i].LineNumber
+		info.Logs = text
 
 		logoutputs.Outputs = append(logoutputs.Outputs, info)
 	}
@@ -279,8 +281,7 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 }
 
 //SearchDetail .
-func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (interface{}, error) {
-	var outputs SearchDetailOutput
+func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (string, error) {
 	if input.RelateLineCount == 0 {
 		input.RelateLineCount = 10
 	}
@@ -289,14 +290,10 @@ func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (int
 	shellCmd := fmt.Sprintf("cd logs && cat -n %s |sed -n \"%d,%dp\" ", input.FileName, startLine, startLine+input.RelateLineCount)
 	contextText, err := runCmd(shellCmd)
 	if err != nil {
-		return &outputs, err
+		return "", err
 	}
 
-	outputs.FileName = input.FileName
-	outputs.LineNumber = input.LineNumber
-	outputs.Logs = contextText
-
-	return outputs, nil
+	return contextText, nil
 }
 
 //LogReadLine .
