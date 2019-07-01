@@ -170,6 +170,9 @@
                 <parameter datatype="number">system_disk_size</parameter>
                 <parameter datatype="string">instance_charge_type</parameter>
                 <parameter datatype="number">instance_charge_period</parameter>
+                <parameter datatype="string">instance_private_ip</parameter>
+                
+                
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>

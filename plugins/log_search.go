@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -264,12 +265,14 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 	var logoutputs SearchDetailOutputs
 
 	for i := 0; i < len(logs.Inputs); i++ {
-		output, err := action.SearchDetail(&logs.Inputs[i])
+		text, err := action.SearchDetail(&logs.Inputs[i])
 		if err != nil {
 			return nil, err
 		}
-
-		info, _ := output.(SearchDetailOutput)
+		var info SearchDetailOutput
+		info.FileName = logs.Inputs[i].FileName
+		info.LineNumber = logs.Inputs[i].LineNumber
+		info.Logs = text
 
 		logoutputs.Outputs = append(logoutputs.Outputs, info)
 	}
@@ -278,47 +281,19 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 }
 
 //SearchDetail .
-func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (interface{}, error) {
-
+func (action *LogSearchDetailAction) SearchDetail(input *SearchDetailInput) (string, error) {
 	if input.RelateLineCount == 0 {
 		input.RelateLineCount = 10
 	}
 
-	sh := "cd logs && cat -n " + input.FileName + " |tail -n +"
-	startLine, needLine := CountLineNumber(input.RelateLineCount, input.LineNumber)
-	sh += startLine + " | head -n " + needLine
-
-	cmd := exec.Command("/bin/sh", "-c", sh)
-
-	//创建获取命令输出管道
-	stdout, err := cmd.StdoutPipe()
+	startLine, _ := strconv.Atoi(input.LineNumber)
+	shellCmd := fmt.Sprintf("cd logs && cat -n %s |sed -n \"%d,%dp\" ", input.FileName, startLine, startLine+input.RelateLineCount)
+	contextText, err := runCmd(shellCmd)
 	if err != nil {
-		fmt.Printf("can not obtain stdout pipe for command: %s \n", err)
-		return []string{}, err
+		return "", err
 	}
 
-	//执行命令
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("conmand start is error: %s \n", err)
-		return []string{}, err
-	}
-
-	output, err := LogReadLine(cmd, stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	logstr := ""
-	for i := 0; i < len(output); i++ {
-		logstr += output[i] + "\n"
-	}
-
-	var outputs SearchDetailOutput
-	outputs.FileName = input.FileName
-	outputs.LineNumber = input.LineNumber
-	outputs.Logs = logstr
-
-	return outputs, nil
+	return contextText, nil
 }
 
 //LogReadLine .
@@ -370,4 +345,19 @@ func CountLineNumber(wLine int, rLine string) (string, string) {
 	line2 := strconv.Itoa(num)
 
 	return line1, line2
+}
+
+func runCmd(shellCommand string) (string, error) {
+	var stderr, stdout bytes.Buffer
+
+	cmd := exec.Command("/bin/sh", "-c", shellCommand)
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+
+	if err := cmd.Run(); err != nil {
+		logrus.Errorf("runCmd (%s) meet err=%v,stderr=%v", shellCommand, err, stderr.String())
+		return stderr.String(), nil
+	}
+
+	return stdout.String(), nil
 }
