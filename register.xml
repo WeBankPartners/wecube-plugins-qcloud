@@ -6,7 +6,8 @@
     <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
     <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
-    <plugin name="vpc" >
+    <container-start-param>-v /home/app/wecube-plugins-qcloud/conf:/home/app/wecube-plugins-qcloud/conf  -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
+    <plugin id="vpc" name="Vpc Management" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -33,7 +34,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="peering-connection">
+    <plugin id="peering-connection" name="Peer Connection Management">
         <interface name="create" path="/v1/qcloud/peering-connection/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -64,7 +65,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="security-group">
+    <plugin id="security-group" name="Security Group Management">
         <interface name="create" path="/v1/qcloud/security-group/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -98,7 +99,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="route-table">
+    <plugin id="route-table" name="Route Table Management">
         <interface name="create" path="/v1/qcloud/route-table/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -128,7 +129,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="subnet">
+    <plugin id="subnet" name="Subnet Management">
         <interface name="create" path="/v1/qcloud/subnet/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -157,7 +158,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="vm">
+    <plugin id="vm" name="Virtual Machine Management">
         <interface name="create" path="/v1/qcloud/vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -171,8 +172,6 @@
                 <parameter datatype="string">instance_charge_type</parameter>
                 <parameter datatype="number">instance_charge_period</parameter>
                 <parameter datatype="string">instance_private_ip</parameter>
-                
-                
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
@@ -197,7 +196,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="storage">
+    <plugin id="storage" name="Storage Management">
         <interface name="create" path="/v1/qcloud/storage/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -229,7 +228,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="nat-gateway">
+    <plugin id="nat-gateway" name="Nat Gateway Management">
         <interface name="create" path="/v1/qcloud/nat-gateway/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -261,7 +260,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="mysql-vm">
+    <plugin id="mysql-vm" name="Mysql Management">
         <interface name="create" path="/v1/qcloud/mysql-vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -307,7 +306,7 @@
             </output-parameters>
         </interface>
     </plugin>
-    <plugin name="redis">
+    <plugin id="redis" name="Redis Management">
         <interface name="create" path="/v1/qcloud/redis/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -328,8 +327,8 @@
             </output-parameters>
         </interface>
     </plugin>
-     <plugin name="log">
-        <interface name="create" path="/v1/qcloud/log/search">
+     <plugin id="log" name="Log Operation">
+        <interface name="search" path="/v1/qcloud/log/search">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">key_word</parameter>
@@ -341,7 +340,7 @@
                 <parameter datatype="string">log</parameter>
             </output-parameters>
         </interface>
-        <interface name="create" path="/v1/qcloud/log/searchdetail">
+        <interface name="searchDetail" path="/v1/qcloud/log/searchdetail">
             <input-parameters>
                 <parameter datatype="string">file_name</parameter>
                 <parameter datatype="string">line_number</parameter>
