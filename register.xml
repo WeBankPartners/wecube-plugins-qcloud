@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package name="qcloud" version="v1">
+<package name="qcloud-resource-management" version="v1">
     <docker-image-file>wecube-plugins-qcloud.image.tar</docker-image-file>
     <docker-image-repository>wecube-plugins-qcloud</docker-image-repository>
     <docker-image-tag>{{IMAGE_TAG}}</docker-image-tag>
     <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
     <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
-    <container-start-param>-v /home/app/wecube-plugins-qcloud/conf:/home/app/wecube-plugins-qcloud/conf  -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
+    <container-start-param> -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
     <plugin id="vpc" name="Vpc Management" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
@@ -141,7 +141,6 @@
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">cidr_block</parameter>
                 <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">route_table_id</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
@@ -190,6 +189,30 @@
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/vm/terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="start" path="/v1/qcloud/vm/start">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="stop" path="/v1/qcloud/vm/stop">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
