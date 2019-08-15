@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"git.webank.io/wecube-plugins-qcloud/conf"
-	"git.webank.io/wecube-plugins-qcloud/plugins"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/conf"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
 	"github.com/sirupsen/logrus"
 	"github.com/snowzach/rotatefilehook"
 )
