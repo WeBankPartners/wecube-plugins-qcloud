@@ -9,8 +9,8 @@ RUN apk add ca-certificates
 RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
 ADD wecube-plugins-qcloud $APP_HOME/
-ADD start.sh $APP_HOME/
-ADD stop.sh $APP_HOME/
+ADD build/start.sh $APP_HOME/
+ADD build/stop.sh $APP_HOME/
 ADD conf $APP_CONF/
 
 RUN chmod +x $APP_HOME/*.*
