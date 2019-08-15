@@ -5,7 +5,7 @@ version=$(shell ./build/version.sh)
 project_name=$(shell basename "${current_dir}" )
 
 
-APP_HOME=src/git.webank.io/wecube-plugins-qcloud
+APP_HOME=src/github.com/WeBankPartners/wecube-plugins-qcloud
 
 ifndef RUN_MODE
   RUN_MODE=dev
@@ -33,7 +33,7 @@ clean:
 
 build: clean
 	chmod +x ./build/*.sh
-	docker run --rm -v $(current_dir):/go/src/git.webank.io/$(project_name) --name build_$(project_name) golang:1.12.5 /bin/bash /go/src/git.webank.io/$(project_name)/build/build.sh 
+	docker run --rm -v $(current_dir):/go/src/github.com/WeBankPartners/$(project_name) --name build_$(project_name) golang:1.12.5 /bin/bash /go/src/github.com/WeBankPartners/$(project_name)/build/build.sh 
 
 image: build
 	docker build -t $(project_name):$(version) .

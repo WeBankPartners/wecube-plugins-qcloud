@@ -5,7 +5,7 @@ import (
 
 	"encoding/json"
 	"errors"
-	"git.webank.io/wecube-plugins-qcloud/plugins/utils"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
