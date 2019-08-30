@@ -11,7 +11,7 @@ wecube通过qcloud的插件包来管理腾讯云上的各类资源。
 ```
 yum install -y git
 ```
-2. 确认主机上已经安装好docker命令,docker安装可参考[docker安装文档](https://github.com/WeBankPartners/we-cmdb/blob/master/cmdb-wiki/docs/install/docker_install_guide.md)
+2. 确认主机上已经安装好docker命令,docker安装可参考[docker安装指引](https://github.com/WeBankPartners/we-cmdb/blob/master/cmdb-wiki/docs/install/docker_install_guide.md)
 
 3. 确认主机上有make命令，如未安装执行如下命令安装:
 ```
