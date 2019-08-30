@@ -1,21 +1,35 @@
-# qcloud插件
-qcloud插件包含腾讯云各类资源管理接口，wecube通过qcloud的插件包来管理腾讯云上的各类资源。
-该插件包的开发语言为golang，开发过程中每加一个新的资源管理接口，同时需要修改build下的register.xm.tpl文件，在里面同步更新相关接口的url、入参和出参。
-插件包制作完成后，需要通过wecube的插件管理界面进行注册才能使用，运行插件的主机需提前安装好docker。
+# QCLOUD插件
+QCloud插件包含腾讯云各类资源管理接口。
 
-## 编译插件包的准备工作
-1. 确认已经安装好git命令
-2. 确认主机上已经安装好docker命令
-3. 确认主机上有make命令
 
-## 插件包的制作
-1. 使用git命令拉取插件包:
-```
-git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
-```
+## 技术实现
+WeCube通过QCloud插件来管理腾讯云上的各类资源。
 
-2. 通过如下命令编译和打包插件，其中PLUGIN_VERSION为插件包的版本号，编译完成后将生成一个zip的插件包
-```
-make package PLUGIN_VERSION=v1.0
-```
+此插件的开发语言为golang，开发过程中每加一个新的资源管理接口，需要同步修改build目录下的register.xm.tpl文件，在里面同步更新相关接口的url、入参和出参。
 
+
+## 主要功能
+QCloud插件包括以下功能
+
+- VPC管理：创建、销毁；
+- 对等连接管理：创建、销毁；
+- 安全组管理：创建、销毁：
+- 路由表管理：创建、销毁；
+- 子网管理：创建、销毁；
+- 虚机管理：创建、销毁、启动、停机；
+- 存储管理：创建、销毁；
+- NAT网关管理：创建、销毁；
+- Mysql管理：创建、销毁、重启；
+- Mariadb管理：创建；
+- Redis管理：创建；
+- 日志管理:关键字查询、日志明细查询；
+
+## 编译打包
+插件采用容器化部署。
+
+如何编译插件，请查看以下文档
+[QCloud插件编译文档](docs/compile/wecube-plugins-qcloud_compile_guide.md)
+
+
+## 插件运行
+插件包制作完成后，需要通过WeCube的插件管理界面进行注册才能使用。运行插件的主机需提前安装好docker。
