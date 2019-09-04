@@ -108,11 +108,8 @@
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
-                <parameter datatype="number">vpc_id</parameter>
-                <parameter datatype="string">route_destination_cidr_block</parameter>
-                <parameter datatype="string">route_next_type</parameter>
-                <parameter datatype="string">route_next_id</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
@@ -130,6 +127,18 @@
                 <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="associate-subnet" path="/v1/qcloud/route-table/associate-subnet">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">subnet_id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -369,6 +378,38 @@
         </interface>
     </plugin>
 
+    <plugin id="route-policy" name="Route Policy Management">
+        <interface name="create" path="/v1/qcloud/route-policy/create">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+                <parameter datatype="string">dest_cidr</parameter>
+                <parameter datatype="string">gateway_type</parameter>
+                <parameter datatype="string">gateway_id</parameter>
+                <parameter datatype="string">desc</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="terminate" path="/v1/qcloud/route-policy/terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+    </plugin>
+
     <plugin id="redis" name="Redis Management">
         <interface name="create" path="/v1/qcloud/redis/create">
             <input-parameters>
@@ -388,32 +429,6 @@
                 <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-     <plugin id="log" name="Log Operation">
-        <interface name="search" path="/v1/qcloud/log/search">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">key_word</parameter>
-                <parameter datatype="number">line_number</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">file_name</parameter>
-                <parameter datatype="string">line_number</parameter>
-                <parameter datatype="string">log</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="searchDetail" path="/v1/qcloud/log/searchdetail">
-            <input-parameters>
-                <parameter datatype="string">file_name</parameter>
-                <parameter datatype="string">line_number</parameter>
-                <parameter datatype="number">relate_line_count</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">file_name</parameter>
-                <parameter datatype="string">line_number</parameter>
-                <parameter datatype="string">logs</parameter>
             </output-parameters>
         </interface>
     </plugin>
