@@ -3,7 +3,6 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"net"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -16,6 +15,19 @@ var RouteTableActions = make(map[string]Action)
 func init() {
 	RouteTableActions["create"] = new(RouteTableCreateAction)
 	RouteTableActions["terminate"] = new(RouteTableTerminateAction)
+	RouteTableActions["associate-subnet"] = new(RouteTableAssociateSubnetAction)
+}
+
+type RouteTablePlugin struct {
+}
+
+func (plugin *RouteTablePlugin) GetActionByName(actionName string) (Action, error) {
+	action, found := RouteTableActions[actionName]
+	if !found {
+		return nil, fmt.Errorf("RouteTable plugin,action = %s not found", actionName)
+	}
+
+	return action, nil
 }
 
 func CreateRouteTableClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
@@ -32,14 +44,11 @@ type RouteTableInputs struct {
 }
 
 type RouteTableInput struct {
-	Guid                      string `json:"guid,omitempty"`
-	ProviderParams            string `json:"provider_params,omitempty"`
-	Id                        string `json:"id,omitempty"`
-	Name                      string `json:"name,omitempty"`
-	VpcId                     string `json:"vpc_id,omitempty"`
-	RouteDestinationCidrBlock string `json:"route_destination_cidr_block,omitempty"`
-	RouteNextType             string `json:"route_next_type,omitempty"`
-	RouteId                   string `json:"route_next_id,omitempty"`
+	Guid           string `json:"guid,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	Id             string `json:"id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	VpcId          string `json:"vpc_id,omitempty"`
 }
 
 type RouteTableOutputs struct {
@@ -50,38 +59,6 @@ type RouteTableOutput struct {
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
-}
-
-type RouteTableDelegateInputs struct {
-	Inputs []RouteTableDelegateInput
-}
-
-type RouteTableDelegateInput struct {
-	Guid           string
-	ProviderParams string
-	Id             string
-	Name           string
-	VpcId          string
-	Routes         []Route
-}
-
-type Route struct {
-	DestinationCidrBlock string
-	NextType             string
-	NextId               string
-}
-
-type RouteTablePlugin struct {
-}
-
-func (plugin *RouteTablePlugin) GetActionByName(actionName string) (Action, error) {
-	action, found := RouteTableActions[actionName]
-
-	if !found {
-		return nil, fmt.Errorf("RouteTable plugin,action = %s not found", actionName)
-	}
-
-	return action, nil
 }
 
 type RouteTableCreateAction struct {
@@ -97,44 +74,6 @@ func (action *RouteTableCreateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *RouteTableCreateAction) convertParam(inputs *RouteTableInputs) (*RouteTableDelegateInputs, error) {
-	routeTableDelegateInputs := RouteTableDelegateInputs{}
-	for _, input := range inputs.Inputs {
-		delegateInput := RouteTableDelegateInput{}
-		delegateInput.Guid = input.Guid
-		delegateInput.Id = input.Id
-		delegateInput.Name = input.Name
-		delegateInput.ProviderParams = input.ProviderParams
-		delegateInput.VpcId = input.VpcId
-
-		route := Route{}
-		route.DestinationCidrBlock = input.RouteDestinationCidrBlock
-		route.NextType = input.RouteNextType
-		route.NextId = input.RouteId
-
-		delegateInput.Routes = append(delegateInput.Routes, route)
-
-		index, exist := isRouteTableExist(routeTableDelegateInputs.Inputs, delegateInput)
-
-		if exist {
-			routeTableDelegateInputs.Inputs[index].Routes = append(routeTableDelegateInputs.Inputs[index].Routes, route)
-		} else {
-			routeTableDelegateInputs.Inputs = append(routeTableDelegateInputs.Inputs, delegateInput)
-
-		}
-	}
-	return &routeTableDelegateInputs, nil
-}
-
-func isRouteTableExist(inputs []RouteTableDelegateInput, input RouteTableDelegateInput) (int, bool) {
-	for i := 0; i < len(inputs); i++ {
-		if inputs[i].Name == input.Name {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
 func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
 	routeTables, ok := input.(RouteTableInputs)
 	if !ok {
@@ -148,65 +87,44 @@ func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
 		if routeTable.Name == "" {
 			return errors.New("routeTableCreateAtion input name is empty")
 		}
-		if _, _, err := net.ParseCIDR(routeTable.RouteDestinationCidrBlock); err != nil {
-			return fmt.Errorf("routeTableCreateAtion invalid RouteDestinationCidrBlock[%s]", routeTable.RouteDestinationCidrBlock)
-		}
-
 	}
 
 	return nil
 }
 
-func (action *RouteTableCreateAction) createRouteTable(routeTable *RouteTableDelegateInput) (*RouteTableOutput, error) {
-	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
+func (action *RouteTableCreateAction) createRouteTable(input *RouteTableInput) (*RouteTableOutput, error) {
+	output := RouteTableOutput{
+		Guid: input.Guid,
+	}
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
 	}
 
 	//check resource exist
-	if routeTable.Id != "" {
-		queryroutetableresponse, flag, err := queryRouteTablesInfo(client, routeTable)
-		if err != nil && flag == false {
+	if input.Id != "" {
+		exist, err := queryRouteTablesInfo(client, input.Id)
+		if err != nil {
 			return nil, err
 		}
 
-		if err == nil && flag == true {
-			return queryroutetableresponse, nil
+		if exist {
+			output.Id = input.Id
+			return &output, nil
 		}
 	}
 
 	request := vpc.NewCreateRouteTableRequest()
-	request.VpcId = &routeTable.VpcId
-	request.RouteTableName = &routeTable.Name
+	request.VpcId = &input.VpcId
+	request.RouteTableName = &input.Name
 
 	response, err := client.CreateRouteTable(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to CreateRouteTable, error=%s", err)
 	}
-
-	routeTableId := *response.Response.RouteTable.RouteTableId
-
-	routesRequest := vpc.NewCreateRoutesRequest()
-	routesRequest.RouteTableId = &routeTableId
-	for _, inputRoute := range routeTable.Routes {
-		route := vpc.Route{}
-		route.DestinationCidrBlock = &inputRoute.DestinationCidrBlock
-		route.GatewayType = &inputRoute.NextType
-		route.GatewayId = &inputRoute.NextId
-		routesRequest.Routes = append(routesRequest.Routes, &route)
-	}
-
-	routesResponse, err := client.CreateRoutes(routesRequest)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add routesRequest = %v, error=%s", routesRequest, err)
-	}
-	logrus.Infof("add routes are completed with request id = %v", *routesResponse.Response.RequestId)
-
-	output := RouteTableOutput{}
-	output.Guid = routeTable.Guid
-	output.RequestId = *routesResponse.Response.RequestId
-	output.Id = routeTableId
+	output.RequestId = *response.Response.RequestId
+	output.Id = *response.Response.RouteTable.RouteTableId
 
 	return &output, nil
 }
@@ -214,14 +132,9 @@ func (action *RouteTableCreateAction) createRouteTable(routeTable *RouteTableDel
 func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(RouteTableInputs)
 
-	routeTables, err := action.convertParam(&inputs)
-	if err != nil {
-		return nil, err
-	}
-
 	outputs := RouteTableOutputs{}
-	for _, routeTable := range routeTables.Inputs {
-		output, err := action.createRouteTable(&routeTable)
+	for _, input := range inputs.Inputs {
+		output, err := action.createRouteTable(&input)
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +142,7 @@ func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error)
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
-	logrus.Infof("all routeTable = %v are created", routeTables)
+	logrus.Infof("all routeTable = %v are created", outputs)
 	return &outputs, nil
 }
 
@@ -255,6 +168,31 @@ func (action *RouteTableTerminateAction) CheckParam(input interface{}) error {
 		if routeTable.Id == "" {
 			return errors.New("routeTableTerminateAtion param routeTableId is empty")
 		}
+		if err := makeSureRouteTableHasNoPolicy(routeTable); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func makeSureRouteTableHasNoPolicy(input RouteTableInput) error {
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return err
+	}
+
+	request := vpc.NewDescribeRouteTablesRequest()
+	request.RouteTableIds = []*string{&input.Id}
+	response, err := client.DescribeRouteTables(request)
+	if err != nil {
+		return err
+	}
+	if *response.Response.TotalCount == 0 {
+		return fmt.Errorf("routeTable(%v) not exist", input.Id)
+	}
+	if len(response.Response.RouteTableSet[0].AssociationSet) > 0 {
+		return fmt.Errorf("routetable still associated with %d subnet", len(response.Response.RouteTableSet[0].AssociationSet))
 	}
 	return nil
 }
@@ -262,7 +200,6 @@ func (action *RouteTableTerminateAction) CheckParam(input interface{}) error {
 func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTableInput) (*RouteTableOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
 	if err != nil {
 		return nil, err
 	}
@@ -296,28 +233,98 @@ func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, err
 	return &outputs, nil
 }
 
-func queryRouteTablesInfo(client *vpc.Client, input *RouteTableDelegateInput) (*RouteTableOutput, bool, error) {
-	output := RouteTableOutput{}
-
+func queryRouteTablesInfo(client *vpc.Client, id string) (bool, error) {
 	request := vpc.NewDescribeRouteTablesRequest()
-	request.RouteTableIds = append(request.RouteTableIds, &input.Id)
+	request.RouteTableIds = append(request.RouteTableIds, &id)
 	response, err := client.DescribeRouteTables(request)
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
 
 	if len(response.Response.RouteTableSet) == 0 {
-		return nil, false, nil
+		return false, nil
 	}
 
 	if len(response.Response.RouteTableSet) > 1 {
-		logrus.Errorf("query route table id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query route table id=%s info find more than 1", input.Id)
+		logrus.Errorf("query route table id=%s info find more than 1", id)
+		return false, fmt.Errorf("query route table id=%s info find more than 1", id)
 	}
 
-	output.Guid = input.Guid
-	output.Id = input.Id
-	output.RequestId = *response.Response.RequestId
+	return true, nil
+}
 
-	return &output, true, nil
+//---------------associate subnet-----------------------//
+type AssociateRouteTableInputs struct {
+	Inputs []AssociateRouteTableInput `json:"inputs,omitempty"`
+}
+
+type AssociateRouteTableInput struct {
+	Guid           string `json:"guid,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	SubnetId       string `json:"subnet_id,omitempty"`
+	RouteTableId   string `json:"route_table_id,omitempty"`
+}
+
+type AssociateRouteTableOutputs struct {
+	Outputs []AssociateRouteTableOutput `json:"outputs,omitempty"`
+}
+
+type AssociateRouteTableOutput struct {
+	RequestId string `json:"request_id,omitempty"`
+	Guid      string `json:"guid,omitempty"`
+}
+
+type RouteTableAssociateSubnetAction struct {
+}
+
+func (action *RouteTableAssociateSubnetAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs AssociateRouteTableInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *RouteTableAssociateSubnetAction) CheckParam(input interface{}) error {
+	inputs, _ := input.(AssociateRouteTableInputs)
+	for _, input := range inputs.Inputs {
+		if input.ProviderParams == "" {
+			return errors.New("RouteTableAssociatSubnetAction input ProviderParams is empty")
+		}
+		if input.SubnetId == "" {
+			return errors.New("RouteTableAssociatSubnetAction input SubnetId is empty")
+		}
+		if input.RouteTableId == "" {
+			return errors.New("RouteTableAssociatSubnetAction input RouteTableId is empty")
+		}
+	}
+	return nil
+}
+
+func (action *RouteTableAssociateSubnetAction) Do(input interface{}) (interface{}, error) {
+	outputs := AssociateRouteTableOutputs{}
+	inputs, _ := input.(AssociateRouteTableInputs)
+	for _, input := range inputs.Inputs {
+		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		if err != nil {
+			return nil, err
+		}
+
+		request := vpc.NewReplaceRouteTableAssociationRequest()
+		request.SubnetId = &input.SubnetId
+		request.RouteTableId = &input.RouteTableId
+
+		response, err := client.ReplaceRouteTableAssociation(request)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to ReplaceRouteTableAssociation(input=%++v), error=%s", input, err)
+		}
+		output := AssociateRouteTableOutput{}
+		output.Guid = input.Guid
+		output.RequestId = *response.Response.RequestId
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	return &outputs, nil
 }

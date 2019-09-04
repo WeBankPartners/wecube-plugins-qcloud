@@ -137,13 +137,97 @@ func NewAllocateAddressesResponse() (response *AllocateAddressesResponse) {
 
 // 本接口 (AllocateAddresses) 用于申请一个或多个[弹性公网IP](https://cloud.tencent.com/document/product/213/1941)（简称 EIP）。
 // * EIP 是专为动态云计算设计的静态 IP 地址。借助 EIP，您可以快速将 EIP 重新映射到您的另一个实例上，从而屏蔽实例故障。
-// * 您的 EIP 与腾讯云账户相关联，而不是与某个实例相关联。在您选择显式释放该地址，或欠费超过七天之前，它会一直与您的腾讯云账户保持关联。
-// * 平台对用户每地域能申请的 EIP 最大配额有所限制，可参见 [EIP 产品简介](https://cloud.tencent.com/document/product/213/5733)，上述配额可通过 DescribeAddressQuota 接口获取。
+// * 您的 EIP 与腾讯云账户相关联，而不是与某个实例相关联。在您选择显式释放该地址，或欠费超过24小时之前，它会一直与您的腾讯云账户保持关联。
+// * 一个腾讯云账户在每个地域能申请的 EIP 最大配额有所限制，可参见 [EIP 产品简介](https://cloud.tencent.com/document/product/213/5733)，上述配额可通过 DescribeAddressQuota 接口获取。
 func (c *Client) AllocateAddresses(request *AllocateAddressesRequest) (response *AllocateAddressesResponse, err error) {
     if request == nil {
         request = NewAllocateAddressesRequest()
     }
     response = NewAllocateAddressesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewAssignIpv6AddressesRequest() (request *AssignIpv6AddressesRequest) {
+    request = &AssignIpv6AddressesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "AssignIpv6Addresses")
+    return
+}
+
+func NewAssignIpv6AddressesResponse() (response *AssignIpv6AddressesResponse) {
+    response = &AssignIpv6AddressesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（AssignIpv6Addresses）用于弹性网卡申请`IPv6`地址。<br />
+// 本接口是异步完成，如需查询异步任务执行结果，请使用本接口返回的`RequestId`轮询`QueryTask`接口。
+// * 一个弹性网卡支持绑定的IP地址是有限制的，更多资源限制信息详见<a href="/document/product/576/18527">弹性网卡使用限制</a>。
+// * 可以指定`IPv6`地址申请，地址类型不能为主`IP`，`IPv6`地址暂时只支持作为辅助`IP`。
+// * 地址必须要在弹性网卡所在子网内，而且不能被占用。
+// * 在弹性网卡上申请一个到多个辅助`IPv6`地址，接口会在弹性网卡所在子网段内返回指定数量的辅助`IPv6`地址。
+func (c *Client) AssignIpv6Addresses(request *AssignIpv6AddressesRequest) (response *AssignIpv6AddressesResponse, err error) {
+    if request == nil {
+        request = NewAssignIpv6AddressesRequest()
+    }
+    response = NewAssignIpv6AddressesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewAssignIpv6CidrBlockRequest() (request *AssignIpv6CidrBlockRequest) {
+    request = &AssignIpv6CidrBlockRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "AssignIpv6CidrBlock")
+    return
+}
+
+func NewAssignIpv6CidrBlockResponse() (response *AssignIpv6CidrBlockResponse) {
+    response = &AssignIpv6CidrBlockResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（AssignIpv6CidrBlock）用于分配IPv6网段。
+// * 使用本接口前，你需要已有VPC实例，如果没有可通过接口<a href="https://cloud.tencent.com/document/api/215/15774" title="CreateVpc" target="_blank">CreateVpc</a>创建。
+// * 每个VPC只能申请一个IPv6网段
+func (c *Client) AssignIpv6CidrBlock(request *AssignIpv6CidrBlockRequest) (response *AssignIpv6CidrBlockResponse, err error) {
+    if request == nil {
+        request = NewAssignIpv6CidrBlockRequest()
+    }
+    response = NewAssignIpv6CidrBlockResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewAssignIpv6SubnetCidrBlockRequest() (request *AssignIpv6SubnetCidrBlockRequest) {
+    request = &AssignIpv6SubnetCidrBlockRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "AssignIpv6SubnetCidrBlock")
+    return
+}
+
+func NewAssignIpv6SubnetCidrBlockResponse() (response *AssignIpv6SubnetCidrBlockResponse) {
+    response = &AssignIpv6SubnetCidrBlockResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（AssignIpv6SubnetCidrBlock）用于分配IPv6子网段。
+// * 给子网分配 `IPv6` 网段，要求子网所属 `VPC` 已获得 `IPv6` 网段。如果尚未分配，请先通过接口 `AssignIpv6CidrBlock` 给子网所属 `VPC` 分配一个 `IPv6` 网段。否则无法分配 `IPv6` 子网段。
+// * 每个子网只能分配一个IPv6网段。
+func (c *Client) AssignIpv6SubnetCidrBlock(request *AssignIpv6SubnetCidrBlockRequest) (response *AssignIpv6SubnetCidrBlockResponse, err error) {
+    if request == nil {
+        request = NewAssignIpv6SubnetCidrBlockRequest()
+    }
+    response = NewAssignIpv6SubnetCidrBlockResponse()
     err = c.Send(request, response)
     return
 }
@@ -203,6 +287,31 @@ func (c *Client) AssociateAddress(request *AssociateAddressRequest) (response *A
         request = NewAssociateAddressRequest()
     }
     response = NewAssociateAddressResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewAssociateNatGatewayAddressRequest() (request *AssociateNatGatewayAddressRequest) {
+    request = &AssociateNatGatewayAddressRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "AssociateNatGatewayAddress")
+    return
+}
+
+func NewAssociateNatGatewayAddressResponse() (response *AssociateNatGatewayAddressResponse) {
+    response = &AssociateNatGatewayAddressResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(AssociateNatGatewayAddress)用于NAT网关绑定弹性IP（EIP）。
+func (c *Client) AssociateNatGatewayAddress(request *AssociateNatGatewayAddressRequest) (response *AssociateNatGatewayAddressResponse, err error) {
+    if request == nil {
+        request = NewAssociateNatGatewayAddressRequest()
+    }
+    response = NewAssociateNatGatewayAddressResponse()
     err = c.Send(request, response)
     return
 }
@@ -498,6 +607,31 @@ func (c *Client) CreateDirectConnectGatewayCcnRoutes(request *CreateDirectConnec
     return
 }
 
+func NewCreateFlowLogRequest() (request *CreateFlowLogRequest) {
+    request = &CreateFlowLogRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "CreateFlowLog")
+    return
+}
+
+func NewCreateFlowLogResponse() (response *CreateFlowLogResponse) {
+    response = &CreateFlowLogResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（CreateFlowLog）用于创建流日志
+func (c *Client) CreateFlowLog(request *CreateFlowLogRequest) (response *CreateFlowLogResponse, err error) {
+    if request == nil {
+        request = NewCreateFlowLogRequest()
+    }
+    response = NewCreateFlowLogResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCreateHaVipRequest() (request *CreateHaVipRequest) {
     request = &CreateHaVipRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -545,6 +679,56 @@ func (c *Client) CreateIp6Translators(request *CreateIp6TranslatorsRequest) (res
         request = NewCreateIp6TranslatorsRequest()
     }
     response = NewCreateIp6TranslatorsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewCreateNatGatewayRequest() (request *CreateNatGatewayRequest) {
+    request = &CreateNatGatewayRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "CreateNatGateway")
+    return
+}
+
+func NewCreateNatGatewayResponse() (response *CreateNatGatewayResponse) {
+    response = &CreateNatGatewayResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(CreateNatGateway)用于创建NAT网关。
+func (c *Client) CreateNatGateway(request *CreateNatGatewayRequest) (response *CreateNatGatewayResponse, err error) {
+    if request == nil {
+        request = NewCreateNatGatewayRequest()
+    }
+    response = NewCreateNatGatewayResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewCreateNatGatewayDestinationIpPortTranslationNatRuleRequest() (request *CreateNatGatewayDestinationIpPortTranslationNatRuleRequest) {
+    request = &CreateNatGatewayDestinationIpPortTranslationNatRuleRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "CreateNatGatewayDestinationIpPortTranslationNatRule")
+    return
+}
+
+func NewCreateNatGatewayDestinationIpPortTranslationNatRuleResponse() (response *CreateNatGatewayDestinationIpPortTranslationNatRuleResponse) {
+    response = &CreateNatGatewayDestinationIpPortTranslationNatRuleResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(CreateNatGatewayDestinationIpPortTranslationNatRule)用于创建NAT网关端口转发规则。
+func (c *Client) CreateNatGatewayDestinationIpPortTranslationNatRule(request *CreateNatGatewayDestinationIpPortTranslationNatRuleRequest) (response *CreateNatGatewayDestinationIpPortTranslationNatRuleResponse, err error) {
+    if request == nil {
+        request = NewCreateNatGatewayDestinationIpPortTranslationNatRuleRequest()
+    }
+    response = NewCreateNatGatewayDestinationIpPortTranslationNatRuleResponse()
     err = c.Send(request, response)
     return
 }
@@ -678,7 +862,7 @@ func NewCreateSecurityGroupPoliciesResponse() (response *CreateSecurityGroupPoli
 // * Protocol字段支持输入TCP, UDP, ICMP, GRE, ALL。
 // * CidrBlock字段允许输入符合cidr格式标准的任意字符串。(展开)在基础网络中，如果CidrBlock包含您的账户内的云服务器之外的设备在腾讯云的内网IP，并不代表此规则允许您访问这些设备，租户之间网络隔离规则优先于安全组中的内网规则。
 // * SecurityGroupId字段允许输入与待修改的安全组位于相同项目中的安全组ID，包括这个安全组ID本身，代表安全组下所有云服务器的内网IP。使用这个字段时，这条规则用来匹配网络报文的过程中会随着被使用的这个ID所关联的云服务器变化而变化，不需要重新修改。
-// * Port字段允许输入一个单独端口号，或者用减号分隔的两个端口号代表端口范围，例如80或8000-8010。只有当Protocol字段是TCP或UDP时，Port字段才被接受。
+// * Port字段允许输入一个单独端口号，或者用减号分隔的两个端口号代表端口范围，例如80或8000-8010。只有当Protocol字段是TCP或UDP时，Port字段才被接受，即Protocol字段不是TCP或UDP时，Protocol和Port排他关系，不允许同时输入，否则会接口报错。
 // * Action字段只允许输入ACCEPT或DROP。
 // * CidrBlock, SecurityGroupId, AddressTemplate三者是排他关系，不允许同时输入，Protocol + Port和ServiceTemplate二者是排他关系，不允许同时输入。
 // * 一次请求中只能创建单个方向的规则, 如果需要指定索引（PolicyIndex）参数, 多条规则的索引必须一致。
@@ -1058,6 +1242,31 @@ func (c *Client) DeleteDirectConnectGatewayCcnRoutes(request *DeleteDirectConnec
     return
 }
 
+func NewDeleteFlowLogRequest() (request *DeleteFlowLogRequest) {
+    request = &DeleteFlowLogRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DeleteFlowLog")
+    return
+}
+
+func NewDeleteFlowLogResponse() (response *DeleteFlowLogResponse) {
+    response = &DeleteFlowLogResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DeleteFlowLog）用于删除流日志
+func (c *Client) DeleteFlowLog(request *DeleteFlowLogRequest) (response *DeleteFlowLogResponse, err error) {
+    if request == nil {
+        request = NewDeleteFlowLogRequest()
+    }
+    response = NewDeleteFlowLogResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDeleteHaVipRequest() (request *DeleteHaVipRequest) {
     request = &DeleteHaVipRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1106,6 +1315,57 @@ func (c *Client) DeleteIp6Translators(request *DeleteIp6TranslatorsRequest) (res
         request = NewDeleteIp6TranslatorsRequest()
     }
     response = NewDeleteIp6TranslatorsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDeleteNatGatewayRequest() (request *DeleteNatGatewayRequest) {
+    request = &DeleteNatGatewayRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DeleteNatGateway")
+    return
+}
+
+func NewDeleteNatGatewayResponse() (response *DeleteNatGatewayResponse) {
+    response = &DeleteNatGatewayResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DeleteNatGateway）用于删除NAT网关。
+// 删除 NAT 网关后，系统会自动删除路由表中包含此 NAT 网关的路由项，同时也会解绑弹性公网IP（EIP）。
+func (c *Client) DeleteNatGateway(request *DeleteNatGatewayRequest) (response *DeleteNatGatewayResponse, err error) {
+    if request == nil {
+        request = NewDeleteNatGatewayRequest()
+    }
+    response = NewDeleteNatGatewayResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDeleteNatGatewayDestinationIpPortTranslationNatRuleRequest() (request *DeleteNatGatewayDestinationIpPortTranslationNatRuleRequest) {
+    request = &DeleteNatGatewayDestinationIpPortTranslationNatRuleRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DeleteNatGatewayDestinationIpPortTranslationNatRule")
+    return
+}
+
+func NewDeleteNatGatewayDestinationIpPortTranslationNatRuleResponse() (response *DeleteNatGatewayDestinationIpPortTranslationNatRuleResponse) {
+    response = &DeleteNatGatewayDestinationIpPortTranslationNatRuleResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DeleteNatGatewayDestinationIpPortTranslationNatRule）用于删除NAT网关端口转发规则。
+func (c *Client) DeleteNatGatewayDestinationIpPortTranslationNatRule(request *DeleteNatGatewayDestinationIpPortTranslationNatRuleRequest) (response *DeleteNatGatewayDestinationIpPortTranslationNatRuleResponse, err error) {
+    if request == nil {
+        request = NewDeleteNatGatewayDestinationIpPortTranslationNatRuleRequest()
+    }
+    response = NewDeleteNatGatewayDestinationIpPortTranslationNatRuleResponse()
     err = c.Send(request, response)
     return
 }
@@ -1795,6 +2055,56 @@ func (c *Client) DescribeDirectConnectGateways(request *DescribeDirectConnectGat
     return
 }
 
+func NewDescribeFlowLogRequest() (request *DescribeFlowLogRequest) {
+    request = &DescribeFlowLogRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeFlowLog")
+    return
+}
+
+func NewDescribeFlowLogResponse() (response *DescribeFlowLogResponse) {
+    response = &DescribeFlowLogResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DescribeFlowLog）用于查询流日志实例信息
+func (c *Client) DescribeFlowLog(request *DescribeFlowLogRequest) (response *DescribeFlowLogResponse, err error) {
+    if request == nil {
+        request = NewDescribeFlowLogRequest()
+    }
+    response = NewDescribeFlowLogResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeFlowLogsRequest() (request *DescribeFlowLogsRequest) {
+    request = &DescribeFlowLogsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeFlowLogs")
+    return
+}
+
+func NewDescribeFlowLogsResponse() (response *DescribeFlowLogsResponse) {
+    response = &DescribeFlowLogsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DescribeFlowLogs）用于查询获取流日志集合
+func (c *Client) DescribeFlowLogs(request *DescribeFlowLogsRequest) (response *DescribeFlowLogsResponse, err error) {
+    if request == nil {
+        request = NewDescribeFlowLogsRequest()
+    }
+    response = NewDescribeFlowLogsResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeGatewayFlowMonitorDetailRequest() (request *DescribeGatewayFlowMonitorDetailRequest) {
     request = &DescribeGatewayFlowMonitorDetailRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1894,6 +2204,56 @@ func (c *Client) DescribeIp6Translators(request *DescribeIp6TranslatorsRequest) 
         request = NewDescribeIp6TranslatorsRequest()
     }
     response = NewDescribeIp6TranslatorsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeNatGatewayDestinationIpPortTranslationNatRulesRequest() (request *DescribeNatGatewayDestinationIpPortTranslationNatRulesRequest) {
+    request = &DescribeNatGatewayDestinationIpPortTranslationNatRulesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeNatGatewayDestinationIpPortTranslationNatRules")
+    return
+}
+
+func NewDescribeNatGatewayDestinationIpPortTranslationNatRulesResponse() (response *DescribeNatGatewayDestinationIpPortTranslationNatRulesResponse) {
+    response = &DescribeNatGatewayDestinationIpPortTranslationNatRulesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DescribeNatGatewayDestinationIpPortTranslationNatRules）用于查询NAT网关端口转发规则对象数组。
+func (c *Client) DescribeNatGatewayDestinationIpPortTranslationNatRules(request *DescribeNatGatewayDestinationIpPortTranslationNatRulesRequest) (response *DescribeNatGatewayDestinationIpPortTranslationNatRulesResponse, err error) {
+    if request == nil {
+        request = NewDescribeNatGatewayDestinationIpPortTranslationNatRulesRequest()
+    }
+    response = NewDescribeNatGatewayDestinationIpPortTranslationNatRulesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeNatGatewaysRequest() (request *DescribeNatGatewaysRequest) {
+    request = &DescribeNatGatewaysRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeNatGateways")
+    return
+}
+
+func NewDescribeNatGatewaysResponse() (response *DescribeNatGatewaysResponse) {
+    response = &DescribeNatGatewaysResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DescribeNatGateways）用于查询 NAT 网关。
+func (c *Client) DescribeNatGateways(request *DescribeNatGatewaysRequest) (response *DescribeNatGatewaysResponse, err error) {
+    if request == nil {
+        request = NewDescribeNatGatewaysRequest()
+    }
+    response = NewDescribeNatGatewaysResponse()
     err = c.Send(request, response)
     return
 }
@@ -2119,6 +2479,57 @@ func (c *Client) DescribeSubnets(request *DescribeSubnetsRequest) (response *Des
         request = NewDescribeSubnetsRequest()
     }
     response = NewDescribeSubnetsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeTaskResultRequest() (request *DescribeTaskResultRequest) {
+    request = &DescribeTaskResultRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeTaskResult")
+    return
+}
+
+func NewDescribeTaskResultResponse() (response *DescribeTaskResultResponse) {
+    response = &DescribeTaskResultResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询EIP异步任务执行结果
+func (c *Client) DescribeTaskResult(request *DescribeTaskResultRequest) (response *DescribeTaskResultResponse, err error) {
+    if request == nil {
+        request = NewDescribeTaskResultRequest()
+    }
+    response = NewDescribeTaskResultResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeVpcIpv6AddressesRequest() (request *DescribeVpcIpv6AddressesRequest) {
+    request = &DescribeVpcIpv6AddressesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DescribeVpcIpv6Addresses")
+    return
+}
+
+func NewDescribeVpcIpv6AddressesResponse() (response *DescribeVpcIpv6AddressesResponse) {
+    response = &DescribeVpcIpv6AddressesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DescribeVpcIpv6Addresses）用于查询 `VPC` `IPv6` 信息。
+// 只能查询已使用的`IPv6`信息，当查询未使用的IP时，本接口不会报错，但不会出现在返回结果里。
+func (c *Client) DescribeVpcIpv6Addresses(request *DescribeVpcIpv6AddressesRequest) (response *DescribeVpcIpv6AddressesResponse, err error) {
+    if request == nil {
+        request = NewDescribeVpcIpv6AddressesRequest()
+    }
+    response = NewDescribeVpcIpv6AddressesResponse()
     err = c.Send(request, response)
     return
 }
@@ -2375,6 +2786,31 @@ func (c *Client) DisassociateAddress(request *DisassociateAddressRequest) (respo
         request = NewDisassociateAddressRequest()
     }
     response = NewDisassociateAddressResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDisassociateNatGatewayAddressRequest() (request *DisassociateNatGatewayAddressRequest) {
+    request = &DisassociateNatGatewayAddressRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "DisassociateNatGatewayAddress")
+    return
+}
+
+func NewDisassociateNatGatewayAddressResponse() (response *DisassociateNatGatewayAddressResponse) {
+    response = &DisassociateNatGatewayAddressResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（DisassociateNatGatewayAddress）用于NAT网关解绑弹性IP。
+func (c *Client) DisassociateNatGatewayAddress(request *DisassociateNatGatewayAddressRequest) (response *DisassociateNatGatewayAddressResponse, err error) {
+    if request == nil {
+        request = NewDisassociateNatGatewayAddressRequest()
+    }
+    response = NewDisassociateNatGatewayAddressResponse()
     err = c.Send(request, response)
     return
 }
@@ -2836,6 +3272,31 @@ func (c *Client) ModifyDirectConnectGatewayAttribute(request *ModifyDirectConnec
     return
 }
 
+func NewModifyFlowLogAttributeRequest() (request *ModifyFlowLogAttributeRequest) {
+    request = &ModifyFlowLogAttributeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "ModifyFlowLogAttribute")
+    return
+}
+
+func NewModifyFlowLogAttributeResponse() (response *ModifyFlowLogAttributeResponse) {
+    response = &ModifyFlowLogAttributeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ModifyFlowLogAttribute）用于修改流日志属性
+func (c *Client) ModifyFlowLogAttribute(request *ModifyFlowLogAttributeRequest) (response *ModifyFlowLogAttributeResponse, err error) {
+    if request == nil {
+        request = NewModifyFlowLogAttributeRequest()
+    }
+    response = NewModifyFlowLogAttributeResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewModifyHaVipAttributeRequest() (request *ModifyHaVipAttributeRequest) {
     request = &ModifyHaVipAttributeRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -2907,6 +3368,81 @@ func (c *Client) ModifyIp6Translator(request *ModifyIp6TranslatorRequest) (respo
         request = NewModifyIp6TranslatorRequest()
     }
     response = NewModifyIp6TranslatorResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyIpv6AddressesAttributeRequest() (request *ModifyIpv6AddressesAttributeRequest) {
+    request = &ModifyIpv6AddressesAttributeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "ModifyIpv6AddressesAttribute")
+    return
+}
+
+func NewModifyIpv6AddressesAttributeResponse() (response *ModifyIpv6AddressesAttributeResponse) {
+    response = &ModifyIpv6AddressesAttributeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ModifyIpv6AddressesAttribute）用于修改弹性网卡内网IPv6地址属性。
+func (c *Client) ModifyIpv6AddressesAttribute(request *ModifyIpv6AddressesAttributeRequest) (response *ModifyIpv6AddressesAttributeResponse, err error) {
+    if request == nil {
+        request = NewModifyIpv6AddressesAttributeRequest()
+    }
+    response = NewModifyIpv6AddressesAttributeResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyNatGatewayAttributeRequest() (request *ModifyNatGatewayAttributeRequest) {
+    request = &ModifyNatGatewayAttributeRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "ModifyNatGatewayAttribute")
+    return
+}
+
+func NewModifyNatGatewayAttributeResponse() (response *ModifyNatGatewayAttributeResponse) {
+    response = &ModifyNatGatewayAttributeResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ModifyNatGatewayAttribute）用于修改NAT网关的属性。
+func (c *Client) ModifyNatGatewayAttribute(request *ModifyNatGatewayAttributeRequest) (response *ModifyNatGatewayAttributeResponse, err error) {
+    if request == nil {
+        request = NewModifyNatGatewayAttributeRequest()
+    }
+    response = NewModifyNatGatewayAttributeResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyNatGatewayDestinationIpPortTranslationNatRuleRequest() (request *ModifyNatGatewayDestinationIpPortTranslationNatRuleRequest) {
+    request = &ModifyNatGatewayDestinationIpPortTranslationNatRuleRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "ModifyNatGatewayDestinationIpPortTranslationNatRule")
+    return
+}
+
+func NewModifyNatGatewayDestinationIpPortTranslationNatRuleResponse() (response *ModifyNatGatewayDestinationIpPortTranslationNatRuleResponse) {
+    response = &ModifyNatGatewayDestinationIpPortTranslationNatRuleResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ModifyNatGatewayDestinationIpPortTranslationNatRule）用于修改NAT网关端口转发规则。
+func (c *Client) ModifyNatGatewayDestinationIpPortTranslationNatRule(request *ModifyNatGatewayDestinationIpPortTranslationNatRuleRequest) (response *ModifyNatGatewayDestinationIpPortTranslationNatRuleResponse, err error) {
+    if request == nil {
+        request = NewModifyNatGatewayDestinationIpPortTranslationNatRuleRequest()
+    }
+    response = NewModifyNatGatewayDestinationIpPortTranslationNatRuleResponse()
     err = c.Send(request, response)
     return
 }
@@ -3450,6 +3986,31 @@ func (c *Client) ResetAttachCcnInstances(request *ResetAttachCcnInstancesRequest
     return
 }
 
+func NewResetNatGatewayConnectionRequest() (request *ResetNatGatewayConnectionRequest) {
+    request = &ResetNatGatewayConnectionRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "ResetNatGatewayConnection")
+    return
+}
+
+func NewResetNatGatewayConnectionResponse() (response *ResetNatGatewayConnectionResponse) {
+    response = &ResetNatGatewayConnectionResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ResetNatGatewayConnection）用来NAT网关并发连接上限。
+func (c *Client) ResetNatGatewayConnection(request *ResetNatGatewayConnectionRequest) (response *ResetNatGatewayConnectionResponse, err error) {
+    if request == nil {
+        request = NewResetNatGatewayConnectionRequest()
+    }
+    response = NewResetNatGatewayConnectionResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewResetRoutesRequest() (request *ResetRoutesRequest) {
     request = &ResetRoutesRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -3573,6 +4134,84 @@ func (c *Client) TransformAddress(request *TransformAddressRequest) (response *T
         request = NewTransformAddressRequest()
     }
     response = NewTransformAddressResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewUnassignIpv6AddressesRequest() (request *UnassignIpv6AddressesRequest) {
+    request = &UnassignIpv6AddressesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "UnassignIpv6Addresses")
+    return
+}
+
+func NewUnassignIpv6AddressesResponse() (response *UnassignIpv6AddressesResponse) {
+    response = &UnassignIpv6AddressesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（UnassignIpv6Addresses）用于释放弹性网卡`IPv6`地址。<br />
+// 本接口是异步完成，如需查询异步任务执行结果，请使用本接口返回的`RequestId`轮询`QueryTask`接口。
+func (c *Client) UnassignIpv6Addresses(request *UnassignIpv6AddressesRequest) (response *UnassignIpv6AddressesResponse, err error) {
+    if request == nil {
+        request = NewUnassignIpv6AddressesRequest()
+    }
+    response = NewUnassignIpv6AddressesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewUnassignIpv6CidrBlockRequest() (request *UnassignIpv6CidrBlockRequest) {
+    request = &UnassignIpv6CidrBlockRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "UnassignIpv6CidrBlock")
+    return
+}
+
+func NewUnassignIpv6CidrBlockResponse() (response *UnassignIpv6CidrBlockResponse) {
+    response = &UnassignIpv6CidrBlockResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（UnassignIpv6CidrBlock）用于释放IPv6网段。<br />
+// 网段如果还有IP占用且未回收，则网段无法释放。
+func (c *Client) UnassignIpv6CidrBlock(request *UnassignIpv6CidrBlockRequest) (response *UnassignIpv6CidrBlockResponse, err error) {
+    if request == nil {
+        request = NewUnassignIpv6CidrBlockRequest()
+    }
+    response = NewUnassignIpv6CidrBlockResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewUnassignIpv6SubnetCidrBlockRequest() (request *UnassignIpv6SubnetCidrBlockRequest) {
+    request = &UnassignIpv6SubnetCidrBlockRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("vpc", APIVersion, "UnassignIpv6SubnetCidrBlock")
+    return
+}
+
+func NewUnassignIpv6SubnetCidrBlockResponse() (response *UnassignIpv6SubnetCidrBlockResponse) {
+    response = &UnassignIpv6SubnetCidrBlockResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（UnassignIpv6SubnetCidrBlock）用于释放IPv6子网段。<br />
+// 子网段如果还有IP占用且未回收，则子网段无法释放。
+func (c *Client) UnassignIpv6SubnetCidrBlock(request *UnassignIpv6SubnetCidrBlockRequest) (response *UnassignIpv6SubnetCidrBlockResponse, err error) {
+    if request == nil {
+        request = NewUnassignIpv6SubnetCidrBlockRequest()
+    }
+    response = NewUnassignIpv6SubnetCidrBlockResponse()
     err = c.Send(request, response)
     return
 }

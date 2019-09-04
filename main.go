@@ -71,8 +71,6 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/vpc/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/peering-connection/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/peering-connection/terminate", routeDispatcher)
-	http.HandleFunc("/v1/qcloud/route-table/create", routeDispatcher)
-	http.HandleFunc("/v1/qcloud/route-table/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mysql-vm/create", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mysql-vm/terminate", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mysql-vm/restart", routeDispatcher)
@@ -90,6 +88,11 @@ func initRouter() {
 	http.HandleFunc("/v1/qcloud/eip/bindnat", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/eip/unbindnat", routeDispatcher)
 	http.HandleFunc("/v1/qcloud/mariadb/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/route-table/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/route-table/terminate", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/route-table/associate-subnet", routeDispatcher)  //路由表关联子网
+	http.HandleFunc("/v1/qcloud/route-policy/create", routeDispatcher)
+	http.HandleFunc("/v1/qcloud/route-policy/terminate", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
