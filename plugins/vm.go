@@ -127,6 +127,7 @@ type QcloudRunInstanceStruct struct {
 
 type InternetAccessible struct {
 	PublicIpAssigned bool `json:"PublicIpAssigned"`
+	InternetMaxBandwidthOut int `json:"InternetMaxBandwidthOut"`
 }
 
 type PlacementStruct struct {
@@ -306,6 +307,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			},
 			InternetAccessible: InternetAccessible{
 				PublicIpAssigned: false,
+				InternetMaxBandwidthOut:10,
 			},
 		}
 
