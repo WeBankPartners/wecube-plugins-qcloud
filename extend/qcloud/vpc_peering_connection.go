@@ -97,7 +97,7 @@ type DescribeVpcPeeringConnectionRequest struct {
 	PeeringConnectionId   *string `name:"peeringConnectionId"`
 	PeeringConnectionName *string `name:"peeringConnectionName"`
 	State                 *string `name:"state"`
-	Offset                *int    `name:"offset,"`
+	Offset                *int    `name:"offset"`
 	Limit                 *int    `name:"limit"`
 	OrderField            *string `name:"orderField"`
 	OrderDirection        *string `name:"orderDirection"`
