@@ -13,6 +13,29 @@ const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
 )
 
+type Filter struct{
+	Name string   
+	Values []string{}
+}
+
+func isValidValue(inputValue string,validValues []string)error{
+	for _,validValue:=range validValues {
+		if validValue == inputValue {
+			return nil 
+		}
+	}
+	return fmt.Errorf("%s is not valid value in(%++v)",inputValue,validValues)
+}
+
+func transferStringArrayToStringPointerArray(stringArray []string)[]*string{
+	outputs:=[]*string{}
+	for _,value:=stringArray{
+		temp:=value
+		outputs:=append(outputs,&temp)
+	}
+	return outputs
+}
+
 func GetMapFromProviderParams(providerParams string) (map[string]string, error) {
 	rtnMap := make(map[string]string)
 	params := strings.Split(providerParams, ";")
