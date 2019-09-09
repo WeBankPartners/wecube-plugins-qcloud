@@ -6,7 +6,7 @@
     <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
     <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
-    <container-start-param> -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
+    <container-start-param>-v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
     <plugin id="vpc" name="Vpc Management" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
