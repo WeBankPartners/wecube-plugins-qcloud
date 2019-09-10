@@ -9,10 +9,10 @@
 			"revisionTime": "2019-02-26T22:47:05Z"
 		},
 		{
-			"checksumSHA1": "rdXBSMsIpX89xZS5rUwnBGZOe+Q=",
+			"checksumSHA1": "4GI/G+nYyCQ3ltASSBIunUr2LYk=",
 			"path": "github.com/sirupsen/logrus",
-			"revision": "d329d24db4313262a3b0a24d8aeb1dc4bd294fb0",
-			"revisionTime": "2018-07-31T16:13:55Z"
+			"revision": "de736cf91b921d56253b4010270681d33fdf7cb5",
+			"revisionTime": "2019-08-07T10:34:36Z"
 		},
 		{
 			"checksumSHA1": "162BZV7nIgqzmfYoYFqXVBLoZ/k=",
@@ -63,21 +63,18 @@
 		},
 		{
 			"checksumSHA1": "NPY/BnzvwHCB5E5Tuj2pNgCYFYY=",
-			"origin": "github.com/WeBankPartners/wecube-plugins-qcloud/vendor/github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/mariadb/v20170312",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/mariadb/v20170312",
 			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
 			"revisionTime": "2019-09-06T12:32:28Z"
 		},
 		{
 			"checksumSHA1": "z/0XcQNK16VWTkTjFWW84rNeZOI=",
-			"origin": "github.com/WeBankPartners/wecube-plugins-qcloud/vendor/github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/postgres/v20170312",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/postgres/v20170312",
 			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
 			"revisionTime": "2019-09-06T12:32:28Z"
 		},
 		{
 			"checksumSHA1": "A/9TY8SQ0Vt38/bexu+6LgFf9I8=",
-			"origin": "github.com/WeBankPartners/wecube-plugins-qcloud/vendor/github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412",
 			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
 			"revisionTime": "2019-09-06T12:32:28Z"
