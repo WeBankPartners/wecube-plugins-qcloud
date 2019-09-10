@@ -557,31 +557,22 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	return &output, nil
 }
 
-type CvmInstance struct {
-	InstanceId         string
-	InstanceName       string
-	PrivateIpAddresses []string
-	PublicIpAddresses  []string
-	SecurityGroupIds   []string
-}
-
-func QueryCvmInstance(providerParams string, filter Filter) ([]CvmInstance, error) {
+func QueryCvmInstance(providerParams string, filter Filter) (interface{}, error) {
 	validFilterNames := []string{"instanceId", "privateIpAddress"}
 	filterValues := common.StringPtrs(filter.Values)
-	instances := []CvmInstance{}
 	var limit int64
 
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	if err != nil {
-		return instances, err
+		return nil, err
 	}
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return instances, err
+		return nil, err
 	}
 
 	if err := isValidValue(filter.Name, validFilterNames); err != nil {
-		return instances, err
+		return nil, err
 	}
 
 	request := cvm.NewDescribeInstancesRequest()
@@ -589,7 +580,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]CvmInstance, erro
 	request.Limit = &limit
 	name, err := TransLittleCamelcaseToShortLineFormat(filter.Name)
 	if err != nil {
-		return instances, err
+		return nil, err
 	}
 	cvmFilter := &cvm.Filter{
 		Name:   common.StringPtr(name),
@@ -600,18 +591,10 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]CvmInstance, erro
 	response, err := client.DescribeInstances(request)
 	if err != nil {
 		logrus.Errorf("cvm DescribeInstances meet err=%v", err)
-		return instances, err
+		return nil, err
 	}
 
-	for _, item := range response.Response.InstanceSet {
-		instance := CvmInstance{
-			InstanceId:   *item.InstanceId,
-			InstanceName: *item.InstanceName,
-		}
-		instances = append(instances, instance)
-	}
-
-	return instances, nil
+	return response, nil
 }
 
 func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
