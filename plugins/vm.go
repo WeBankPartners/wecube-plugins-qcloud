@@ -5,13 +5,14 @@ import (
 
 	"encoding/json"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
-	"strconv"
-	"time"
 )
 
 const (
@@ -126,8 +127,8 @@ type QcloudRunInstanceStruct struct {
 }
 
 type InternetAccessible struct {
-	PublicIpAssigned bool `json:"PublicIpAssigned"`
-	InternetMaxBandwidthOut int `json:"InternetMaxBandwidthOut"`
+	PublicIpAssigned        bool `json:"PublicIpAssigned"`
+	InternetMaxBandwidthOut int  `json:"InternetMaxBandwidthOut"`
 }
 
 type PlacementStruct struct {
@@ -306,8 +307,8 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				Password: password,
 			},
 			InternetAccessible: InternetAccessible{
-				PublicIpAssigned: false,
-				InternetMaxBandwidthOut:10,
+				PublicIpAssigned:        false,
+				InternetMaxBandwidthOut: 10,
 			},
 		}
 
@@ -554,4 +555,81 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	output.Id = vm.Id
 
 	return &output, nil
+}
+
+type CvmInstance struct {
+	InstanceId         string
+	InstanceName       string
+	PrivateIpAddresses []string
+	PublicIpAddresses  []string
+	SecurityGroupIds   []string
+}
+
+func QueryCvmInstance(providerParams string, filter Filter) ([]CvmInstance, error) {
+	validFilterNames := []string{"instanceId", "privateIpAddress"}
+	filterValues := common.StringPtrs(filter.Values)
+	instances := []CvmInstance{}
+	var limit int64
+
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	if err != nil {
+		return instances, err
+	}
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return instances, err
+	}
+
+	if err := isValidValue(filter.Name, validFilterNames); err != nil {
+		return instances, err
+	}
+
+	request := cvm.NewDescribeInstancesRequest()
+	limit = int64(len(filterValues))
+	request.Limit = &limit
+	name, err := TransLittleCamelcaseToShortLineFormat(filter.Name)
+	if err != nil {
+		return instances, err
+	}
+	cvmFilter := &cvm.Filter{
+		Name:   common.StringPtr(name),
+		Values: common.StringPtrs(filter.Values),
+	}
+	request.Filters = append(request.Filters, cvmFilter)
+
+	response, err := client.DescribeInstances(request)
+	if err != nil {
+		logrus.Errorf("cvm DescribeInstances meet err=%v", err)
+		return instances, err
+	}
+
+	for _, item := range response.Response.InstanceSet {
+		instance := CvmInstance{
+			InstanceId:   *item.InstanceId,
+			InstanceName: *item.InstanceName,
+		}
+		instances = append(instances, instance)
+	}
+
+	return instances, nil
+}
+
+func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	if err != nil {
+		return err
+	}
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return err
+	}
+
+	request := cvm.NewAssociateSecurityGroupsRequest()
+	request.InstanceIds = common.StringPtrs([]string{instanceId})
+	request.SecurityGroupIds = common.StringPtrs(securityGroups)
+	if _, err = client.AssociateSecurityGroups(request); err != nil {
+		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
+	}
+
+	return err
 }

@@ -1303,7 +1303,7 @@ type DescribeOrdersResponse struct {
 	Response *struct {
 
 		// 返回的订单数量。
-		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount" `
+		TotalCount []*int64 `json:"TotalCount,omitempty" name:"TotalCount" list`
 
 		// 订单信息列表。
 		Deals []*Deal `json:"Deals,omitempty" name:"Deals" list`
