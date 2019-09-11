@@ -614,5 +614,5 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
 	}
 
-	return err
+	return nil
 }
