@@ -15,9 +15,9 @@
 package v20170312
 
 import (
-    "encoding/json"
+	"encoding/json"
 
-    tchttp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
+	tchttp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
 )
 
 type CloneAccountRequest struct {
@@ -43,12 +43,12 @@ type CloneAccountRequest struct {
 }
 
 func (r *CloneAccountRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CloneAccountRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CloneAccountResponse struct {
@@ -64,12 +64,12 @@ type CloneAccountResponse struct {
 }
 
 func (r *CloneAccountResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CloneAccountResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CloseDBExtranetAccessRequest struct {
@@ -80,12 +80,12 @@ type CloseDBExtranetAccessRequest struct {
 }
 
 func (r *CloseDBExtranetAccessRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CloseDBExtranetAccessRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CloseDBExtranetAccessResponse struct {
@@ -101,12 +101,12 @@ type CloseDBExtranetAccessResponse struct {
 }
 
 func (r *CloseDBExtranetAccessResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CloseDBExtranetAccessResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ConstraintRange struct {
@@ -144,12 +144,12 @@ type CopyAccountPrivilegesRequest struct {
 }
 
 func (r *CopyAccountPrivilegesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CopyAccountPrivilegesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CopyAccountPrivilegesResponse struct {
@@ -162,12 +162,12 @@ type CopyAccountPrivilegesResponse struct {
 }
 
 func (r *CopyAccountPrivilegesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CopyAccountPrivilegesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateAccountRequest struct {
@@ -196,12 +196,12 @@ type CreateAccountRequest struct {
 }
 
 func (r *CreateAccountRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CreateAccountRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateAccountResponse struct {
@@ -226,12 +226,12 @@ type CreateAccountResponse struct {
 }
 
 func (r *CreateAccountResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CreateAccountResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateDBInstanceRequest struct {
@@ -278,12 +278,12 @@ type CreateDBInstanceRequest struct {
 }
 
 func (r *CreateDBInstanceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CreateDBInstanceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateDBInstanceResponse struct {
@@ -291,11 +291,11 @@ type CreateDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 订单对应的实例 ID 列表，如果此处没有返回实例 ID，可以通过订单查询接口获取。还可通过实例查询接口查询实例是否创建完成。
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -304,12 +304,12 @@ type CreateDBInstanceResponse struct {
 }
 
 func (r *CreateDBInstanceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *CreateDBInstanceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DBAccount struct {
@@ -514,12 +514,12 @@ type DeleteAccountRequest struct {
 }
 
 func (r *DeleteAccountRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DeleteAccountRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DeleteAccountResponse struct {
@@ -532,12 +532,12 @@ type DeleteAccountResponse struct {
 }
 
 func (r *DeleteAccountResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DeleteAccountResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountPrivilegesRequest struct {
@@ -566,12 +566,12 @@ type DescribeAccountPrivilegesRequest struct {
 }
 
 func (r *DescribeAccountPrivilegesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeAccountPrivilegesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountPrivilegesResponse struct {
@@ -596,12 +596,12 @@ type DescribeAccountPrivilegesResponse struct {
 }
 
 func (r *DescribeAccountPrivilegesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeAccountPrivilegesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountsRequest struct {
@@ -612,12 +612,12 @@ type DescribeAccountsRequest struct {
 }
 
 func (r *DescribeAccountsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeAccountsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountsResponse struct {
@@ -636,12 +636,12 @@ type DescribeAccountsResponse struct {
 }
 
 func (r *DescribeAccountsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeAccountsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeBackupTimeRequest struct {
@@ -652,12 +652,12 @@ type DescribeBackupTimeRequest struct {
 }
 
 func (r *DescribeBackupTimeRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeBackupTimeRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeBackupTimeResponse struct {
@@ -668,7 +668,7 @@ type DescribeBackupTimeResponse struct {
 		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
 
 		// 实例备份时间配置信息
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		Items []*DBBackupTimeConfig `json:"Items,omitempty" name:"Items" list`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -677,12 +677,12 @@ type DescribeBackupTimeResponse struct {
 }
 
 func (r *DescribeBackupTimeResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeBackupTimeResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstanceSpecsRequest struct {
@@ -690,12 +690,12 @@ type DescribeDBInstanceSpecsRequest struct {
 }
 
 func (r *DescribeDBInstanceSpecsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBInstanceSpecsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstanceSpecsResponse struct {
@@ -711,12 +711,12 @@ type DescribeDBInstanceSpecsResponse struct {
 }
 
 func (r *DescribeDBInstanceSpecsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBInstanceSpecsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstancesRequest struct {
@@ -769,12 +769,12 @@ type DescribeDBInstancesRequest struct {
 }
 
 func (r *DescribeDBInstancesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBInstancesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstancesResponse struct {
@@ -793,12 +793,12 @@ type DescribeDBInstancesResponse struct {
 }
 
 func (r *DescribeDBInstancesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBInstancesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBLogFilesRequest struct {
@@ -812,12 +812,12 @@ type DescribeDBLogFilesRequest struct {
 }
 
 func (r *DescribeDBLogFilesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBLogFilesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBLogFilesResponse struct {
@@ -848,12 +848,12 @@ type DescribeDBLogFilesResponse struct {
 }
 
 func (r *DescribeDBLogFilesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBLogFilesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBParametersRequest struct {
@@ -864,12 +864,12 @@ type DescribeDBParametersRequest struct {
 }
 
 func (r *DescribeDBParametersRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBParametersRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBParametersResponse struct {
@@ -888,12 +888,12 @@ type DescribeDBParametersResponse struct {
 }
 
 func (r *DescribeDBParametersResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBParametersResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceDetailsRequest struct {
@@ -913,12 +913,12 @@ type DescribeDBPerformanceDetailsRequest struct {
 }
 
 func (r *DescribeDBPerformanceDetailsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBPerformanceDetailsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceDetailsResponse struct {
@@ -929,11 +929,11 @@ type DescribeDBPerformanceDetailsResponse struct {
 		Master *PerformanceMonitorSet `json:"Master,omitempty" name:"Master"`
 
 		// 备机1性能监控数据
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave1 *PerformanceMonitorSet `json:"Slave1,omitempty" name:"Slave1"`
 
 		// 备机2性能监控数据，如果实例是一主一从，则没有该字段
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave2 *PerformanceMonitorSet `json:"Slave2,omitempty" name:"Slave2"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -942,12 +942,12 @@ type DescribeDBPerformanceDetailsResponse struct {
 }
 
 func (r *DescribeDBPerformanceDetailsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBPerformanceDetailsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceRequest struct {
@@ -967,12 +967,12 @@ type DescribeDBPerformanceRequest struct {
 }
 
 func (r *DescribeDBPerformanceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBPerformanceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceResponse struct {
@@ -1015,12 +1015,12 @@ type DescribeDBPerformanceResponse struct {
 }
 
 func (r *DescribeDBPerformanceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBPerformanceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageDetailsRequest struct {
@@ -1040,12 +1040,12 @@ type DescribeDBResourceUsageDetailsRequest struct {
 }
 
 func (r *DescribeDBResourceUsageDetailsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBResourceUsageDetailsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageDetailsResponse struct {
@@ -1056,11 +1056,11 @@ type DescribeDBResourceUsageDetailsResponse struct {
 		Master *ResourceUsageMonitorSet `json:"Master,omitempty" name:"Master"`
 
 		// 备机1资源使用情况监控数据
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave1 *ResourceUsageMonitorSet `json:"Slave1,omitempty" name:"Slave1"`
 
 		// 备机2资源使用情况监控数据
-	// 注意：此字段可能返回 null，表示取不到有效值。
+		// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave2 *ResourceUsageMonitorSet `json:"Slave2,omitempty" name:"Slave2"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -1069,12 +1069,12 @@ type DescribeDBResourceUsageDetailsResponse struct {
 }
 
 func (r *DescribeDBResourceUsageDetailsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBResourceUsageDetailsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageRequest struct {
@@ -1094,12 +1094,12 @@ type DescribeDBResourceUsageRequest struct {
 }
 
 func (r *DescribeDBResourceUsageRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBResourceUsageRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageResponse struct {
@@ -1124,12 +1124,12 @@ type DescribeDBResourceUsageResponse struct {
 }
 
 func (r *DescribeDBResourceUsageResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBResourceUsageResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBSlowLogsRequest struct {
@@ -1164,12 +1164,12 @@ type DescribeDBSlowLogsRequest struct {
 }
 
 func (r *DescribeDBSlowLogsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBSlowLogsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBSlowLogsResponse struct {
@@ -1197,12 +1197,12 @@ type DescribeDBSlowLogsResponse struct {
 }
 
 func (r *DescribeDBSlowLogsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeDBSlowLogsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeFlowRequest struct {
@@ -1213,12 +1213,12 @@ type DescribeFlowRequest struct {
 }
 
 func (r *DescribeFlowRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeFlowRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeFlowResponse struct {
@@ -1234,12 +1234,12 @@ type DescribeFlowResponse struct {
 }
 
 func (r *DescribeFlowResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeFlowResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeLogFileRetentionPeriodRequest struct {
@@ -1250,12 +1250,12 @@ type DescribeLogFileRetentionPeriodRequest struct {
 }
 
 func (r *DescribeLogFileRetentionPeriodRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeLogFileRetentionPeriodRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeLogFileRetentionPeriodResponse struct {
@@ -1274,12 +1274,12 @@ type DescribeLogFileRetentionPeriodResponse struct {
 }
 
 func (r *DescribeLogFileRetentionPeriodResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeLogFileRetentionPeriodResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeOrdersRequest struct {
@@ -1290,12 +1290,12 @@ type DescribeOrdersRequest struct {
 }
 
 func (r *DescribeOrdersRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeOrdersRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeOrdersResponse struct {
@@ -1303,7 +1303,7 @@ type DescribeOrdersResponse struct {
 	Response *struct {
 
 		// 返回的订单数量。
-		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount" `
+		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
 
 		// 订单信息列表。
 		Deals []*Deal `json:"Deals,omitempty" name:"Deals" list`
@@ -1314,12 +1314,12 @@ type DescribeOrdersResponse struct {
 }
 
 func (r *DescribeOrdersResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeOrdersResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribePriceRequest struct {
@@ -1348,12 +1348,12 @@ type DescribePriceRequest struct {
 }
 
 func (r *DescribePriceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribePriceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribePriceResponse struct {
@@ -1372,12 +1372,12 @@ type DescribePriceResponse struct {
 }
 
 func (r *DescribePriceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribePriceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeRenewalPriceRequest struct {
@@ -1391,12 +1391,12 @@ type DescribeRenewalPriceRequest struct {
 }
 
 func (r *DescribeRenewalPriceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeRenewalPriceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeRenewalPriceResponse struct {
@@ -1415,12 +1415,12 @@ type DescribeRenewalPriceResponse struct {
 }
 
 func (r *DescribeRenewalPriceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeRenewalPriceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSaleInfoRequest struct {
@@ -1428,12 +1428,12 @@ type DescribeSaleInfoRequest struct {
 }
 
 func (r *DescribeSaleInfoRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeSaleInfoRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSaleInfoResponse struct {
@@ -1449,12 +1449,12 @@ type DescribeSaleInfoResponse struct {
 }
 
 func (r *DescribeSaleInfoResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeSaleInfoResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSqlLogsRequest struct {
@@ -1471,12 +1471,12 @@ type DescribeSqlLogsRequest struct {
 }
 
 func (r *DescribeSqlLogsRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeSqlLogsRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSqlLogsResponse struct {
@@ -1507,12 +1507,12 @@ type DescribeSqlLogsResponse struct {
 }
 
 func (r *DescribeSqlLogsResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeSqlLogsResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeUpgradePriceRequest struct {
@@ -1531,12 +1531,12 @@ type DescribeUpgradePriceRequest struct {
 }
 
 func (r *DescribeUpgradePriceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeUpgradePriceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeUpgradePriceResponse struct {
@@ -1555,12 +1555,12 @@ type DescribeUpgradePriceResponse struct {
 }
 
 func (r *DescribeUpgradePriceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *DescribeUpgradePriceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type GrantAccountPrivilegesRequest struct {
@@ -1578,10 +1578,10 @@ type GrantAccountPrivilegesRequest struct {
 	// 数据库名。如果为 \*，表示设置全局权限（即 \*.\*），此时忽略 Type 和 Object 参数。当DbName不为\*时，需要传入参 Type。
 	DbName *string `json:"DbName,omitempty" name:"DbName"`
 
-	// 全局权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER，SHOW DATABASES 
-	// 库权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER 
-	// 表/视图权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE VIEW，SHOW VIEW，TRIGGER 
-	// 存储过程/函数权限： ALTER ROUTINE，EXECUTE 
+	// 全局权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER，SHOW DATABASES
+	// 库权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER
+	// 表/视图权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE VIEW，SHOW VIEW，TRIGGER
+	// 存储过程/函数权限： ALTER ROUTINE，EXECUTE
 	// 字段权限： INSERT，REFERENCES，SELECT，UPDATE
 	Privileges []*string `json:"Privileges,omitempty" name:"Privileges" list`
 
@@ -1596,12 +1596,12 @@ type GrantAccountPrivilegesRequest struct {
 }
 
 func (r *GrantAccountPrivilegesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *GrantAccountPrivilegesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type GrantAccountPrivilegesResponse struct {
@@ -1614,12 +1614,12 @@ type GrantAccountPrivilegesResponse struct {
 }
 
 func (r *GrantAccountPrivilegesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *GrantAccountPrivilegesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type InitDBInstancesRequest struct {
@@ -1633,12 +1633,12 @@ type InitDBInstancesRequest struct {
 }
 
 func (r *InitDBInstancesRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *InitDBInstancesRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type InitDBInstancesResponse struct {
@@ -1657,12 +1657,12 @@ type InitDBInstancesResponse struct {
 }
 
 func (r *InitDBInstancesResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *InitDBInstancesResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type InstanceSpec struct {
@@ -1706,12 +1706,12 @@ type ModifyAccountDescriptionRequest struct {
 }
 
 func (r *ModifyAccountDescriptionRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyAccountDescriptionRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyAccountDescriptionResponse struct {
@@ -1724,12 +1724,12 @@ type ModifyAccountDescriptionResponse struct {
 }
 
 func (r *ModifyAccountDescriptionResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyAccountDescriptionResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyBackupTimeRequest struct {
@@ -1746,12 +1746,12 @@ type ModifyBackupTimeRequest struct {
 }
 
 func (r *ModifyBackupTimeRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyBackupTimeRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyBackupTimeResponse struct {
@@ -1767,12 +1767,12 @@ type ModifyBackupTimeResponse struct {
 }
 
 func (r *ModifyBackupTimeResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyBackupTimeResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstanceNameRequest struct {
@@ -1786,12 +1786,12 @@ type ModifyDBInstanceNameRequest struct {
 }
 
 func (r *ModifyDBInstanceNameRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBInstanceNameRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstanceNameResponse struct {
@@ -1804,12 +1804,12 @@ type ModifyDBInstanceNameResponse struct {
 }
 
 func (r *ModifyDBInstanceNameResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBInstanceNameResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstancesProjectRequest struct {
@@ -1823,12 +1823,12 @@ type ModifyDBInstancesProjectRequest struct {
 }
 
 func (r *ModifyDBInstancesProjectRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBInstancesProjectRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstancesProjectResponse struct {
@@ -1841,12 +1841,12 @@ type ModifyDBInstancesProjectResponse struct {
 }
 
 func (r *ModifyDBInstancesProjectResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBInstancesProjectResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBParametersRequest struct {
@@ -1860,12 +1860,12 @@ type ModifyDBParametersRequest struct {
 }
 
 func (r *ModifyDBParametersRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBParametersRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBParametersResponse struct {
@@ -1884,12 +1884,12 @@ type ModifyDBParametersResponse struct {
 }
 
 func (r *ModifyDBParametersResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyDBParametersResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyLogFileRetentionPeriodRequest struct {
@@ -1903,12 +1903,12 @@ type ModifyLogFileRetentionPeriodRequest struct {
 }
 
 func (r *ModifyLogFileRetentionPeriodRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyLogFileRetentionPeriodRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyLogFileRetentionPeriodResponse struct {
@@ -1924,12 +1924,12 @@ type ModifyLogFileRetentionPeriodResponse struct {
 }
 
 func (r *ModifyLogFileRetentionPeriodResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ModifyLogFileRetentionPeriodResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type MonitorData struct {
@@ -1952,12 +1952,12 @@ type OpenDBExtranetAccessRequest struct {
 }
 
 func (r *OpenDBExtranetAccessRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *OpenDBExtranetAccessRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type OpenDBExtranetAccessResponse struct {
@@ -1973,12 +1973,12 @@ type OpenDBExtranetAccessResponse struct {
 }
 
 func (r *OpenDBExtranetAccessResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *OpenDBExtranetAccessResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ParamConstraint struct {
@@ -2096,12 +2096,12 @@ type RenewDBInstanceRequest struct {
 }
 
 func (r *RenewDBInstanceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *RenewDBInstanceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type RenewDBInstanceResponse struct {
@@ -2109,7 +2109,7 @@ type RenewDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -2118,12 +2118,12 @@ type RenewDBInstanceResponse struct {
 }
 
 func (r *RenewDBInstanceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *RenewDBInstanceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ResetAccountPasswordRequest struct {
@@ -2143,12 +2143,12 @@ type ResetAccountPasswordRequest struct {
 }
 
 func (r *ResetAccountPasswordRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ResetAccountPasswordRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ResetAccountPasswordResponse struct {
@@ -2161,12 +2161,12 @@ type ResetAccountPasswordResponse struct {
 }
 
 func (r *ResetAccountPasswordResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *ResetAccountPasswordResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ResourceUsageMonitorSet struct {
@@ -2320,12 +2320,12 @@ type UpgradeDBInstanceRequest struct {
 }
 
 func (r *UpgradeDBInstanceRequest) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *UpgradeDBInstanceRequest) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type UpgradeDBInstanceResponse struct {
@@ -2333,7 +2333,7 @@ type UpgradeDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -2342,12 +2342,12 @@ type UpgradeDBInstanceResponse struct {
 }
 
 func (r *UpgradeDBInstanceResponse) ToJsonString() string {
-    b, _ := json.Marshal(r)
-    return string(b)
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 func (r *UpgradeDBInstanceResponse) FromJsonString(s string) error {
-    return json.Unmarshal([]byte(s), &r)
+	return json.Unmarshal([]byte(s), &r)
 }
 
 type ZoneChooseInfo struct {

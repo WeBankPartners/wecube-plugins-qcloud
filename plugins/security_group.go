@@ -72,17 +72,17 @@ type SecurityGroupPolicyInputs struct {
 }
 
 type SecurityGroupPolicyInput struct {
-	Guid            string `json:"guid,omitempty"`
-	ProviderParams  string `json:"provider_params,omitempty"`
-	Name            string `json:"name,omitempty"`
-	Id              string `json:"id,omitempty"`
-	Description     string `json:"description,omitempty"`
-	RuleType        string `json:"rule_type,omitempty"`
-	RuleCidrIp      string `json:"rule_cidr_ip,omitempty"`
-	RuleIpProtocol  string `json:"rule_ip_protocol,omitempty"`
-	RulePortRange   string `json:"rule_port_range,omitempty"`
-	RulePolicy      string `json:"rule_policy,omitempty"`
-	RuleDescription string `json:"rule_description,omitempty"`
+	Guid              string `json:"guid,omitempty"`
+	ProviderParams    string `json:"provider_params,omitempty"`
+	Name              string `json:"name,omitempty"`
+	Id                string `json:"id,omitempty"`
+	Description       string `json:"description,omitempty"`
+	PolicyType        string `json:"policy_type,omitempty"`
+	PolicyCidrBlock   string `json:"policy_cidr_block,omitempty"`
+	PolicyProtocol    string `json:"policy_protocol,omitempty"`
+	PolicyPort        string `json:"policy_port,omitempty"`
+	PolicyAction      string `json:"policy_action,omitempty"`
+	PolicyDescription string `json:"policy_description,omitempty"`
 }
 
 type SecurityGroupPolicyOutputs struct {
@@ -178,7 +178,7 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 func checkSecurityGroup(actionParams []SecurityGroupInput) ([]SecurityGroupParam, error) {
 	securityGroups := []SecurityGroupParam{}
 	for i := 0; i < len(actionParams); i++ {
-		index := checkSecurityGroupIfAppend(securityGroups, actionParams[i].Name)
+		_, index := checkSecurityGroupByName(securityGroups, actionParams[i].Name)
 		if index == -1 {
 			SecurityGroup, err := buildNewSecurityGroup(actionParams[i])
 			if err != nil {
@@ -206,13 +206,13 @@ func buildNewSecurityGroup(actionParam SecurityGroupInput) (SecurityGroupParam, 
 	return SecurityGroup, nil
 }
 
-func checkSecurityGroupIfAppend(SecurityGroups []SecurityGroupParam, name string) int {
+func checkSecurityGroupByName(SecurityGroups []SecurityGroupParam, name string) (SecurityGroupParam, int) {
 	for i := 0; i < len(SecurityGroups); i++ {
 		if SecurityGroups[i].GroupName == name {
-			return i
+			return SecurityGroups[i], i
 		}
 	}
-	return -1
+	return SecurityGroupParam{}, -1
 }
 
 type SecurityGroupTermination struct{}
@@ -325,6 +325,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 		}
 
 		outputs.Outputs = append(outputs.Outputs, output.(SecurityGroupPolicyOutput))
+		logrus.Infof("outputs[%v]", outputs)
 	}
 
 	return outputs, nil
@@ -332,26 +333,44 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 
 func checkSecurityGroupPolicy(actionParams []SecurityGroupPolicyInput) ([]SecurityGroupParam, error) {
 	securityGroups := []SecurityGroupParam{}
+
 	for i := 0; i < len(actionParams); i++ {
 		policy := &vpc.SecurityGroupPolicy{
-			Protocol:          common.StringPtr(actionParams[i].RuleIpProtocol),
-			Port:              common.StringPtr(actionParams[i].RulePortRange),
-			CidrBlock:         common.StringPtr(actionParams[i].RuleCidrIp),
-			SecurityGroupId:   common.StringPtr(actionParams[i].Id),
-			Action:            common.StringPtr(actionParams[i].RulePolicy),
-			PolicyDescription: common.StringPtr(actionParams[i].RuleDescription),
+			Protocol:          common.StringPtr(actionParams[i].PolicyProtocol),
+			Port:              common.StringPtr(actionParams[i].PolicyPort),
+			CidrBlock:         common.StringPtr(actionParams[i].PolicyCidrBlock),
+			Action:            common.StringPtr(actionParams[i].PolicyAction),
+			PolicyDescription: common.StringPtr(actionParams[i].PolicyDescription),
 		}
-		index := checkSecurityGroupIfAppend(securityGroups, actionParams[i].Name)
+		securityGroupExisted, index := checkSecurityGroupById(securityGroups, actionParams[i].Id)
 		if index == -1 {
 			securityGroup, err := buildNewSecurityGroupByPolicy(actionParams[i], policy)
 			if err != nil {
 				return securityGroups, err
 			}
 			securityGroups = append(securityGroups, securityGroup)
+		} else {
+			securityGroup, err := buildExistedSecurityGroupByPolicy(&securityGroupExisted, actionParams[i], policy)
+			if err != nil {
+				return securityGroups, err
+			}
+			securityGroups, err = updateSecurityGroupPolicies(securityGroup, securityGroups)
+			if err != nil {
+				return securityGroups, err
+			}
 		}
 	}
 
 	return securityGroups, nil
+}
+
+func checkSecurityGroupById(SecurityGroups []SecurityGroupParam, id string) (SecurityGroupParam, int) {
+	for i := 0; i < len(SecurityGroups); i++ {
+		if SecurityGroups[i].SecurityGroupId == id {
+			return SecurityGroups[i], i
+		}
+	}
+	return SecurityGroupParam{}, -1
 }
 
 func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy *vpc.SecurityGroupPolicy) (SecurityGroupParam, error) {
@@ -366,17 +385,49 @@ func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy 
 			Ingress: []*vpc.SecurityGroupPolicy{},
 		},
 	}
-	if actionParam.RuleType == "Egress" {
+	if actionParam.PolicyType == "Egress" {
 		SecurityGroup.SecurityGroupPolicySet.Egress = append(SecurityGroup.SecurityGroupPolicySet.Egress, policy)
-	} else if actionParam.RuleType == "Ingress" {
+	} else if actionParam.PolicyType == "Ingress" {
 		SecurityGroup.SecurityGroupPolicySet.Ingress = append(SecurityGroup.SecurityGroupPolicySet.Ingress, policy)
 	} else {
-		return SecurityGroup, fmt.Errorf("Invalid rule type[%v]", actionParam.RuleType)
+		return SecurityGroup, fmt.Errorf("Invalid policy type[%v]", actionParam.PolicyType)
 	}
 	return SecurityGroup, nil
 }
 
+<<<<<<< HEAD
 func CreateSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
+=======
+func buildExistedSecurityGroupByPolicy(securityGroupExisted *SecurityGroupParam, actionParam SecurityGroupPolicyInput, policy *vpc.SecurityGroupPolicy) (*SecurityGroupParam, error) {
+	if securityGroupExisted.GroupName == actionParam.Name {
+		policySet := securityGroupExisted.SecurityGroupPolicySet
+		if actionParam.PolicyType == "Ingress" && len(policySet.Ingress) > 0 {
+			securityGroupExisted.SecurityGroupPolicySet.Ingress = append(securityGroupExisted.SecurityGroupPolicySet.Ingress, policy)
+			return securityGroupExisted, nil
+		}
+		if actionParam.PolicyType == "Egress" && len(policySet.Egress) > 0 {
+			securityGroupExisted.SecurityGroupPolicySet.Egress = append(securityGroupExisted.SecurityGroupPolicySet.Egress, policy)
+			return securityGroupExisted, nil
+		}
+
+		return securityGroupExisted, fmt.Errorf("do not add Ingress and Egress policy to the same securityGroup at the same time")
+	}
+
+	return securityGroupExisted, nil
+}
+
+func updateSecurityGroupPolicies(securityGroup *SecurityGroupParam, securityGroups []SecurityGroupParam) ([]SecurityGroupParam, error) {
+	for i := 0; i < len(securityGroups); i++ {
+		if securityGroup.GroupName == securityGroups[i].GroupName {
+			securityGroups[i] = *securityGroup
+			return securityGroups, nil
+		}
+	}
+	return securityGroups, fmt.Errorf("not exist SecurityGroupParam[%v]", &securityGroup)
+}
+
+func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
+>>>>>>> 189bbd04ee4aeebfe88c27fa33df6d1a6fde17af
 	//check resource exsit
 	if input.SecurityGroupId != "" {
 		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
@@ -387,11 +438,8 @@ func CreateSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) 
 
 	createPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
 	createPolicies.SecurityGroupId = common.StringPtr(input.SecurityGroupId)
-	if len(input.SecurityGroupPolicySet.Ingress) > 0 {
-		createPolicies.SecurityGroupPolicySet.Ingress = input.SecurityGroupPolicySet.Ingress
-	}
-	if len(input.SecurityGroupPolicySet.Egress) > 0 {
-		createPolicies.SecurityGroupPolicySet.Egress = input.SecurityGroupPolicySet.Egress
+	if len(input.SecurityGroupPolicySet.Ingress) > 0 || len(input.SecurityGroupPolicySet.Egress) > 0 {
+		createPolicies.SecurityGroupPolicySet = input.SecurityGroupPolicySet
 	}
 
 	createPoliciesResp, err := client.CreateSecurityGroupPolicies(createPolicies)
@@ -413,7 +461,7 @@ type SecurityGroupDeletePolicies struct {
 }
 
 func (action *SecurityGroupDeletePolicies) ReadParam(param interface{}) (interface{}, error) {
-	var inputs SecurityGroupPolicyInput
+	var inputs SecurityGroupPolicyInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -422,7 +470,7 @@ func (action *SecurityGroupDeletePolicies) ReadParam(param interface{}) (interfa
 }
 
 func (action *SecurityGroupDeletePolicies) CheckParam(input interface{}) error {
-	_, ok := input.(SecurityGroupPolicyInput)
+	_, ok := input.(SecurityGroupPolicyInputs)
 	if !ok {
 		return INVALID_PARAMETERS
 	}
@@ -465,11 +513,8 @@ func DeleteSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) 
 	}
 	deletePolicies := vpc.NewDeleteSecurityGroupPoliciesRequest()
 	deletePolicies.SecurityGroupId = common.StringPtr(input.SecurityGroupId)
-	if len(input.SecurityGroupPolicySet.Ingress) > 0 {
-		deletePolicies.SecurityGroupPolicySet.Ingress = input.SecurityGroupPolicySet.Ingress
-	}
-	if len(input.SecurityGroupPolicySet.Egress) > 0 {
-		deletePolicies.SecurityGroupPolicySet.Egress = input.SecurityGroupPolicySet.Egress
+	if len(input.SecurityGroupPolicySet.Ingress) > 0 || len(input.SecurityGroupPolicySet.Egress) > 0 {
+		deletePolicies.SecurityGroupPolicySet = input.SecurityGroupPolicySet
 	}
 
 	deletePoliciesResp, err := client.DeleteSecurityGroupPolicies(deletePolicies)

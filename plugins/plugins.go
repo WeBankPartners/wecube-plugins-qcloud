@@ -59,7 +59,7 @@ func init() {
 	registerPlugin("eip", new(EIPPlugin))
 	registerPlugin("mariadb", new(MariadbPlugin))
 	registerPlugin("route-policy", new(RoutePolicyPlugin))
-	
+
 }
 
 type PluginRequest struct {

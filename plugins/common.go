@@ -13,6 +13,38 @@ const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
 )
 
+type Filter struct {
+	Name   string
+	Values []string
+}
+
+func TransLittleCamelcaseToShortLineFormat(inputValue string) (string, error) {
+	str := ""
+	for i := 0; i < len(inputValue); i++ {
+
+		ch := inputValue[i]
+		fmt.Println("i:", i, inputValue[i])
+		if ch < 65 || (ch > 90 && ch < 97) || ch > 126 {
+			return str, fmt.Errorf("wrong character")
+		}
+		if ch < 'a' {
+			str = fmt.Sprintf("%s-%c", str, ch+32)
+		} else {
+			str = fmt.Sprintf("%s%c", str, ch)
+		}
+	}
+	return str, nil
+}
+
+func isValidValue(inputValue string, validValues []string) error {
+	for _, validValue := range validValues {
+		if validValue == inputValue {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s is not valid value in(%++v)", inputValue, validValues)
+}
+
 func GetMapFromProviderParams(providerParams string) (map[string]string, error) {
 	rtnMap := make(map[string]string)
 	params := strings.Split(providerParams, ";")
