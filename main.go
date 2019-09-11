@@ -54,6 +54,7 @@ func initConfig() {
 }
 
 func initRouter() {
+	//path should be defined as "/[version]/[provider]/[plugin]/[action]"
 	http.HandleFunc("/v1/qcloud/", routeDispatcher)
 }
 
