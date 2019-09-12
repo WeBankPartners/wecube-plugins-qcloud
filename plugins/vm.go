@@ -607,10 +607,10 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 		return err
 	}
 
-	request := cvm.NewAssociateSecurityGroupsRequest()
+	request := cvm.NewModifyInstancesAttributeRequest()
 	request.InstanceIds = common.StringPtrs([]string{instanceId})
-	request.SecurityGroupIds = common.StringPtrs(securityGroups)
-	if _, err = client.AssociateSecurityGroups(request); err != nil {
+	request.SecurityGroups = common.StringPtrs(securityGroups)
+	if _, err = client.ModifyInstancesAttribute(request); err != nil {
 		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
 	}
 

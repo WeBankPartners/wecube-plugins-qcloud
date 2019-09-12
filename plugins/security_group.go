@@ -325,7 +325,6 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 		}
 
 		outputs.Outputs = append(outputs.Outputs, output.(SecurityGroupPolicyOutput))
-		logrus.Infof("outputs[%v]", outputs)
 	}
 
 	return outputs, nil
@@ -342,6 +341,7 @@ func checkSecurityGroupPolicy(actionParams []SecurityGroupPolicyInput) ([]Securi
 			Action:            common.StringPtr(actionParams[i].PolicyAction),
 			PolicyDescription: common.StringPtr(actionParams[i].PolicyDescription),
 		}
+
 		securityGroupExisted, index := checkSecurityGroupById(securityGroups, actionParams[i].Id)
 		if index == -1 {
 			securityGroup, err := buildNewSecurityGroupByPolicy(actionParams[i], policy)
@@ -434,8 +434,18 @@ func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) 
 
 	createPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
 	createPolicies.SecurityGroupId = common.StringPtr(input.SecurityGroupId)
+
 	if len(input.SecurityGroupPolicySet.Ingress) > 0 || len(input.SecurityGroupPolicySet.Egress) > 0 {
 		createPolicies.SecurityGroupPolicySet = input.SecurityGroupPolicySet
+		if len(createPolicies.SecurityGroupPolicySet.Ingress) > 0 {
+			for i := 0; i < len(createPolicies.SecurityGroupPolicySet.Ingress); i++ {
+				createPolicies.SecurityGroupPolicySet.Ingress[i].PolicyIndex = common.Int64Ptr(0)
+			}
+		} else {
+			for i := 0; i < len(createPolicies.SecurityGroupPolicySet.Egress); i++ {
+				createPolicies.SecurityGroupPolicySet.Egress[i].PolicyIndex = common.Int64Ptr(0)
+			}
+		}
 	}
 
 	createPoliciesResp, err := client.CreateSecurityGroupPolicies(createPolicies)
