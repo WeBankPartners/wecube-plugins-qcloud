@@ -319,7 +319,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			return outputs, err
 		}
 
-		output, err := CreateSecurityGroupPolicies(client, &securityGroup)
+		output, err := createSecurityGroupPolicies(client, &securityGroup)
 		if err != nil {
 			return outputs, err
 		}
@@ -395,9 +395,6 @@ func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy 
 	return SecurityGroup, nil
 }
 
-<<<<<<< HEAD
-func CreateSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
-=======
 func buildExistedSecurityGroupByPolicy(securityGroupExisted *SecurityGroupParam, actionParam SecurityGroupPolicyInput, policy *vpc.SecurityGroupPolicy) (*SecurityGroupParam, error) {
 	if securityGroupExisted.GroupName == actionParam.Name {
 		policySet := securityGroupExisted.SecurityGroupPolicySet
@@ -427,7 +424,6 @@ func updateSecurityGroupPolicies(securityGroup *SecurityGroupParam, securityGrou
 }
 
 func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
->>>>>>> 189bbd04ee4aeebfe88c27fa33df6d1a6fde17af
 	//check resource exsit
 	if input.SecurityGroupId != "" {
 		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
