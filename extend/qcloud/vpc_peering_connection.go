@@ -93,14 +93,14 @@ func (c *Client) DeletePeeringConnection(request *DeleteVpcPeeringConnectionRequ
 
 type DescribeVpcPeeringConnectionRequest struct {
 	*common.BaseRequest
-	VpcId                 *string `json:"vpcId,omitempty"`
-	PeeringConnectionId   *string `json:"peeringConnectionId,omitempty"`
-	PeeringConnectionName *string `json:"peeringConnectionName,omitempty"`
-	State                 *string `json:"state,omitempty"`
-	Offset                *int    `json:"offset,omitempty"`
-	Limit                 *int    `json:"limit,omitempty"`
-	OrderField            *string `json:"orderField,omitempty"`
-	OrderDirection        *string `json:"orderDirection,omitempty"`
+	VpcId                 *string `name:"vpcId"`
+	PeeringConnectionId   *string `name:"peeringConnectionId"`
+	PeeringConnectionName *string `name:"peeringConnectionName"`
+	State                 *string `name:"state"`
+	Offset                *int    `name:"offset"`
+	Limit                 *int    `name:"limit"`
+	OrderField            *string `name:"orderField"`
+	OrderDirection        *string `name:"orderDirection"`
 }
 
 type DescribeVpcPeeringConnectionResponse struct {
