@@ -74,13 +74,6 @@
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">description</parameter>
-                <parameter datatype="number">rule_priority</parameter>
-                <parameter datatype="string">rule_type</parameter>
-                <parameter datatype="string">rule_cidr_ip</parameter>
-                <parameter datatype="string">rule_ip_protocol</parameter>
-                <parameter datatype="string">rule_port_range</parameter>
-                <parameter datatype="string">rule_policy</parameter>
-                <parameter datatype="string">rule_description</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
@@ -94,6 +87,46 @@
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="create-policies" path="/v1/qcloud/security-group/create-policies">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">description</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">rule_type</parameter>
+                <parameter datatype="string">rule_cidr_ip</parameter>
+                <parameter datatype="string">rule_ip_protocol</parameter>
+                <parameter datatype="string">rule_port_range</parameter>
+                <parameter datatype="string">rule_policy</parameter>
+                <parameter datatype="string">rule_description</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="delete-policies" path="/v1/qcloud/security-group/delete-policies">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">description</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">rule_type</parameter>
+                <parameter datatype="string">rule_cidr_ip</parameter>
+                <parameter datatype="string">rule_ip_protocol</parameter>
+                <parameter datatype="string">rule_port_range</parameter>
+                <parameter datatype="string">rule_policy</parameter>
+                <parameter datatype="string">rule_description</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
