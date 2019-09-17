@@ -498,7 +498,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		if err != nil {
 			return outputs, err
 		}
-		output, err := deleteSecurityGroupPolicies(client, &securityGroup)
+		output, err := DeleteSecurityGroupPolicies(client, &securityGroup)
 		if err != nil {
 			return outputs, err
 		}
@@ -509,7 +509,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 
 }
 
-func deleteSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
+func DeleteSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
 	//check resource exsit
 	if input.SecurityGroupId != "" {
 		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
