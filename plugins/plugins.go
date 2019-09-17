@@ -22,7 +22,7 @@ type Action interface {
 	Do(param interface{}) (interface{}, error)
 }
 
-func registerPlugin(name string, plugin Plugin) {
+func RegisterPlugin(name string, plugin Plugin) {
 	pluginsMutex.Lock()
 	defer pluginsMutex.Unlock()
 
@@ -44,21 +44,21 @@ func getPluginByName(name string) (Plugin, error) {
 }
 
 func init() {
-	registerPlugin("vm", new(VmPlugin))
-	registerPlugin("storage", new(StoragePlugin))
-	registerPlugin("security-group", new(SecurityGroupPlugin))
-	registerPlugin("subnet", new(SubnetPlugin))
-	registerPlugin("nat-gateway", new(NatGatewayPlugin))
-	registerPlugin("vpc", new(VpcPlugin))
-	registerPlugin("peering-connection", new(PeeringConnectionPlugin))
-	registerPlugin("route-table", new(RouteTablePlugin))
-	registerPlugin("mysql-vm", new(MysqlVmPlugin))
-	registerPlugin("redis", new(RedisPlugin))
-	registerPlugin("log", new(LogPlugin))
-	registerPlugin("elastic-nic", new(ElasticNicPlugin))
-	registerPlugin("eip", new(EIPPlugin))
-	registerPlugin("mariadb", new(MariadbPlugin))
-	registerPlugin("route-policy", new(RoutePolicyPlugin))
+	RegisterPlugin("vm", new(VmPlugin))
+	RegisterPlugin("storage", new(StoragePlugin))
+	RegisterPlugin("security-group", new(SecurityGroupPlugin))
+	RegisterPlugin("subnet", new(SubnetPlugin))
+	RegisterPlugin("nat-gateway", new(NatGatewayPlugin))
+	RegisterPlugin("vpc", new(VpcPlugin))
+	RegisterPlugin("peering-connection", new(PeeringConnectionPlugin))
+	RegisterPlugin("route-table", new(RouteTablePlugin))
+	RegisterPlugin("mysql-vm", new(MysqlVmPlugin))
+	RegisterPlugin("redis", new(RedisPlugin))
+	RegisterPlugin("log", new(LogPlugin))
+	RegisterPlugin("elastic-nic", new(ElasticNicPlugin))
+	RegisterPlugin("eip", new(EIPPlugin))
+	RegisterPlugin("mariadb", new(MariadbPlugin))
+	RgisterPlugin("route-policy", new(RoutePolicyPlugin))
 	
 }
 
@@ -115,12 +115,7 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	}
 
 	logrus.Infof("action do with parameters = %v", actionParam)
-	outputs, err := action.Do(actionParam)
-	if err != nil {
-		return &pluginResponse, err
-	}
+	pluginResponse.Results, err = action.Do(actionParam)
 
-	pluginResponse.Results = outputs
-
-	return &pluginResponse, nil
+	return &pluginResponse, err
 }

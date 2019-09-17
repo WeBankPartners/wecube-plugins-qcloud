@@ -29,12 +29,12 @@ func CreateMysqlVmClient(region, secretId, secretKey string) (client *cdb.Client
 
 	clientProfile := profile.NewClientProfile()
 	clientProfile.HttpProfile.Endpoint = "cdb.tencentcloudapi.com"
-	client,err :=cdb.NewClient(credential, region, clientProfile)
+	client, err = cdb.NewClient(credential, region, clientProfile)
 	if err != nil {
-		logrus.Errorf("CreateMysqlVmClient meet error=%v",err)
+		logrus.Errorf("CreateMysqlVmClient meet error=%v", err)
 	}
 
-	return client,err
+	return client, err
 }
 
 type MysqlVmInputs struct {
@@ -428,95 +428,79 @@ func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlV
 }
 
 //--------------query mysql instance ------------------//
-type MysqlInstance struct {
-	Id string
-	Name string
-	Vip string
-}
-
-func QueryMysqlInstance(providerParams string,filter Filter)([]MysqlInstance,error){
+func QueryMysqlInstance(providerParams string,filter Filter)([]*cdb.InstanceInfo,error){
 	validFilterNames:=[]string{"instanceId","vip"}
-	filterValues:= transferStringArrayToStringPointerArray(filter.Values)
-	instances:=[]MysqlInstance{}
+        filterValues := common.StringPtrs(filter.Values)
+	emptyInstances:=[]*cdb.InstanceInfo{}
 	var offset,limit uint64
 
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return instances,err 
+		return 	emptyInstances,err 
 	}
 	if err :=isValidValue(filter.Name,validFilterNames);err!=nil {
-		return instances,err
+		return 	emptyInstances,err
 	}
 
-	request:=cdb.NewDescribeDBInstancesRequest()
-	limit=len(filterValues)
-	request.Limit=&limit
-	if filter.Name=="instanceId" {
+	request := cdb.NewDescribeDBInstancesRequest()
+	limit = uint64(len(filterValues))
+	request.Limit = &limit
+	if filter.Name == "instanceId" {
 		request.InstanceIds = filterValues
 	}
 	if filter.Name == "vip" {
-		request.Vips=filterValues
+		request.Vips = filterValues
 	}
 
 	response, err := client.DescribeDBInstances(request)
-	if err!=nil {
-		logrus.Errorf("cdb DescribeDBInstances meet err=%v",err)
-		return instances,err
+	if err != nil {
+		logrus.Errorf("cdb DescribeDBInstances meet err=%v", err)
+		return instances, err
 	}
 
-	for _,item := range response.Response.Items {
-		instance:=MysqlInstance{
-			Id:item.InstanceId,
-			Name:item.InstanceName,
-			Vip:item.Vip
-		}
-		instances =append(instances,instance)
-	}
-	return instances,nil 
+	return  response.Response.Items ,nil 
 }
 
 //-------------query security group by instanceId-----------//
-func QueryMySqlInstanceSecurityGroups(providerParams string,instanceId string)([]string,error){
-	securityGroups:=[]string{}
+func QueryMySqlInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
+	securityGroups := []string{}
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return securityGroups,err 
+		return securityGroups, err
 	}
 
-	request:=cdb.NewDescribeDBSecurityGroupsRequest()
-	request.InstanceId =&instanceId
-	
+	request := cdb.NewDescribeDBSecurityGroupsRequest()
+	request.InstanceId = &instanceId
+
 	response, err := client.DescribeDBSecurityGroups(request)
 	if err != nil {
-		logrus.Errorf("cdb DescribeDBSecurityGroups meet err=%v",err)
-		return securityGroups,err 
+		logrus.Errorf("cdb DescribeDBSecurityGroups meet err=%v", err)
+		return securityGroups, err
 	}
 
-	for _,group:=response.Response.Groups{
-		securityGroups = append(securityGroups,*group)
+	for _, group := range response.Response.Groups {
+		securityGroups = append(securityGroups, *group.SecurityGroupName)
 	}
-	return securityGroups,nil 
+	return securityGroups, nil
 }
 
 //-------------add security group to instance-----------//
-func BindMySqlInstanceSecurityGroups(providerParams string ,instanceId string,securityGroups []string)error{
+func BindMySqlInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return securityGroups,err
+		return err
 	}
 
-	request:=cdb.NewModifyDBInstanceSecurityGroupsRequest()
-	request.SecurityGroupIds = transferStringArrayToStringPointerArray(securityGroups)
+	request := cdb.NewModifyDBInstanceSecurityGroupsRequest()
+	request.SecurityGroupIds = common.StringPtrs(securityGroups)
 
-	_, err := client.ModifyDBInstanceSecurityGroups(request)
+	_, err = client.ModifyDBInstanceSecurityGroups(request)
 	if err != nil {
-		logrus.Errorf("cdb ModifyDBInstanceSecurityGroups meet err=%v",err)
+		logrus.Errorf("cdb ModifyDBInstanceSecurityGroups meet err=%v", err)
 	}
 
-	return err 
+	return err
 }
-
-
