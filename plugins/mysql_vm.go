@@ -428,24 +428,24 @@ func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlV
 }
 
 //--------------query mysql instance ------------------//
-func QueryMysqlInstance(providerParams string,filter Filter)([]*cdb.InstanceInfo,error){
-	validFilterNames:=[]string{"instanceId","vip"}
-        filterValues := common.StringPtrs(filter.Values)
-	emptyInstances:=[]*cdb.InstanceInfo{}
-	var offset,limit uint64
+func QueryMysqlInstance(providerParams string, filter Filter) ([]*cdb.InstanceInfo, error) {
+	validFilterNames := []string{"instanceId", "vip"}
+	filterValues := common.StringPtrs(filter.Values)
+	emptyInstances := []*cdb.InstanceInfo{}
+	var offset, limit uint64 = 0, uint64(len(filterValues))
 
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return 	emptyInstances,err 
+		return emptyInstances, err
 	}
-	if err :=isValidValue(filter.Name,validFilterNames);err!=nil {
-		return 	emptyInstances,err
+	if err := isValidValue(filter.Name, validFilterNames); err != nil {
+		return emptyInstances, err
 	}
 
 	request := cdb.NewDescribeDBInstancesRequest()
-	limit = uint64(len(filterValues))
 	request.Limit = &limit
+	request.Offset = &offset
 	if filter.Name == "instanceId" {
 		request.InstanceIds = filterValues
 	}
@@ -456,10 +456,10 @@ func QueryMysqlInstance(providerParams string,filter Filter)([]*cdb.InstanceInfo
 	response, err := client.DescribeDBInstances(request)
 	if err != nil {
 		logrus.Errorf("cdb DescribeDBInstances meet err=%v", err)
-		return instances, err
+		return emptyInstances, err
 	}
 
-	return  response.Response.Items ,nil 
+	return response.Response.Items, nil
 }
 
 //-------------query security group by instanceId-----------//

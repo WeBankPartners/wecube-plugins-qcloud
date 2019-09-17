@@ -31,9 +31,6 @@ func (plugin *SecurityGroupPlugin) GetActionByName(actionName string) (Action, e
 	}
 	return action, nil
 }
-func CreateVpcClientcreateVpcClient(region, secretId, secretKey string) (client *vpc.Clien{
-	return CreateVpcClientcreateVpcClient(region,secretId,secretKey)
-}
 
 func createVpcClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
@@ -567,18 +564,16 @@ func querySecurityGroupsInfo(client *vpc.Client, input *SecurityGroupParam) (Sec
 	return output, true, nil
 }
 
-
-
-func CreateSecurityGroup(providerParam string,name string,description string)(string,error){
+func CreateSecurityGroup(providerParam string, name string, description string) (string, error) {
 	paramsMap, err := GetMapFromProviderParams(providerParam)
 	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return "", err
 	}
 
-	req:=vpc.NewCreateSecurityGroupRequest()
+	req := vpc.NewCreateSecurityGroupRequest()
 	req.GroupName = common.StringPtr(name)
-	if len(description)!=0{
+	if len(description) != 0 {
 		req.GroupDescription = common.StringPtr(description)
 	}
 
@@ -587,46 +582,46 @@ func CreateSecurityGroup(providerParam string,name string,description string)(st
 		return "", err
 	}
 
-	return *resp.Response.SecurityGroup.SecurityGroupId,nil 
+	return *resp.Response.SecurityGroup.SecurityGroupId, nil
 }
 
-func QuerySecurityGroups(providerParam string,securityGroupIds []string)([]*vpc.SecurityGroup,error){
-	securityGroups:=[]*vpc.SecurityGroup{}
+func QuerySecurityGroups(providerParam string, securityGroupIds []string) ([]*vpc.SecurityGroup, error) {
+	securityGroups := []*vpc.SecurityGroup{}
 	paramsMap, err := GetMapFromProviderParams(providerParam)
 	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return securityGroups, err
 	}
 
-	req:= vpc.NewDescribeSecurityGroups()
-	req.SecurityGroupIds =common.StringPtrs(securityGroupIds)
-	resp,err := client.DescribeSecurityGroups(req)
-	if err != nil{
+	req := vpc.NewDescribeSecurityGroupsRequest()
+	req.SecurityGroupIds = common.StringPtrs(securityGroupIds)
+	resp, err := client.DescribeSecurityGroups(req)
+	if err != nil {
 		return securityGroups, err
 	}
 
-	return resp.Response.SecurityGroupSet,nil 
+	return resp.Response.SecurityGroupSet, nil
 }
 
-func QuerySecurityGroupPolicies(providerParam string,securityGroupId string)(vpc.SecurityGroupPolicySet,error){
-	emptyPolicySet:=vpc.SecurityGroupPolicySet{}
+func QuerySecurityGroupPolicies(providerParam string, securityGroupId string) (vpc.SecurityGroupPolicySet, error) {
+	emptyPolicySet := vpc.SecurityGroupPolicySet{}
 	paramsMap, err := GetMapFromProviderParams(providerParam)
 	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return emptyPolicySet, err
 	}
-	req:=vpc.NewDescribeSecurityGroupPoliciesRequest()
-	request.SecurityGroupId = &securityGroupId
+	req := vpc.NewDescribeSecurityGroupPoliciesRequest()
+	req.SecurityGroupId = &securityGroupId
 
-	resp,err:=client.DescribeSecurityGroupPolicies(reqeust)
+	resp, err := client.DescribeSecurityGroupPolicies(req)
 	if err != nil {
-		return emptyPolicySet,err
+		return emptyPolicySet, err
 	}
 
 	if resp.Response.SecurityGroupPolicySet == nil {
-		logrus.Errorf("securityGroup(%s) descirbe policies get null pointer",securityGroupId)
-		return emptyPolicySet,fmt.Errorf("securityGroup(%s) descirbe policies get null pointer",securityGroupId)
+		logrus.Errorf("securityGroup(%s) descirbe policies get null pointer", securityGroupId)
+		return emptyPolicySet, fmt.Errorf("securityGroup(%s) descirbe policies get null pointer", securityGroupId)
 	}
 
-	return *resp.Response.SecurityGroupPolicySet,nil 
+	return *resp.Response.SecurityGroupPolicySet, nil
 }

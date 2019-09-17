@@ -9,11 +9,11 @@ const PASSWORD_LEN = 12
 
 func CreateRandomPassword() string {
 	digitals := "0123456789"
-	letters :="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(letters)
 	result := []byte{}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < PASSWORD_LEN - 4; i++ {
+	for i := 0; i < PASSWORD_LEN-4; i++ {
 		result = append(result, bytes[r.Intn(len(bytes))])
 	}
 
@@ -24,4 +24,3 @@ func CreateRandomPassword() string {
 
 	return string(result)
 }
-

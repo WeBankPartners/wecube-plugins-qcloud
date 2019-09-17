@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	_ "github.com/WeBankPartners/wecube-plugins-qcloud/plugins/bussiness_plugins/security_group"
 	"net/http"
 	"os"
 	"strings"

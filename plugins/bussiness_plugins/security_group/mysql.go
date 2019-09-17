@@ -1,110 +1,105 @@
 package securitygroup
+
 import (
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
 )
 
-//resource type 
-type MysqlResourceType  struct {
-
+//resource type
+type MysqlResourceType struct {
 }
 
-func (resourceType *MysqlResourceType)QueryInstancesById(providerParams string,instanceIds []string)(map[string]ResourceInstance,error){
-	result:=make(map[string]ResourceInstance)
+func (resourceType *MysqlResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
+	result := make(map[string]ResourceInstance)
 	if len(instanceIds) == 0 {
-		return result,nil 
+		return result, nil
 	}
 
-	filter:=plugins.Filter{
-		Name:"instanceId",
-		Values:instanceIds,
+	filter := plugins.Filter{
+		Name:   "instanceId",
+		Values: instanceIds,
 	}
-	paramsMap, _:= plugins.GetMapFromProviderParams(providerParams)
-	items,err:=plugins.QueryMysqlInstance(providerParams,filter)
+	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
+	items, err := plugins.QueryMysqlInstance(providerParams, filter)
 	if err != nil {
-		return result,err 
+		return result, err
 	}
 
-	for _,item:=range items{
-		instance:=MysqlInstance{
-			Id: item.InstanceId,
-	        Name:item.InstanceName,
-			Vip:item.Vip,
-			Region:paramsMap["Region"],
+	for _, item := range items {
+		instance := MysqlInstance{
+			Id:     *item.InstanceId,
+			Name:   *item.InstanceName,
+			Vip:    *item.Vip,
+			Region: paramsMap["Region"],
 		}
-		result[item.Vip] = instance
+		result[*item.InstanceId] = instance
 	}
 
-	return result,nil 
+	return result, nil
 }
 
-func (resourceType *MysqlResourceType)QueryInstancesByIp(providerParams string,ips []string)(map[string]ResourceInstance,error){
-	result:=make(map[string]ResourceInstance)
+func (resourceType *MysqlResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
+	result := make(map[string]ResourceInstance)
 
-	if len(instanceIds) == 0 {
-		return result,nil 
+	if len(ips) == 0 {
+		return result, nil
 	}
 
-	filter:=plugin.Filter{
-		Name:"vip",
-		Values:ips,
+	filter := plugins.Filter{
+		Name:   "vip",
+		Values: ips,
 	}
 
-	items,err:=plugins.QueryMysqlInstance(providerParams,filter)
+	items, err := plugins.QueryMysqlInstance(providerParams, filter)
 	if err != nil {
-		return result,err 
+		return result, err
 	}
 
-	paramsMap, _:= plugins.GetMapFromProviderParams(providerParams)
-	for _,item:=range items{
-		instance:=MysqlInstance{
-			Id: item.InstanceId,
-	        Name:item.InstanceName,
-			Vip:item.Vip,
-			Region:paramsMap["Region"],
+	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
+	for _, item := range items {
+		instance := MysqlInstance{
+			Id:     *item.InstanceId,
+			Name:   *item.InstanceName,
+			Vip:    *item.Vip,
+			Region: paramsMap["Region"],
 		}
-		result[item.Vip] = &instance
+		result[*item.Vip] = instance
 	}
 
-	return result,nil 
+	return result, nil
 }
 
-func (resourceType *MysqlResourceType) IsSupportSecurityGroupApi()bool {
-	return true 
+func (resourceType *MysqlResourceType) IsSupportSecurityGroupApi() bool {
+	return true
 }
 
-
-//resource instance 
+//resource instance
 type MysqlInstance struct {
-	Id string
-	Name string
-	Vip string
-	Region string 
+	Id     string
+	Name   string
+	Vip    string
+	Region string
 }
 
-func (instance *MysqlInstance)Id()string{
+func (instance MysqlInstance) GetId() string {
 	return instance.Id
 }
 
-func (instance *MysqlInstance)Name()string{
+func (instance MysqlInstance) GetName() string {
 	return instance.Name
 }
 
-func (instance *MysqlInstance)QuerySecurityGroups(providerParams string)([]string,error){
-	return plugins.QueryMySqlInstanceSecurityGroups(providerParams,instance.Id)
+func (instance MysqlInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
+	return plugins.QueryMySqlInstanceSecurityGroups(providerParams, instance.Id)
 }
 
-func (inst *MysqlInstance)AssociateSecurityGroups(providerParams string,securityGroups []string)error{
-	return plugins.BindMySqlInstanceSecurityGroups(providerParams,instance.Id,securityGroups)
+func (instance MysqlInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
+	return plugins.BindMySqlInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
 }
 
-func (inst *MysqlInstance)ResourceTypeName()string{
+func (instance MysqlInstance) ResourceTypeName() string {
 	return "mysql"
 }
-func (inst *MysqlInstance )Region()string{
+
+func (instance MysqlInstance) GetRegion() string {
 	return instance.Region
 }
-
-
-
-
-

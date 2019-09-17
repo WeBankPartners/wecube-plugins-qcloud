@@ -13,7 +13,6 @@ import (
 	"strings"
 )
 
-
 func Md5Encode(rawData string) string {
 	data := []byte(rawData)
 	return fmt.Sprintf("%x", md5.Sum(data))
@@ -62,21 +61,19 @@ func AesDecode(key string, encryptData string) (string, error) {
 
 func encode(guid string, seed string, password string) string {
 	md5sum := Md5Encode(guid + seed)
-	encoded, _ := AesEncode(md5sum[0:16], password);
+	encoded, _ := AesEncode(md5sum[0:16], password)
 	return encoded
 }
 
-
-func decode(guid string, seed string, encoded string) (string, error){
-	md5sum := Md5Encode(guid+seed)
-	decode,err := AesDecode(md5sum[0:16], encoded)
+func decode(guid string, seed string, encoded string) (string, error) {
+	md5sum := Md5Encode(guid + seed)
+	decode, err := AesDecode(md5sum[0:16], encoded)
 	if err != nil {
 		log.Println("AesDecode meet error(%v)", err)
-		return decode , err
+		return decode, err
 	}
-	return decode,nil
+	return decode, nil
 }
-
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
@@ -92,23 +89,20 @@ func main() {
 		fmt.Print("seed-> ")
 		seed, _ := reader.ReadString('\n')
 		seed = strings.Replace(seed, "\n", "", -1)
-		if strings.EqualFold(method, "E")  {
+		if strings.EqualFold(method, "E") {
 			fmt.Print("password-> ")
 			password, _ := reader.ReadString('\n')
 			password = strings.Replace(password, "\n", "", -1)
-			enc := encode (guid, seed, password)
+			enc := encode(guid, seed, password)
 			fmt.Print("Encode result: ", enc)
 		} else if strings.EqualFold(method, "D") {
 			fmt.Print("password-> ")
 			encoded, _ := reader.ReadString('\n')
 			encoded = strings.Replace(encoded, "\n", "", -1)
-			dec,_ := decode(guid, seed, encoded)
+			dec, _ := decode(guid, seed, encoded)
 			fmt.Print("Decode result: ", dec)
-		}else {
+		} else {
 			fmt.Print("Please input E or D!")
 		}
 	}
 }
-
-
-

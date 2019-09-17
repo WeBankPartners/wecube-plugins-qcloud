@@ -58,8 +58,8 @@ func init() {
 	RegisterPlugin("elastic-nic", new(ElasticNicPlugin))
 	RegisterPlugin("eip", new(EIPPlugin))
 	RegisterPlugin("mariadb", new(MariadbPlugin))
-	RgisterPlugin("route-policy", new(RoutePolicyPlugin))
-	
+	RegisterPlugin("route-policy", new(RoutePolicyPlugin))
+
 }
 
 type PluginRequest struct {
