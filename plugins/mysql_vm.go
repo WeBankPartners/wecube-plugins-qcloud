@@ -112,6 +112,12 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	request.Period = &mysqlVmInput.ChargePeriod
 	request.GoodsNum = &mysqlVmInput.Count
 
+	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
+	if err != nil {
+		return "", "", err
+	}
+	request.Zone = common.StringPtr(zone)
+
 	response, err := client.CreateDBInstance(request)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create mysqlVm, error=%s", err)
@@ -124,6 +130,23 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	return *response.Response.InstanceIds[0], *response.Response.RequestId, nil
 }
 
+func getZoneFromProviderParams(ProviderParams string) (string, error) {
+	var err error
+	var zone string
+	var ok bool
+	if ProviderParams == "" {
+		err = fmt.Errorf("mysqlVmCreateAtion:input ProviderParams is empty")
+		return fmt.Sprintf("getZoneFromProviderParams meet err=%v", err), err
+	}
+	paramsMap, _ := GetMapFromProviderParams(ProviderParams)
+	if zone, ok = paramsMap["AvailableZone"]; !ok {
+		err = fmt.Errorf("mysqlVmCreateAtion: failed to get AvailableZone from input ProviderParams")
+		return fmt.Sprintf("getZoneFromProviderParams meet err=%v", err), err
+	}
+
+	return zone, nil
+}
+
 func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Client, mysqlVmInput *MysqlVmInput) (string, string, error) {
 	request := cdb.NewCreateDBInstanceHourRequest()
 	request.Memory = &mysqlVmInput.Memory
@@ -133,6 +156,12 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
 	request.InstanceName = &mysqlVmInput.Name
 	request.GoodsNum = &mysqlVmInput.Count
+
+	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
+	if err != nil {
+		return "", "", err
+	}
+	request.Zone = common.StringPtr(zone)
 
 	response, err := client.CreateDBInstanceHour(request)
 	if err != nil {
