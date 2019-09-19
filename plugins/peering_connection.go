@@ -212,6 +212,12 @@ func (action *PeeringConnectionTerminateAction) CheckParam(input interface{}) er
 		if peeringConnection.Id == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection is empty")
 		}
+		if peeringConnection.PeerProviderParams == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerProviderParams is empty")
+		}
+		if peeringConnection.ProviderParams == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.ProviderParams is empty")
+		}
 	}
 
 	return nil

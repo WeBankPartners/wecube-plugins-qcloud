@@ -58,8 +58,8 @@
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">peer_provider_params</parameter>
                 <parameter datatype="string">id</parameter>
-                <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
@@ -326,6 +326,7 @@
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
