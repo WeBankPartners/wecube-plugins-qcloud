@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"strings"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	mariadb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/mariadb/v20170312"
-	"strings"
 )
 
 const (
@@ -286,7 +287,7 @@ func waitMariadbToDesireStatus(client *mariadb.Client, instanceId string, desire
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 30 {
+		if count >= 60 {
 			return "", 0, errors.New("waitMariadbRunning timeout")
 		}
 	}
