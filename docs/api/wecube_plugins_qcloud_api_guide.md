@@ -1237,7 +1237,7 @@ id|string|云数据库MySQL实例ID
 		"Inputs":[
 		{
 			"guid":"0010_000000010",
-			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID=AKID0ZxA9ZGkhPq8E0oKk9MQVZNvEqGzZy3t;SecretKey=kE3g7PWP2i9X1HGn0znOo8RfR4ScWBby",
+			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"name":"mysql-test1",
 			"vpc_id": "vpc-nn3hi480 ",
 			"subnet_id": "subnet-1b4zl3gd",
@@ -1293,7 +1293,7 @@ id|string|云数据库MySQL实例ID
 		"Inputs":[
 		{
 			"guid":"0010_000000010",
-			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID=AKID0ZxA9ZGkhPq8E0oKk9MQVZNvEqGzZy3t;SecretKey=kE3g7PWP2i9X1HGn0znOo8RfR4ScWBby",
+			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id":"cdb-pn6gd5jp"			
 		}
 	]
@@ -1342,7 +1342,7 @@ id|string|云数据库MySQL重启实例ID
 		"Inputs":[
 		{
 			"guid":"0010_000000010",
-			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID=AKID0ZxA9ZGkhPq8E0oKk9MQVZNvEqGzZy3t;SecretKey=kE3g7PWP2i9X1HGn0znOo8RfR4ScWBby",
+			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id":"cdb-pn6gd5jp"			
 		}
 	]
@@ -1413,7 +1413,7 @@ password|string|MariaDB实例用户密码
 	"inputs":[
 		{
 		"guid": "0011_000000011",
-		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID=AKID0ZxA9ZGkhPq8E0oKk9MQVZNvEqGzZy3t;SecretKey=kE3g7PWP2i9X1HGn0znOo8RfR4ScWBby",
+		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"seed":"seed@123456",
 		"vpc_id":"vpc-nn3hi480",
 		"subnet_id":"subnet-1b4zl3gd",
@@ -1489,7 +1489,7 @@ id|string|Redis实例ID
 	"inputs":[
 		{
 		"guid": "0012_000000012",
-		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID=AKID0ZxA9ZGkhPq8E0oKk9MQVZNvEqGzZy3t;SecretKey=kE3g7PWP2i9X1HGn0znOo8RfR4ScWBby",
+		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"vpc_id":"vpc-nn3hi480",
 		"subnet_id":"subnet-1b4zl3gd",
 		"type_id":2,
