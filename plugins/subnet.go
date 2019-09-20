@@ -367,6 +367,7 @@ func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interf
 		}
 		output := SubnetOutput{
 			Guid: input.Guid,
+			Id:   input.Id,
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}

@@ -192,6 +192,22 @@
                 <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
+         <interface name="create" path="/v1/qcloud/subnet/create-with-routetable">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">cidr_block</parameter>
+                <parameter datatype="string">vpc_id</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </output-parameters>
+        </interface>
         <interface name="terminate" path="/v1/qcloud/subnet/terminate">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -199,7 +215,18 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="terminate" path="/v1/qcloud/subnet/terminate-with-routetable">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </input-parameters>
+            <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
