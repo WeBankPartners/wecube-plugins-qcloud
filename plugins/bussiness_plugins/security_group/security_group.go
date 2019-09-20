@@ -147,8 +147,7 @@ type SecurityPolicy struct {
 	Description             string `json:"description"`
 	ErrorMsg                string `json:"err_msg,omitempty"`
 	UndoReason              string `json:"undo_reason,omitempty"`
-
-	SecurityGroupId string `json:"-"`
+	SecurityGroupId         string `json:"security_group_id, omitempty"`
 }
 
 type CalcSecurityPoliciesResult struct {
@@ -447,23 +446,51 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 }
 
 //自动构建的安全组的名称格式ip-auoto-1,ip_auto_2
-func getAutoCreatedSecurityGroups(ip string, allSecurityGroupsNames, allSecurityGroupsIds []string) ([]string, int) {
+func getAutoCreatedSecurityGroups(ip string, allSecurityGroupsNames, allSecurityGroupsIds []string) ([]string, int, error) {
+	var err error
 	maxAutoCreatedNum := 0
 	createdSecurityGroups := []string{}
+	nums := []int{}
 	for i, securityGroup := range allSecurityGroupsNames {
 		elements := strings.Split(securityGroup, "-")
-		logrus.Infof("elements=%v, ip=%v, allSecurityGroups=%v", elements, ip, allSecurityGroupsNames)
 		if len(elements) == 3 {
 			if elements[0] == ip && elements[1] == "auto" {
 				if num, err := strconv.Atoi(elements[2]); err == nil {
 					createdSecurityGroups = append(createdSecurityGroups, allSecurityGroupsIds[i])
-					maxAutoCreatedNum = num
+					nums = append(nums, num)
+					if maxAutoCreatedNum < num {
+						maxAutoCreatedNum = num
+					}
 				}
 			}
 		}
 	}
+	createdSecurityGroups, err = sortSecurityGroupsIds(nums, createdSecurityGroups)
+	if err != nil {
+		return createdSecurityGroups, maxAutoCreatedNum + 1, err
+	}
+	logrus.Infof("getAutoCreatedSecurityGroups createdSecurityGroups:%v", createdSecurityGroups)
 
-	return createdSecurityGroups, maxAutoCreatedNum + 1
+	return createdSecurityGroups, maxAutoCreatedNum + 1, nil
+}
+
+func sortSecurityGroupsIds(num []int, securityGroupsIds []string) ([]string, error) {
+	if len(num) != len(securityGroupsIds) {
+		err := fmt.Errorf("sortSecurityGroupsIds error: lengths of two arrays is not equal")
+		return []string{}, err
+	}
+	flag := 1
+	for i := 0; i < len(num) && flag == 1; i++ {
+		flag = 0
+		for j := 0; j < len(num)-i-1; j++ {
+			if num[j] > num[j+1] {
+				num[j], num[j+1] = num[j+1], num[j]
+				securityGroupsIds[j], securityGroupsIds[j+1] = securityGroupsIds[j+1], securityGroupsIds[j]
+				flag = 1
+			}
+		}
+	}
+	return securityGroupsIds, nil
 }
 
 func getSecurityGroupFreePolicyNum(providerParams string, securityGroup string, direction string) (int, error) {
@@ -572,13 +599,11 @@ func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, p
 
 	securityGroupPolicySet := newSecurityPolicySet(policies, direction)
 	req.SecurityGroupPolicySet = &securityGroupPolicySet
-	logrus.Infof("CreateSecurityGroupPolicies req=%v", *req)
 	if _, err = client.CreateSecurityGroupPolicies(req); err == nil {
 		for _, policy := range policies {
 			policy.SecurityGroupId = securityGroupId
 		}
 	}
-	logrus.Infof("CreateSecurityGroupPolicies policies=%++v", policies)
 
 	return err
 }
@@ -587,6 +612,7 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 	newSecurityGroups := []string{}
 	freePolicyNumMap := make(map[string]int)
 	freePoliciesNum := 0
+	securityGroupsIds := []string{}
 
 	if len(policies) == 0 {
 		return newSecurityGroups, nil
@@ -598,8 +624,12 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 	}
 	logrus.Infof("securityGroupsNames:%v", securityGroupsNames)
 
-	createdSecurityGroups, autoCreatedStartIndex := getAutoCreatedSecurityGroups(policies[0].Ip, securityGroupsNames, existSecurityGroups)
+	createdSecurityGroups, autoCreatedStartIndex, err := getAutoCreatedSecurityGroups(policies[0].Ip, securityGroupsNames, existSecurityGroups)
+	if err != nil {
+		return newSecurityGroups, err
+	}
 	logrus.Infof("createdSecurityGroups=%v, autoCreatedStartIndex=%v", createdSecurityGroups, autoCreatedStartIndex)
+
 	//计算已经存在的安全组中还能插入多少条
 	for _, securityGroup := range createdSecurityGroups {
 		freeNum, err := getSecurityGroupFreePolicyNum(providerParams, securityGroup, direction)
@@ -609,6 +639,7 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 		freePolicyNumMap[securityGroup] = freeNum
 		freePoliciesNum += freeNum
 	}
+	securityGroupsIds = append(securityGroupsIds, createdSecurityGroups...)
 
 	//计算需要新创建几个安全组
 	if freePoliciesNum < len(policies) {
@@ -618,6 +649,7 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 			return newSecurityGroups, err
 		}
 		logrus.Infof("newSecurityGroups=%v", newSecurityGroups)
+		securityGroupsIds = append(securityGroupsIds, newSecurityGroups...)
 
 		for _, securityGroup := range newSecurityGroups {
 			freePolicyNumMap[securityGroup] = MAX_SEUCRITY_RULE_NUM
@@ -627,20 +659,21 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 	logrus.Infof("freePolicyNumMap=%v", freePolicyNumMap)
 	//开始将策略加到安全组中
 	offset, limit := 0, 0
-	for securityGroup, freeNum := range freePolicyNumMap {
+
+	//for securityGroup, freeNum := range freePolicyNumMap {
+	for _, securityGroupId := range securityGroupsIds {
+		freeNum := freePolicyNumMap[securityGroupId]
 		if len(policies)-offset > freeNum {
 			limit = freeNum
 		} else {
 			limit = len(policies) - offset
 		}
-		logrus.Infof("before create policies=%++v", policies)
-		if err := addPoliciesToSecurityGroup(providerParams, securityGroup, policies[offset:offset+limit], direction); err != nil {
+		if err := addPoliciesToSecurityGroup(providerParams, securityGroupId, policies[offset:offset+limit], direction); err != nil {
 			return newSecurityGroups, err
 		}
-		logrus.Infof("after create policies=%++v", policies)
 
 		for i := offset; i < offset+limit; i++ {
-			policies[i].SecurityGroupId = securityGroup
+			policies[i].SecurityGroupId = securityGroupId
 		}
 		offset += limit
 	}
