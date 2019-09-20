@@ -302,28 +302,28 @@ func (action *RouteTableAssociateSubnetAction) CheckParam(input interface{}) err
 	return nil
 }
 
-func associateSubnetWithRouteTable(providerParams string,subnetId string,routeTableId string) error {
+func associateSubnetWithRouteTable(providerParams string, subnetId string, routeTableId string) error {
 	paramsMap, _ := GetMapFromProviderParams(providerParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return  err
+		return err
 	}
 
 	request := vpc.NewReplaceRouteTableAssociationRequest()
-	request.SubnetId = &input.SubnetId
-	request.RouteTableId = &input.RouteTableId
+	request.SubnetId = &subnetId
+	request.RouteTableId = &routeTableId
 
-	_, err := client.ReplaceRouteTableAssociation(request)
-	return err 
+	_, err = client.ReplaceRouteTableAssociation(request)
+	return err
 }
 
 func (action *RouteTableAssociateSubnetAction) Do(input interface{}) (interface{}, error) {
 	outputs := AssociateRouteTableOutputs{}
 	inputs, _ := input.(AssociateRouteTableInputs)
 	for _, input := range inputs.Inputs {
-		err:=associateSubnetWithRouteTable(input.ProviderParams,input.SubnetId,input.RouteTableId)
-		if err != nil{
-			return outputs ,err 
+		err := associateSubnetWithRouteTable(input.ProviderParams, input.SubnetId, input.RouteTableId)
+		if err != nil {
+			return outputs, err
 		}
 		output := AssociateRouteTableOutput{}
 		output.Guid = input.Guid

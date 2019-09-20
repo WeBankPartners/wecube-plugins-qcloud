@@ -24,9 +24,9 @@ func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	if length > unpadding {
-	  return origData[:(length - unpadding)]
+		return origData[:(length - unpadding)]
 	}
-	return  []byte{}
+	return []byte{}
 }
 
 func AesEncode(key string, rawData string) (string, error) {
@@ -44,29 +44,29 @@ func AesEncode(key string, rawData string) (string, error) {
 }
 
 func AesDecode(key string, encryptData string) (password string, err error) {
-	defer func(){
-			 if r:=recover();r!=nil{
-					err=fmt.Errorf("%v",r)
-			}
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
 	}()
 
-    bytesRawKey := []byte(key)
-    bytesRawData, _ := hex.DecodeString(encryptData)
-    block, err := aes.NewCipher(bytesRawKey)
-    if err != nil {
-       return 
-    }
-    blockSize := block.BlockSize()
-    blockMode := cipher.NewCBCDecrypter(block, bytesRawKey[:blockSize])
-    origData := make([]byte, len(bytesRawData))
-    blockMode.CryptBlocks(origData, bytesRawData)
-	
-	origData = PKCS7UnPadding(origData)
-    if len(origData) == 0 {
-	   err=fmt.Errorf("password wrong")
-	   return 
-    }
+	bytesRawKey := []byte(key)
+	bytesRawData, _ := hex.DecodeString(encryptData)
+	block, err := aes.NewCipher(bytesRawKey)
+	if err != nil {
+		return
+	}
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, bytesRawKey[:blockSize])
+	origData := make([]byte, len(bytesRawData))
+	blockMode.CryptBlocks(origData, bytesRawData)
 
-   password=string(origData)
-   return 
+	origData = PKCS7UnPadding(origData)
+	if len(origData) == 0 {
+		err = fmt.Errorf("password wrong")
+		return
+	}
+
+	password = string(origData)
+	return
 }
