@@ -38,6 +38,8 @@
 
 - [安全组创建](#security-group-create)
 - [安全组销毁](#security-group-terminate)
+- [安全组规则添加](#security-group-policy-create)
+- [安全组规则删除](#security-group-ploicy-delete)
 
 **云服务器**
 
@@ -91,6 +93,7 @@ id|string|VPC实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -105,6 +108,7 @@ id|string|VPC实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -141,6 +145,7 @@ id|string|VPC实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -154,6 +159,8 @@ id|string|VPC实例ID
 ```
 
 输出：
+
+```
 {
     "result_code": "0",
     "result_message": "success",
@@ -167,6 +174,7 @@ id|string|VPC实例ID
         ]
     }
 }
+```
 
 
 ### 子网
@@ -193,6 +201,7 @@ id|string|子网实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -208,6 +217,7 @@ id|string|子网实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -244,6 +254,7 @@ id|string|子网实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -257,6 +268,7 @@ id|string|子网实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -297,6 +309,7 @@ id|string|路由表实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
   "inputs": [
@@ -310,6 +323,7 @@ id|string|路由表实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -346,6 +360,7 @@ id|string|路由表实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
   "inputs": [
@@ -358,6 +373,7 @@ id|string|路由表实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -394,6 +410,7 @@ guid|string|CI类型全局唯一ID
 
 ##### 示例：
 输入：
+
 ```
 {
   "inputs": [
@@ -407,6 +424,7 @@ guid|string|CI类型全局唯一ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -449,6 +467,7 @@ id|string|路由策略实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
   "inputs": [
@@ -465,6 +484,7 @@ id|string|路由策略实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -501,19 +521,22 @@ guid|string|CI类型全局唯一ID
 
 ##### 示例：
 输入：
+
 ```
 {
-  "inputs": [
+	"inputs": [
 		{
 			"guid":"0004_0000000044",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}"
 			"id": "114914",
 			"route_table_id": "rtb-47oxymsj",
-		}]
+		}
+	]
 }
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -560,6 +583,7 @@ eip_id|string|弹性IP实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[{
@@ -576,6 +600,7 @@ eip_id|string|弹性IP实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -614,6 +639,7 @@ id|string|NAT网关实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[{
@@ -626,6 +652,7 @@ id|string|NAT网关实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -672,6 +699,7 @@ id|string|对等连接实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
     "inputs": [
@@ -689,6 +717,7 @@ id|string|对等连接实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -727,6 +756,7 @@ id|string|对等连接实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
     "inputs": [
@@ -740,8 +770,8 @@ id|string|对等连接实例ID
 }
 ```
 
-
 输出：
+
 ```
 {
     "result_code": "0",
@@ -783,9 +813,10 @@ id|string|安全组实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
-  "inputs": [
+    "inputs": [
   	    {
 			"guid":"0007_0000000077",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -796,6 +827,7 @@ id|string|安全组实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -833,9 +865,10 @@ id|string|安全组实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
-  "inputs": [
+    "inputs": [
   	    {
 			"guid":"0007_0000000077",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -845,6 +878,7 @@ id|string|安全组实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -860,6 +894,147 @@ id|string|安全组实例ID
     }
 }
 ```
+
+
+
+#### <span id="security-group-policy-create">安全组规则创建</span>
+[POST] /v1/qcloud/security-group/create-policies
+
+##### 输入参数：
+参数名称|类型|必选|描述
+:--|:--|:--|:-- 
+guid|string|是|CI类型全局唯一ID
+provider_params|string|是|公有云远程连接参数， 包括region，az，secretid， secretkey等
+id|string|否|安全组实例ID，若有值，则会检查该安全组是否已存在， 若已存在， 则不创建
+name|string|是|安全组名称
+description|string|是|安全组描述
+policy_type|string|是|出站规则或者入战规则，取值Egress 或 Ingress
+policy_cidr_block|string|是|网段或IP(互斥)
+policy_protocol|string|是|协议, 取值: TCP,UDP, ICMP
+policy_port|string|是|端口(all, 离散port, range)
+policy_action|string|是|ACCEPT 或 DROP
+policy_description|string|是|安全组规则描述
+
+##### 输出参数：
+参数名称|类型|描述
+:--|:--|:--
+request_id|string|请求ID
+guid|string|CI类型全局唯一ID
+id|string|安全组实例ID
+
+##### 示例：
+输入：
+
+```
+{
+	"inputs": [
+		{
+			"id": "sg-3jh0itt3",
+			"guid": "0007_0000000077",
+			"provider_params": "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
+			"name": "securityGroup-test",
+			"description": "securityGroup test",
+			"policy_type": "Ingress",
+			"policy_cidr_block": "10.0.0.1",
+			"policy_protocol": "TCP",
+			"policy_port": "8090-8095",
+			"policy_action": "ACCEPT",
+			"policy_description": "test accept 10.0.0.1 8090-8095 TCP"
+		}
+	]
+}
+```
+
+输出：
+
+```
+{
+    "result_code": "0",
+    "result_message": "success",
+    "results": {
+        "outputs": [
+            {
+                "requestId": "1b8bb434-3653-4ebb-ab46-9893c49824cf",
+                "guid": "0007_0000000077",
+                "id": "sg-3jh0itt3"
+            }
+        ]
+    }
+}
+```
+
+
+
+#### <span id="security-group-policy-delete">安全组规则删除</span>
+[POST] /v1/qcloud/security-group/delete-policies
+
+##### 输入参数：
+参数名称|类型|必选|描述
+:--|:--|:--|:-- 
+guid|string|是|CI类型全局唯一ID
+provider_params|string|是|公有云远程连接参数，包括region，az，secretid，secretkey等
+id|string|是|安全组实例ID，若有值，则会检查该安全组是否已存在，若已存在，则不创建
+policy_type|string|是|出站规则或者入战规则，取值Egress 或 Ingress
+policy_cidr_block|string|否|网段或IP(互斥)
+policy_protocol|string|否|协议, 取值: TCP,UDP, ICMP
+policy_port|string|否|端口(all, 离散port, range)
+policy_action|string|否|ACCEPT 或 DROP
+
+##### 输出参数：
+参数名称|类型|描述
+:--|:--|:--
+request_id|string|请求ID
+guid|string|CI类型全局唯一ID
+id|string|安全组实例ID
+
+##### 示例：
+输入：
+
+```
+{
+	"inputs": [
+		{
+			"id": "sg-919hc72d",
+			"guid": "0007_0000000077",
+			"provider_params": "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;{$your_SecretID};SecretKey={$your_SecretKey}",
+			"policy_type": "Ingress",
+			"policy_cidr_block": "10.0.0.1",
+			"policy_protocol": "TCP",
+			"policy_port": "8080",
+			"policy_action": "ACCEPT"
+		},
+		{
+			"id": "sg-919hc72d",
+			"guid": "0007_0000000077",
+			"provider_params": "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;{$your_SecretID};SecretKey={$your_SecretKey}",
+			"policy_type": "Ingress",
+			"policy_cidr_block": "10.0.0.2",
+			"policy_protocol": "UDP",
+			"policy_port": "8080-8090",
+			"policy_action": "DROP"
+		}
+	]
+}
+```
+
+输出：
+
+```
+{
+    "result_code": "0",
+    "result_message": "success",
+    "results": {
+        "outputs": [
+            {
+                "requestId": "0f55cf5d-539b-40b8-826b-f818e4b3a8e7",
+                "guid": "0007_0000000077",
+                "id": "sg-919hc72d"
+            }
+        ]
+    }
+}
+```
+
 
 
 ### 云服务器
@@ -898,6 +1073,7 @@ instance_private_ip|string|是|内网IP
 
 ##### 示例：
 输入：
+
 ```
 {
  "inputs": [
@@ -920,6 +1096,7 @@ instance_private_ip|string|是|内网IP
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -962,9 +1139,10 @@ id|string|云服务器实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
- "inputs": [
+ 	"inputs": [
  	    {
 			"guid":"0008_0000000088",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -975,6 +1153,7 @@ id|string|云服务器实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1012,9 +1191,10 @@ id|string|云服务器实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
- "inputs": [
+ 	"inputs": [
  	    {
 			"guid":"0008_0000000088",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1025,6 +1205,7 @@ id|string|云服务器实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1062,9 +1243,10 @@ id|string|云服务器实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
- "inputs": [
+ 	"inputs": [
  	    {
 			"guid":"0008_0000000088",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1075,6 +1257,7 @@ id|string|云服务器实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1119,6 +1302,7 @@ id|string|云硬盘实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
    "inputs": [
@@ -1136,6 +1320,7 @@ id|string|云硬盘实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1173,6 +1358,7 @@ id|string|云硬盘实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
    "inputs": [
@@ -1185,6 +1371,7 @@ id|string|云硬盘实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1232,9 +1419,10 @@ id|string|云数据库MySQL实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
-		"Inputs":[
+	"inputs":[
 		{
 			"guid":"0010_000000010",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1253,6 +1441,8 @@ id|string|云数据库MySQL实例ID
 ```
 
 输出：
+
+```
 {
     "result_code": "0",
     "result_message": "success",
@@ -1266,6 +1456,7 @@ id|string|云数据库MySQL实例ID
         ]
     }
 }
+```
 
 
 
@@ -1288,9 +1479,10 @@ id|string|云数据库MySQL实例ID
 
 ##### 示例：
 输入：
+
 ```
-{
-		"Inputs":[
+{	
+	"inputs":[
 		{
 			"guid":"0010_000000010",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1301,6 +1493,7 @@ id|string|云数据库MySQL实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1337,9 +1530,10 @@ id|string|云数据库MySQL重启实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
-		"Inputs":[
+	"Inputs":[
 		{
 			"guid":"0010_000000010",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1350,6 +1544,7 @@ id|string|云数据库MySQL重启实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1408,6 +1603,7 @@ password|string|MariaDB实例用户密码
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -1432,6 +1628,7 @@ password|string|MariaDB实例用户密码
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
@@ -1484,6 +1681,7 @@ id|string|Redis实例ID
 
 ##### 示例：
 输入：
+
 ```
 {
 	"inputs":[
@@ -1504,6 +1702,7 @@ id|string|Redis实例ID
 ```
 
 输出：
+
 ```
 {
     "result_code": "0",
