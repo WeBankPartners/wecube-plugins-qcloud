@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -9,8 +10,13 @@ import (
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 )
 
+const ENV_SECRET_ID = "SECRET_ID"
+const ENV_SECRET_KEY = "SECRET_KEY"
+
 func TestQueryCvmInstance1(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	filter := Filter{
 		Name:   "instanceId",
 		Values: []string{"ins-f1mg286i"},
@@ -24,7 +30,9 @@ func TestQueryCvmInstance1(t *testing.T) {
 }
 
 func TestQueryCvmInstance2(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	filter := Filter{
 		Name:   "privateIpAddress",
 		Values: []string{"172.16.0.5"},
@@ -38,7 +46,9 @@ func TestQueryCvmInstance2(t *testing.T) {
 }
 
 func TestBindCvmInstanceSecurityGroups(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	instanceId := "ins-f1mg286i"
 	securityGroups := []string{"sg-3jh0itt3", "sg-61gur97r", "sg-919hc72d", "sg-f9xgfrxj"}
 	err := BindCvmInstanceSecurityGroups(providerParams, instanceId, securityGroups)
@@ -48,7 +58,9 @@ func TestBindCvmInstanceSecurityGroups(t *testing.T) {
 }
 
 func TestQueryCvmInstance3(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	filter := Filter{
 		Name:   "instanceId",
 		Values: []string{"ins-f1mg286i"},

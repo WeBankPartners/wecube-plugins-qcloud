@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -9,7 +10,9 @@ import (
 )
 
 func TestCreateSecurityGroupPolicies(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 
 	securityGroupId := "sg-3jh0itt3"
@@ -48,7 +51,9 @@ func TestCreateSecurityGroupPolicies(t *testing.T) {
 }
 
 func TestCreateSecurityGroupPoliciesMore(t *testing.T) {
-	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=AKID4wd694uBOL3bu1jdbKn03qSovmOk9mSv;SecretKey=MTLO1NdhRzMWSBe4H8lERQ9V6SZQ2OVk"
+	secretId := os.Getenv(ENV_SECRET_ID)
+	secretKey := os.Getenv(ENV_SECRET_KEY)
+	providerParams := "Region=ap-guangzhou;AvailableZone=ap-guanghzou-4;SecretID=" + secretId + ";SecretKey=" + secretKey
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 
 	securityGroupId := "sg-3jh0itt3"

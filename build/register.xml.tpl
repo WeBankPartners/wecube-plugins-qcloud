@@ -102,12 +102,12 @@
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">description</parameter>
                 <parameter datatype="string">id</parameter>
-                <parameter datatype="string">rule_type</parameter>
-                <parameter datatype="string">rule_cidr_ip</parameter>
-                <parameter datatype="string">rule_ip_protocol</parameter>
-                <parameter datatype="string">rule_port_range</parameter>
-                <parameter datatype="string">rule_policy</parameter>
-                <parameter datatype="string">rule_description</parameter>
+                <parameter datatype="string">policy_type</parameter>
+                <parameter datatype="string">policy_cidr_block</parameter>
+                <parameter datatype="string">policy_protocol</parameter>
+                <parameter datatype="string">policy_port</parameter>
+                <parameter datatype="string">policy_action</parameter>
+                <parameter datatype="string">policy_description</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
@@ -119,15 +119,12 @@
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">description</parameter>
                 <parameter datatype="string">id</parameter>
-                <parameter datatype="string">rule_type</parameter>
-                <parameter datatype="string">rule_cidr_ip</parameter>
-                <parameter datatype="string">rule_ip_protocol</parameter>
-                <parameter datatype="string">rule_port_range</parameter>
-                <parameter datatype="string">rule_policy</parameter>
-                <parameter datatype="string">rule_description</parameter>
+                <parameter datatype="string">policy_type</parameter>
+                <parameter datatype="string">policy_cidr_block</parameter>
+                <parameter datatype="string">policy_protocol</parameter>
+                <parameter datatype="string">policy_port</parameter>
+                <parameter datatype="string">policy_action</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
