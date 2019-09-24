@@ -457,30 +457,24 @@ func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlV
 }
 
 //--------------query mysql instance ------------------//
-type MysqlInstance struct {
-	Id   string
-	Name string
-	Vip  string
-}
-
-func QueryMysqlInstance(providerParams string, filter Filter) ([]MysqlInstance, error) {
+func QueryMysqlInstance(providerParams string, filter Filter) ([]*cdb.InstanceInfo, error) {
 	validFilterNames := []string{"instanceId", "vip"}
 	filterValues := common.StringPtrs(filter.Values)
-	instances := []MysqlInstance{}
-	var limit uint64
+	emptyInstances := []*cdb.InstanceInfo{}
+	var offset, limit uint64 = 0, uint64(len(filterValues))
 
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return instances, err
+		return emptyInstances, err
 	}
 	if err := isValidValue(filter.Name, validFilterNames); err != nil {
-		return instances, err
+		return emptyInstances, err
 	}
 
 	request := cdb.NewDescribeDBInstancesRequest()
-	limit = uint64(len(filterValues))
 	request.Limit = &limit
+	request.Offset = &offset
 	if filter.Name == "instanceId" {
 		request.InstanceIds = filterValues
 	}
@@ -491,18 +485,10 @@ func QueryMysqlInstance(providerParams string, filter Filter) ([]MysqlInstance, 
 	response, err := client.DescribeDBInstances(request)
 	if err != nil {
 		logrus.Errorf("cdb DescribeDBInstances meet err=%v", err)
-		return instances, err
+		return emptyInstances, err
 	}
 
-	for _, item := range response.Response.Items {
-		instance := MysqlInstance{
-			Id:   *item.InstanceId,
-			Name: *item.InstanceName,
-			Vip:  *item.Vip,
-		}
-		instances = append(instances, instance)
-	}
-	return instances, nil
+	return response.Response.Items, nil
 }
 
 //-------------query security group by instanceId-----------//
@@ -524,7 +510,7 @@ func QueryMySqlInstanceSecurityGroups(providerParams string, instanceId string) 
 	}
 
 	for _, group := range response.Response.Groups {
-		securityGroups = append(securityGroups, *group.SecurityGroupName)
+		securityGroups = append(securityGroups, *group.SecurityGroupId)
 	}
 	return securityGroups, nil
 }
@@ -539,6 +525,7 @@ func BindMySqlInstanceSecurityGroups(providerParams string, instanceId string, s
 
 	request := cdb.NewModifyDBInstanceSecurityGroupsRequest()
 	request.SecurityGroupIds = common.StringPtrs(securityGroups)
+	request.InstanceId = &instanceId
 
 	_, err = client.ModifyDBInstanceSecurityGroups(request)
 	if err != nil {

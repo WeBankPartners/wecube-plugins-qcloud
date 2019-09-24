@@ -23,7 +23,6 @@ func TransLittleCamelcaseToShortLineFormat(inputValue string) (string, error) {
 	for i := 0; i < len(inputValue); i++ {
 
 		ch := inputValue[i]
-		fmt.Println("i:", i, inputValue[i])
 		if ch < 65 || (ch > 90 && ch < 97) || ch > 126 {
 			return str, fmt.Errorf("wrong character")
 		}

@@ -557,7 +557,7 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (*VmOutput, error) {
 	return &output, nil
 }
 
-func QueryCvmInstance(providerParams string, filter Filter) (interface{}, error) {
+func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, error) {
 	validFilterNames := []string{"instanceId", "privateIpAddress"}
 	filterValues := common.StringPtrs(filter.Values)
 	var limit int64
@@ -594,7 +594,7 @@ func QueryCvmInstance(providerParams string, filter Filter) (interface{}, error)
 		return nil, err
 	}
 
-	return response, nil
+	return response.Response.InstanceSet, nil
 }
 
 func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
@@ -614,5 +614,5 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
 	}
 
-	return nil
+	return err
 }
