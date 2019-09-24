@@ -6,7 +6,7 @@
     <container-port>8081</container-port>
     <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
     <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
-    <container-start-param> -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
+    <container-start-param>-v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
     <plugin id="vpc" name="Vpc Management" >
         <interface name="create" path="/v1/qcloud/vpc/create">
             <input-parameters>
@@ -58,6 +58,7 @@
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">peer_provider_params</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
@@ -74,13 +75,6 @@
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">name</parameter>
                 <parameter datatype="string">description</parameter>
-                <parameter datatype="number">rule_priority</parameter>
-                <parameter datatype="string">rule_type</parameter>
-                <parameter datatype="string">rule_cidr_ip</parameter>
-                <parameter datatype="string">rule_ip_protocol</parameter>
-                <parameter datatype="string">rule_port_range</parameter>
-                <parameter datatype="string">rule_policy</parameter>
-                <parameter datatype="string">rule_description</parameter>
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
@@ -94,6 +88,43 @@
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="create-policies" path="/v1/qcloud/security-group/create-policies">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">description</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">policy_type</parameter>
+                <parameter datatype="string">policy_cidr_block</parameter>
+                <parameter datatype="string">policy_protocol</parameter>
+                <parameter datatype="string">policy_port</parameter>
+                <parameter datatype="string">policy_action</parameter>
+                <parameter datatype="string">policy_description</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="delete-policies" path="/v1/qcloud/security-group/delete-policies">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">policy_type</parameter>
+                <parameter datatype="string">policy_cidr_block</parameter>
+                <parameter datatype="string">policy_protocol</parameter>
+                <parameter datatype="string">policy_port</parameter>
+                <parameter datatype="string">policy_action</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>
@@ -158,6 +189,22 @@
                 <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
+         <interface name="create" path="/v1/qcloud/subnet/create-with-routetable">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">cidr_block</parameter>
+                <parameter datatype="string">vpc_id</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </output-parameters>
+        </interface>
         <interface name="terminate" path="/v1/qcloud/subnet/terminate">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -165,7 +212,18 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="terminate" path="/v1/qcloud/subnet/terminate-with-routetable">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">route_table_id</parameter>
+            </input-parameters>
+            <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -292,6 +350,7 @@
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">request_id</parameter>

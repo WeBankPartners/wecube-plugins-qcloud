@@ -1,5 +1,3 @@
 logs
 wecube-plugins.exe
 wecube-plugins-qcloud
-plugins/cvm_test.go
-plugins/security_group_test.go
