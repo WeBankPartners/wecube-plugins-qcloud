@@ -481,7 +481,7 @@ func QueryMySqlInstanceSecurityGroups(providerParams string, instanceId string) 
 	}
 
 	for _, group := range response.Response.Groups {
-		securityGroups = append(securityGroups, *group.SecurityGroupName)
+		securityGroups = append(securityGroups, *group.SecurityGroupId)
 	}
 	return securityGroups, nil
 }
@@ -496,6 +496,7 @@ func BindMySqlInstanceSecurityGroups(providerParams string, instanceId string, s
 
 	request := cdb.NewModifyDBInstanceSecurityGroupsRequest()
 	request.SecurityGroupIds = common.StringPtrs(securityGroups)
+	request.InstanceId = &instanceId
 
 	_, err = client.ModifyDBInstanceSecurityGroups(request)
 	if err != nil {

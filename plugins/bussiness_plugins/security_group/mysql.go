@@ -1,7 +1,17 @@
 package securitygroup
 
 import (
+	"fmt"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	DEVICE_TYPE_MAP = map[string]bool{
+		"HA":    true,
+		"BASIC": false,
+	}
 )
 
 //resource type
@@ -31,6 +41,13 @@ func (resourceType *MysqlResourceType) QueryInstancesById(providerParams string,
 			Vip:    *item.Vip,
 			Region: paramsMap["Region"],
 		}
+
+		if isSupport, ok := DEVICE_TYPE_MAP[*item.DeviceType]; ok {
+			instance.SupportSecurityGroupApi = isSupport
+		} else {
+			return result, fmt.Errorf("QueryInstancesById failed to get instance.DeviceType")
+		}
+
 		result[*item.InstanceId] = instance
 	}
 
@@ -62,6 +79,13 @@ func (resourceType *MysqlResourceType) QueryInstancesByIp(providerParams string,
 			Vip:    *item.Vip,
 			Region: paramsMap["Region"],
 		}
+
+		if isSupport, ok := DEVICE_TYPE_MAP[*item.DeviceType]; ok {
+			instance.SupportSecurityGroupApi = isSupport
+		} else {
+			return result, fmt.Errorf("QueryInstancesById failed to get instance.DeviceType")
+		}
+
 		result[*item.Vip] = instance
 	}
 
@@ -74,10 +98,11 @@ func (resourceType *MysqlResourceType) IsSupportSecurityGroupApi() bool {
 
 //resource instance
 type MysqlInstance struct {
-	Id     string
-	Name   string
-	Vip    string
-	Region string
+	Id                      string
+	Name                    string
+	Vip                     string
+	Region                  string
+	SupportSecurityGroupApi bool
 }
 
 func (instance MysqlInstance) GetId() string {
@@ -89,6 +114,7 @@ func (instance MysqlInstance) GetName() string {
 }
 
 func (instance MysqlInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
+	logrus.Infof("QuerySecurityGroups instance=%++v", instance)
 	return plugins.QueryMySqlInstanceSecurityGroups(providerParams, instance.Id)
 }
 
@@ -102,4 +128,8 @@ func (instance MysqlInstance) ResourceTypeName() string {
 
 func (instance MysqlInstance) GetRegion() string {
 	return instance.Region
+}
+
+func (instance MysqlInstance) IsSupportSecurityGroupApi() bool {
+	return instance.SupportSecurityGroupApi
 }

@@ -25,6 +25,7 @@ type ResourceInstance interface {
 	GetRegion() string
 	QuerySecurityGroups(providerParams string) ([]string, error)
 	AssociateSecurityGroups(providerParams string, securityGroups []string) error
+	IsSupportSecurityGroupApi() bool
 }
 
 type ResourceType interface {
@@ -231,7 +232,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 				Type:                    instance.ResourceTypeName(),
 				Id:                      instance.GetId(),
 				Region:                  instance.GetRegion(),
-				SupportSecurityGroupApi: restType.IsSupportSecurityGroupApi(),
+				SupportSecurityGroupApi: restType.IsSupportSecurityGroupApi() && instance.IsSupportSecurityGroupApi(),
 				PeerIp:                  peerIp,
 				Protocol:                proto,
 				Ports:                   port,
@@ -401,12 +402,16 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 			continue
 		}
 		instance := instances[policies[0].Id]
+		logrus.Infof("applyPolicies instance=%++v", instance)
+
 		existSecurityGroups, err := instance.QuerySecurityGroups(providerParams)
 		if err != nil {
+			logrus.Infof("applyPolicies err=%v", err)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
 
+		logrus.Infof("applyPolicies existSecurityGroups=%++v", existSecurityGroups)
 		newSecurityGroups, err := createPolicies(providerParams, existSecurityGroups, policies, direction)
 		if err != nil {
 			destroyPolicies(providerParams, policies, direction)
@@ -546,19 +551,21 @@ func createNewAutomationSecurityGroups(providerParams string, ip string, newCrea
 	return newSecurityGroupIds, nil
 }
 
-func newSecurityPolicySet(policies []*SecurityPolicy, direction string) vpc.SecurityGroupPolicySet {
+func newSecurityPolicySet(policies []*SecurityPolicy, direction string, isSetPolicyIndex bool) vpc.SecurityGroupPolicySet {
 	securityPolicies := []*vpc.SecurityGroupPolicy{}
 	var policyIndex int64 = 0
 
 	for _, policy := range policies {
 		action := strings.ToUpper(policy.Action)
 		securityPolicy := vpc.SecurityGroupPolicy{
-			PolicyIndex:       &policyIndex,
 			Protocol:          &policy.Protocol,
 			Port:              &policy.Ports,
 			CidrBlock:         &policy.PeerIp,
 			Action:            &action,
 			PolicyDescription: &policy.Description,
+		}
+		if isSetPolicyIndex {
+			securityPolicy.PolicyIndex = &policyIndex
 		}
 		securityPolicies = append(securityPolicies, &securityPolicy)
 	}
@@ -597,7 +604,7 @@ func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, p
 		return err
 	}
 
-	securityGroupPolicySet := newSecurityPolicySet(policies, direction)
+	securityGroupPolicySet := newSecurityPolicySet(policies, direction, true)
 	req.SecurityGroupPolicySet = &securityGroupPolicySet
 	if _, err = client.CreateSecurityGroupPolicies(req); err == nil {
 		for _, policy := range policies {
@@ -684,6 +691,7 @@ func destroyPolicies(providerParams string, policies []*SecurityPolicy, directio
 	securityGroupMap := make(map[string][]*SecurityPolicy)
 	for _, policy := range policies {
 		securityGroupMap[policy.SecurityGroupId] = append(securityGroupMap[policy.SecurityGroupId], policy)
+		logrus.Infof("destroyPolicies policy=%++v", *policy)
 	}
 
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
@@ -693,7 +701,7 @@ func destroyPolicies(providerParams string, policies []*SecurityPolicy, directio
 	}
 
 	for securityGroupId, policies := range securityGroupMap {
-		securityGroupPolicySet := newSecurityPolicySet(policies, direction)
+		securityGroupPolicySet := newSecurityPolicySet(policies, direction, false)
 		req := vpc.NewDeleteSecurityGroupPoliciesRequest()
 		req.SecurityGroupId = &securityGroupId
 		req.SecurityGroupPolicySet = &securityGroupPolicySet
@@ -701,6 +709,7 @@ func destroyPolicies(providerParams string, policies []*SecurityPolicy, directio
 		_, err := client.DeleteSecurityGroupPolicies(req)
 		if err != nil {
 			logrus.Errorf("DeleteSecurityGroupPolicies meet err=%v,req=%++v", err, *req)
+			return err
 		}
 	}
 	return nil

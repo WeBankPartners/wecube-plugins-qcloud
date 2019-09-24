@@ -27,12 +27,13 @@ func (resourceType *CvmResourceType) QueryInstancesById(providerParams string, i
 
 	for _, item := range items {
 		instance := CvmInstance{
-			Id:             *item.InstanceId,
-			Name:           *item.InstanceName,
-			PrivateIps:     common.StringValues(item.PrivateIpAddresses),
-			PublicIps:      common.StringValues(item.PublicIpAddresses),
-			SecurityGroups: common.StringValues(item.SecurityGroupIds),
-			Region:         paramsMap["Region"],
+			Id:                      *item.InstanceId,
+			Name:                    *item.InstanceName,
+			PrivateIps:              common.StringValues(item.PrivateIpAddresses),
+			PublicIps:               common.StringValues(item.PublicIpAddresses),
+			SecurityGroups:          common.StringValues(item.SecurityGroupIds),
+			Region:                  paramsMap["Region"],
+			SupportSecurityGroupApi: true,
 		}
 		result[*item.InstanceId] = instance
 	}
@@ -60,12 +61,13 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	for _, item := range items {
 		instance := CvmInstance{
-			Id:             *item.InstanceId,
-			Name:           *item.InstanceName,
-			PrivateIps:     common.StringValues(item.PrivateIpAddresses),
-			PublicIps:      common.StringValues(item.PublicIpAddresses),
-			SecurityGroups: common.StringValues(item.SecurityGroupIds),
-			Region:         paramsMap["Region"],
+			Id:                      *item.InstanceId,
+			Name:                    *item.InstanceName,
+			PrivateIps:              common.StringValues(item.PrivateIpAddresses),
+			PublicIps:               common.StringValues(item.PublicIpAddresses),
+			SecurityGroups:          common.StringValues(item.SecurityGroupIds),
+			Region:                  paramsMap["Region"],
+			SupportSecurityGroupApi: true,
 		}
 		result[ips[0]] = instance
 	}
@@ -79,12 +81,13 @@ func (resourceType *CvmResourceType) IsSupportSecurityGroupApi() bool {
 
 //resource instance
 type CvmInstance struct {
-	Id             string
-	Name           string
-	PrivateIps     []string
-	PublicIps      []string
-	Region         string
-	SecurityGroups []string
+	Id                      string
+	Name                    string
+	PrivateIps              []string
+	PublicIps               []string
+	Region                  string
+	SecurityGroups          []string
+	SupportSecurityGroupApi bool
 }
 
 func (instance CvmInstance) GetId() string {
@@ -109,4 +112,8 @@ func (instance CvmInstance) ResourceTypeName() string {
 
 func (instance CvmInstance) GetRegion() string {
 	return instance.Region
+}
+
+func (instance CvmInstance) IsSupportSecurityGroupApi() bool {
+	return instance.SupportSecurityGroupApi
 }
