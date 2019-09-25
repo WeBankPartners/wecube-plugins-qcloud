@@ -75,19 +75,24 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 	return result, nil
 }
 
-func (resourceType *CvmResourceType) IsSupportSecurityGroupApi() bool {
-	return true
+
+func (resourceType *CvmResourceType) IsLoadBalanceType()bool {
+	return false
 }
 
 //resource instance
 type CvmInstance struct {
 	Id                      string
+	Ip                      string
 	Name                    string
 	PrivateIps              []string
 	PublicIps               []string
 	Region                  string
 	SecurityGroups          []string
 	SupportSecurityGroupApi bool
+
+	IsLoadBalancerBackend  bool
+	LoadBalanceIp           string
 }
 
 func (instance CvmInstance) GetId() string {
@@ -107,7 +112,11 @@ func (instance CvmInstance) AssociateSecurityGroups(providerParams string, secur
 }
 
 func (instance CvmInstance) ResourceTypeName() string {
-	return "cvm"
+	if !instance.IsLoadBalancerBackend{
+		return "cvm"
+	}else {
+		return fmt.Sprintf("cvm-lb-%s",instance.LoadBalanceIp)
+	}
 }
 
 func (instance CvmInstance) GetRegion() string {
@@ -115,5 +124,16 @@ func (instance CvmInstance) GetRegion() string {
 }
 
 func (instance CvmInstance) IsSupportSecurityGroupApi() bool {
-	return instance.SupportSecurityGroupApi
+	return true
+}
+
+func (instance CvmInstance) GetBackendTargets(providerParams string,proto string,port string)([]ResourceInstance,error)
+	instances:=[]ResourceInstance{}
+	return instances,fmt.Errorf("cvm do not support GetBackendTargets function")
+}
+func (instance CvmInstance)GetIp()string{
+	if len(instance.PrivateIps) >0{
+		return instance.PrivateIps[0]
+	}
+	return ""
 }

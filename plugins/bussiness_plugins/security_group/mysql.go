@@ -92,8 +92,8 @@ func (resourceType *MysqlResourceType) QueryInstancesByIp(providerParams string,
 	return result, nil
 }
 
-func (resourceType *MysqlResourceType) IsSupportSecurityGroupApi() bool {
-	return true
+func (resourceType *MysqlResourceType) IsLoadBalanceType()bool {
+	return false
 }
 
 //resource instance
@@ -107,6 +107,10 @@ type MysqlInstance struct {
 
 func (instance MysqlInstance) GetId() string {
 	return instance.Id
+}
+
+func (instance MysqlInstance) GetIp() string {
+	return instance.Vip
 }
 
 func (instance MysqlInstance) GetName() string {
@@ -132,4 +136,9 @@ func (instance MysqlInstance) GetRegion() string {
 
 func (instance MysqlInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
+}
+
+func (instance MysqlInstance) GetBackendTargets(providerParams string,port string,proto string)([]ResourceInstance,error){
+	instances:=[]ResourceInstance{}
+	return instances,fmt.Errorf("mysql do not support GetBackendTargets function")
 }

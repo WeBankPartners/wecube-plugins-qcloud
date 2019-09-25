@@ -23,15 +23,17 @@ type ResourceInstance interface {
 	GetId() string
 	GetName() string
 	GetRegion() string
+	GetIp() string
 	QuerySecurityGroups(providerParams string) ([]string, error)
 	AssociateSecurityGroups(providerParams string, securityGroups []string) error
 	IsSupportSecurityGroupApi() bool
+	GetBackendTargets(providerParams string,proto string,port string)([]ResourceInstance,error)
 }
 
 type ResourceType interface {
 	QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error)
 	QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error)
-	IsSupportSecurityGroupApi() bool
+	IsLoadBalanceType()bool 
 }
 
 //resourceType register
@@ -210,8 +212,62 @@ func (action *CalcSecurityPolicyAction) CheckParam(input interface{}) error {
 	return nil
 }
 
+func newPolicies(instance ResourceInstance, myIp string,peerIp string, proto string, port string,action string,desc string)([]SecurityPolicy,error){
+	policies:=[]string{}
+	resType, _:= getResouceTypeByName(instance.ResourceTypeName())
+
+	//非LB设备
+	if false == resType.IsLoadBalanceType(){
+		newPolicy := SecurityPolicy{
+			Ip:                      myIp,
+			Type:                    instance.ResourceTypeName(),
+			Id:                      instance.GetId(),
+			Region:                  instance.GetRegion(),
+			SupportSecurityGroupApi: instance.IsSupportSecurityGroupApi(),
+			PeerIp:                  peerIp,
+			Protocol:                proto,
+			Ports:                   port,
+			Action:                  action,
+			Description:             description,
+		}
+		policies:=append(policies,newPolicy)
+		return policies,nil 
+	}
+
+	//LB设备
+	providerParams:=getProviderParams(instance.GetRegion())
+	splitPorts:=strings.Split(port,",")
+
+	for _,splitPort:=range splitPorts{
+		if _,err:=strconv.Atoi(splitPort);err != nil {
+			return policies,fmt.Errorf("lb(%s) do not support security port like %s format",port)
+		}
+		instances,err:=instance.GetBackendTargets(providerParams,proto,splitPort)
+		if err != nil {
+			return policies, err 
+		}
+		for _,backendInstance:=range instances{
+			newPolicy := SecurityPolicy{
+				Ip:                      backendInstance.GetIp(),
+				Type:                    backendInstance.ResourceTypeName(),
+				Id:                      backendInstance.GetId(),
+				Region:                  backendInstance.GetRegion(),
+				SupportSecurityGroupApi: backendInstance.IsSupportSecurityGroupApi(),
+				PeerIp:                  peerIp,
+				Protocol:                proto,
+				Ports:                   port,
+				Action:                  action,
+				Description:             description,
+			}
+			policies:=append(policies,newPolicy)
+		}
+	}
+
+	return policies,nil 
+}
+
 func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
-	action string, description string) ([]SecurityPolicy, error) {
+	action string, description string,direction string) ([]SecurityPolicy, error) {
 	policies := []SecurityPolicy{}
 
 	//check if dev exist
@@ -220,26 +276,27 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 		return policies, err
 	}
 
-	restType, err := getResouceTypeByName(instance.ResourceTypeName())
+	resType, err := getResouceTypeByName(instance.ResourceTypeName())
 	if err != nil {
 		return policies, err
 	}
 
+	if direction == EGRESS_RULE {
+		if resType.IsLoadBalanceType() {
+			logrus.Errorf("%s is %d device,do not support egress",devIp,instance.ResourceTypeName())
+			return policies,nil
+		}
+	}
+
 	for _, peerIp := range peerIps {
 		for _, port := range ports {
-			newPolicy := SecurityPolicy{
-				Ip:                      devIp,
-				Type:                    instance.ResourceTypeName(),
-				Id:                      instance.GetId(),
-				Region:                  instance.GetRegion(),
-				SupportSecurityGroupApi: restType.IsSupportSecurityGroupApi() && instance.IsSupportSecurityGroupApi(),
-				PeerIp:                  peerIp,
-				Protocol:                proto,
-				Ports:                   port,
-				Action:                  action,
-				Description:             description,
+			newPolicies,err:=newPolicies(instance,peerIp,proto,port,action,description)
+			if err != nil {
+				return policies,err
 			}
-			policies = append(policies, newPolicy)
+			if len(newPolicies) > 0 {
+				policies = append(policies, newPolicies...)
+			}
 		}
 	}
 	return policies, nil
@@ -255,7 +312,7 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	//calc egress policies
 	if isContainInList(EGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.SourceIps {
-			policies, err := calcPolicies(ip, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description)
+			policies, err := calcPolicies(ip, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description,EGRESS_RULE)
 			result.EgressPolicies = append(result.EgressPolicies, policies...)
 			if err != nil && finalError != nil {
 				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
@@ -269,7 +326,7 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	//calc ingress policies
 	if isContainInList(INGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.DestIps {
-			policies, err := calcPolicies(ip, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description)
+			policies, err := calcPolicies(ip, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description,INGRESS_RULE)
 			result.IngressPolicies = append(result.IngressPolicies, policies...)
 			if err != nil && finalError != nil {
 				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
@@ -370,6 +427,10 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 	instanceMap := make(map[string][]*SecurityPolicy)
 
 	for i, _ := range policies {
+		if strings.HasPrefix(policies[i].Type,"cvm"){
+			policies[i].Type = "cvm"
+		}
+
 		if policies[i].SupportSecurityGroupApi == true {
 			key := policies[i].Ip
 			instanceMap[key] = append(instanceMap[key], &policies[i])
