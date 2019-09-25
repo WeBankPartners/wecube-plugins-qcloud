@@ -35,7 +35,7 @@ func TransLittleCamelcaseToShortLineFormat(inputValue string) (string, error) {
 	return str, nil
 }
 
-func isValidValue(inputValue string, validValues []string) error {
+func IsValidValue(inputValue string, validValues []string) error {
 	for _, validValue := range validValues {
 		if validValue == inputValue {
 			return nil
