@@ -75,6 +75,9 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 	return result, nil
 }
 
+func (resourceType *CvmResourceType )IsSupportEgressPolicy()bool {
+	return true
+}
 
 func (resourceType *CvmResourceType) IsLoadBalanceType()bool {
 	return false

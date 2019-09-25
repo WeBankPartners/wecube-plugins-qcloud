@@ -34,6 +34,7 @@ type ResourceType interface {
 	QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error)
 	QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error)
 	IsLoadBalanceType()bool 
+	IsSupportEgressPolicy()bool
 }
 
 //resourceType register
@@ -282,7 +283,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	}
 
 	if direction == EGRESS_RULE {
-		if resType.IsLoadBalanceType() {
+		if false == resType.IsSupportEgressPolicy() {
 			logrus.Errorf("%s is %d device,do not support egress",devIp,instance.ResourceTypeName())
 			return policies,nil
 		}

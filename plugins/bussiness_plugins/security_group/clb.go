@@ -36,6 +36,10 @@ func createClbClient(providerParams string)(client *clb.Client,err eror){
 	return mariadb.NewClient(credential, paramsMap["Region"], clientProfile)
 }
 
+func (resourceType *ClbResourceType )IsSupportEgressPolicy()bool {
+	return false
+}
+
 func (resourceType *ClbResourceType)QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error){
 	result := make(map[string]ResourceInstance)
 	client,_:=createClbClient(providerParams)

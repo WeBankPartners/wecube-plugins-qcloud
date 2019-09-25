@@ -92,6 +92,10 @@ func (resourceType *MysqlResourceType) QueryInstancesByIp(providerParams string,
 	return result, nil
 }
 
+func (resourceType *MysqlResourceType )IsSupportEgressPolicy()bool {
+	return false
+}
+
 func (resourceType *MysqlResourceType) IsLoadBalanceType()bool {
 	return false
 }
