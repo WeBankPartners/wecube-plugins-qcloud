@@ -123,7 +123,7 @@ func (instance CpmInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
 }
 
-func createBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
+func CreateBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
 
 	clientProfile := profile.NewClientProfile()
@@ -145,7 +145,7 @@ func QueryCpmInstance(providerParams string, filter plugins.Filter) ([]*bm.Devic
 	if err != nil {
 		return nil, err
 	}
-	client, err := createBmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, err := CreateBmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
 	}
@@ -181,6 +181,6 @@ func QueryCpmInstanceSecurityGroups(providerParams string, instanceId string) ([
 
 func BindCpmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
 	err := fmt.Errorf("cloud physical machienes do not support security group")
-	logrus.Infof("QueryCpmInstanceSecurityGroups meet error:%v", err)
+	logrus.Infof("BindCpmInstanceSecurityGroups meet error:%v", err)
 	return err
 }

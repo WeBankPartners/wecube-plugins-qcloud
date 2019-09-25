@@ -472,3 +472,54 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 
 	return output, nil
 }
+
+func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBInstance, error) {
+	validFilterNames := []string{"instanceId", "vip"}
+	filterValues := common.StringPtrs(filter.Values)
+	var limit int64
+
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	if err != nil {
+		return nil, err
+	}
+	client, err := CreateMariadbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return nil, err
+	}
+
+	if err := IsValidValue(filter.Name, validFilterNames); err != nil {
+		return nil, err
+	}
+
+	request := mariadb.NewDescribeDBInstancesRequest()
+	limit = int64(len(filterValues))
+	request.Limit = &limit
+	if filter.Name == "instanceId" {
+		request.InstanceIds = filterValues
+	}
+	if filter.Name == "vip" {
+		request.SearchName = &filter.Name
+		searchKey := strings.Join(filter.Values, "\n")
+		request.SearchKey = &searchKey
+	}
+
+	response, err := client.DescribeDBInstances(request)
+	if err != nil {
+		logrus.Errorf("mariadb DescribeDBInstances meet err=%v", err)
+		return nil, err
+	}
+
+	return response.Response.Instances, nil
+}
+
+func QueryMariadbInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
+	err := fmt.Errorf("mariadb do not support security group")
+	logrus.Infof("QueryMariadbInstanceSecurityGroups meet error:%v", err)
+	return nil, err
+}
+
+func BindMariadbInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
+	err := fmt.Errorf("mariadb do not support security group")
+	logrus.Infof("BindMariadbInstanceSecurityGroups meet error:%v", err)
+	return err
+}
