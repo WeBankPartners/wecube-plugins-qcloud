@@ -27,7 +27,7 @@ type ResourceInstance interface {
 	QuerySecurityGroups(providerParams string) ([]string, error)
 	AssociateSecurityGroups(providerParams string, securityGroups []string) error
 	IsSupportSecurityGroupApi() bool
-	GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, error)
+	GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string,error)
 }
 
 type ResourceType interface {
@@ -244,12 +244,12 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 		if _, err := strconv.Atoi(splitPort); err != nil {
 			return policies, fmt.Errorf("loadbalancer do not support port format like %s", port)
 		}
-		instances, err := instance.GetBackendTargets(providerParams, proto, splitPort)
+		instances, ports,err := instance.GetBackendTargets(providerParams, proto, splitPort)
 		fmt.Printf("getLb backendHost=%++v\n", instances)
 		if err != nil {
 			return policies, err
 		}
-		for _, backendInstance := range instances {
+		for i, backendInstance := range instances {
 			newPolicy := SecurityPolicy{
 				Ip:                      backendInstance.GetIp(),
 				Type:                    backendInstance.ResourceTypeName(),
@@ -258,7 +258,7 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 				SupportSecurityGroupApi: backendInstance.IsSupportSecurityGroupApi(),
 				PeerIp:                  peerIp,
 				Protocol:                proto,
-				Ports:                   port,
+				Ports:                   ports[i],
 				Action:                  action,
 				Description:             desc,
 			}

@@ -138,23 +138,49 @@ func (instance ClbInstance) IsSupportSecurityGroupApi() bool {
 	return false
 }
 
-func (instance ClbInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, error) {
+func (instance ClbInstance) GetBackendTargets(providerParams string, protocol string, port string) ([]ResourceInstance, []string, error) {
 	instances := []ResourceInstance{}
-	//先获取监听器
-	listenerId, err := getLbListener(providerParams, instance.Id, instance.Forward, proto, port)
+	client, _ := createClbClient(providerParams)
+	proto := strings.ToUpper(protocol)
+	portInt64, err := strconv.ParseInt(port, 10, 64)
 	if err != nil {
-		return instances, fmt.Errorf("can't found listener,lb=%s,proto=%s,port=%s", instance.Id, proto, port)
+		return instances,[]string{},fmt.Errorf("%s is invalid port", port)
 	}
 
-	//获取后端RS
-	instances, err = getLbBackendTargets(providerParams, instance.Id, instance.Forward, listenerId, instance.Vip)
-	if err != nil {
-		logrus.Errorf("getLbBackendTargets meet error:%v", err)
+	instanceIds:=[]string{}
+	ports:=[]int64{}
+	if instance.Forward == 1 {
+		instanceIds, ports err = getAppLbBackends(client,instance.Id,proto,port)
 	}
 
-	return instances, err
+	if instance.Forward == 0 {
+		return  getClassicLbBackends(client,instance.Id,proto,port)
+	}
+
+	portsStr:=[]string
+	cvmType := CvmResourceType{}
+
+	instanceMap, err := cvmType.QueryInstancesById(providerParams, instanceIds)
+	if err != nil {
+		logrus.Errorf("getLbBackendTargets:query meet err=%v", err)
+		return instances, []string{},fmt.Errorf("getLbBackendTargets:query meet err=%v", err)
+	}
+
+	for i, instanceId := range instanceIds {
+		instance,ok:=instanceMap[instanceId]
+		if !ok {
+			continue
+		}
+		cvmInstance := instance.(CvmInstance)
+		cvmInstance.IsLoadBalancerBackend = true
+		cvmInstance.LoadBalanceIp = instance.Vip
+		instances = append(instances, cvmInstance)
+		portsStr=append(portsStr,fmt.Sprintf("%v",ports[i]))
+	}
+
+	return instances, portsStr,err
 }
-
+	
 func getAppLbListenerId(client *clb.Client, lbId string, proto string, port int64) (string, error) {
 	request := clb.NewDescribeListenersRequest()
 	request.LoadBalancerId = &lbId
@@ -172,7 +198,7 @@ func getAppLbListenerId(client *clb.Client, lbId string, proto string, port int6
 	return *resp.Response.Listeners[0].ListenerId, nil
 }
 
-func getClassicLbListenerId(client *clb.Client, lbId string, proto string, port int64) (string, error) {
+func getClassicLbListenerId(client *clb.Client, lbId string, proto string, port int64) (string,string, error) {
 	request := clb.NewDescribeClassicalLBListenersRequest()
 	request.LoadBalancerId = &lbId
 	request.Protocol = &proto
@@ -180,54 +206,30 @@ func getClassicLbListenerId(client *clb.Client, lbId string, proto string, port 
 
 	resp, err := client.DescribeClassicalLBListeners(request)
 	if err != nil {
-		return "", err
+		return "","", err
 	}
 
 	if len(resp.Response.Listeners) == 0 {
-		return "", fmt.Errorf("can't found listenerId by lb(%s),proto(%s),port(%v)", lbId, proto, port)
+		return "","",fmt.Errorf("can't found listenerId by lb(%s),proto(%s),port(%v)", lbId, proto, port)
 	}
 
-	return *resp.Response.Listeners[0].ListenerId, nil
+	port := fmt.Sprintf("%v",*resp.Response.Listeners[0].InstancePort)
+	return *resp.Response.Listeners[0].ListenerId, port,nil
 }
 
-func getLbListener(providerParams string, id string, forward uint64, protocol string, port string) (string, error) {
-	listenerId := ""
-	client, _ := createClbClient(providerParams)
-	proto := strings.ToUpper(protocol)
-	portInt64, err := strconv.ParseInt(port, 10, 64)
-
-	if err != nil {
-		return listenerId, fmt.Errorf("%s is invalid port", port)
-	}
-
-	if forward != 0 && forward != 1 {
-		return listenerId, fmt.Errorf("lb forward(%v) is invalid value", forward)
-	}
-
-	if forward == 1 {
-		listenerId, err = getAppLbListenerId(client, id, proto, portInt64)
-	}
-
-	//classic
-	if forward == 0 {
-		listenerId, err = getClassicLbListenerId(client, id, proto, portInt64)
-	}
-
-	if err != nil {
-		logrus.Errorf("getLbListener:meet err=%v", err)
-	}
-
-	return listenerId, err
-}
-
-func getAppLbBackends(client *clb.Client, lbId string, listenerId string) ([]string, error) {
-	request := clb.NewDescribeTargetsRequest()
+func getAppLbBackends(client *clb.Client, lbId string, protocol string, port int64) ([]string, []int64,error) {
 	instanceIds := []string{}
-	listenerIds := []string{listenerId}
-	request.LoadBalancerId = &lbId
-	request.ListenerIds = common.StringPtrs(listenerIds)
+	ports:=[]int64{}
+	listenerId, err := getAppLbListenerId(client, lbId, protocol, portInt64)
+	if err != nil {
+		return instanceIds ,ports,errr
+	}
 
-	fmt.Printf("getAppLbBackends id=%v,listenerId=%v\n", lbId, listenerId)
+	listenerIds := []string{listenerId}
+	request := clb.NewDescribeTargetsRequest()
+	request.ListenerIds = common.StringPtrs(listenerIds)
+	request.LoadBalancerId = &lbId
+	
 	resp, err := client.DescribeTargets(request)
 	if err != nil {
 		fmt.Printf("describe target meet err=%v\n", err)
@@ -235,23 +237,28 @@ func getAppLbBackends(client *clb.Client, lbId string, listenerId string) ([]str
 	}
 
 	if len(resp.Response.Listeners) == 0 {
-		fmt.Printf("listenrerNum =0\n")
-		return instanceIds, fmt.Errorf("lb(%v) can't found listenerId(%s)", lbId, listenerId)
+		return instanceIds, ports,fmt.Errorf("lb(%v) can't found listenerId(%s)", lbId, listenerId)
 	}
 
 	for _, target := range resp.Response.Listeners[0].Targets {
 		instanceIds = append(instanceIds, *target.InstanceId)
+		ports = append(ports,*target.Port)
 	}
-	fmt.Printf("getAppLbBackEnd=%v\n", instanceIds)
 
-	return instanceIds, nil
+	return instanceIds, ports,nil
 }
 
-func getClassicLbBackends(client *clb.Client, lbId string, listenerId string) ([]string, error) {
+func getClassicLbBackends(client *clb.Client, lbId string,protocol string, port int64) ([]string,[]int64, error) {
 	instanceIds := []string{}
+	ports:=[]int64{}
+
+	listenerId, listnerPort,err = getClassicLbListenerId(client, lbId , protocol, port)
+    if err != nil {
+		return instanceIds ,ports,errr
+	}
+
 	request := clb.NewDescribeClassicalLBTargetsRequest()
 	request.LoadBalancerId = &lbId
-
 	resp, err := client.DescribeClassicalLBTargets(request)
 	if err != nil {
 		return instanceIds, err
@@ -259,46 +266,8 @@ func getClassicLbBackends(client *clb.Client, lbId string, listenerId string) ([
 
 	for _, target := range resp.Response.Targets {
 		instanceIds = append(instanceIds, *target.InstanceId)
+		ports =append(ports,listnerPort)
 	}
 
-	return instanceIds, nil
-}
-
-func getLbBackendTargets(providerParams string, id string, forward uint64, listenerId string, vip string) ([]ResourceInstance, error) {
-	instances := []ResourceInstance{}
-	instanceIds := []string{}
-	client, err := createClbClient(providerParams)
-
-	if forward != 0 && forward != 1 {
-		return instances, fmt.Errorf("lb forward(%v) is invalid value", forward)
-	}
-
-	if forward == 1 {
-		instanceIds, err = getAppLbBackends(client, id, listenerId)
-	}
-
-	if forward == 0 {
-		instanceIds, err = getClassicLbBackends(client, id, listenerId)
-	}
-
-	if err != nil {
-		logrus.Errorf("getLbBackendTargets:meet err=%v", err)
-		return instances, err
-	}
-
-	cvmType := CvmResourceType{}
-	instanceMap, err := cvmType.QueryInstancesById(providerParams, instanceIds)
-	if err != nil {
-		logrus.Errorf("getLbBackendTargets:query meet err=%v", err)
-		return instances, fmt.Errorf("getLbBackendTargets:query meet err=%v", err)
-	}
-
-	for _, instance := range instanceMap {
-		cvmInstance := instance.(CvmInstance)
-		cvmInstance.IsLoadBalancerBackend = true
-		cvmInstance.LoadBalanceIp = vip
-		instances = append(instances, cvmInstance)
-	}
-
-	return instances, err
+	return instanceIds, ports,nil
 }

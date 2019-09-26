@@ -131,7 +131,7 @@ func (instance CvmInstance) IsSupportSecurityGroupApi() bool {
 	return true
 }
 
-func (instance CvmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, error) {
+func (instance CvmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string,error) {
 	instances := []ResourceInstance{}
 	return instances, fmt.Errorf("cvm do not support GetBackendTargets function")
 }

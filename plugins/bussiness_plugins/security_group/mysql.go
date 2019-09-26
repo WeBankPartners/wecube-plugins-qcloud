@@ -142,7 +142,7 @@ func (instance MysqlInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
 }
 
-func (instance MysqlInstance) GetBackendTargets(providerParams string, port string, proto string) ([]ResourceInstance, error) {
-	instances := []ResourceInstance{}
-	return instances, fmt.Errorf("mysql do not support GetBackendTargets function")
+func (instance MysqlInstance) GetBackendTargets(providerParams string, port string, proto string) ([]ResourceInstance, []string,error) {
+	instances,ports := []ResourceInstance{},[]string{}
+	return instances, ports, fmt.Errorf("mysql do not support GetBackendTargets function")
 }
