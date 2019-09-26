@@ -287,7 +287,7 @@ func waitMariadbToDesireStatus(client *mariadb.Client, instanceId string, desire
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 60 {
+		if count >= 360 {
 			return "", 0, errors.New("waitMariadbRunning timeout")
 		}
 	}
