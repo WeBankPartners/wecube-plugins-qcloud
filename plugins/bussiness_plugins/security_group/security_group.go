@@ -291,7 +291,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 
 	for _, peerIp := range peerIps {
 		for _, port := range ports {
-			newPolicies, err := newPolicies(instance, peerIp, devIp, proto, port, action, description)
+			newPolicies, err := newPolicies(instance, devIp, peerIp, proto, port, action, description)
 			if err != nil {
 				return policies, err
 			}
