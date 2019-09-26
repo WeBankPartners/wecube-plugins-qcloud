@@ -254,7 +254,7 @@ func newPolicies(instance ResourceInstance, myIp string,peerIp string, proto str
 				Id:                      backendInstance.GetId(),
 				Region:                  backendInstance.GetRegion(),
 				SupportSecurityGroupApi: backendInstance.IsSupportSecurityGroupApi(),
-				PeerIp:                  peerIp,
+				PeerIp:                  peerIp,                peerIp,
 				Protocol:                proto,
 				Ports:                   port,
 				Action:                  action,
@@ -428,7 +428,7 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 	instanceMap := make(map[string][]*SecurityPolicy)
 
 	for i, _ := range policies {
-		if strings.HasPrefix(policies[i].Type,"cvm"){
+		if strings.HasPrefix(policies[i].Type,"clb-cvm"){
 			policies[i].Type = "cvm"
 		}
 

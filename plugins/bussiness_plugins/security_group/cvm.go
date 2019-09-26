@@ -118,7 +118,7 @@ func (instance CvmInstance) ResourceTypeName() string {
 	if !instance.IsLoadBalancerBackend{
 		return "cvm"
 	}else {
-		return fmt.Sprintf("cvm-lb-%s",instance.LoadBalanceIp)
+		return fmt.Sprintf("clb-cvm-%s",instance.LoadBalanceIp)
 	}
 }
 
