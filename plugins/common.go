@@ -44,6 +44,19 @@ func IsValidValue(inputValue string, validValues []string) error {
 	return fmt.Errorf("%s is not valid value in(%++v)", inputValue, validValues)
 }
 
+func GetRegionFromProviderParams(providerParams string) (string, error) {
+	paramMap, err := GetMapFromProviderParams(providerParams)
+	if err != nil {
+		return "", err
+	}
+
+	region, ok := paramMap["Region"]
+	if !ok {
+		return region, fmt.Errorf("region not found in providerParams")
+	}
+	return region, nil
+}
+
 func GetMapFromProviderParams(providerParams string) (map[string]string, error) {
 	rtnMap := make(map[string]string)
 	params := strings.Split(providerParams, ";")

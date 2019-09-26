@@ -208,7 +208,7 @@ func getInstanceIdByDealName(client *mariadb.Client, dealName string) (string, e
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 30 {
+		if count >= 180 {
 			return "", errors.New("getInstanceIdByDealName timeout")
 		}
 	}
