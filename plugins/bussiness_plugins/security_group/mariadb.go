@@ -1,6 +1,10 @@
 package securitygroup
 
-import "github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
+import (
+	"fmt"
+
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
+)
 
 //resource type
 type MariadbResourceType struct {
@@ -106,4 +110,13 @@ func (instance MariadbInstance) GetRegion() string {
 
 func (instance MariadbInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
+}
+
+func (instance MariadbInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
+	instances := []ResourceInstance{}
+	return instances, []string{}, fmt.Errorf("mariadb do not support GetBackendTargets function")
+}
+
+func (instance MariadbInstance) GetIp() string {
+	return instance.Vip
 }

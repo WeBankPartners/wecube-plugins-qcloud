@@ -2,6 +2,7 @@ package securitygroup
 
 import (
 	"fmt"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
 	"github.com/zqfan/tencentcloud-sdk-go/common"
 )
@@ -94,9 +95,8 @@ type CvmInstance struct {
 	Region                  string
 	SecurityGroups          []string
 	SupportSecurityGroupApi bool
-
-	IsLoadBalancerBackend bool
-	LoadBalanceIp         string
+	IsLoadBalancerBackend   bool
+	LoadBalanceIp           string
 }
 
 func (instance CvmInstance) GetId() string {
@@ -135,6 +135,7 @@ func (instance CvmInstance) GetBackendTargets(providerParams string, proto strin
 	instances := []ResourceInstance{}
 	return instances, []string{}, fmt.Errorf("cvm do not support GetBackendTargets function")
 }
+
 func (instance CvmInstance) GetIp() string {
 	if len(instance.PrivateIps) > 0 {
 		return instance.PrivateIps[0]

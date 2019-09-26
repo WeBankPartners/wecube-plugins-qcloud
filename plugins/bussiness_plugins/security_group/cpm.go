@@ -93,6 +93,8 @@ type CpmInstance struct {
 	LanIp                   string
 	Region                  string
 	SupportSecurityGroupApi bool
+	IsLoadBalancerBackend   bool
+	LoadBalanceIp           string
 }
 
 func (instance CpmInstance) GetId() string {
@@ -121,6 +123,15 @@ func (instance CpmInstance) GetRegion() string {
 
 func (instance CpmInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
+}
+
+func (instance CpmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
+	instances := []ResourceInstance{}
+	return instances, []string{}, fmt.Errorf("cpm do not support GetBackendTargets function")
+}
+
+func (instance CpmInstance) GetIp() string {
+	return instance.LanIp
 }
 
 func CreateBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
