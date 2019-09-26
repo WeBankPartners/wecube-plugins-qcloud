@@ -152,7 +152,7 @@ type SecurityPolicy struct {
 	Description             string `json:"description"`
 	ErrorMsg                string `json:"err_msg,omitempty"`
 	UndoReason              string `json:"undo_reason,omitempty"`
-	SecurityGroupId         string `json:"security_group_id, omitempty"`
+	SecurityGroupId         string `json:"security_group_id,omitempty"`
 }
 
 type CalcSecurityPoliciesResult struct {
@@ -249,6 +249,10 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 		if err != nil {
 			return policies, err
 		}
+		if len(instances) == 0 {
+			return policies, fmt.Errorf("loadbalancer(%s) port (%v) do not have any backends", instance.GetIp(), splitPort)
+		}
+
 		for i, backendInstance := range instances {
 			newPolicy := SecurityPolicy{
 				Ip:                      backendInstance.GetIp(),
@@ -286,7 +290,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 
 	if direction == EGRESS_RULE {
 		if false == resType.IsSupportEgressPolicy() {
-			logrus.Errorf("%s is %d device,do not support egress", devIp, instance.ResourceTypeName())
+			logrus.Errorf("%s is %s device,do not support egress", devIp, instance.ResourceTypeName())
 			return policies, nil
 		}
 	}
