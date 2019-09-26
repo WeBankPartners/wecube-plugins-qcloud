@@ -217,7 +217,7 @@ func getLbListener(providerParams string, id string, forward uint64, protocol st
 		logrus.Errorf("getLbListener:meet err=%v", err)
 	}
 
-	return id, err
+	return listenerId, err
 }
 
 func getAppLbBackends(client *clb.Client, lbId string, listenerId string) ([]string, error) {
@@ -227,18 +227,22 @@ func getAppLbBackends(client *clb.Client, lbId string, listenerId string) ([]str
 	request.LoadBalancerId = &lbId
 	request.ListenerIds = common.StringPtrs(listenerIds)
 
+	fmt.Printf("getAppLbBackends id=%v,listenerId=%v\n", lbId, listenerId)
 	resp, err := client.DescribeTargets(request)
 	if err != nil {
+		fmt.Printf("describe target meet err=%v\n", err)
 		return instanceIds, err
 	}
 
 	if len(resp.Response.Listeners) == 0 {
+		fmt.Printf("listenrerNum =0\n")
 		return instanceIds, fmt.Errorf("lb(%v) can't found listenerId(%s)", lbId, listenerId)
 	}
 
 	for _, target := range resp.Response.Listeners[0].Targets {
 		instanceIds = append(instanceIds, *target.InstanceId)
 	}
+	fmt.Printf("getAppLbBackEnd=%v\n", instanceIds)
 
 	return instanceIds, nil
 }
@@ -279,6 +283,7 @@ func getLbBackendTargets(providerParams string, id string, forward uint64, liste
 
 	if err != nil {
 		logrus.Errorf("getLbBackendTargets:meet err=%v", err)
+		return instances, err
 	}
 
 	cvmType := CvmResourceType{}

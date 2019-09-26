@@ -242,9 +242,10 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 
 	for _, splitPort := range splitPorts {
 		if _, err := strconv.Atoi(splitPort); err != nil {
-			return policies, fmt.Errorf("lb(%s) do not support security port like %s format", port)
+			return policies, fmt.Errorf("loadbalancer do not support port format like %s", port)
 		}
 		instances, err := instance.GetBackendTargets(providerParams, proto, splitPort)
+		fmt.Printf("getLb backendHost=%++v\n", instances)
 		if err != nil {
 			return policies, err
 		}
