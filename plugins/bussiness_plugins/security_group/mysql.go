@@ -92,11 +92,11 @@ func (resourceType *MysqlResourceType) QueryInstancesByIp(providerParams string,
 	return result, nil
 }
 
-func (resourceType *MysqlResourceType )IsSupportEgressPolicy()bool {
+func (resourceType *MysqlResourceType) IsSupportEgressPolicy() bool {
 	return false
 }
 
-func (resourceType *MysqlResourceType) IsLoadBalanceType()bool {
+func (resourceType *MysqlResourceType) IsLoadBalanceType() bool {
 	return false
 }
 
@@ -142,7 +142,7 @@ func (instance MysqlInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
 }
 
-func (instance MysqlInstance) GetBackendTargets(providerParams string,port string,proto string)([]ResourceInstance,error){
-	instances:=[]ResourceInstance{}
-	return instances,fmt.Errorf("mysql do not support GetBackendTargets function")
+func (instance MysqlInstance) GetBackendTargets(providerParams string, port string, proto string) ([]ResourceInstance, error) {
+	instances := []ResourceInstance{}
+	return instances, fmt.Errorf("mysql do not support GetBackendTargets function")
 }
