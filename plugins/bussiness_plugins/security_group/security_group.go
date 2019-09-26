@@ -89,6 +89,7 @@ func init() {
 	//resourceType registry
 	addNewResourceType("mysql", new(MysqlResourceType))
 	addNewResourceType("cvm", new(CvmResourceType))
+	addNewResourceType("clb", new(ClbResourceType))
 
 	//action
 	SecurityGroupActions["calc-security-policies"] = new(CalcSecurityPolicyAction)
@@ -290,13 +291,13 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	}
 
 	for _, peerIp := range peerIps {
-		peerinstance, err := findInstanceByIp(peerIp)
+		peerInstance, err := findInstanceByIp(peerIp)
+		fmt.Printf("findInstanceByip peerIp=%s,instance=%++v,err=%v\n", peerIp, peerInstance, err)
 		if err == nil {
-			peerResType,_ = getResouceTypeByName(instance.ResourceTypeName())
-			if direction == INGRESS_RULE && nil != peerResType 
-			   && peerResType.IsLoadBalanceType() {
-				   return policies,Errorf("perrIp(%s) 是负载均衡设备,入栈规则不支持对端IP为负载均衡设备",peerIp)
-			   }
+			peerResType, _ := getResouceTypeByName(peerInstance.ResourceTypeName())
+			if direction == INGRESS_RULE && nil != peerResType && peerResType.IsLoadBalanceType() {
+				return policies, fmt.Errorf("对端设备(%s) 是负载均衡设备,入栈规则不支持对端IP为负载均衡设备", peerIp)
+			}
 		}
 
 		for _, port := range ports {
