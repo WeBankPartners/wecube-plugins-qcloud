@@ -290,6 +290,15 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	}
 
 	for _, peerIp := range peerIps {
+		peerinstance, err := findInstanceByIp(peerIp)
+		if err == nil {
+			peerResType,_ = getResouceTypeByName(instance.ResourceTypeName())
+			if direction == INGRESS_RULE && nil != peerResType 
+			   && peerResType.IsLoadBalanceType() {
+				   return policies,Errorf("perrIp(%s) 是负载均衡设备,入栈规则不支持对端IP为负载均衡设备",peerIp)
+			   }
+		}
+
 		for _, port := range ports {
 			newPolicies,err:=newPolicies(instance,peerIp,proto,port,action,description)
 			if err != nil {
