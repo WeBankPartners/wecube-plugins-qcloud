@@ -27,14 +27,14 @@ type ResourceInstance interface {
 	QuerySecurityGroups(providerParams string) ([]string, error)
 	AssociateSecurityGroups(providerParams string, securityGroups []string) error
 	IsSupportSecurityGroupApi() bool
-	GetBackendTargets(providerParams string,proto string,port string)([]ResourceInstance,error)
+	GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, error)
 }
 
 type ResourceType interface {
 	QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error)
 	QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error)
-	IsLoadBalanceType()bool 
-	IsSupportEgressPolicy()bool
+	IsLoadBalanceType() bool
+	IsSupportEgressPolicy() bool
 }
 
 //resourceType register
@@ -213,12 +213,12 @@ func (action *CalcSecurityPolicyAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func newPolicies(instance ResourceInstance, myIp string,peerIp string, proto string, port string,action string,desc string)([]SecurityPolicy,error){
-	policies:=[]string{}
-	resType, _:= getResouceTypeByName(instance.ResourceTypeName())
+func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto string, port string, action string, desc string) ([]SecurityPolicy, error) {
+	policies := []SecurityPolicy{}
+	resType, _ := getResouceTypeByName(instance.ResourceTypeName())
 
 	//非LB设备
-	if false == resType.IsLoadBalanceType(){
+	if false == resType.IsLoadBalanceType() {
 		newPolicy := SecurityPolicy{
 			Ip:                      myIp,
 			Type:                    instance.ResourceTypeName(),
@@ -229,46 +229,46 @@ func newPolicies(instance ResourceInstance, myIp string,peerIp string, proto str
 			Protocol:                proto,
 			Ports:                   port,
 			Action:                  action,
-			Description:             description,
+			Description:             desc,
 		}
-		policies:=append(policies,newPolicy)
-		return policies,nil 
+		policies := append(policies, newPolicy)
+		return policies, nil
 	}
 
 	//LB设备
-	providerParams:=getProviderParams(instance.GetRegion())
-	splitPorts:=strings.Split(port,",")
+	providerParams, _ := getProviderParams(instance.GetRegion())
+	splitPorts := strings.Split(port, ",")
 
-	for _,splitPort:=range splitPorts{
-		if _,err:=strconv.Atoi(splitPort);err != nil {
-			return policies,fmt.Errorf("lb(%s) do not support security port like %s format",port)
+	for _, splitPort := range splitPorts {
+		if _, err := strconv.Atoi(splitPort); err != nil {
+			return policies, fmt.Errorf("lb(%s) do not support security port like %s format", port)
 		}
-		instances,err:=instance.GetBackendTargets(providerParams,proto,splitPort)
+		instances, err := instance.GetBackendTargets(providerParams, proto, splitPort)
 		if err != nil {
-			return policies, err 
+			return policies, err
 		}
-		for _,backendInstance:=range instances{
+		for _, backendInstance := range instances {
 			newPolicy := SecurityPolicy{
 				Ip:                      backendInstance.GetIp(),
 				Type:                    backendInstance.ResourceTypeName(),
 				Id:                      backendInstance.GetId(),
 				Region:                  backendInstance.GetRegion(),
 				SupportSecurityGroupApi: backendInstance.IsSupportSecurityGroupApi(),
-				PeerIp:                  peerIp,                peerIp,
+				PeerIp:                  peerIp,
 				Protocol:                proto,
 				Ports:                   port,
 				Action:                  action,
-				Description:             description,
+				Description:             desc,
 			}
-			policies:=append(policies,newPolicy)
+			policies = append(policies, newPolicy)
 		}
 	}
 
-	return policies,nil 
+	return policies, nil
 }
 
 func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
-	action string, description string,direction string) ([]SecurityPolicy, error) {
+	action string, description string, direction string) ([]SecurityPolicy, error) {
 	policies := []SecurityPolicy{}
 
 	//check if dev exist
@@ -284,8 +284,8 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 
 	if direction == EGRESS_RULE {
 		if false == resType.IsSupportEgressPolicy() {
-			logrus.Errorf("%s is %d device,do not support egress",devIp,instance.ResourceTypeName())
-			return policies,nil
+			logrus.Errorf("%s is %d device,do not support egress", devIp, instance.ResourceTypeName())
+			return policies, nil
 		}
 	}
 
@@ -300,9 +300,9 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 		}
 
 		for _, port := range ports {
-			newPolicies,err:=newPolicies(instance,peerIp,proto,port,action,description)
+			newPolicies, err := newPolicies(instance, devIp, peerIp, proto, port, action, description)
 			if err != nil {
-				return policies,err
+				return policies, err
 			}
 			if len(newPolicies) > 0 {
 				policies = append(policies, newPolicies...)
@@ -322,7 +322,7 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	//calc egress policies
 	if isContainInList(EGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.SourceIps {
-			policies, err := calcPolicies(ip, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description,EGRESS_RULE)
+			policies, err := calcPolicies(ip, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description, EGRESS_RULE)
 			result.EgressPolicies = append(result.EgressPolicies, policies...)
 			if err != nil && finalError != nil {
 				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
@@ -336,7 +336,7 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	//calc ingress policies
 	if isContainInList(INGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.DestIps {
-			policies, err := calcPolicies(ip, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description,INGRESS_RULE)
+			policies, err := calcPolicies(ip, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description, INGRESS_RULE)
 			result.IngressPolicies = append(result.IngressPolicies, policies...)
 			if err != nil && finalError != nil {
 				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
@@ -437,7 +437,7 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 	instanceMap := make(map[string][]*SecurityPolicy)
 
 	for i, _ := range policies {
-		if strings.HasPrefix(policies[i].Type,"clb-cvm"){
+		if strings.HasPrefix(policies[i].Type, "clb-cvm") {
 			policies[i].Type = "cvm"
 		}
 

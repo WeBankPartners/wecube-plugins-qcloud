@@ -1,6 +1,7 @@
 package securitygroup
 
 import (
+	"fmt"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
 	"github.com/zqfan/tencentcloud-sdk-go/common"
 )
@@ -75,11 +76,11 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 	return result, nil
 }
 
-func (resourceType *CvmResourceType )IsSupportEgressPolicy()bool {
+func (resourceType *CvmResourceType) IsSupportEgressPolicy() bool {
 	return true
 }
 
-func (resourceType *CvmResourceType) IsLoadBalanceType()bool {
+func (resourceType *CvmResourceType) IsLoadBalanceType() bool {
 	return false
 }
 
@@ -94,8 +95,8 @@ type CvmInstance struct {
 	SecurityGroups          []string
 	SupportSecurityGroupApi bool
 
-	IsLoadBalancerBackend  bool
-	LoadBalanceIp           string
+	IsLoadBalancerBackend bool
+	LoadBalanceIp         string
 }
 
 func (instance CvmInstance) GetId() string {
@@ -115,10 +116,10 @@ func (instance CvmInstance) AssociateSecurityGroups(providerParams string, secur
 }
 
 func (instance CvmInstance) ResourceTypeName() string {
-	if !instance.IsLoadBalancerBackend{
+	if !instance.IsLoadBalancerBackend {
 		return "cvm"
-	}else {
-		return fmt.Sprintf("clb-cvm-%s",instance.LoadBalanceIp)
+	} else {
+		return fmt.Sprintf("clb-cvm-%s", instance.LoadBalanceIp)
 	}
 }
 
@@ -130,12 +131,12 @@ func (instance CvmInstance) IsSupportSecurityGroupApi() bool {
 	return true
 }
 
-func (instance CvmInstance) GetBackendTargets(providerParams string,proto string,port string)([]ResourceInstance,error)
-	instances:=[]ResourceInstance{}
-	return instances,fmt.Errorf("cvm do not support GetBackendTargets function")
+func (instance CvmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, error) {
+	instances := []ResourceInstance{}
+	return instances, fmt.Errorf("cvm do not support GetBackendTargets function")
 }
-func (instance CvmInstance)GetIp()string{
-	if len(instance.PrivateIps) >0{
+func (instance CvmInstance) GetIp() string {
+	if len(instance.PrivateIps) > 0 {
 		return instance.PrivateIps[0]
 	}
 	return ""
