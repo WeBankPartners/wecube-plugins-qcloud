@@ -476,8 +476,8 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBInstance, error) {
 	validFilterNames := []string{"instanceId", "vip"}
 	filterValues := common.StringPtrs(filter.Values)
-	var limit int64
-
+	var offset, limit int64 = 0, int64(len(filterValues))
+	logrus.Infof("QueryMariadbInstance providerParams:%v, filter:%++v", providerParams, filter)
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	if err != nil {
 		return nil, err
@@ -492,8 +492,8 @@ func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBIn
 	}
 
 	request := mariadb.NewDescribeDBInstancesRequest()
-	limit = int64(len(filterValues))
 	request.Limit = &limit
+	request.Offset = &offset
 	if filter.Name == "instanceId" {
 		request.InstanceIds = filterValues
 	}

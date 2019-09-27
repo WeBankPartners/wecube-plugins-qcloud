@@ -205,8 +205,9 @@ func QueryBmlbInstance(providerParams string, filter plugins.Filter) ([]*bmlb.Lo
 		return nil, err
 	}
 	request := bmlb.NewDescribeLoadBalancersRequest()
-	limit := uint64(len(filterValues))
+	var offset, limit uint64 = 0, uint64(len(filterValues))
 	request.Limit = &limit
+	request.Offset = &offset
 	if filter.Name == "instanceId" {
 		request.LoadBalancerIds = filterValues
 	}

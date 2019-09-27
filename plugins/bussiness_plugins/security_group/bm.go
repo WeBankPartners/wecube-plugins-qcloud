@@ -154,7 +154,6 @@ func createBmClient(region, secretId, secretKey string) (client *bm.Client, err 
 func QueryBmInstance(providerParams string, filter plugins.Filter) ([]*bm.DeviceInfo, error) {
 	validFilterNames := []string{"instanceId", "lanIp"}
 	filterValues := common.StringPtrs(filter.Values)
-	var limit uint64
 
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	if err != nil {
@@ -170,7 +169,9 @@ func QueryBmInstance(providerParams string, filter plugins.Filter) ([]*bm.Device
 	}
 
 	request := bm.NewDescribeDevicesRequest()
-	limit = uint64(len(filterValues))
+	var offset, limit uint64 = 0, uint64(len(filterValues))
+	request.Limit = &limit
+	request.Offset = &offset
 	request.Limit = &limit
 	if filter.Name == "instanceId" {
 		request.InstanceIds = filterValues
