@@ -390,7 +390,7 @@
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
-                <parameter datatype="number">private_port</parameter>
+                <parameter datatype="string">private_port</parameter>
                 <parameter datatype="string">private_ip</parameter>
                 <parameter datatype="string">user_name</parameter>
                 <parameter datatype="string">password</parameter>
