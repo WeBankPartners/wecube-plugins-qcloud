@@ -90,7 +90,9 @@ func init() {
 	addNewResourceType("mysql", new(MysqlResourceType))
 	addNewResourceType("cvm", new(CvmResourceType))
 	addNewResourceType("clb", new(ClbResourceType))
-
+	addNewResourceType("redis", new(RedisResourceType))
+	addNewResourceType("mongodb", new(MongodbResourceType))
+	 
 	//action
 	SecurityGroupActions["calc-security-policies"] = new(CalcSecurityPolicyAction)
 	SecurityGroupActions["apply-security-policies"] = new(ApplySecurityPolicyAction)
