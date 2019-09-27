@@ -72,7 +72,11 @@ func (resourceType *MariadbResourceType) QueryInstancesByIp(providerParams strin
 	return result, nil
 }
 
-func (resourceType *MariadbResourceType) IsSupportSecurityGroupApi() bool {
+func (resourceType *MariadbResourceType) IsSupportEgressPolicy() bool {
+	return false
+}
+
+func (resourceType *MariadbResourceType) IsLoadBalanceType() bool {
 	return false
 }
 

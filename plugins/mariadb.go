@@ -515,7 +515,7 @@ func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBIn
 func QueryMariadbInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
 	err := fmt.Errorf("mariadb do not support security group")
 	logrus.Infof("QueryMariadbInstanceSecurityGroups meet error:%v", err)
-	return nil, err
+	return []string{}, err
 }
 
 func BindMariadbInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {

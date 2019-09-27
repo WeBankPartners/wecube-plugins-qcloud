@@ -15,10 +15,10 @@ const (
 )
 
 //resource type
-type CpmResourceType struct {
+type BmResourceType struct {
 }
 
-func (resourceType *CpmResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
+func (resourceType *BmResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
 	result := make(map[string]ResourceInstance)
 	if len(instanceIds) == 0 {
 		return result, nil
@@ -29,13 +29,13 @@ func (resourceType *CpmResourceType) QueryInstancesById(providerParams string, i
 		Values: instanceIds,
 	}
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
-	deviceInfoSet, err := QueryCpmInstance(providerParams, filter)
+	deviceInfoSet, err := QueryBmInstance(providerParams, filter)
 	if err != nil {
 		return result, err
 	}
 
 	for _, deviceInfo := range deviceInfoSet {
-		instance := CpmInstance{
+		instance := BmInstance{
 			Id:                      *deviceInfo.InstanceId,
 			Name:                    *deviceInfo.Alias,
 			WanIp:                   *deviceInfo.WanIp,
@@ -50,7 +50,7 @@ func (resourceType *CpmResourceType) QueryInstancesById(providerParams string, i
 	return result, nil
 }
 
-func (resourceType *CpmResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
+func (resourceType *BmResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
 	result := make(map[string]ResourceInstance)
 	if len(ips) == 0 {
 		return result, nil
@@ -61,13 +61,13 @@ func (resourceType *CpmResourceType) QueryInstancesByIp(providerParams string, i
 		Values: ips,
 	}
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
-	deviceInfoSet, err := QueryCpmInstance(providerParams, filter)
+	deviceInfoSet, err := QueryBmInstance(providerParams, filter)
 	if err != nil {
 		return result, err
 	}
 
 	for _, deviceInfo := range deviceInfoSet {
-		instance := CpmInstance{
+		instance := BmInstance{
 			Id:                      *deviceInfo.InstanceId,
 			Name:                    *deviceInfo.Alias,
 			WanIp:                   *deviceInfo.WanIp,
@@ -82,11 +82,15 @@ func (resourceType *CpmResourceType) QueryInstancesByIp(providerParams string, i
 	return result, nil
 }
 
-func (resourceType *CpmResourceType) IsSupportSecurityGroupApi() bool {
+func (resourceType *BmResourceType) IsSupportEgressPolicy() bool {
+	return true
+}
+
+func (resourceType *BmResourceType) IsLoadBalanceType() bool {
 	return false
 }
 
-type CpmInstance struct {
+type BmInstance struct {
 	Id                      string
 	Name                    string
 	WanIp                   string
@@ -97,44 +101,44 @@ type CpmInstance struct {
 	LoadBalanceIp           string
 }
 
-func (instance CpmInstance) GetId() string {
+func (instance BmInstance) GetId() string {
 	return instance.Id
 }
 
-func (instance CpmInstance) GetName() string {
+func (instance BmInstance) GetName() string {
 	return instance.Name
 }
 
-func (instance CpmInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
-	return QueryCpmInstanceSecurityGroups(providerParams, instance.Id)
+func (instance BmInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
+	return QueryBmInstanceSecurityGroups(providerParams, instance.Id)
 }
 
-func (instance CpmInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
-	return BindCpmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
+func (instance BmInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
+	return BindBmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
 }
 
-func (instance CpmInstance) ResourceTypeName() string {
-	return "cpm"
+func (instance BmInstance) ResourceTypeName() string {
+	return "bm"
 }
 
-func (instance CpmInstance) GetRegion() string {
+func (instance BmInstance) GetRegion() string {
 	return instance.Region
 }
 
-func (instance CpmInstance) IsSupportSecurityGroupApi() bool {
+func (instance BmInstance) IsSupportSecurityGroupApi() bool {
 	return instance.SupportSecurityGroupApi
 }
 
-func (instance CpmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
+func (instance BmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
 	instances := []ResourceInstance{}
-	return instances, []string{}, fmt.Errorf("cpm do not support GetBackendTargets function")
+	return instances, []string{}, fmt.Errorf("bm do not support GetBackendTargets function")
 }
 
-func (instance CpmInstance) GetIp() string {
+func (instance BmInstance) GetIp() string {
 	return instance.LanIp
 }
 
-func CreateBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
+func createBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
 
 	clientProfile := profile.NewClientProfile()
@@ -144,10 +148,10 @@ func CreateBmClient(region, secretId, secretKey string) (client *bm.Client, err 
 	if err != nil {
 		logrus.Errorf("Create Qcloud bm client failed,err=%v", err)
 	}
-	return
+	return client, err
 }
 
-func QueryCpmInstance(providerParams string, filter plugins.Filter) ([]*bm.DeviceInfo, error) {
+func QueryBmInstance(providerParams string, filter plugins.Filter) ([]*bm.DeviceInfo, error) {
 	validFilterNames := []string{"instanceId", "lanIp"}
 	filterValues := common.StringPtrs(filter.Values)
 	var limit uint64
@@ -156,7 +160,7 @@ func QueryCpmInstance(providerParams string, filter plugins.Filter) ([]*bm.Devic
 	if err != nil {
 		return nil, err
 	}
-	client, err := CreateBmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, err := createBmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
 	}
@@ -177,21 +181,21 @@ func QueryCpmInstance(providerParams string, filter plugins.Filter) ([]*bm.Devic
 
 	response, err := client.DescribeDevices(request)
 	if err != nil {
-		logrus.Errorf("cpm DescribeDevices meet err=%v", err)
+		logrus.Errorf("bm DescribeDevices meet err=%v", err)
 		return nil, err
 	}
 
 	return response.Response.DeviceInfoSet, nil
 }
 
-func QueryCpmInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
+func QueryBmInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
 	err := fmt.Errorf("cloud physical machienes do not support security group")
-	logrus.Infof("QueryCpmInstanceSecurityGroups meet error:%v", err)
+	logrus.Infof("QueryBmInstanceSecurityGroups meet error:%v", err)
 	return nil, err
 }
 
-func BindCpmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
+func BindBmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
 	err := fmt.Errorf("cloud physical machienes do not support security group")
-	logrus.Infof("BindCpmInstanceSecurityGroups meet error:%v", err)
+	logrus.Infof("BindBmInstanceSecurityGroups meet error:%v", err)
 	return err
 }
