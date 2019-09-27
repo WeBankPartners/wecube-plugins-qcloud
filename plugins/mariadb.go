@@ -71,7 +71,7 @@ type MariadbOutput struct {
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
 	PrivateIp string `json:"private_ip,omitempty"`
-	Port      int64  `json:"private_port,omitempty"`
+	Port      string `json:"private_port,omitempty"`
 	UserName  string `json:"user_name,omitempty"`
 	Password  string `json:"password,omitempty"`
 }
@@ -467,7 +467,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 	output.RequestId = requestId
 	output.Id = instanceId
 	output.PrivateIp = vip
-	output.Port = vport
+	output.Port = fmt.Sprintf("%v", vport)
 	output.UserName = input.UserName
 
 	return output, nil
