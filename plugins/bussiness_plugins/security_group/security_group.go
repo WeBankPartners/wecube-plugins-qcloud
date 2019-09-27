@@ -90,6 +90,9 @@ func init() {
 	addNewResourceType("mysql", new(MysqlResourceType))
 	addNewResourceType("cvm", new(CvmResourceType))
 	addNewResourceType("clb", new(ClbResourceType))
+	addNewResourceType("bm", new(ClbResourceType))
+	addNewResourceType("bmlb", new(ClbResourceType))
+	addNewResourceType("mariadb", new(ClbResourceType))
 	addNewResourceType("redis", new(RedisResourceType))
 	addNewResourceType("mongodb", new(MongodbResourceType))
 
