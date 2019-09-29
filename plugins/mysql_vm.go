@@ -3,12 +3,12 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"time"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	"time"
 )
 
 const (
@@ -72,9 +72,9 @@ type MysqlVmOutput struct {
 	PrivateIp string `json:"private_ip,omitempty"`
 
 	//用户名和密码
-	Port      string `json:"private_port,omitempty"`
-	UserName  string `json:"user_name,omitempty"`
-	Password  string `json:"password,omitempty"`
+	Port     string `json:"private_port,omitempty"`
+	UserName string `json:"user_name,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type MysqlVmPlugin struct {
@@ -185,32 +185,31 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	return *response.Response.InstanceIds[0], *response.Response.RequestId, nil
 }
 
-func initMysqlInstance(client *cdb.Client, instanceId string,charset string,lowerCaseTableName string)(string,string,error) {
-	var defaultPort int64 =3306
+func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string) (string, string, error) {
+	var defaultPort int64 = 3306
 	password := utils.CreateRandomPassword()
 	charSetParamName := "character_set_server"
 	lowCaseParamName := "lower_case_table_names"
 
-	charsetParam :=&cdb.ParamInfo{
-		Name: &charSetParamName,
+	charsetParam := &cdb.ParamInfo{
+		Name:  &charSetParamName,
 		Value: &charset,
 	}
 	lowCaseParam := &cdb.ParamInfo{
-		Name: &lowCaseParamName,
+		Name:  &lowCaseParamName,
 		Value: &lowerCaseTableName,
 	}
+	request := cdb.NewInitDBInstancesRequest()
+	request.InstanceIds = []*string{&instanceId}
+	request.NewPassword = &password
+	request.Vport = &defaultPort
+	request.Parameters = []*cdb.ParamInfo{charsetParam, lowCaseParam}
 
-	request:=cdb.NewInitDBInstancesRequest()
-	request.InstanceIds= []*string{&instanceId}
-	request.NewPassword=&password
-	request.Vport  = &defaultPort 
-	reqeust.Parameters=[]*cdb.ParamInfo{charsetParam,lowCaseParam}
-
-	resp,err := client.InitDBInstances(reqeust)
-	if err != nil{
-		return password,"",err
+	_, err := client.InitDBInstances(request)
+	if err != nil {
+		return password, "", err
 	}
-	return password,fmt.Sprintf("%v",defaultPort,),nil
+	return password, fmt.Sprintf("%v", defaultPort), nil
 }
 
 func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*MysqlVmOutput, error) {
@@ -244,11 +243,17 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 		}
 	}
 
-	//init database 	
-	LowerCaseTableNames string `json:"lower_case_table_names,omitempty"`
-	password,port,err := initMysqlInstance(client, instanceId,input.CharacterSet,input.LowerCaseTableNames)
+	//init database
+	if mysqlVmInput.CharacterSet == "" {
+		mysqlVmInput.CharacterSet = DEFAULT_MARIADB_CHARACTER_SET
+	}
+	if mysqlVmInput.LowerCaseTableNames == "" {
+		mysqlVmInput.LowerCaseTableNames = DEFAULT_MARIADB_LOWER_CASE_TABLE_NAMES
+	}
+
+	password, port, err := initMysqlInstance(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames)
 	if err != nil {
-		return nil,err 
+		return nil, err
 	}
 
 	output := MysqlVmOutput{}
@@ -258,11 +263,11 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	output.RequestId = requestId
 	output.Port = port
 	output.UserName = "root"
-	
-	md5sum := utils.Md5Encode(input.Guid + input.Seed)
+
+	md5sum := utils.Md5Encode(mysqlVmInput.Guid + mysqlVmInput.Seed)
 	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
 		logrus.Errorf("AesEncode meet error(%v)", err)
-		return output, err
+		return &output, err
 	}
 
 	return &output, nil
