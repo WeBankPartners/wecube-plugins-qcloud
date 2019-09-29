@@ -345,6 +345,7 @@
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">private_ip</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/mysql-vm/terminate">
