@@ -330,6 +330,7 @@
         <interface name="create" path="/v1/qcloud/mysql-vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">seed</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">engine_version</parameter>
                 <parameter datatype="number">memory</parameter>
@@ -341,11 +342,16 @@
                 <parameter datatype="string">charge_type</parameter>
                 <parameter datatype="number">charge_period</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">character_set</parameter>
+                <parameter datatype="string">lower_case_table_names</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
                 <parameter datatype="string">private_ip</parameter>
+                <parameter datatype="string">private_port</parameter>
+                <parameter datatype="string">user_name</parameter>
+                <parameter datatype="string">password</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/mysql-vm/terminate">
