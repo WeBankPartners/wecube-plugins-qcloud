@@ -209,7 +209,25 @@ func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lo
 	if err != nil {
 		return password, "", err
 	}
+
 	return password, fmt.Sprintf("%v", defaultPort), nil
+}
+
+func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string) (string, string, error) {
+	maxTryNum := 20
+
+	for i := 0; i < maxTryNum; i++ {
+		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName)
+		initFlag, err := queryMySqlInstanceInitFlag(client, instanceId)
+		if err != nil {
+			return password, port, err
+		}
+		if initFlag == 1 {
+			return password, port, nil
+		}
+		time.Sleep(10 * time.Second)
+	}
+	return "", "", fmt.Errorf("timeout")
 }
 
 func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*MysqlVmOutput, error) {
@@ -251,7 +269,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 		mysqlVmInput.LowerCaseTableNames = DEFAULT_MARIADB_LOWER_CASE_TABLE_NAMES
 	}
 
-	password, port, err := initMysqlInstance(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames)
+	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames)
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +289,22 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	}
 
 	return &output, nil
+}
+
+func queryMySqlInstanceInitFlag(client *cdb.Client, instanceId string) (int64, error) {
+	var initFlag int64 = 0
+	request := cdb.NewDescribeDBInstancesRequest()
+	request.InstanceIds = append(request.InstanceIds, &instanceId)
+
+	response, err := client.DescribeDBInstances(request)
+	if err != nil {
+		return initFlag, err
+	}
+	if len(response.Response.Items) == 0 {
+		return initFlag, fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
+	}
+
+	return *response.Response.Items[0].InitFlag, nil
 }
 
 func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Client, instanceId string) (string, error) {
@@ -297,6 +331,7 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 			return "", errors.New("waitForMysqlVmCreationToFinish timeout")
 		}
 	}
+	return "", fmt.Errorf("timeout")
 }
 
 func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {
