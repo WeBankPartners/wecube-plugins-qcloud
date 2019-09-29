@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -43,6 +43,7 @@ type MysqlVmInputs struct {
 
 type MysqlVmInput struct {
 	Guid           string `json:"guid,omitempty"`
+	Seed           string `json:"seed,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	EngineVersion  string `json:"engine_version,omitempty"`
 	Memory         int64  `json:"memory,omitempty"`
@@ -54,6 +55,10 @@ type MysqlVmInput struct {
 	Count          int64  `json:"count,omitempty"`
 	ChargeType     string `json:"charge_type,omitempty"`
 	ChargePeriod   int64  `json:"charge_period,omitempty"`
+
+	//初始化时使用
+	CharacterSet        string `json:"character_set,omitempty"`
+	LowerCaseTableNames string `json:"lower_case_table_names,omitempty"`
 }
 
 type MysqlVmOutputs struct {
@@ -65,6 +70,11 @@ type MysqlVmOutput struct {
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
 	PrivateIp string `json:"private_ip,omitempty"`
+
+	//用户名和密码
+	Port      string `json:"private_port,omitempty"`
+	UserName  string `json:"user_name,omitempty"`
+	Password  string `json:"password,omitempty"`
 }
 
 type MysqlVmPlugin struct {
@@ -175,6 +185,34 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	return *response.Response.InstanceIds[0], *response.Response.RequestId, nil
 }
 
+func initMysqlInstance(client *cdb.Client, instanceId string,charset string,lowerCaseTableName string)(string,string,error) {
+	var defaultPort int64 =3306
+	password := utils.CreateRandomPassword()
+	charSetParamName := "character_set_server"
+	lowCaseParamName := "lower_case_table_names"
+
+	charsetParam :=&cdb.ParamInfo{
+		Name: &charSetParamName,
+		Value: &charset,
+	}
+	lowCaseParam := &cdb.ParamInfo{
+		Name: &lowCaseParamName,
+		Value: &lowerCaseTableName,
+	}
+
+	request:=cdb.NewInitDBInstancesRequest()
+	request.InstanceIds= []*string{&instanceId}
+	request.NewPassword=&password
+	request.Vport  = &defaultPort 
+	reqeust.Parameters=[]*cdb.ParamInfo{charsetParam,lowCaseParam}
+
+	resp,err := client.InitDBInstances(reqeust)
+	if err != nil{
+		return password,"",err
+	}
+	return password,fmt.Sprintf("%v",defaultPort,),nil
+}
+
 func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*MysqlVmOutput, error) {
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -206,11 +244,26 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 		}
 	}
 
+	//init database 	
+	LowerCaseTableNames string `json:"lower_case_table_names,omitempty"`
+	password,port,err := initMysqlInstance(client, instanceId,input.CharacterSet,input.LowerCaseTableNames)
+	if err != nil {
+		return nil,err 
+	}
+
 	output := MysqlVmOutput{}
 	output.Guid = mysqlVmInput.Guid
 	output.PrivateIp = privateIp
 	output.Id = instanceId
 	output.RequestId = requestId
+	output.Port = port
+	output.UserName = "root"
+	
+	md5sum := utils.Md5Encode(input.Guid + input.Seed)
+	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
+		logrus.Errorf("AesEncode meet error(%v)", err)
+		return output, err
+	}
 
 	return &output, nil
 }

@@ -337,14 +337,14 @@ func createMariadbAccount(client *mariadb.Client, instanceId string, userName st
 
 func initMariadb(client *mariadb.Client, instanceId string, charset string, lowCaseTableName string) error {
 	charSetParamName := "character_set_server"
-	lowCaweParamName := "lower_case_table_names"
+	lowCaseParamName := "lower_case_table_names"
 
 	charsetParam := mariadb.DBParamValue{
 		Param: &charSetParamName,
 		Value: &charset,
 	}
 	lowCaseParam := mariadb.DBParamValue{
-		Param: &lowCaweParamName,
+		Param: &lowCaseParamName,
 		Value: &lowCaseTableName,
 	}
 
