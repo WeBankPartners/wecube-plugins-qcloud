@@ -253,6 +253,9 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	} else {
 		instanceId, requestId, err = action.createMysqlVmWithPostByHour(client, mysqlVmInput)
 	}
+	if err != nil {
+		return nil, err
+	}
 
 	if instanceId != "" {
 		privateIp, err = action.waitForMysqlVmCreationToFinish(client, instanceId)
