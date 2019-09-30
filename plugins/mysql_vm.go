@@ -516,14 +516,19 @@ func waitForAsyncTaskToFinish(client *cdb.Client, requestId string) error {
 
 func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
+	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
-		err := action.restartMysqlVm(mysqlVm)
-		if err != nil {
-			return nil, err
-		}
+			err := action.restartMysqlVm(mysqlVm)
+			if err != nil {
+					return outputs, err
+			}
+			output := MysqlVmOutput{}
+			output.Guid = mysqlVm.Guid
+			output.Id = mysqlVm.Id
+			outputs.Outputs = append(outputs.Outputs,output)
 	}
 
-	return "", nil
+	return outputs, nil
 }
 
 func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlVmOutput, bool, error) {
