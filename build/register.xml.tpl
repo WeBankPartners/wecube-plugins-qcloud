@@ -306,12 +306,12 @@
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="number">max_concurrent</parameter>
                 <parameter datatype="number">bandwidth</parameter>
-                <parameter datatype="string">assigned_eip_set</parameter>
-                <parameter datatype="number">auto_alloc_eip_num</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">eip</parameter>
+                <parameter datatype="string">eip_id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/nat-gateway/terminate">
@@ -338,7 +338,6 @@
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
                 <parameter datatype="string">name</parameter>
-                <parameter datatype="number">count</parameter>
                 <parameter datatype="string">charge_type</parameter>
                 <parameter datatype="number">charge_period</parameter>
                 <parameter datatype="string">id</parameter>

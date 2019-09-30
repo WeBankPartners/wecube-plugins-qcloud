@@ -120,6 +120,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
 	request.InstanceName = &mysqlVmInput.Name
 	request.Period = &mysqlVmInput.ChargePeriod
+	mysqlVmInput.Count = 1
 	request.GoodsNum = &mysqlVmInput.Count
 
 	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
