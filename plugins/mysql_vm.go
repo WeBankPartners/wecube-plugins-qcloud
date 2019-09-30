@@ -207,7 +207,7 @@ func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lo
 
 	_, err := client.InitDBInstances(request)
 	if err != nil {
-		return password, "", err
+		return password, fmt.Sprintf("%v", defaultPort), err
 	}
 
 	return password, fmt.Sprintf("%v", defaultPort), nil
