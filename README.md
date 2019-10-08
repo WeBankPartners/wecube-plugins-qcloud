@@ -26,7 +26,7 @@ QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种�
 QCloud插件包编译为docker镜像后，执行如下命令运行插件
 
 ```
-docker run -d  -p 9081:9081  --restart=unless-stopped -v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs   wecube-plugins-qcloud:v10
+docker run -d  -p 8081:8081  --restart=unless-stopped -v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs   wecube-plugins-qcloud:v10
 ```
 
 ## API说明
