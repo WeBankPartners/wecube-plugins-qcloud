@@ -1,7 +1,6 @@
 package securitygroup
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -21,9 +20,14 @@ type BmlbResourceType struct {
 }
 
 func (resourceType *BmlbResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
+	logrus.Infof("BmlbResourceType QueryInstancesById: request instanceIds=%++v", instanceIds)
+
 	result := make(map[string]ResourceInstance)
 	if len(instanceIds) == 0 {
-		return result, nil
+		err := fmt.Errorf("instanceIds is empty")
+
+		logrus.Errorf("BmlbResourceType QueryInstancesById meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -33,6 +37,7 @@ func (resourceType *BmlbResourceType) QueryInstancesById(providerParams string, 
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	loadBalancerSet, err := QueryBmlbInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("BmlbResourceType QueryInstancesById meet error=%v", err)
 		return result, err
 	}
 
@@ -51,13 +56,19 @@ func (resourceType *BmlbResourceType) QueryInstancesById(providerParams string, 
 		result[*loadBalancer.LoadBalancerId] = instance
 	}
 
+	logrus.Infof("BmlbResourceType QueryInstancesById: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *BmlbResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
+	logrus.Infof("BmlbResourceType QueryInstancesByIp: request ips=%++v", ips)
+
 	result := make(map[string]ResourceInstance)
 	if len(ips) == 0 {
-		return result, nil
+		err := fmt.Errorf("ips is empty")
+
+		logrus.Errorf("BmlbResourceType QueryInstancesByIp meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -67,6 +78,7 @@ func (resourceType *BmlbResourceType) QueryInstancesByIp(providerParams string, 
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	loadBalancerSet, err := QueryBmlbInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("BmlbResourceType QueryInstancesByIp meet error=%v", err)
 		return result, err
 	}
 
@@ -83,19 +95,25 @@ func (resourceType *BmlbResourceType) QueryInstancesByIp(providerParams string, 
 			instance.Vip = common.StringValues(loadBalancer.LoadBalancerVips)[0]
 			result[instance.Vip] = instance
 		} else {
-			return result, fmt.Errorf("QueryInstancesByIp bmlb meet error: loadBalancer[%v].LoadBalancerVips is nil", *loadBalancer.LoadBalancerId)
+			err := fmt.Errorf("loadBalancer[%v].LoadBalancerVips is nil", *loadBalancer.LoadBalancerId)
+
+			logrus.Errorf("BmlbResourceType QueryInstancesByIp meet error=%v", err)
+			return result, err
 		}
 
 	}
 
+	logrus.Infof("BmlbResourceType QueryInstancesByIp: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *BmlbResourceType) IsSupportEgressPolicy() bool {
+	logrus.Infof("BmlbResourceType IsSupportEgressPolicy: return=[false]")
 	return false
 }
 
 func (resourceType *BmlbResourceType) IsLoadBalanceType() bool {
+	logrus.Infof("BmlbResourceType IsLoadBalanceType: return=[true]")
 	return true
 }
 
@@ -110,45 +128,61 @@ type BmlbInstance struct {
 }
 
 func (instance BmlbInstance) ResourceTypeName() string {
+	logrus.Infof("BmlbInstance ResourceTypeName: return=[bmlb]")
 	return "bmlb"
 }
 
 func (instance BmlbInstance) GetId() string {
+	logrus.Infof("BmlbInstance GetId: return=[%v]", instance.Id)
 	return instance.Id
 }
 
 func (instance BmlbInstance) GetName() string {
+	logrus.Infof("BmlbInstance GetName: return=[%v]", instance.Name)
 	return instance.Name
 }
 
 func (instance BmlbInstance) GetIp() string {
+	logrus.Infof("BmlbInstance GetName: return=[%v]", instance.Vip)
 	return instance.Vip
 }
 func (instance BmlbInstance) GetRegion() string {
+	logrus.Infof("BmlbInstance GetRegion: return=[%v]", instance.Region)
 	return instance.Region
 }
 
 func (instance BmlbInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
-	return []string{}, errors.New("bmlb do not support query security groups function")
+	err := fmt.Errorf("bmlb do not support security group")
+
+	logrus.Errorf("BmlbInstance QuerySecurityGroups meet error=%v", err)
+	return []string{}, err
 }
 
 func (instance BmlbInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
-	return errors.New("bmlb do not associate security groups function")
+	err := fmt.Errorf("bmlb do not associate security groups function")
+
+	logrus.Errorf("BmlbInstance AssociateSecurityGroups meet error=%v", err)
+	return err
 }
 
 func (instance BmlbInstance) IsSupportSecurityGroupApi() bool {
+	logrus.Infof("BmlbInstance IsSupportSecurityGroupApi: return=[%v]", instance.SupportSecurityGroupApi)
 	return instance.SupportSecurityGroupApi
 }
 
 func (instance BmlbInstance) GetBackendTargets(providerParams string, protocol string, port string) ([]ResourceInstance, []string, error) {
+	logrus.Infof("BmlbInstance GetBackendTargets: reuqest protocol=%v, port=%v", protocol, port)
+
 	results := []ResourceInstance{}
 	ports := []string{}
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	if err != nil {
+		logrus.Errorf("BmlbInstance GetBackendTargets GetMapFromProviderParams meet error=%v", err)
 		return results, ports, err
 	}
 	client, err := createBmlbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		logrus.Errorf("BmlbInstance GetBackendTargets createBmlbClient meet error=%v", err)
 		return results, ports, err
 	}
 
@@ -158,13 +192,14 @@ func (instance BmlbInstance) GetBackendTargets(providerParams string, protocol s
 
 	response, err := client.DescribeDevicesBindInfo(request)
 	if err != nil {
+		logrus.Errorf("BmlbInstance GetBackendTargets DescribeDevicesBindInfo meet error=%v", err)
 		return results, ports, err
 	}
 
 	for _, loadBalancer := range response.Response.LoadBalancerSet {
 		for _, listener := range loadBalancer.L4ListenerSet {
 			for _, bmInstance := range listener.BackendSet {
-				instance := BmInstance{
+				instance := BmlbInstance{
 					Id: *bmInstance.InstanceId,
 				}
 				results = append(results, instance)
@@ -172,6 +207,8 @@ func (instance BmlbInstance) GetBackendTargets(providerParams string, protocol s
 			}
 		}
 	}
+
+	logrus.Infof("BmlbInstance GetBackendTargets: return results=%++v, ports=%++v", results, ports)
 	return results, ports, err
 }
 
@@ -183,21 +220,26 @@ func createBmlbClient(region, secretId, secretKey string) (client *bmlb.Client, 
 
 	client, err = bmlb.NewClient(credential, region, clientProfile)
 	if err != nil {
-		logrus.Errorf("Create Qcloud bmlb client failed,err=%v", err)
+		logrus.Errorf("createBmlbClient: failed to create Qcloud bm client, err=%v", err)
 	}
+
 	return client, err
 }
 
 func QueryBmlbInstance(providerParams string, filter plugins.Filter) ([]*bmlb.LoadBalancer, error) {
+	logrus.Infof("QueryBmlbInstance: request filter=%++v", filter)
+
 	validFilterNames := []string{"instanceId", "vip"}
 	filterValues := common.StringPtrs(filter.Values)
 
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	if err != nil {
+		logrus.Errorf("QueryBmlbInstance GetMapFromProviderParams meet error=%v", err)
 		return nil, err
 	}
 	client, err := createBmlbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		logrus.Errorf("QueryBmlbInstance createBmlbClient meet error=%v", err)
 		return nil, err
 	}
 
@@ -217,9 +259,10 @@ func QueryBmlbInstance(providerParams string, filter plugins.Filter) ([]*bmlb.Lo
 
 	response, err := client.DescribeLoadBalancers(request)
 	if err != nil {
-		logrus.Errorf("bmlb DescribeLoadBalancers meet err=%v", err)
+		logrus.Errorf("QueryBmlbInstance DescribeLoadBalancers meet error=%v", err)
 		return nil, err
 	}
 
+	logrus.Infof("QueryBmlbInstance: return=%++v", response.Response.LoadBalancerSet)
 	return response.Response.LoadBalancerSet, nil
 }

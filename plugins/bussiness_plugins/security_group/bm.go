@@ -19,9 +19,14 @@ type BmResourceType struct {
 }
 
 func (resourceType *BmResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
+	logrus.Infof("BmResourceType QueryInstancesById: request instanceIds=%++v", instanceIds)
+
 	result := make(map[string]ResourceInstance)
 	if len(instanceIds) == 0 {
-		return result, nil
+		err := fmt.Errorf("instanceIds is empty")
+
+		logrus.Errorf("BmResourceType QueryInstancesById meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -31,6 +36,7 @@ func (resourceType *BmResourceType) QueryInstancesById(providerParams string, in
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	deviceInfoSet, err := QueryBmInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("BmResourceType QueryInstancesById QueryBmInstance meet error=%v", err)
 		return result, err
 	}
 
@@ -47,13 +53,19 @@ func (resourceType *BmResourceType) QueryInstancesById(providerParams string, in
 		result[*deviceInfo.InstanceId] = instance
 	}
 
+	logrus.Infof("BmResourceType QueryInstancesById: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *BmResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
+	logrus.Infof("BmResourceType QueryInstancesByIp: request ips=%++v", ips)
+
 	result := make(map[string]ResourceInstance)
 	if len(ips) == 0 {
-		return result, nil
+		err := fmt.Errorf("ips is empty")
+
+		logrus.Errorf("BmResourceType QueryInstancesByIp meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -63,6 +75,7 @@ func (resourceType *BmResourceType) QueryInstancesByIp(providerParams string, ip
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	deviceInfoSet, err := QueryBmInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("BmResourceType QueryInstancesByIp meet error=%v", err)
 		return result, err
 	}
 
@@ -79,14 +92,17 @@ func (resourceType *BmResourceType) QueryInstancesByIp(providerParams string, ip
 		result[*deviceInfo.LanIp] = instance
 	}
 
+	logrus.Infof("BmResourceType QueryInstancesByIp: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *BmResourceType) IsSupportEgressPolicy() bool {
+	logrus.Infof("BmResourceType IsSupportEgressPolicy: return=[true]")
 	return true
 }
 
 func (resourceType *BmResourceType) IsLoadBalanceType() bool {
+	logrus.Infof("BmResourceType IsLoadBalanceType: return=[false]")
 	return false
 }
 
@@ -102,69 +118,95 @@ type BmInstance struct {
 }
 
 func (instance BmInstance) GetId() string {
+	logrus.Infof("BmInstance GetId: return=[%v]", instance.Id)
 	return instance.Id
 }
 
 func (instance BmInstance) GetName() string {
+	logrus.Infof("BmInstance GetName: return=[%v]", instance.Name)
 	return instance.Name
 }
 
 func (instance BmInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
-	return QueryBmInstanceSecurityGroups(providerParams, instance.Id)
+	securityGroups, err := QueryBmInstanceSecurityGroups(providerParams, instance.Id)
+	if err != nil {
+		logrus.Errorf("BmInstance QuerySecurityGroups meet error=%v", err)
+		return []string{}, err
+	}
+
+	logrus.Infof("BmInstance QuerySecurityGroups: return=[%++v]", securityGroups)
+	return securityGroups, nil
 }
 
 func (instance BmInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
-	return BindBmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
+	err := BindBmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
+	if err != nil {
+		logrus.Errorf("BmInstance AssociateSecurityGroups meet error=%v", err)
+	}
+
+	return err
 }
 
 func (instance BmInstance) ResourceTypeName() string {
+	logrus.Infof("BmInstance ResourceTypeName: return=[bm]")
 	return "bm"
 }
 
 func (instance BmInstance) GetRegion() string {
+	logrus.Infof("BmInstance GetRegion: return=[%v]", instance.Region)
 	return instance.Region
 }
 
 func (instance BmInstance) IsSupportSecurityGroupApi() bool {
+	logrus.Infof("BmInstance IsSupportSecurityGroupApi: return=[%v]", instance.SupportSecurityGroupApi)
 	return instance.SupportSecurityGroupApi
 }
 
 func (instance BmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
 	instances := []ResourceInstance{}
-	return instances, []string{}, fmt.Errorf("bm do not support GetBackendTargets function")
+	err := fmt.Errorf("bm do not support GetBackendTargets function")
+
+	logrus.Errorf("BmInstance GetBackendTargets meet error=%v", err)
+	return instances, []string{}, err
 }
 
 func (instance BmInstance) GetIp() string {
+	logrus.Infof("BmInstance GetIp: return=[%v]", instance.LanIp)
 	return instance.LanIp
 }
 
 func createBmClient(region, secretId, secretKey string) (client *bm.Client, err error) {
 	credential := common.NewCredential(secretId, secretKey)
-
 	clientProfile := profile.NewClientProfile()
 	clientProfile.HttpProfile.Endpoint = QCLOUD_ENDPOINT_BM
 
 	client, err = bm.NewClient(credential, region, clientProfile)
 	if err != nil {
-		logrus.Errorf("Create Qcloud bm client failed,err=%v", err)
+		logrus.Errorf("createBmClient: failed to create Qcloud bm client, err=%v", err)
 	}
+
 	return client, err
 }
 
 func QueryBmInstance(providerParams string, filter plugins.Filter) ([]*bm.DeviceInfo, error) {
+	logrus.Infof("QueryBmInstance: request filter=%++v", filter)
+
 	validFilterNames := []string{"instanceId", "lanIp"}
 	filterValues := common.StringPtrs(filter.Values)
 
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	if err != nil {
+		logrus.Errorf("QueryBmInstance GetMapFromProviderParams meet error=%v", err)
 		return nil, err
 	}
 	client, err := createBmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		logrus.Errorf("QueryBmInstance createBmClient meet error=%v", err)
 		return nil, err
 	}
 
 	if err := plugins.IsValidValue(filter.Name, validFilterNames); err != nil {
+		logrus.Errorf("QueryBmInstance IsValidValue meet error=%v", err)
 		return nil, err
 	}
 
@@ -182,21 +224,24 @@ func QueryBmInstance(providerParams string, filter plugins.Filter) ([]*bm.Device
 
 	response, err := client.DescribeDevices(request)
 	if err != nil {
-		logrus.Errorf("bm DescribeDevices meet err=%v", err)
+		logrus.Errorf("QueryBmInstance DescribeDevices meet error=%v", err)
 		return nil, err
 	}
 
+	logrus.Infof("QueryBmInstance: return=%++v", response.Response.DeviceInfoSet)
 	return response.Response.DeviceInfoSet, nil
 }
 
 func QueryBmInstanceSecurityGroups(providerParams string, instanceId string) ([]string, error) {
-	err := fmt.Errorf("cloud physical machienes do not support security group")
-	logrus.Infof("QueryBmInstanceSecurityGroups meet error:%v", err)
+	err := fmt.Errorf("bm do not support security group")
+
+	logrus.Errorf("QueryBmInstanceSecurityGroups meet error:%v", err)
 	return nil, err
 }
 
 func BindBmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
-	err := fmt.Errorf("cloud physical machienes do not support security group")
-	logrus.Infof("BindBmInstanceSecurityGroups meet error:%v", err)
+	err := fmt.Errorf("bm do not support security group")
+
+	logrus.Errorf("BindBmInstanceSecurityGroups meet error:%v", err)
 	return err
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const ENV_SECRET_ID = "SECRET_ID"
@@ -16,13 +18,22 @@ func getProviderParams(region string) (string, error) {
 	secretKey := os.Getenv(ENV_SECRET_KEY)
 
 	if secretId == "" {
-		return "", errors.New("can't get secretId from env")
+		err := errors.New("can't get secretId from env")
+
+		logrus.Errorf("getProviderParams meet error=%v", err)
+		return "", err
 	}
 	if secretKey == "" {
-		return "", errors.New("can't get secretKey from env")
+		err := errors.New("can't get secretKey from env")
+
+		logrus.Errorf("getProviderParams meet error=%v", err)
+		return "", err
 	}
 	if region == "" {
-		return "", errors.New("input region is empty")
+		err := errors.New("input region is empty")
+
+		logrus.Errorf("getProviderParams meet error=%v", err)
+		return "", err
 	}
 
 	return fmt.Sprintf("Region=%s;SecretID=%s;SecretKey=%s", region, secretId, secretKey), nil
@@ -31,7 +42,11 @@ func getProviderParams(region string) (string, error) {
 func getRegions() ([]string, error) {
 	regions := strings.Split(os.Getenv(ENV_SUPPORT_REGIONS), ";")
 	if len(regions) == 0 {
-		return regions, errors.New("can't get region from env")
+		err := errors.New("can't get region from env")
+
+		logrus.Errorf("getRegions meet error=%v", err)
+		return regions, err
 	}
+
 	return regions, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
+	"github.com/sirupsen/logrus"
 	"github.com/zqfan/tencentcloud-sdk-go/common"
 )
 
@@ -12,9 +13,14 @@ type CvmResourceType struct {
 }
 
 func (resourceType *CvmResourceType) QueryInstancesById(providerParams string, instanceIds []string) (map[string]ResourceInstance, error) {
+	logrus.Infof("CvmResourceType QueryInstancesById: request instanceIds=%++v", instanceIds)
+
 	result := make(map[string]ResourceInstance)
 	if len(instanceIds) == 0 {
-		return result, nil
+		err := fmt.Errorf("instanceIds is empty")
+
+		logrus.Errorf("CvmResourceType QueryInstancesById meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -24,6 +30,7 @@ func (resourceType *CvmResourceType) QueryInstancesById(providerParams string, i
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
 	items, err := plugins.QueryCvmInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("CvmResourceType QueryInstancesById QueryCvmInstance meet error=%v", err)
 		return result, err
 	}
 
@@ -40,14 +47,19 @@ func (resourceType *CvmResourceType) QueryInstancesById(providerParams string, i
 		result[*item.InstanceId] = instance
 	}
 
+	logrus.Infof("CvmResourceType QueryInstancesById: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, ips []string) (map[string]ResourceInstance, error) {
-	result := make(map[string]ResourceInstance)
+	logrus.Infof("CvmResourceType QueryInstancesByIp: request ips=%++v", ips)
 
+	result := make(map[string]ResourceInstance)
 	if len(ips) == 0 {
-		return result, nil
+		err := fmt.Errorf("ips is empty")
+
+		logrus.Errorf("CvmResourceType QueryInstancesByIp meet error=%v", err)
+		return result, err
 	}
 
 	filter := plugins.Filter{
@@ -57,6 +69,7 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 
 	items, err := plugins.QueryCvmInstance(providerParams, filter)
 	if err != nil {
+		logrus.Errorf("CvmResourceType QueryInstancesByIp QueryCvmInstance meet error=%v", err)
 		return result, err
 	}
 
@@ -74,14 +87,17 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 		result[ips[0]] = instance
 	}
 
+	logrus.Infof("CvmResourceType QueryInstancesByIp: result=%++v", result)
 	return result, nil
 }
 
 func (resourceType *CvmResourceType) IsSupportEgressPolicy() bool {
+	logrus.Infof("CvmResourceType IsSupportEgressPolicy: return=[true]")
 	return true
 }
 
 func (resourceType *CvmResourceType) IsLoadBalanceType() bool {
+	logrus.Infof("CvmResourceType IsLoadBalanceType: return=[false]")
 	return false
 }
 
@@ -100,43 +116,59 @@ type CvmInstance struct {
 }
 
 func (instance CvmInstance) GetId() string {
+	logrus.Infof("CvmInstance GetId: return=[%v]", instance.Id)
 	return instance.Id
 }
 
 func (instance CvmInstance) GetName() string {
+	logrus.Infof("CvmInstance GetName: return=[%v]", instance.Name)
 	return instance.Name
 }
 
 func (instance CvmInstance) QuerySecurityGroups(providerParams string) ([]string, error) {
+	logrus.Infof("CvmInstance QuerySecurityGroups: return=[%++v]", instance.SecurityGroups)
 	return instance.SecurityGroups, nil
 }
 
 func (instance CvmInstance) AssociateSecurityGroups(providerParams string, securityGroups []string) error {
-	return plugins.BindCvmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
+	err := plugins.BindCvmInstanceSecurityGroups(providerParams, instance.Id, securityGroups)
+	if err != nil {
+		logrus.Errorf("CvmInstance AssociateSecurityGroups meet error=%v", err)
+	}
+	return err
 }
 
 func (instance CvmInstance) ResourceTypeName() string {
 	if !instance.IsLoadBalancerBackend {
+		logrus.Infof("CvmInstance ResourceTypeName: return=[cvm]")
 		return "cvm"
 	} else {
+		logrus.Infof("CvmInstance ResourceTypeName: return=[clb-cvm-%v]", instance.LoadBalanceIp)
 		return fmt.Sprintf("clb-cvm-%s", instance.LoadBalanceIp)
 	}
 }
 
 func (instance CvmInstance) GetRegion() string {
+	logrus.Infof("CvmInstance GetRegion: return=[%v]", instance.Region)
 	return instance.Region
 }
 
 func (instance CvmInstance) IsSupportSecurityGroupApi() bool {
-	return true
+	logrus.Infof("CvmInstance IsSupportSecurityGroupApi: return=[%v]", instance.SupportSecurityGroupApi)
+	return instance.SupportSecurityGroupApi
 }
 
 func (instance CvmInstance) GetBackendTargets(providerParams string, proto string, port string) ([]ResourceInstance, []string, error) {
 	instances := []ResourceInstance{}
-	return instances, []string{}, fmt.Errorf("cvm do not support GetBackendTargets function")
+	err := fmt.Errorf("cvm do not support GetBackendTargets function")
+
+	logrus.Errorf("CvmInstance GetBackendTargets meet error=%v", err)
+	return instances, []string{}, err
 }
 
 func (instance CvmInstance) GetIp() string {
+	logrus.Infof("CvmInstance GetIp: instance.PrivateIps=%++v", instance.PrivateIps)
+
 	if len(instance.PrivateIps) > 0 {
 		return instance.PrivateIps[0]
 	}
