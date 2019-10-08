@@ -18,11 +18,11 @@ QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种�
 <img src="./docs/compile/images/plugin_function.png" />
 
 
-## QCloud编译和插件包的制作
+## QCloud编译和插件包制作
 [QCloud插件编译文档](docs/compile/wecube-plugins-qcloud_compile_guide.md)
 
 
-## qcloud插件包独立运行
+## QCloud插件包独立运行
 QCloud插件包编译为docker镜像后，执行如下命令运行插件
 
 ```
