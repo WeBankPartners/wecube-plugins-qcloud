@@ -6,9 +6,9 @@
 ## 简介
 
 QCloud插件对腾讯云原生资源(如CVM、CLB、NAT网关、安全组等)的生命周期管理接口进行业务封装，提供更贴近业务使用场景的API接口，这些接口可以分为两类：
-1. 基础资源接口，对原生QCloud的API参数进行简化，如腾讯云原生API创建CVM有很多参数需要输入，这些参数包括操作系统ID，机型ID、安全组ID等，用户需要查看对应的API文档才能确定这些ID值。而qcloud插件API可将这些参数的细节对用户进行屏蔽，用户只需填入操作系统版本如(centos7.2)，机器对应的硬件配置(如2核4G),即可通过QCloud插件API在腾讯云上创建成功对应的CVM。
+1. 基础资源接口，对原生QCloud的API参数进行简化，如腾讯云原生API创建CVM有很多参数需要输入，这些参数包括操作系统ID，机型ID、安全组ID等，用户需要查看对应的API文档才能确定这些ID值。而QCloud插件API可将这些参数的细节对用户进行屏蔽，用户只需填入操作系统版本(如centos7.2)，机器对应的硬件配置(如2核4G),即可通过QCloud插件API在腾讯云上创建成功对应的CVM。
 
-2. 业务组合接口，提供基于腾讯云原生API的业务组合能力，如创建子网时默认会创建对应该子网的路由表；根据IP查询该IP对应的资源类型和所在地域；根据输入的源IP，目标IP，目标端口和协议，自动创建对应的安全组入栈和出栈规则并绑定安全组到对应的资源等。
+2. 业务组合接口，提供基于腾讯云原生API的业务组合能力，如创建子网时默认会创建对应该子网的路由表；根据IP查询该IP对应的资源类型和所在地域；根据源IP，目标IP，目标端口和协议，自动创建对应的安全组入栈和出栈规则并绑定安全组到对应的资源等。
 
 ## 使用QCloud插件的场景
 QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种场景:
@@ -26,7 +26,7 @@ QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种�
 QCloud插件包编译为docker镜像后，执行如下命令运行插件
 
 ```
-docker run -d  -p 8081:8081  --restart=unless-stopped -v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs   wecube-plugins-qcloud:v10
+docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs   wecube-plugins-qcloud:v1.0
 ```
 
 ## API说明
