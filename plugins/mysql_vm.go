@@ -186,9 +186,8 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	return *response.Response.InstanceIds[0], *response.Response.RequestId, nil
 }
 
-func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string) (string, string, error) {
+func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string,password string) (string, string, error) {
 	var defaultPort int64 = 3306
-	password := utils.CreateRandomPassword()
 	charSetParamName := "character_set_server"
 	lowCaseParamName := "lower_case_table_names"
 
@@ -216,9 +215,10 @@ func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lo
 
 func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string) (string, string, error) {
 	maxTryNum := 20
+	password := utils.CreateRandomPassword()
 
 	for i := 0; i < maxTryNum; i++ {
-		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName)
+		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName,password)
 		initFlag, err := queryMySqlInstanceInitFlag(client, instanceId)
 		if err != nil {
 			return password, port, err
