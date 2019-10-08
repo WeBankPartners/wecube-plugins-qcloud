@@ -37,6 +37,7 @@
 	```
 	make build
 	```
+	
 	![qcloud_build](images/qcloud_build.png)
 
 
@@ -44,7 +45,8 @@
 	```
 	make image
 	```
-	![qcloud_build](images/qcloud_image.png)
+
+	![qcloud_image](images/qcloud_image.png)
 
 	执行以下命令，将生成wecube使用的插件包：
 	```
