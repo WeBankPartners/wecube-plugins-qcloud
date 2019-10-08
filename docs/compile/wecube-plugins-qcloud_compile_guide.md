@@ -32,8 +32,19 @@
 
 2. 编译和打包插件
 
-	执行以下命令：
+	执行以下命令将生成插件包的二进制程序
 	
+	```
+	make build
+	```
+	
+
+	执行以下命令将生成插件包的docker镜像，镜像的tag为github的commit号
+	```
+	make image
+	```
+
+	执行以下命令，将生成wecube使用的插件包：
 	```
 	make package PLUGIN_VERSION=v1.0
 	```
