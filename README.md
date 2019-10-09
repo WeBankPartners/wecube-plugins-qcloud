@@ -18,10 +18,45 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 <img src="./docs/compile/images/plugin_function.png" />
 
 ## QCloud插件开发环境搭建
-[QCloud插件开发环境搭建](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
+[QCloud插件开发环境搭建指引](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
+
+开发环境搭建完成后，如果是linux用户，执行go build命令后，在当前目录下可以看到wecube-plugins-qcloud的二进制程序，执行如下命令启动该程序
+```
+./wecube-plugins-qcloud
+```
+
+程序启动后，可通过curl命令创建vpc来验证，命令如下其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
+```
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+	"inputs":[{
+		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
+		"name": "api_test_vpc",
+		"cidr_block": "10.5.0.0/16"
+		}
+	]
+}'
+
+```
+如果看到如下返回，表示创建vpc成功
+```
+{
+    "result_code": "0",
+    "result_message": "success",
+    "results": {
+        "outputs": [
+            {
+                "id": "vpc-k6051or0"
+            }
+        ]
+    }
+}
+```
 
 ## QCloud编译和插件包制作
-[QCloud插件编译和制作](docs/compile/wecube-plugins-qcloud_compile_guide.md)
+[QCloud插件编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
 
 
 ## 独立运行QCloud插件
