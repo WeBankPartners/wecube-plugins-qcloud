@@ -25,7 +25,7 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 ./wecube-plugins-qcloud
 ```
 
-程序启动后，可以通过curl命令创建vpc来验证命令如下,其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
+程序启动后，可通过curl命令创建vpc来验证，命令如下其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
 ```
 curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
   -H 'cache-control: no-cache' \
