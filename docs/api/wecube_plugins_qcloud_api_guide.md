@@ -103,7 +103,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
 		"guid": "0001_0000000011",
 		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"name": "api_test_vpc",
-		"cidr_block": "10.5.0.0/16\"
+		"cidr_block": "10.5.0.0/16"
 		}
 	]
 }'
