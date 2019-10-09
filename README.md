@@ -25,10 +25,10 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 
 
 ## 独立运行QCloud插件
-QCloud插件包编译为docker镜像后，执行如下命令运行插件，其中imageTag需要替换为QCloud插件docker镜像的tag
+QCloud插件包编译为docker镜像后，执行如下命令运行插件，其中IMAGE_TAG需要替换为QCloud插件docker镜像的tag
 
 ```
-docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:imageTag
+docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:{$IMAGE_TAG}
 ```
 
 ## API使用说明
