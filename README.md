@@ -20,19 +20,18 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 ## QCloud插件开发环境搭建
 [QCloud插件开发环境搭建](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
 
-开发环境搭建完成后，如果是linux用户，在当前目录下可以看到wecube-plugins-qcloud的二进制程序执行如下命令启动该程序
+开发环境搭建完成后，如果是linux用户，执行go build命令后，在当前目录下可以看到wecube-plugins-qcloud的二进制程序，执行如下命令启动该程序
 ```
 ./wecube-plugins-qcloud
 ```
 
-程序启动后，可以通过curl命令创建vpc来验证如下,其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
+程序启动后，可以通过curl命令创建vpc来验证命令如下,其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
 ```
 curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
   -H 'cache-control: no-cache' \
   -H 'content-type: application/json' \
   -d '{
 	"inputs":[{
-		"guid": "0001_0000000011",
 		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"name": "api_test_vpc",
 		"cidr_block": "10.5.0.0/16"
@@ -40,6 +39,20 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
 	]
 }'
 
+```
+如果看到如下返回，表示创建vpc成功
+```
+{
+    "result_code": "0",
+    "result_message": "success",
+    "results": {
+        "outputs": [
+            {
+                "id": "vpc-k6051or0"
+            }
+        ]
+    }
+}
 ```
 
 ## QCloud编译和插件包制作
