@@ -1,10 +1,9 @@
-# qcloud插件开发环境搭建
+# QCloud插件开发环境搭建
 
 ## 搭建Linux开发环境
 1. 在linux主机上新建如下目录
 ```
 mkdir -p /data/gowork/src/github.com/WeBankPartners/
-
 ```
 
 2. 下载golang二进制包并解压
@@ -14,7 +13,7 @@ wget https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz
 tar xzvf go1.12.9.linux-amd64.tar.gz 
 ```
 
-3. 设置golang环境变量,在/data/目录下新建golang.sh脚本里面的内容如下:
+3. 设置golang环境变量,在/data/目录下新建golang.sh脚本,里面的内容如下:
 ```
 export GOROOT=/data/go
 export GOPATH=/data/gowork
@@ -31,7 +30,7 @@ source /data/golang.sh
 go version
 ```
 
-6. git clone qcloud插件包代码
+6. git clone QCloud插件包代码
 ```
 cd /data/gowork/src/github.com/WeBankPartners/
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
