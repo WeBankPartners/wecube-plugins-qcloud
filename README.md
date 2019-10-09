@@ -18,7 +18,7 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 <img src="./docs/compile/images/plugin_function.png" />
 
 ## QCloud插件开发环境搭建
-[QCloud插件开发环境搭建](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
+[QCloud插件开发环境搭建指引](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
 
 开发环境搭建完成后，如果是linux用户，执行go build命令后，在当前目录下可以看到wecube-plugins-qcloud的二进制程序，执行如下命令启动该程序
 ```
@@ -56,7 +56,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
 ```
 
 ## QCloud编译和插件包制作
-[QCloud插件编译和制作](docs/compile/wecube-plugins-qcloud_compile_guide.md)
+[QCloud插件编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
 
 
 ## 独立运行QCloud插件
