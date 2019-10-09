@@ -31,8 +31,8 @@ QCloud插件包编译为docker镜像后，执行如下命令运行插件，其�
 docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:imageTag
 ```
 
-## API说明
-关于QCloud插件的API说明，请查看以下文档
+## API使用说明
+关于QCloud插件的API使用说明，请查看以下文档
 [QCloud插件API手册](docs/api/wecube_plugins_qcloud_api_guide.md)
 
 ## License
