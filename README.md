@@ -11,7 +11,7 @@ QCloud插件对腾讯云原生资源(如CVM、CLB、NAT网关、安全组等)的
 2. 业务组合接口，提供基于腾讯云原生API的业务组合能力，如创建子网时默认会创建对应该子网的路由表；根据IP查询该IP对应的资源类型和所在地域；根据源IP、目标IP、目标端口和协议，自动创建对应的安全组入栈和出栈规则并绑定安全组到对应的资源等;创建数据库实例的同时，完成数据库初始化。
 
 ## 使用QCloud插件的场景
-QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种场景:
+QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种场景:
 1. 通过wecube注册插件来使用插件的功能
 2. 独立部署使用，这种场景第三方应用使用http请求向插件发起请求。
 
@@ -21,14 +21,14 @@ QCloud插件API包含的功能如下图所示,使用qcloud插件主要有两种�
 [QCloud插件开发环境搭建](docs/compile/wecube-plugins-qcloud_build_dev_env.md)
 
 ## QCloud编译和插件包制作
-[QCloud插件编译文档](docs/compile/wecube-plugins-qcloud_compile_guide.md)
+[QCloud插件编译和制作](docs/compile/wecube-plugins-qcloud_compile_guide.md)
 
 
 ## 独立运行QCloud插件
-QCloud插件包编译为docker镜像后，执行如下命令运行插件，其中imageTag需要替换为qcloud插件docker镜像的tag
+QCloud插件包编译为docker镜像后，执行如下命令运行插件，其中imageTag需要替换为QCloud插件docker镜像的tag
 
 ```
-docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs   wecube-plugins-qcloud:imageTag
+docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:imageTag
 ```
 
 ## API说明
