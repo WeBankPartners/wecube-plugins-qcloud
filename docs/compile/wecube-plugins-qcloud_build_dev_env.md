@@ -57,7 +57,7 @@ GOROOT=D:\go
 GOPATH=D:\gowork
 ```
 
-6. 使用git clone下载代码。在cmd命令行中，切换到D:\gowork\src\github.com\WeBankPartners目录，然后执行如下命令
+6. git clone QCloud插件包代码。在cmd命令行中，切换到D:\gowork\src\github.com\WeBankPartners目录，然后执行如下命令
 ```
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
