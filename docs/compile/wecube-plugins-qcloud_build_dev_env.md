@@ -4,7 +4,7 @@
 - [搭建Windows开发环境](#Windows)
 - [搭建Mac开发环境](#Mac)
 
-##<span id="Linux">搭建Linux开发环境</span>
+## <span id="Linux">搭建Linux开发环境</span>
 1. 在linux主机上新建如下目录
 ```
 mkdir -p /data/gowork/src/github.com/WeBankPartners/
@@ -46,7 +46,7 @@ cd /data/gowork/src/github.com/WeBankPartners/wecube-plugins-qcloud
 go build 
 ```
 
-##<span id="Windows">搭建Windows开发环境</span>
+## <span id="Windows">搭建Windows开发环境</span>
 1. 在Windows系统上，建好目录D:\gowork\src\github.com\WeBankPartners
 
 2. 确认本机上已经安装git客户端，如果没有安装请到如下链接地址进行下载安装https://www.git-scm.com/download/win
@@ -71,7 +71,7 @@ git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 go build 
 ```
 
-##<span id="Mac">搭建Mac开发环境</span>
+## <span id="Mac">搭建Mac开发环境</span>
 1.首先需安装golang，下面是使用brew安装golang
 ```
 brew install go
