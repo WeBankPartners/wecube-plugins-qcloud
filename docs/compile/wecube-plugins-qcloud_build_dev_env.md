@@ -96,7 +96,7 @@ source ~/.bash_profile
 
 4.创建如下目录
 ```
-mkdir /Users/gowork/go/src/github.com/WeBankPartners/
+mkdir -p /Users/gowork/go/src/github.com/WeBankPartners/
 ```
 
 5.git clone QCloud插件包代码
