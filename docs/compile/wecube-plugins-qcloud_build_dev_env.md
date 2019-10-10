@@ -113,6 +113,14 @@ mkdir -p /Users/gowork/go/src/github.com/WeBankPartners/
 cd /Users/gowork/go/src/github.com/WeBankPartners/
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
+> 如遇到无法下载代码错误：
+> <img src="./images/git_clone_permission_denied.png" />
+> 请执行以下命令  
+> 
+> ```bash
+> cd..
+> sudo chmod 777 WeBankPartners/
+> ```
 
 7.编译代码
 ```bash
