@@ -66,3 +66,47 @@ git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
 go build 
 ```
+
+## 搭建Mac开发环境
+1.首先需安装golang，下面是使用brew安装golang
+```
+brew install go
+```
+
+2.使用go env可查看当前golang版本信息，此时显示出来的GOROOT就是你使用brew安装go的安装目录
+
+3.配置golang环境变量
+```
+vim ~/.bash_profile
+```
+
+配置GOROOT，GOPATH，GOBIN，PATH
+```
+GOROOT=/usr/local/go
+export GOROOT
+export GOPATH=/Users/gowork/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:$GOBIN:$GOROOT/bin
+```
+
+使环境变量生效
+```
+source ~/.bash_profile
+```
+
+4.创建如下目录
+```
+mkdir /Users/gowork/go/src/github.com/WeBankPartners/
+```
+
+5.git clone QCloud插件包代码
+```
+cd /Users/gowork/go/src/github.com/WeBankPartners/
+git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
+```
+
+7.编译代码
+```
+cd /Users/gowork/go/src/github.com/WeBankPartners/wecube-plugins-qcloud/
+go build
+```
