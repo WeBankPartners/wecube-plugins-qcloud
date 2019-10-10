@@ -27,17 +27,7 @@ QCloud插件API包含的功能如下图所示,使用QCloud插件主要有两种�
 
 程序启动后，可通过curl命令创建vpc来验证，命令如下其中your_SecretID和your_SecretKey需要替换为用户自己腾讯云的secretId和secretKey。
 ```
-curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
-  -H 'cache-control: no-cache' \
-  -H 'content-type: application/json' \
-  -d '{
-	"inputs":[{
-		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
-		"name": "api_test_vpc",
-		"cidr_block": "10.5.0.0/16"
-		}
-	]
-}'
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-cache" -H "content-type: application/json" -d "{\"inputs\":[{\"provider_params\": \"Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}\",\"name\": \"api_test_vpc\",\"cidr_block\": \"10.5.0.0/16\"}]}"
 
 ```
 如果看到如下返回，表示创建vpc成功
@@ -54,6 +44,9 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
     }
 }
 ```
+对于windows用户，如果使用curl命令测试,可参考[windows环境安装curl命令](docs/windows_install_curl.md)
+
+插件相关的日志保存在当前目录logs/wecube-plugins-qcloud.log中。
 
 ## QCloud编译和插件包制作
 [QCloud插件编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
