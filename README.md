@@ -43,9 +43,10 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-ca
         ]
     }
 }
-插件相关的日志保存在当前目录logs/wecube-plugins-qcloud.log中。
-对于windows用户，如果使用curl命令测试,可参考[windows环境安装curl命令](docs/windows_install_curl.md)
 ```
+对于windows用户，如果使用curl命令测试,可参考[windows环境安装curl命令](docs/windows_install_curl.md)
+
+插件相关的日志保存在当前目录logs/wecube-plugins-qcloud.log中。
 
 ## QCloud编译和插件包制作
 [QCloud插件编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
