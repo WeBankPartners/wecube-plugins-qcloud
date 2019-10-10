@@ -6,42 +6,42 @@
 
 ## <span id="Linux">搭建Linux开发环境</span>
 1. 在linux主机上新建如下目录
-```
+```bash
 mkdir -p /data/gowork/src/github.com/WeBankPartners/
 ```
 
 2. 下载golang二进制包并解压
-```
+```bash
 cd /data/
 wget https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz 
 tar xzvf go1.12.9.linux-amd64.tar.gz 
 ```
 
 3. 设置golang环境变量,在/data/目录下新建golang.sh脚本,里面的内容如下:
-```
+```bash
 export GOROOT=/data/go
 export GOPATH=/data/gowork
 export PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 ```
 
 4. 执行如下命令，使golang环境变量生效
-```
+```bash
 source /data/golang.sh
 ```
 
 5. 执行如下命令，确认golang环境搭建完成
-```
+```bash
 go version
 ```
 
 6. git clone QCloud插件包代码
-```
+```bash
 cd /data/gowork/src/github.com/WeBankPartners/
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
 
 7. 编译代码
-```
+```bash
 cd /data/gowork/src/github.com/WeBankPartners/wecube-plugins-qcloud
 go build 
 ```
@@ -56,36 +56,41 @@ go build
 4. 安装完成后，在cmd的命令行中输入go version确认可以看到golang的版本号
 
 5. 在windows中设置系统环境变量GOROOT和GOPATH:
-```
+```bash
 GOROOT=D:\go
 GOPATH=D:\gowork
 ```
 
 6. git clone QCloud插件包代码。在cmd命令行中，切换到D:\gowork\src\github.com\WeBankPartners目录，然后执行如下命令
-```
+```bash
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
 
 7. 编译代码,在cmd命令行中切换到D:\gowork\src\github.com\WeBankPartners\wecube-plugins-qcloud目录，执行如下命令
-```
+```bash
 go build 
 ```
 
 ## <span id="Mac">搭建Mac开发环境</span>
+
+> 以下步骤如无权限，请加sudo执行命令
+
 1.首先需安装golang，下面是使用brew安装golang
-```
+```bash
 brew install go
 ```
 
 2.使用go env可查看当前golang版本信息，此时显示出来的GOROOT就是你使用brew安装go的安装目录
 
+<img src="./images/goroot.png" />
+
 3.配置golang环境变量
-```
+```bash
 vim ~/.bash_profile
 ```
 
 配置GOROOT，GOPATH，GOBIN，PATH
-```
+```bash
 GOROOT=/usr/local/go
 export GOROOT
 export GOPATH=/Users/gowork/go
@@ -94,23 +99,23 @@ export PATH=$PATH:$GOBIN:$GOROOT/bin
 ```
 
 使环境变量生效
-```
+```bash
 source ~/.bash_profile
 ```
 
 4.创建如下目录
-```
+```bash
 mkdir -p /Users/gowork/go/src/github.com/WeBankPartners/
 ```
 
 5.git clone QCloud插件包代码
-```
+```bash
 cd /Users/gowork/go/src/github.com/WeBankPartners/
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
 
 7.编译代码
-```
+```bash
 cd /Users/gowork/go/src/github.com/WeBankPartners/wecube-plugins-qcloud/
 go build
 ```
