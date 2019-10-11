@@ -59,6 +59,7 @@ func init() {
 	RegisterPlugin("eip", new(EIPPlugin))
 	RegisterPlugin("mariadb", new(MariadbPlugin))
 	RegisterPlugin("route-policy", new(RoutePolicyPlugin))
+	RegisterPlugin("clb",new(ClbPlugin))
 
 }
 
