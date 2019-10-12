@@ -186,7 +186,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	return *response.Response.InstanceIds[0], *response.Response.RequestId, nil
 }
 
-func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string,password string) (string, string, error) {
+func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string, password string) (string, string, error) {
 	var defaultPort int64 = 3306
 	charSetParamName := "character_set_server"
 	lowCaseParamName := "lower_case_table_names"
@@ -218,7 +218,7 @@ func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowe
 	password := utils.CreateRandomPassword()
 
 	for i := 0; i < maxTryNum; i++ {
-		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName,password)
+		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName, password)
 		initFlag, err := queryMySqlInstanceInitFlag(client, instanceId)
 		if err != nil {
 			return password, port, err
@@ -518,14 +518,14 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
-			err := action.restartMysqlVm(mysqlVm)
-			if err != nil {
-					return outputs, err
-			}
-			output := MysqlVmOutput{}
-			output.Guid = mysqlVm.Guid
-			output.Id = mysqlVm.Id
-			outputs.Outputs = append(outputs.Outputs,output)
+		err := action.restartMysqlVm(mysqlVm)
+		if err != nil {
+			return outputs, err
+		}
+		output := MysqlVmOutput{}
+		output.Guid = mysqlVm.Guid
+		output.Id = mysqlVm.Id
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return outputs, nil
