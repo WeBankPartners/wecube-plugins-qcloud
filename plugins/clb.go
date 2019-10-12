@@ -323,11 +323,11 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 type AddBackTargetAction struct {
 }
 
-type AddBackTargetInputs struct {
-	Inputs []AddBackTargetInput `json:"inputs,omitempty"`
+type BackTargetInputs struct {
+	Inputs []BackTargetInput `json:"inputs,omitempty"`
 }
 
-type AddBackTargetInput struct {
+type BackTargetInput struct {
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	LbId           string `json:"lb_id"`
@@ -337,16 +337,16 @@ type AddBackTargetInput struct {
 	HostPort       string `json:"hostPort"`
 }
 
-type AddBackTargetOutputs struct {
+type BackTargetOutputs struct {
 	Outputs []AddBackTargetOutput `json:"outputs,omitempty"`
 }
 
-type AddBackTargetOutput struct {
+type BackTargetOutput struct {
 	Guid string `json:"guid,omitempty"`
 }
 
 func (action *AddBackTargetAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs AddBackTargetInputs
+	var inputs BackTargetInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -378,9 +378,9 @@ func isValidProtocol(protocol string) error {
 }
 
 func (action *AddBackTargetAction) CheckParam(input interface{}) error {
-	inputs, ok := input.(AddBackTargetInputs)
+	inputs, ok := input.(BackTargetInputs)
 	if !ok {
-		return fmt.Errorf("AddBackTargetAction:input type=%T not right", input)
+		return fmt.Errorf("input type=%T not right", input)
 	}
 
 	for _, input := range inputs.Inputs {
@@ -430,13 +430,17 @@ func createListener(client *clb.Client, lbId string, proto string, port int64) (
 		return "", fmt.Errorf("createLbListener response have %d entries,it shoud be 1", len(response.Response.ListenerIds))
 	}
 
+	//sleep  to wait listener create ok
+	time.Sleep(15*time.Second)
+
 	return *response.Response.ListenerIds[0], nil
 }
 
 func queryClbListener(client *clb.Client, lbId string, proto string, port int64) (string, error) {
+	upperProtocol := strings.ToUpper(proto)
 	request := clb.NewDescribeListenersRequest()
 	request.LoadBalancerId = &lbId
-	request.Protocol = &proto
+	request.Protocol = &upperProtocol
 	request.Port = &port
 
 	resp, err := client.DescribeListeners(request)
@@ -483,8 +487,8 @@ func ensureAddListenerBackHost(client *clb.Client, lbId string, listenerId strin
 }
 
 func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
-	inputs, _ := input.(AddBackTargetInputs)
-	outputs := AddBackTargetOutputs{}
+	inputs, _ := input.(BackTargetInputs)
+	outputs := BackTargetOutputs{}
 	for _, input := range inputs.Inputs {
 		portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
@@ -497,7 +501,7 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		if err = ensureAddListenerBackHost(client, input.LbId, listenerId, input.HostId, hostPort); err != nil {
 			return &outputs, err
 		}
-		output := AddBackTargetOutput{
+		output := BackTargetOutput{
 			Guid: input.Guid,
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
@@ -506,20 +510,6 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 }
 
 type DelBackTargetAction struct {
-}
-
-type DelBackTargetInputs struct {
-	Inputs []DelBackTargetInput `json:"inputs,omitempty"`
-}
-
-type DelBackTargetInput struct {
-	Guid           string `json:"guid"`
-	ProviderParams string `json:"provider_params"`
-	LbId           string `json:"lb_id"`
-	Port           string `json:"port"`
-	Protocol       string `json:"protocol"`
-	HostId         string `json:"hostId"`
-	HostPort       string `json:"hostPort"`
 }
 
 type DelBackTargetOutputs struct {
@@ -531,7 +521,7 @@ type DelBackTargetOutput struct {
 }
 
 func (action *DelBackTargetAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs DelBackTargetInputs
+	var inputs BackTargetInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -564,8 +554,8 @@ func ensureDelListenerBackHost(client *clb.Client, lbId string, listenerId strin
 }
 
 func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
-	inputs, _ := input.(DelBackTargetInputs)
-	outputs := DelBackTargetOutputs{}
+	inputs, _ := input.(BackTargetInputs)
+	outputs := BackTargetOutputs{}
 
 	for _, input := range inputs.Inputs {
 		portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
@@ -582,7 +572,7 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, input.HostId); err != nil {
 			return outputs, err
 		}
-		output := DelBackTargetOutput{
+		output := BackTargetOutput{
 			Guid: input.Guid,
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
