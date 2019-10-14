@@ -9,9 +9,9 @@
 QCloud plugin is an open-source project used by Wecube to manage life cycle of IAAS and PAAS resource on Tencent Cloud.
 
 The QCloud plugin makes resource management feasible by providing features such as:
-· Create subnet with route table
-· Query resource type and region with IP address
-· Create load balancer and associate backend instance with no need to known CLB(Tencent cloud load balancer) listener concept.
+- Create subnet with route table
+- Query resource type and region with IP address
+- Create load balancer and associate backend instance with no need to known CLB(Tencent cloud load balancer) listener concept.
 
 <img src="./docs/compile/images/plugin_function_en.png" />
 
