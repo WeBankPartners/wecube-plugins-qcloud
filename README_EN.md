@@ -8,7 +8,7 @@
 
 QCloud plugin is an open-source project used by Wecube to manage life cycle of IAAS and PAAS resource on Tencent Cloud.
 
-It provides basic resource manangement and some advanced apis to support more complicated context,like create subnet with route table,query resource type and region with ip address,create loadbalancer and associate backend host with no need to care CLB(tencent cloud loadbalancer) listener,etc.
+It provides basic resource manangement and advanced apis to support more complicated context, like create subnet with route table,query resource type and region with ip address, create loadbalancer and associate backend host with no need to care CLB(tencent cloud loadbalancer) listener, etc.
 
 <img src="./docs/compile/images/plugin_function_en.png" />
 
@@ -28,13 +28,13 @@ make build
 ```
 ![qcloud_build](docs/compile/images/qcloud_build.png)
 
-3. Build plugin docker image,the docker image tag is github's commit number.
+3. Build plugin docker image, the docker image tag is github's commit number.
 ```
 make image
 ```
 ![qcloud_image](docs/compile/images/qcloud_image.png)
 
-4. Run plugin container,please replace variable IMAGE_TAG with your image tag
+4. Run plugin container, please replace variable IMAGE_TAG with your image tag
 ```
 docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:{$IMAGE_TAG}
 ```
@@ -51,6 +51,10 @@ If you want to build a Plugin Package to work with Wecube,please execute followi
 make package PLUGIN_VERSION=v{$package_version}
 ```
 ![qcloud_package](docs/compile/images/qcloud_plugin_package.png)
+
+## License
+QCloud plugin is available under the Apache 2 license.
+
 
 
 
