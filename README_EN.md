@@ -1,4 +1,4 @@
-# Wecube Qcloud Plguin
+# Wecube QCloud Plugin
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![](https://img.shields.io/badge/language-golang-orang.svg)
 
@@ -6,9 +6,9 @@
 
 ## Introduction
 
-Qcloud plugin is an open-source project used by Wecube to management lifecycle of IAAS and PAAS resource on Tencent Cloud.
+QCloud plugin is an open-source project used by Wecube to management life cycle of IAAS and PAAS resource on Tencent Cloud.
 
-It provides basic resource manangement and some advanced apis to support more complicated context,like create subnet with route table,query resource type and region with ip address etc,create loadbalancer and associate backend host with no need to care CLB(tencent cloud loadbalancer) listener.
+It provides basic resource manangement and some advanced apis to support more complicated context,like create subnet with route table,query resource type and region with ip address,create loadbalancer and associate backend host with no need to care CLB(tencent cloud loadbalancer) listener,etc.
 
 <img src="./docs/compile/images/plugin_function_en.png" />
 
@@ -17,24 +17,24 @@ It provides basic resource manangement and some advanced apis to support more co
 
 Before execute following command,please make sure docker command is installed on a centos host.[How to Install Docker](https://docs.docker.com/install/linux/docker-ce/centos/)
 
-1. git clone source code 
+1. Git clone source code 
 ```
 git clone https://github.com/WeBankPartners/wecube-plugins-qcloud.git
 ```
 
-2. build plugin binary
+2. Build plugin binary
 ```
 make build 
 ```
 ![qcloud_build](docs/compile/images/qcloud_build.png)
 
-3. build plugin docker image,the docker image tag is github's commit number.
+3. Build plugin docker image,the docker image tag is github's commit number.
 ```
 make image
 ```
 ![qcloud_image](docs/compile/images/qcloud_image.png)
 
-4. run plugin container,please replace variable IMAGE_TAG with your image tag
+4. Run plugin container,please replace variable IMAGE_TAG with your image tag
 ```
 docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:{$IMAGE_TAG}
 ```
@@ -46,7 +46,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-ca
 
 ## Build Plugin Package for Wecube
 
-If you want to build a Plugin Package to work with Wecube,please execute following command .You can replace variable package_version with any version you want.
+If you want to build a Plugin Package to work with Wecube,please execute following command .You can replace variable package_version with version you want.
 ```
 make package PLUGIN_VERSION=v{$package_version}
 ```
