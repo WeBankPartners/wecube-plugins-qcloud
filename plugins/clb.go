@@ -23,8 +23,8 @@ var clbActions = make(map[string]Action)
 func init() {
 	clbActions["create"] = new(CreateClbAction)
 	clbActions["terminate"] = new(TerminateClbAction)
-	clbActions["addBackTarget"] = new(AddBackTargetAction)
-	clbActions["delBackTarget"] = new(DelBackTargetAction)
+	clbActions["add-backtarget"] = new(AddBackTargetAction)
+	clbActions["del-backtarget"] = new(DelBackTargetAction)
 }
 
 func createClbClient(region, secretId, secretKey string) (client *clb.Client, err error) {
@@ -331,10 +331,10 @@ type BackTargetInput struct {
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	LbId           string `json:"lb_id"`
-	Port           string `json:"port"`
+	Port           string `json:"lb_port"`
 	Protocol       string `json:"protocol"`
-	HostId         string `json:"hostId"`
-	HostPort       string `json:"hostPort"`
+	HostId         string `json:"host_id"`
+	HostPort       string `json:"host_port"`
 }
 
 type BackTargetOutputs struct {
