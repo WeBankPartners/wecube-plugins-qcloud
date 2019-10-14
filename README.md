@@ -49,7 +49,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-ca
 插件相关的日志保存在当前目录logs/wecube-plugins-qcloud.log中。
 
 ## QCloud编译和插件包制作
-[QCloud插件编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
+[QCloud插件包编译和制作指引](docs/compile/wecube-plugins-qcloud_compile_guide.md)
 
 
 ## 独立运行QCloud插件
