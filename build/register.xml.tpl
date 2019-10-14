@@ -433,7 +433,6 @@
             </output-parameters>
         </interface>
     </plugin>
-
     <plugin id="redis" name="Redis Management">
         <interface name="create" path="/v1/qcloud/redis/create">
             <input-parameters>
@@ -452,6 +451,62 @@
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+    </plugin>
+    <plugin id="clb" name="Clb Management">
+        <interface name="create" path="/v1/qcloud/clb/create">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="number">name</parameter>
+                <parameter datatype="number">type</parameter>
+                <parameter datatype="number">vpc_id</parameter>
+                <parameter datatype="number">subnet_id</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">vip</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="/terminate" path="/v1/qcloud/clb/terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="add-backtarget" path="/v1/qcloud/clb/add-backtarget">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">lb_id</parameter>
+                <parameter datatype="string">lb_port</parameter>
+                <parameter datatype="string">protocol</parameter>
+                <parameter datatype="string">host_id</parameter>
+                <parameter datatype="string">host_port</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+         <interface name="del-backtarget" path="/v1/qcloud/clb/del-backtarget">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">lb_id</parameter>
+                <parameter datatype="string">lb_port</parameter>
+                <parameter datatype="string">protocol</parameter>
+                <parameter datatype="string">host_id</parameter>
+                <parameter datatype="string">host_port</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
     </plugin>
