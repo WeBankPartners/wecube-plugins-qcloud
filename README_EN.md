@@ -39,7 +39,7 @@ make image
 docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:{$IMAGE_TAG}
 ```
 
-5. On same host,use curl command to check if Qcloud Plugin works fine.Please replace variable your_SecretID and your_SecretKey with your Tencent Cloud Account's SecretID and SecretKey.If you see a vpc with CIDR 10.5.0.0/16 is created on Tencent Cloud,the plugin is work fine.
+5. On same host,use curl command to check if QCloud plugin works fine.Please replace variable your_SecretID and your_SecretKey with your Tencent Cloud Account's SecretID and SecretKey.If you see a vpc with CIDR 10.5.0.0/16 is created on Tencent Cloud,the plugin is work fine.
 ```
 curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-cache" -H "content-type: application/json" -d "{\"inputs\":[{\"provider_params\": \"Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}\",\"name\": \"api_test_vpc\",\"cidr_block\": \"10.5.0.0/16\"}]}"
 ```
