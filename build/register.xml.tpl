@@ -471,7 +471,7 @@
                 <parameter datatype="string">vip</parameter>
             </output-parameters>
         </interface>
-        <interface name="/terminate" path="/v1/qcloud/clb/terminate">
+        <interface name="terminate" path="/v1/qcloud/clb/terminate">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">provider_params</parameter>
