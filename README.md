@@ -65,8 +65,7 @@ docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/local
 [QCloud插件API手册](docs/api/wecube_plugins_qcloud_api_guide.md)
 
 ## License
-QCloud插件是基于 Apache License 2.0 协议， 详情请参考
-[LICENSE](LICENSE)
+QCloud插件是基于 Apache License 2.0 协议
 
 ## 社区
 - 如果您想得到最快的响应，请给我们提issue。
