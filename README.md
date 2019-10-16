@@ -68,5 +68,11 @@ docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/local
 QCloud插件是基于 Apache License 2.0 协议
 
 ## 社区
-- 如果您想得到最快的响应，请给我们提issue。
+- 如果您想得到最快的响应，请给我们提[Issue](https://github.com/WeBankPartners/wecube-plugin-qcloud/issues/new/choose)或扫描下面的二维码，我们会第一时间反馈。
+
+	<div align="left">
+	<img src="https://github.com/WeBankPartners/we-cmdb/blob/master/cmdb-wiki/images/wecube_qr_code.png"  height="200" width="200">
+	</div>
+
+
 - 联系我们：fintech@webank.com
