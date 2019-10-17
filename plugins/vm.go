@@ -116,7 +116,7 @@ type QcloudRunInstanceStruct struct {
 	Placement             PlacementStruct
 	ImageId               string
 	InstanceChargeType    string
-	InstanceChargePrepaid InstanceChargePrepaidStruct `json:"InstanceChargePrepaid,omitempty"`
+	InstanceChargePrepaid *InstanceChargePrepaidStruct `json:"InstanceChargePrepaid,omitempty"`
 	InstanceType          string
 	SystemDisk            SystemDiskStruct          `json:"SystemDisk,omitempty"`
 	DataDisks             []DataDisksStruct         `json:"DataDisks,omitempty"`
@@ -317,7 +317,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		if vm.InstanceChargeType == INSTANCE_CHARGE_TYPE_PREPAID {
-			runInstanceRequest.InstanceChargePrepaid = InstanceChargePrepaidStruct{
+			runInstanceRequest.InstanceChargePrepaid = &InstanceChargePrepaidStruct{
 				Period:    vm.InstanceChargePeriod,
 				RenewFlag: RENEW_FLAG_NOTIFY_AND_AUTO_RENEW,
 			}
