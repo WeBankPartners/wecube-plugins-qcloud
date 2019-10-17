@@ -61,6 +61,16 @@ make package PLUGIN_VERSION=v{$package_version}
 QCloud plugin is available under the Apache 2 license.
 
 
+## Community
+- For quick response, please [raise an issue](https://github.com/WeBankPartners/wecube-plugins-qcloud/issues/new/choose) to us, or you can also scan the following QR code to join our community, we will provide feedback as quickly as we can.
+
+  <div align="left">
+  <img src="docs/images/wecube_qr_code.png"  height="200" width="200">
+  </div>
+
+- Contact us: fintech@webank.com
+
+
 
 
 
