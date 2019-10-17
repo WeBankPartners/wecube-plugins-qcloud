@@ -55,7 +55,7 @@ make image
 docker run -d -p 8081:8081 --restart=unless-stopped -v /etc/localtime:/etc/localtime  wecube-plugins-qcloud:{$IMAGE_TAG}
 ```
 
-5. On the same centos server, use curl command to check if QCloud plugin works fine. Please replace variable {$your_SecretID} and {$your_SecretKey} with your Tencent Cloud account's secretID and secretKey. If you see a new vpc with CIDR 10.5.0.0/16 has been created on Tencent Cloud, means the plugin is work fine.
+5. On the same centos server, use curl command to check if QCloud plugin works fine. Please replace variable {$your_SecretID} and {$your_SecretKey} with your Tencent Cloud account's secretID and secretKey. If you see a new vpc with CIDR 10.5.0.0/16 has been created on Tencent Cloud, means the plugin works fine.
 
 ```
 curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-cache" -H "content-type: application/json" -d "{\"inputs\":[{\"provider_params\": \"Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}\",\"name\": \"api_test_vpc\",\"cidr_block\": \"10.5.0.0/16\"}]}"
@@ -63,7 +63,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create -H "cache-control: no-ca
 
 ## Build Plugin Package for Wecube
 
-If you want to build a plugin package to work with Wecube,please execute the following command. You can replace variable {$package_version} with the version number you want.
+If you want to build a plugin package to work with Wecube, please execute the following command. You can replace variable {$package_version} with the version number you want.
 
 ```
 make package PLUGIN_VERSION=v{$package_version}
