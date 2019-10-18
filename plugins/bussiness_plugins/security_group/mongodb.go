@@ -131,7 +131,7 @@ func (resourceType *MongodbResourceType) QueryInstancesByIp(providerParams strin
 						Region: region,
 						Vip:    *db.Vip,
 					}
-					result[*db.Vip] = instance
+					result[ip] = instance
 					break
 				}
 			}

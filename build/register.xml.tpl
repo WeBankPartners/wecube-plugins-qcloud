@@ -17,7 +17,6 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -29,9 +28,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -49,7 +46,6 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -62,9 +58,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -78,7 +72,6 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -90,9 +83,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="create-policies" path="/v1/qcloud/security-group/create-policies">
@@ -110,7 +101,6 @@
                 <parameter datatype="string">policy_description</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -127,9 +117,7 @@
                 <parameter datatype="string">policy_action</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -143,7 +131,6 @@
                 <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -155,9 +142,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="associate-subnet" path="/v1/qcloud/route-table/associate-subnet">
@@ -168,7 +153,6 @@
                 <parameter datatype="string">route_table_id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
@@ -184,7 +168,6 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -199,7 +182,6 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
                 <parameter datatype="string">route_table_id</parameter>
@@ -213,7 +195,6 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/subnet/terminate-with-routetable">
@@ -225,7 +206,6 @@
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -247,7 +227,6 @@
                  <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
                 <parameter datatype="string">cpu</parameter>
@@ -264,9 +243,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="start" path="/v1/qcloud/vm/start">
@@ -276,9 +253,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="stop" path="/v1/qcloud/vm/stop">
@@ -288,9 +263,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -308,7 +281,6 @@
                 <parameter datatype="string">instance_id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -320,9 +292,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -336,13 +306,12 @@
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="number">max_concurrent</parameter>
                 <parameter datatype="number">bandwidth</parameter>
-                <parameter datatype="string">assigned_eip_set</parameter>
-                <parameter datatype="number">auto_alloc_eip_num</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">eip</parameter>
+                <parameter datatype="string">eip_id</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/nat-gateway/terminate">
@@ -353,9 +322,7 @@
                 <parameter datatype="string">vpc_id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -363,6 +330,7 @@
         <interface name="create" path="/v1/qcloud/mysql-vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">seed</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">engine_version</parameter>
                 <parameter datatype="number">memory</parameter>
@@ -370,16 +338,19 @@
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
                 <parameter datatype="string">name</parameter>
-                <parameter datatype="number">count</parameter>
                 <parameter datatype="string">charge_type</parameter>
                 <parameter datatype="number">charge_period</parameter>
                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">character_set</parameter>
+                <parameter datatype="string">lower_case_table_names</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
                 <parameter datatype="string">private_ip</parameter>
+                <parameter datatype="string">private_port</parameter>
+                <parameter datatype="string">user_name</parameter>
+                <parameter datatype="string">password</parameter>
             </output-parameters>
         </interface>
         <interface name="terminate" path="/v1/qcloud/mysql-vm/terminate">
@@ -389,9 +360,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
         <interface name="restart" path="/v1/qcloud/mysql-vm/restart">
@@ -401,9 +370,7 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
             </output-parameters>
         </interface>
     </plugin>
@@ -427,10 +394,9 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
-                <parameter datatype="number">private_port</parameter>
+                <parameter datatype="string">private_port</parameter>
                 <parameter datatype="string">private_ip</parameter>
                 <parameter datatype="string">user_name</parameter>
                 <parameter datatype="string">password</parameter>
@@ -451,7 +417,6 @@
                 <parameter datatype="string">desc</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
             </output-parameters>
@@ -464,12 +429,10 @@
                 <parameter datatype="string">route_table_id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
     </plugin>
-
     <plugin id="redis" name="Redis Management">
         <interface name="create" path="/v1/qcloud/redis/create">
             <input-parameters>
@@ -486,9 +449,64 @@
                 <parameter datatype="string">id</parameter>
             </input-parameters>
             <output-parameters>
-                <parameter datatype="string">request_id</parameter>
                 <parameter datatype="string">guid</parameter>
                 <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+    </plugin>
+    <plugin id="clb" name="Clb Management">
+        <interface name="create" path="/v1/qcloud/clb/create">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="number">name</parameter>
+                <parameter datatype="number">type</parameter>
+                <parameter datatype="number">vpc_id</parameter>
+                <parameter datatype="number">subnet_id</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">vip</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="terminate" path="/v1/qcloud/clb/terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="add-backtarget" path="/v1/qcloud/clb/add-backtarget">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">lb_id</parameter>
+                <parameter datatype="string">lb_port</parameter>
+                <parameter datatype="string">protocol</parameter>
+                <parameter datatype="string">host_id</parameter>
+                <parameter datatype="string">host_port</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+         <interface name="del-backtarget" path="/v1/qcloud/clb/del-backtarget">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">lb_id</parameter>
+                <parameter datatype="string">lb_port</parameter>
+                <parameter datatype="string">protocol</parameter>
+                <parameter datatype="string">host_id</parameter>
+                <parameter datatype="string">host_port</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
     </plugin>

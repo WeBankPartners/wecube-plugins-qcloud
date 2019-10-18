@@ -71,7 +71,7 @@ type MariadbOutput struct {
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
 	PrivateIp string `json:"private_ip,omitempty"`
-	Port      int64  `json:"private_port,omitempty"`
+	Port      string `json:"private_port,omitempty"`
 	UserName  string `json:"user_name,omitempty"`
 	Password  string `json:"password,omitempty"`
 }
@@ -287,7 +287,7 @@ func waitMariadbToDesireStatus(client *mariadb.Client, instanceId string, desire
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 60 {
+		if count >= 360 {
 			return "", 0, errors.New("waitMariadbRunning timeout")
 		}
 	}
@@ -337,14 +337,14 @@ func createMariadbAccount(client *mariadb.Client, instanceId string, userName st
 
 func initMariadb(client *mariadb.Client, instanceId string, charset string, lowCaseTableName string) error {
 	charSetParamName := "character_set_server"
-	lowCaweParamName := "lower_case_table_names"
+	lowCaseParamName := "lower_case_table_names"
 
 	charsetParam := mariadb.DBParamValue{
 		Param: &charSetParamName,
 		Value: &charset,
 	}
 	lowCaseParam := mariadb.DBParamValue{
-		Param: &lowCaweParamName,
+		Param: &lowCaseParamName,
 		Value: &lowCaseTableName,
 	}
 
@@ -467,7 +467,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 	output.RequestId = requestId
 	output.Id = instanceId
 	output.PrivateIp = vip
-	output.Port = vport
+	output.Port = fmt.Sprintf("%v", vport)
 	output.UserName = input.UserName
 
 	return output, nil

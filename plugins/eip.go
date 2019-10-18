@@ -10,7 +10,7 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
-	vpcb "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
+	unversioned "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
 )
 
 var EIPActions = make(map[string]Action)
@@ -22,6 +22,14 @@ func init() {
 	EIPActions["detach"] = new(EIPDetachAction)
 	EIPActions["bindnat"] = new(EIPBindNatAction)
 	EIPActions["unbindnat"] = new(EIPUnBindNatAction)
+}
+
+func newVpcClient(region, secretId, secretKey string) (*unversioned.Client, error) {
+	return unversioned.NewClientWithSecretId(
+		secretId,
+		secretKey,
+		region,
+	)
 }
 
 func CreateEIPClient(region, secretId, secretKey string) (client *vpc.Client, err error) {
@@ -416,7 +424,7 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (*EIPOutput, error
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	request := vpcb.NewEipBindNatGatewayRequest()
+	request := unversioned.NewEipBindNatGatewayRequest()
 	request.VpcId = &eip.VpcId
 	request.NatId = &eip.NatId
 	request.AssignedEipSet = []*string{
@@ -426,7 +434,7 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (*EIPOutput, error
 	if err != nil {
 		return nil, fmt.Errorf("Failed to bind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
 	}
-	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
+	taskReq := unversioned.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = response.TaskId
 	count := 0
 	for {
@@ -505,7 +513,7 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (*EIPOutput, e
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	request := vpcb.NewEipUnBindNatGatewayRequest()
+	request := unversioned.NewEipUnBindNatGatewayRequest()
 	request.VpcId = &eip.VpcId
 	request.NatId = &eip.NatId
 	request.AssignedEipSet = []*string{
@@ -515,7 +523,7 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (*EIPOutput, e
 	if err != nil {
 		return nil, fmt.Errorf("Failed to unbind nat gateway (EIP Id=%v), error=%s", eip.Id, err)
 	}
-	taskReq := vpcb.NewDescribeVpcTaskResultRequest()
+	taskReq := unversioned.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = response.TaskId
 	count := 0
 	for {
