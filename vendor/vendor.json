@@ -20,6 +20,18 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "3y/fL7gLMeRL2nhkXsutDDwc9qk=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/bm/v20180423",
+			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
+			"revisionTime": "2019-09-06T12:32:28Z"
+		},
+		{
+			"checksumSHA1": "5+Dns9aYi02GoorbGYn1nsXaZQ4=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/bmlb/v20180625",
+			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
+			"revisionTime": "2019-09-06T12:32:28Z"
+		},
+		{
 			"checksumSHA1": "qnvW8BkL3VR90418xmN/4iyDWuo=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
 			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",

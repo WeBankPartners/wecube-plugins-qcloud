@@ -27,6 +27,7 @@ func isContainInList(input string, list []string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -36,6 +37,7 @@ func isValidValueIgnoreCase(inputValue string, validValues []string) error {
 			return nil
 		}
 	}
+
 	return fmt.Errorf("%s is not valid value in(%++v)", inputValue, validValues)
 }
 
@@ -44,6 +46,7 @@ func isValidProtocol(protocol string) error {
 	if err := isValidValueIgnoreCase(protocol, validProtocols); err != nil {
 		return fmt.Errorf("protocol(%s) is invalid", protocol)
 	}
+
 	return nil
 }
 
@@ -60,6 +63,7 @@ func isValidPort(port string) (int, error) {
 	if err != nil || portInt >= 65535 {
 		return 0, fmt.Errorf("port(%s) is invalid", port)
 	}
+
 	return portInt, nil
 }
 
@@ -68,6 +72,7 @@ func isValidAction(action string) error {
 	if err := isValidValueIgnoreCase(action, validActions); err != nil {
 		return fmt.Errorf("action(%s) is invalid", action)
 	}
+
 	return nil
 }
 
@@ -127,5 +132,6 @@ func getPortsByPolicyFormat(portStr string) ([]string, error) {
 	if len(rangePorts) > 0 {
 		rtnPorts = append(rtnPorts, rangePorts...)
 	}
+
 	return rtnPorts, nil
 }

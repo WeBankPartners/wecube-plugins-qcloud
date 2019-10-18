@@ -161,6 +161,7 @@ func queryRegionInstance(providerParams string,region string,queryResourceType [
 	ch<-result
 }
 
+
 func findInstanceByIp(ip string,queryResourceType []string) (ResourceInstance, error) {
 	chResult:=make(chan QueryIpResult)
 	regions, err := getRegions()
@@ -176,7 +177,6 @@ func findInstanceByIp(ip string,queryResourceType []string) (ResourceInstance, e
 			logrus.Errorf("findInstanceByIp getProviderParams meet err=%v\n", err)
 			return nil, err
 		}
-
 		go queryRegionInstance(providerParams,region,queryResourceType,ip,chResult)
 	}
 
@@ -190,9 +190,8 @@ func findInstanceByIp(ip string,queryResourceType []string) (ResourceInstance, e
 			return nil,result.Err
 		}
 	}
-
 	err = fmt.Errorf("ip(%s),can't be found", ip)
-	logrus.Infof("findInstanceByIp(%v) meet error=%v", ip,err)
+	logrus.Infof("findInstanceByIp meet error=%v", err)
 	return nil, err
 }
 

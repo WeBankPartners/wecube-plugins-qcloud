@@ -571,7 +571,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 		return nil, err
 	}
 
-	if err := isValidValue(filter.Name, validFilterNames); err != nil {
+	if err := IsValidValue(filter.Name, validFilterNames); err != nil {
 		return nil, err
 	}
 

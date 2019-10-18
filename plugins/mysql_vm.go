@@ -570,7 +570,7 @@ func QueryMysqlInstance(providerParams string, filter Filter) ([]*cdb.InstanceIn
 	if err != nil {
 		return emptyInstances, err
 	}
-	if err := isValidValue(filter.Name, validFilterNames); err != nil {
+	if err := IsValidValue(filter.Name, validFilterNames); err != nil {
 		return emptyInstances, err
 	}
 
