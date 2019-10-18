@@ -5,6 +5,7 @@ import (
 
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins"
 	"github.com/sirupsen/logrus"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	"github.com/zqfan/tencentcloud-sdk-go/common"
 )
 
@@ -61,20 +62,29 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 		logrus.Errorf("CvmResourceType QueryInstancesByIp meet error=%v", err)
 		return result, err
 	}
+	total := []*cvm.Instance{}
 
-	filter := plugins.Filter{
-		Name:   "privateIpAddress",
-		Values: ips,
-	}
-
-	items, err := plugins.QueryCvmInstance(providerParams, filter)
-	if err != nil {
-		logrus.Errorf("CvmResourceType QueryInstancesByIp QueryCvmInstance meet error=%v", err)
-		return result, err
+	for i := 0; i < (len(ips)+4)/5; i++ {
+		last := 0
+		if (i+1)*5 > len(ips) {
+			last = len(ips)
+		} else {
+			last = (i + 1) * 5
+		}
+		filter := plugins.Filter{
+			Name:   "privateIpAddress",
+			Values: ips[i*5 : last],
+		}
+		items, err := plugins.QueryCvmInstance(providerParams, filter)
+		if err != nil {
+			logrus.Errorf("CvmResourceType QueryInstancesByIp QueryCvmInstance meet error=%v", err)
+			return result, err
+		}
+		total = append(total, items...)
 	}
 
 	paramsMap, _ := plugins.GetMapFromProviderParams(providerParams)
-	for _, item := range items {
+	for _, item := range total {
 		instance := CvmInstance{
 			Id:                      *item.InstanceId,
 			Name:                    *item.InstanceName,
@@ -84,7 +94,7 @@ func (resourceType *CvmResourceType) QueryInstancesByIp(providerParams string, i
 			Region:                  paramsMap["Region"],
 			SupportSecurityGroupApi: true,
 		}
-		result[ips[0]] = instance
+		result[common.StringValues(item.PrivateIpAddresses)[0]] = instance
 	}
 
 	logrus.Infof("CvmResourceType QueryInstancesByIp: result=%++v", result)
