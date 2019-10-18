@@ -17,6 +17,12 @@ const (
 	MAX_SEUCRITY_RULE_NUM = 100
 )
 
+var (
+	ErrorIpNotFound = errors.New("ip not found")
+	LbResoureTypeNames=[]string{}
+	ALLResourceTypeNames=[]string{}
+)
+
 //interface definition
 type ResourceInstance interface {
 	ResourceTypeName() string
@@ -81,7 +87,6 @@ func (plugin *BussinessSecurityGroupPlugin) GetActionByName(actionName string) (
 
 	if !found {
 		err := fmt.Errorf("Bussiness Security Group plugin,action = %s not found", actionName)
-
 		logrus.Errorf("BussinessSecurityGroupPlugin GetActionByName meet error=%v", err)
 		return nil, err
 	}
@@ -96,52 +101,96 @@ func init() {
 	plugins.RegisterPlugin("bs-security-group", new(BussinessSecurityGroupPlugin))
 
 	//resourceType registry
-	addNewResourceType("mysql", new(MysqlResourceType))
 	addNewResourceType("cvm", new(CvmResourceType))
 	addNewResourceType("clb", new(ClbResourceType))
-	addNewResourceType("bm", new(BmResourceType))
+	addNewResourceType("mysql", new(MysqlResourceType))
+	/*addNewResourceType("bm", new(BmResourceType))
 	addNewResourceType("bmlb", new(BmlbResourceType))
 	addNewResourceType("mariadb", new(MariadbResourceType))
 	addNewResourceType("redis", new(RedisResourceType))
-	addNewResourceType("mongodb", new(MongodbResourceType))
+	addNewResourceType("mongodb", new(MongodbResourceType))*/
 
 	//action
 	SecurityGroupActions["calc-security-policies"] = new(CalcSecurityPolicyAction)
 	SecurityGroupActions["apply-security-policies"] = new(ApplySecurityPolicyAction)
+
+	LbResoureTypeNames =[]string{"clb"}
+	ALLResourceTypeNames=[]string{"cvm","clb","mysql"}
 }
 
-func findInstanceByIp(ip string) (ResourceInstance, error) {
-	logrus.Infof("findInstanceByIp: request ip=%v", ip)
+type QueryIpResult struct {
+	Err error
+	Instance ResourceInstance 
+}
 
+
+func queryRegionInstance(providerParams string,region string,queryResourceType []string,ip string,ch chan QueryIpResult) {
+	result:=QueryIpResult{
+		Err:nil,
+		Instance:nil,
+	}
+	start := time.Now()
+	defer func (){
+		logrus.Infof("queryRegionInstance region(%s) ip (%s) taken %v,result=%++v",region,ip,time.Since(start),result)
+	}()
+
+	for resourceTypeName, resType := range resourceTypeMap {
+		if !isContainInList(resourceTypeName,queryResourceType){
+				continue
+		}
+		
+		instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
+		logrus.Infof("findInstanceByIp QueryInstancesByIp instanceMap:%++v", instanceMap)
+		if err != nil {
+			result.Err=err
+			logrus.Errorf("findInstanceByIp QueryInstancesByIp meet error=%v\n", err)
+			break
+		}
+		instance, ok := instanceMap[ip]
+		if ok {
+			result.Instance = instance
+			logrus.Infof("findInstanceByIp: return instance=%v", instance)
+			break
+		}
+	}
+
+	if result.Err ==nil && result.Instance == nil {
+		result.Err = ErrorIpNotFound
+	}
+
+	ch<-result
+}
+
+
+func findInstanceByIp(ip string,queryResourceType []string) (ResourceInstance, error) {
+	chResult:=make(chan QueryIpResult)
 	regions, err := getRegions()
 	if err != nil {
 		logrus.Errorf("findInstanceByIp getRegions meet err=%v\n", err)
 		return nil, err
 	}
 
+	logrus.Infof("findInstanceByIp: request ip=%v", ip)
 	for _, region := range regions {
 		providerParams, err := getProviderParams(region)
 		if err != nil {
 			logrus.Errorf("findInstanceByIp getProviderParams meet err=%v\n", err)
 			return nil, err
 		}
+		go queryRegionInstance(providerParams,region,queryResourceType,ip,chResult)
+	}
 
-		for _, resType := range resourceTypeMap {
-			instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
-			logrus.Infof("findInstanceByIp QueryInstancesByIp instanceMap:%++v", instanceMap)
-			if err != nil {
-				logrus.Errorf("findInstanceByIp QueryInstancesByIp meet error=%v\n", err)
-				return nil, err
-			}
-			instance, ok := instanceMap[ip]
-			if ok {
-				logrus.Infof("findInstanceByIp: return instance=%v", instance)
-				return instance, nil
-			}
+	for  _, _= range regions{
+		result:= <-chResult
+		if result.Instance!= nil && result.Err == nil {
+			return result.Instance,nil
+		}
+
+		if result.Err != nil && result.Err != ErrorIpNotFound{
+			return nil,result.Err
 		}
 	}
 	err = fmt.Errorf("ip(%s),can't be found", ip)
-
 	logrus.Infof("findInstanceByIp meet error=%v", err)
 	return nil, err
 }
@@ -317,7 +366,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	policies := []SecurityPolicy{}
 
 	//check if dev exist
-	instance, err := findInstanceByIp(devIp)
+	instance, err := findInstanceByIp(devIp,ALLResourceTypeNames)
 	if err != nil {
 		logrus.Errorf("calcPolicies findInstanceByIp meet error=%v", err)
 		return policies, err
@@ -338,7 +387,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	}
 
 	for _, peerIp := range peerIps {
-		peerInstance, err := findInstanceByIp(peerIp)
+		peerInstance, err := findInstanceByIp(peerIp,LbResoureTypeNames)
 		logrus.Infof("calcPolicies findInstanceByip peerIp=%s, instance=%++v, err=%v\n", peerIp, peerInstance, err)
 		if err == nil {
 			peerResType, _ := getResouceTypeByName(peerInstance.ResourceTypeName())

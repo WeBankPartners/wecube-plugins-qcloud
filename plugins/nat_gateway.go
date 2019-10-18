@@ -3,20 +3,11 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/sirupsen/logrus"
-	vpcb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
-	vpc "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+	unversioned "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
+	"time"
 )
-
-func newVpcClient(region, secretId, secretKey string) (*vpc.Client, error) {
-	return vpc.NewClientWithSecretId(
-		secretId,
-		secretKey,
-		region,
-	)
-}
 
 var NatGatewayActions = make(map[string]Action)
 
@@ -112,8 +103,8 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 			return queryNatGatewayResponse, nil
 		}
 	}
-
-	createReq := vpc.NewCreateNatGatewayRequest()
+	natGateway.AutoAllocEipNum = 1
+	createReq := unversioned.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
 	createReq.MaxConcurrent = &natGateway.MaxConcurrent
@@ -134,7 +125,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	output.Id = *createResp.NatGatewayId
 
 	//query eip infp
-	req := vpcb.NewDescribeAddressesRequest()
+	req := vpc.NewDescribeAddressesRequest()
 	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return nil, err
@@ -163,6 +154,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 		if count > 20 {
 			return nil, fmt.Errorf("query nat eip info timeout")
 		}
+		time.Sleep(10 * time.Second)
 		count++
 	}
 
@@ -216,7 +208,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	deleteReq := vpc.NewDeleteNatGatewayRequest()
+	deleteReq := unversioned.NewDeleteNatGatewayRequest()
 	deleteReq.VpcId = &natGateway.VpcId
 	deleteReq.NatId = &natGateway.Id
 	deleteResp, err := c.DeleteNatGateway(deleteReq)
@@ -224,7 +216,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		return nil, err
 	}
 
-	taskReq := vpc.NewDescribeVpcTaskResultRequest()
+	taskReq := unversioned.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = deleteResp.TaskId
 	count := 0
 	for {
@@ -269,10 +261,10 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	return &outputs, nil
 }
 
-func queryNatGatewayInfo(client *vpc.Client, input *NatGatewayInput) (*NatGatewayOutput, bool, error) {
+func queryNatGatewayInfo(client *unversioned.Client, input *NatGatewayInput) (*NatGatewayOutput, bool, error) {
 	output := NatGatewayOutput{}
 
-	request := vpc.NewDescribeNatGatewayRequest()
+	request := unversioned.NewDescribeNatGatewayRequest()
 	request.NatId = &input.Id
 	response, err := client.DescribeNatGateway(request)
 	if err != nil {

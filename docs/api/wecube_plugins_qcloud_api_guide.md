@@ -95,16 +95,18 @@ id|string|VPC实例ID
 输入：
 
 ```
-{
-	"inputs":[
-		{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+	"inputs":[{
 		"guid": "0001_0000000011",
 		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"name": "api_test_vpc",
 		"cidr_block": "10.5.0.0/16"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -147,7 +149,10 @@ id|string|VPC实例ID
 输入：
 
 ```
-{
+  curl -X POST http://127.0.0.1:8081/v1/qcloud/vpc/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs":[
 		{
 		"guid": "0001_0000000011",
@@ -155,7 +160,7 @@ id|string|VPC实例ID
 		"id": "vpc-k6051or0"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -203,8 +208,11 @@ id|string|子网实例ID
 输入：
 
 ```
-{
-	"inputs":[
+curl -X POST http://127.0.0.1:8081/v1/qcloud/subnet/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+	   "inputs":[
 		{
 			"guid":"0002_0000000022",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -213,7 +221,7 @@ id|string|子网实例ID
 			"cidr_block": "10.5.1.0/24"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -256,7 +264,10 @@ id|string|子网实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/subnet/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs":[
 		{
 			"guid":"0002_0000000022",
@@ -264,7 +275,7 @@ id|string|子网实例ID
 			"id": "subnet-1dfa3lfh"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -311,7 +322,10 @@ id|string|路由表实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/route-table/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
   "inputs": [
   	    {
   	    	"guid":"0003_0000000033",
@@ -319,7 +333,7 @@ id|string|路由表实例ID
 			"name": "rtbl_001",
 			"vpc_id":"vpc-nn3hi480"
 		}]
-}
+}'
 ```
 
 输出：
@@ -362,14 +376,17 @@ id|string|路由表实例ID
 输入：
 
 ```
-{
-  "inputs": [
+curl -X POST http://127.0.0.1:8081/v1/qcloud/route-table/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+        "inputs": [
   	    {
   	    	"guid":"0003_0000000033",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id": "rtb-47oxymsj"
 		}]
-}
+}'
 ```
 
 输出：
@@ -412,15 +429,18 @@ guid|string|CI类型全局唯一ID
 输入：
 
 ```
-{
-  "inputs": [
+curl -X POST http://127.0.0.1:8081/v1/qcloud/route-table/associate-subnet \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+       "inputs": [
   	    {
   	    	"guid":"0003_0000000033",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"route_table_id": "rtb-47oxymsj",
 			"subnet_id":"subnet-1b4zl3gd"
 		}]
-}
+}'
 ```
 
 输出：
@@ -469,7 +489,10 @@ id|string|路由策略实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/route-policy/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
   "inputs": [
   	    {
 			"guid":"0004_0000000044",
@@ -480,7 +503,7 @@ id|string|路由策略实例ID
 			"gateway_id":"nat-9rbwryi9",
 			"desc":"nat_policy"
 		}]
-} 
+}'
 ```
 
 输出：
@@ -523,16 +546,19 @@ guid|string|CI类型全局唯一ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/route-policy/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs": [
 		{
 			"guid":"0004_0000000044",
-			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}"
+			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id": "114914",
-			"route_table_id": "rtb-47oxymsj",
+			"route_table_id": "rtb-47oxymsj"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -585,7 +611,10 @@ eip_id|string|弹性IP实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/nat-gateway/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs":[{
 		"guid":"0005_0000000055",
 		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -596,7 +625,7 @@ eip_id|string|弹性IP实例ID
 		"assigned_eip_set": "",
 		"auto_alloc_eip_num": 1
 	}]
-}
+}'
 ```
 
 输出：
@@ -641,14 +670,17 @@ id|string|NAT网关实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/nat-gateway/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs":[{
 		"guid":"0005_0000000055",
 		"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 		"id": "nat-kr5dnmzb",
 		"vpc_id": "vpc-nn3hi480"
 	}]
-}
+}'
 ```
 
 输出：
@@ -701,7 +733,10 @@ id|string|对等连接实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/peering-connection/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
     "inputs": [
     	{
 			"guid":"0006_0000000066",
@@ -713,7 +748,7 @@ id|string|对等连接实例ID
 			"peer_uin": "100011023753"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -758,7 +793,10 @@ id|string|对等连接实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/peering-connection/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
     "inputs": [
     	{
 			"guid":"0006_0000000066",
@@ -767,7 +805,7 @@ id|string|对等连接实例ID
 			"id": "pcx-c9zunx21"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -815,7 +853,10 @@ id|string|安全组实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/security-group/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
     "inputs": [
   	    {
 			"guid":"0007_0000000077",
@@ -823,7 +864,7 @@ id|string|安全组实例ID
 			"name": "group-test-1",
 			"description": "PluginAccess"
 		}]
-}
+}'
 ```
 
 输出：
@@ -867,14 +908,17 @@ id|string|安全组实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/security-group/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
     "inputs": [
   	    {
 			"guid":"0007_0000000077",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id": "sg-gco3jxye"
 		}]
-}
+}'
 ```
 
 输出：
@@ -926,7 +970,10 @@ id|string|安全组实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/security-group/create-policies \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs": [
 		{
 			"id": "sg-3jh0itt3",
@@ -942,7 +989,7 @@ id|string|安全组实例ID
 			"policy_description": "test accept 10.0.0.1 8090-8095 TCP"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -991,7 +1038,10 @@ id|string|安全组实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/security-group/delete-policies \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs": [
 		{
 			"id": "sg-919hc72d",
@@ -1014,7 +1064,7 @@ id|string|安全组实例ID
 			"policy_action": "DROP"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1075,8 +1125,11 @@ instance_private_ip|string|是|内网IP
 输入：
 
 ```
-{
- "inputs": [
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vm/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+     "inputs": [
  	    {
 			"guid":"0008_0000000088",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-3;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
@@ -1092,7 +1145,7 @@ instance_private_ip|string|是|内网IP
 			"instance_private_ip": null
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1141,7 +1194,10 @@ id|string|云服务器实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vm/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
  	"inputs": [
  	    {
 			"guid":"0008_0000000088",
@@ -1149,7 +1205,7 @@ id|string|云服务器实例ID
 			"id": "ins-kjqxqlgh"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1193,7 +1249,10 @@ id|string|云服务器实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vm/start \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
  	"inputs": [
  	    {
 			"guid":"0008_0000000088",
@@ -1201,7 +1260,7 @@ id|string|云服务器实例ID
 			"id": "ins-kjqxqlgh"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1245,7 +1304,10 @@ id|string|云服务器实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/vm/stop \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
  	"inputs": [
  	    {
 			"guid":"0008_0000000088",
@@ -1253,7 +1315,7 @@ id|string|云服务器实例ID
 			"id": "ins-kjqxqlgh"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1304,7 +1366,10 @@ id|string|云硬盘实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/storage/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
    "inputs": [
 	   {
 			"guid":"0009_0000000099",
@@ -1316,7 +1381,7 @@ id|string|云硬盘实例ID
 			"disk_charge_type": "POSTPAID_BY_HOUR",
 			"disk_charge_period": null
 		}]
-}
+}'
 ```
 
 输出：
@@ -1360,14 +1425,17 @@ id|string|云硬盘实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/storage/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
    "inputs": [
 	   {
 			"guid":"0009_0000000099",
 			"provider_params": "Region=ap-shanghai;AvailableZone=ap-shanghai-1;SecretID={$your_SecretID};SecretKey={$your_SecretKey}",
 			"id":"disk-74ate6ar"
 		}]
-}
+}'
 ```
 
 输出：
@@ -1421,7 +1489,10 @@ id|string|云数据库MySQL实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/mysql-vm/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
 	"inputs":[
 		{
 			"guid":"0010_000000010",
@@ -1437,7 +1508,7 @@ id|string|云数据库MySQL实例ID
 			"charge_period":1
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1481,7 +1552,10 @@ id|string|云数据库MySQL实例ID
 输入：
 
 ```
-{	
+curl -X POST http://127.0.0.1:8081/v1/qcloud/mysql-vm/terminate \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{	
 	"inputs":[
 		{
 			"guid":"0010_000000010",
@@ -1489,7 +1563,7 @@ id|string|云数据库MySQL实例ID
 			"id":"cdb-pn6gd5jp"			
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1532,7 +1606,10 @@ id|string|云数据库MySQL重启实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/mysql-vm/restart \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{	
 	"Inputs":[
 		{
 			"guid":"0010_000000010",
@@ -1540,7 +1617,7 @@ id|string|云数据库MySQL重启实例ID
 			"id":"cdb-pn6gd5jp"			
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1605,7 +1682,10 @@ password|string|MariaDB实例用户密码
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/mariadb/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{	
 	"inputs":[
 		{
 		"guid": "0011_000000011",
@@ -1624,7 +1704,7 @@ password|string|MariaDB实例用户密码
 		"user_name":"tdsqladmin"
 		}
 	]
-}
+}'
 ```
 
 输出：
@@ -1683,7 +1763,10 @@ id|string|Redis实例ID
 输入：
 
 ```
-{
+curl -X POST http://127.0.0.1:8081/v1/qcloud/redis/create \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{	
 	"inputs":[
 		{
 		"guid": "0012_000000012",
@@ -1698,7 +1781,7 @@ id|string|Redis实例ID
 		"billing_mode":1
 		}
 	]
-}
+}'
 ```
 
 输出：
