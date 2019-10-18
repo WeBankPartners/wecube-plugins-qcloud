@@ -17,6 +17,12 @@ const (
 	MAX_SEUCRITY_RULE_NUM = 100
 )
 
+var (
+	ErrorIpNotFound = errors.New("ip not found")
+	LbResoureTypeNames=[]string{}
+	ALLResourceTypeNames=[]string{}
+)
+
 //interface definition
 type ResourceInstance interface {
 	ResourceTypeName() string
@@ -62,8 +68,12 @@ func getResouceTypeByName(name string) (ResourceType, error) {
 
 	resType, found := resourceTypeMap[name]
 	if !found {
-		return nil, fmt.Errorf("resourceType[%s] not found", name)
+		err := fmt.Errorf("resourceType[%s] not found", name)
+
+		logrus.Errorf("getResouceTypeByName meet error=%v", err)
+		return nil, err
 	}
+
 	return resType, nil
 }
 
@@ -71,10 +81,14 @@ type BussinessSecurityGroupPlugin struct {
 }
 
 func (plugin *BussinessSecurityGroupPlugin) GetActionByName(actionName string) (plugins.Action, error) {
+	logrus.Infof("BussinessSecurityGroupPlugin GetActionByName: request actionName=%v", actionName)
+
 	action, found := SecurityGroupActions[actionName]
 
 	if !found {
-		return nil, fmt.Errorf("Bussiness Security Group plugin,action = %s not found", actionName)
+		err := fmt.Errorf("Bussiness Security Group plugin,action = %s not found", actionName)
+		logrus.Errorf("BussinessSecurityGroupPlugin GetActionByName meet error=%v", err)
+		return nil, err
 	}
 
 	return action, nil
@@ -87,47 +101,99 @@ func init() {
 	plugins.RegisterPlugin("bs-security-group", new(BussinessSecurityGroupPlugin))
 
 	//resourceType registry
-	addNewResourceType("mysql", new(MysqlResourceType))
 	addNewResourceType("cvm", new(CvmResourceType))
 	addNewResourceType("clb", new(ClbResourceType))
+	addNewResourceType("mysql", new(MysqlResourceType))
+	/*addNewResourceType("bm", new(BmResourceType))
+	addNewResourceType("bmlb", new(BmlbResourceType))
+	addNewResourceType("mariadb", new(MariadbResourceType))
 	addNewResourceType("redis", new(RedisResourceType))
-	addNewResourceType("mongodb", new(MongodbResourceType))
+	addNewResourceType("mongodb", new(MongodbResourceType))*/
 
 	//action
 	SecurityGroupActions["calc-security-policies"] = new(CalcSecurityPolicyAction)
 	SecurityGroupActions["apply-security-policies"] = new(ApplySecurityPolicyAction)
+
+	LbResoureTypeNames =[]string{"clb"}
+	ALLResourceTypeNames=[]string{"cvm","clb","mysql"}
 }
 
-func findInstanceByIp(ip string) (ResourceInstance, error) {
+type QueryIpResult struct {
+	Err error
+	Instance ResourceInstance 
+}
+
+
+func queryRegionInstance(providerParams string,region string,queryResourceType []string,ip string,ch chan QueryIpResult) {
+	result:=QueryIpResult{
+		Err:nil,
+		Instance:nil,
+	}
+	start := time.Now()
+	defer func (){
+		logrus.Infof("queryRegionInstance region(%s) ip (%s) taken %v,result=%++v",region,ip,time.Since(start),result)
+	}()
+
+	for resourceTypeName, resType := range resourceTypeMap {
+		if !isContainInList(resourceTypeName,queryResourceType){
+				continue
+		}
+		
+		instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
+		logrus.Infof("findInstanceByIp QueryInstancesByIp instanceMap:%++v", instanceMap)
+		if err != nil {
+			result.Err=err
+			logrus.Errorf("findInstanceByIp QueryInstancesByIp meet error=%v\n", err)
+			break
+		}
+		instance, ok := instanceMap[ip]
+		if ok {
+			result.Instance = instance
+			logrus.Infof("findInstanceByIp: return instance=%v", instance)
+			break
+		}
+	}
+
+	if result.Err ==nil && result.Instance == nil {
+		result.Err = ErrorIpNotFound
+	}
+
+	ch<-result
+}
+
+func findInstanceByIp(ip string,queryResourceType []string) (ResourceInstance, error) {
+	chResult:=make(chan QueryIpResult)
 	regions, err := getRegions()
 	if err != nil {
-		logrus.Errorf("getRegions meet err=%v\n", err)
+		logrus.Errorf("findInstanceByIp getRegions meet err=%v\n", err)
 		return nil, err
 	}
 
+	logrus.Infof("findInstanceByIp: request ip=%v", ip)
 	for _, region := range regions {
 		providerParams, err := getProviderParams(region)
 		if err != nil {
-			logrus.Errorf("getProviderParams meet err=%v\n", err)
+			logrus.Errorf("findInstanceByIp getProviderParams meet err=%v\n", err)
 			return nil, err
 		}
 
-		for _, resType := range resourceTypeMap {
-			instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
-			logrus.Infof("instanceMap:%++v", instanceMap)
-			if err != nil {
-				logrus.Errorf("QueryInstancesByIp meet err=%v\n", err)
-				return nil, err
-			}
-			instance, ok := instanceMap[ip]
-			if ok {
-				return instance, nil
-			}
+		go queryRegionInstance(providerParams,region,queryResourceType,ip,chResult)
+	}
+
+	for  _, _= range regions{
+		result:= <-chResult
+		if result.Instance!= nil && result.Err == nil {
+			return result.Instance,nil
+		}
+
+		if result.Err != nil && result.Err != ErrorIpNotFound{
+			return nil,result.Err
 		}
 	}
 
-	logrus.Errorf("ip(%s),can't be found", ip)
-	return nil, fmt.Errorf("ip(%s),can't be found", ip)
+	err = fmt.Errorf("ip(%s),can't be found", ip)
+	logrus.Infof("findInstanceByIp(%v) meet error=%v", ip,err)
+	return nil, err
 }
 
 //---------------calc security policy action------------------------------//
@@ -174,41 +240,49 @@ func (action *CalcSecurityPolicyAction) ReadParam(param interface{}) (interface{
 	var input CalcSecurityPoliciesRequest
 	err := plugins.UnmarshalJson(param, &input)
 	if err != nil {
-		logrus.Errorf("CalcSecurityPolicyAction unmarshal failed,err=%v,param=%v", err, param)
+		logrus.Errorf("CalcSecurityPolicyAction ReadParam UnmarshalJson: failed to unmarsh, err=%v, param=%v", err, param)
 		return nil, err
 	}
+
+	logrus.Infof("CalcSecurityPolicyAction ReadParam: return=%++v", input)
 	return input, nil
 }
 
 func (action *CalcSecurityPolicyAction) CheckParam(input interface{}) error {
 	req, _ := input.(CalcSecurityPoliciesRequest)
 	if err := isValidProtocol(req.Protocol); err != nil {
+		logrus.Errorf("CalcSecurityPolicyAction CheckParam isValidProtocol meet error=%v", err)
 		return err
 	}
 
 	if err := isValidAction(req.PolicyAction); err != nil {
+		logrus.Errorf("CalcSecurityPolicyAction CheckParam isValidAction meet error=%v", err)
 		return err
 	}
 
 	for _, ip := range req.SourceIps {
 		if err := isValidIp(ip); err != nil {
+			logrus.Errorf("CalcSecurityPolicyAction CheckParam isValidIp meet error=%v", err)
 			return err
 		}
 	}
 
 	for _, ip := range req.DestIps {
 		if err := isValidIp(ip); err != nil {
+			logrus.Errorf("CalcSecurityPolicyAction CheckParam isValidIp meet error=%v", err)
 			return err
 		}
 	}
 
 	_, err := getPortsByPolicyFormat(req.DestPort)
 	if err != nil {
+		logrus.Errorf("CalcSecurityPolicyAction CheckParam getPortsByPolicyFormat meet error=%v", err)
 		return err
 	}
 
 	for _, direction := range req.PolicyDirections {
 		if err := isValidDirection(direction); err != nil {
+			logrus.Errorf("CalcSecurityPolicyAction CheckParam isValidDirection meet error=%v", err)
 			return err
 		}
 	}
@@ -217,6 +291,8 @@ func (action *CalcSecurityPolicyAction) CheckParam(input interface{}) error {
 }
 
 func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto string, port string, action string, desc string) ([]SecurityPolicy, error) {
+	logrus.Infof("newPolicies: request instance=%++v, myIp=%v, peerIp=%v, protocol=%v, port=%v, action=%v, description=%v", instance, myIp, peerIp, proto, port, action, desc)
+
 	policies := []SecurityPolicy{}
 	resType, _ := getResouceTypeByName(instance.ResourceTypeName())
 
@@ -235,6 +311,8 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 			Description:             desc,
 		}
 		policies := append(policies, newPolicy)
+
+		logrus.Infof("newPolicies: return policies=%++v", policies)
 		return policies, nil
 	}
 
@@ -244,15 +322,21 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 
 	for _, splitPort := range splitPorts {
 		if _, err := strconv.Atoi(splitPort); err != nil {
-			return policies, fmt.Errorf("loadbalancer do not support port format like %s", port)
+			err := fmt.Errorf("loadbalancer do not support port format like %s", port)
+
+			logrus.Errorf("newPolicies strconv.Atoi meet error=%v", err)
+			return policies, err
 		}
 		instances, ports, err := instance.GetBackendTargets(providerParams, proto, splitPort)
-		fmt.Printf("getLb backendHost=%++v\n", instances)
 		if err != nil {
+			logrus.Errorf("newPolicies GetBackendTargets meet error=%v", err)
 			return policies, err
 		}
 		if len(instances) == 0 {
-			return policies, fmt.Errorf("loadbalancer(%s) port (%v) do not have any backends", instance.GetIp(), splitPort)
+			err := fmt.Errorf("loadbalancer(%s) port (%v) do not have any backends", instance.GetIp(), splitPort)
+
+			logrus.Errorf("newPolicies GetBackendTargets meet error=%v", err)
+			return policies, err
 		}
 
 		for i, backendInstance := range instances {
@@ -272,44 +356,53 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 		}
 	}
 
+	logrus.Infof("newPolicies: return policies=%++v", policies)
 	return policies, nil
 }
 
 func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	action string, description string, direction string) ([]SecurityPolicy, error) {
+	logrus.Infof("calcPolicies: reuqest devIp=%v, peerIps=%++v, protocol=%v, ports=%++v, action=%v, description=%v, direction=%v", devIp, peerIps, proto, ports, action, description, direction)
+
 	policies := []SecurityPolicy{}
 
 	//check if dev exist
-	instance, err := findInstanceByIp(devIp)
+	instance, err := findInstanceByIp(devIp,ALLResourceTypeNames)
 	if err != nil {
+		logrus.Errorf("calcPolicies findInstanceByIp meet error=%v", err)
 		return policies, err
 	}
 
 	resType, err := getResouceTypeByName(instance.ResourceTypeName())
 	if err != nil {
+		logrus.Errorf("calcPolicies getResouceTypeByName meet error=%v", err)
 		return policies, err
 	}
 
 	if direction == EGRESS_RULE {
 		if false == resType.IsSupportEgressPolicy() {
-			logrus.Errorf("%s is %s device,do not support egress", devIp, instance.ResourceTypeName())
-			return policies, nil
+			err := fmt.Errorf("%s is %s device,do not support egress", devIp, instance.ResourceTypeName())
+			logrus.Errorf("calcPolicies IsSupportEgressPolicy meet error=%v", err)
+			return policies, err
 		}
 	}
 
 	for _, peerIp := range peerIps {
-		peerInstance, err := findInstanceByIp(peerIp)
-		fmt.Printf("findInstanceByip peerIp=%s,instance=%++v,err=%v\n", peerIp, peerInstance, err)
+		peerInstance, err := findInstanceByIp(peerIp,LbResoureTypeNames)
+		logrus.Infof("calcPolicies findInstanceByip peerIp=%s, instance=%++v, err=%v\n", peerIp, peerInstance, err)
 		if err == nil {
 			peerResType, _ := getResouceTypeByName(peerInstance.ResourceTypeName())
 			if direction == INGRESS_RULE && nil != peerResType && peerResType.IsLoadBalanceType() {
-				return policies, fmt.Errorf("对端设备(%s) 是负载均衡设备,入栈规则不支持对端IP为负载均衡设备", peerIp)
+				err := fmt.Errorf("对端设备(%s) 是负载均衡设备,入栈规则不支持对端IP为负载均衡设备", peerIp)
+				logrus.Infof("calcPolicies getResouceTypeByName meet error=%v", err)
+				return policies, err
 			}
 		}
 
 		for _, port := range ports {
 			newPolicies, err := newPolicies(instance, devIp, peerIp, proto, port, action, description)
 			if err != nil {
+				logrus.Errorf("calcPolicies newPolicies meet error=%v", err)
 				return policies, err
 			}
 			if len(newPolicies) > 0 {
@@ -317,15 +410,20 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 			}
 		}
 	}
+
+	logrus.Infof("calcPolicies: retuern policies=%++v", policies)
 	return policies, nil
 }
 
 func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, error) {
 	var finalError error
 	req, _ := input.(CalcSecurityPoliciesRequest)
+	logrus.Infof("CalcSecurityPolicyAction Do: request input=%++v", input)
+
 	result := CalcSecurityPoliciesResult{}
 	start := time.Now()
 	ports, _ := getPortsByPolicyFormat(req.DestPort)
+	logrus.Infof("CalcSecurityPolicyAction Do: ports=%++v", ports)
 
 	//calc egress policies
 	if isContainInList(EGRESS_RULE, req.PolicyDirections) {
@@ -359,6 +457,7 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	result.IngressPoliciesTotal = len(result.IngressPolicies)
 	result.EgressPoliciesTotal = len(result.EgressPolicies)
 
+	logrus.Infof("CalcSecurityPolicyAction Do: return result=%++v, finalError=%++v", result, finalError)
 	return result, finalError
 }
 
@@ -396,11 +495,13 @@ func (action *ApplySecurityPolicyAction) ReadParam(param interface{}) (interface
 		logrus.Errorf("ApplySecurityPolicyAction:unmarshal failed,err=%v,param=%v", err, param)
 		return nil, err
 	}
+	logrus.Infof("ApplySecurityPolicyAction ReadParam: input=%++v", input)
 	return input, nil
 }
 
 func (action *ApplySecurityPolicyAction) CheckParam(input interface{}) error {
 	req, _ := input.(ApplySecurityPoliciesRequest)
+	logrus.Infof("ApplySecurityPolicyAction CheckParam: req=%++v", req)
 
 	for _, policy := range req.IngressPolicies {
 		if policy.Ip == "" || policy.Id == "" {
@@ -422,6 +523,7 @@ func (action *ApplySecurityPolicyAction) Do(input interface{}) (interface{}, err
 	req, _ := input.(ApplySecurityPoliciesRequest)
 	result := ApplySecurityPoliciesResult{}
 	start := time.Now()
+	logrus.Infof("ApplySecurityPolicyAction Do: req=%++v", req)
 
 	result.IngressApplyResult = applyPolicies(req.IngressPolicies, INGRESS_RULE)
 	result.EgressApplyResult = applyPolicies(req.EgressPolicies, EGRESS_RULE)
@@ -431,6 +533,7 @@ func (action *ApplySecurityPolicyAction) Do(input interface{}) (interface{}, err
 		err = errors.New("have some failed polices,please check policy applied detail")
 	}
 
+	logrus.Infof("ApplySecurityPolicyAction Do: result=%++v", result)
 	return result, err
 }
 
@@ -441,6 +544,8 @@ func fillSecuityPoliciesWithErrMsg(policies []*SecurityPolicy, err error) {
 }
 
 func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
+	logrus.Infof("applyPolicies: input policies=%++v direction=%++v", policies, direction)
+
 	result := ApplyResult{}
 	instanceMap := make(map[string][]*SecurityPolicy)
 
@@ -457,27 +562,34 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 			result.UndoPolicies = append(result.UndoPolicies, policies[i])
 		}
 	}
+	logrus.Infof("applyPolicies: instanceMap=%++v", instanceMap)
 
 	for _, policies := range instanceMap {
 		resType, err := getResouceTypeByName(policies[0].Type)
 		if err != nil {
+			logrus.Errorf("applyPolicies getResouceTypeByName meet error=%v", err)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
 
 		providerParams, err := getProviderParams(policies[0].Region)
 		if err != nil {
+			logrus.Errorf("applyPolicies getProviderParams meet error=%v", err)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
 
 		instances, err := resType.QueryInstancesById(providerParams, []string{policies[0].Id})
 		if err != nil {
+			logrus.Errorf("applyPolicies QueryInstancesById meet error=%v", err)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
 		if len(instances) == 0 {
-			fillSecuityPoliciesWithErrMsg(policies, fmt.Errorf("can't found instanceId(%s)", policies[0].Id))
+			err := fmt.Errorf("can't found instanceId(%s)", policies[0].Id)
+			logrus.Errorf("applyPolicies QueryInstancesById meet error=%v", err)
+
+			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
 		instance := instances[policies[0].Id]
@@ -485,7 +597,7 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 
 		existSecurityGroups, err := instance.QuerySecurityGroups(providerParams)
 		if err != nil {
-			logrus.Infof("applyPolicies err=%v", err)
+			logrus.Errorf("applyPolicies QuerySecurityGroups meet error=%v", err)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
@@ -493,11 +605,13 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 		logrus.Infof("applyPolicies existSecurityGroups=%++v", existSecurityGroups)
 		newSecurityGroups, err := createPolicies(providerParams, existSecurityGroups, policies, direction)
 		if err != nil {
+			logrus.Errorf("applyPolicies createPolicies meet error=%v", err)
+
 			destroyPolicies(providerParams, policies, direction)
 			fillSecuityPoliciesWithErrMsg(policies, err)
 			continue
 		}
-		logrus.Infof("newSecurityGroups:%v", newSecurityGroups)
+		logrus.Infof("applyPolicies newSecurityGroups:%v", newSecurityGroups)
 
 		if len(newSecurityGroups) > 0 {
 			groups := []string{}
@@ -505,6 +619,8 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 			groups = append(groups, existSecurityGroups...)
 
 			if err = instance.AssociateSecurityGroups(providerParams, groups); err != nil {
+				logrus.Errorf("applyPolicies AssociateSecurityGroups meet error=%v", err)
+
 				destroyPolicies(providerParams, policies, direction)
 				bindError := fmt.Errorf("resourceType(%s) instance(%s) AssociateSecurityGroups[%v] meet err=%v", policies[0].Type, policies[0].Ip, groups, err)
 				fillSecuityPoliciesWithErrMsg(policies, bindError)
@@ -526,11 +642,14 @@ func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult {
 	result.SuccessTotal = len(result.SuccessPolicies)
 	result.FailedTotal = len(result.FailedPolicies)
 
+	logrus.Infof("applyPolicies: result=%++v", result)
 	return result
 }
 
 //自动构建的安全组的名称格式ip-auoto-1,ip_auto_2
 func getAutoCreatedSecurityGroups(ip string, allSecurityGroupsNames, allSecurityGroupsIds []string) ([]string, int, error) {
+	logrus.Infof("getAutoCreatedSecurityGroups: input ip=%v allSecurityGroupsNames=%++v allSecurityGroupsIds=%++v", ip, allSecurityGroupsNames, allSecurityGroupsIds)
+
 	var err error
 	maxAutoCreatedNum := 0
 	createdSecurityGroups := []string{}
@@ -551,6 +670,7 @@ func getAutoCreatedSecurityGroups(ip string, allSecurityGroupsNames, allSecurity
 	}
 	createdSecurityGroups, err = sortSecurityGroupsIds(nums, createdSecurityGroups)
 	if err != nil {
+		logrus.Errorf("getAutoCreatedSecurityGroups sortSecurityGroupsIds meet error=%v", err)
 		return createdSecurityGroups, maxAutoCreatedNum + 1, err
 	}
 	logrus.Infof("getAutoCreatedSecurityGroups createdSecurityGroups:%v", createdSecurityGroups)
@@ -559,8 +679,12 @@ func getAutoCreatedSecurityGroups(ip string, allSecurityGroupsNames, allSecurity
 }
 
 func sortSecurityGroupsIds(num []int, securityGroupsIds []string) ([]string, error) {
+	logrus.Infof("sortSecurityGroupsIds; input num=%++v securityGroupsIds=%++v", num, securityGroupsIds)
+
 	if len(num) != len(securityGroupsIds) {
 		err := fmt.Errorf("sortSecurityGroupsIds error: lengths of two arrays is not equal")
+		logrus.Errorf("sortSecurityGroupsIds meet error=%v", err)
+
 		return []string{}, err
 	}
 	flag := 1
@@ -574,13 +698,17 @@ func sortSecurityGroupsIds(num []int, securityGroupsIds []string) ([]string, err
 			}
 		}
 	}
+
+	logrus.Infof("sortSecurityGroupsIds: return securityGroupsIds=%++v", securityGroupsIds)
 	return securityGroupsIds, nil
 }
 
 func getSecurityGroupFreePolicyNum(providerParams string, securityGroup string, direction string) (int, error) {
+	logrus.Infof("getSecurityGroupFreePolicyNum: input securityGroup=%v direction=%v", securityGroup, direction)
+
 	policiesSet, err := plugins.QuerySecurityGroupPolicies(providerParams, securityGroup)
 	if err != nil {
-		logrus.Errorf("getSecurityGroupFreePolicyNum meet err=%v\n", err)
+		logrus.Errorf("getSecurityGroupFreePolicyNum meet error=%v\n", err)
 		return 0, err
 	}
 
@@ -592,10 +720,13 @@ func getSecurityGroupFreePolicyNum(providerParams string, securityGroup string, 
 }
 
 func getSecurityGroupNames(providerParams string, securityGroupIds []string) ([]string, error) {
+	logrus.Infof("getSecurityGroupNames: input securityGroupIds=%++v", securityGroupIds)
+
 	securityGroupNames := []string{}
 	idNameMap := make(map[string]string)
 	securityGroupSet, err := plugins.QuerySecurityGroups(providerParams, securityGroupIds)
 	if err != nil {
+		logrus.Errorf("getSecurityGroupNames QuerySecurityGroups meet error=%v", err)
 		return securityGroupNames, err
 	}
 
@@ -607,30 +738,39 @@ func getSecurityGroupNames(providerParams string, securityGroupIds []string) ([]
 		if name, ok := idNameMap[id]; ok {
 			securityGroupNames = append(securityGroupNames, name)
 		} else {
-			return securityGroupNames, fmt.Errorf("can't found groupId(%s) detail", id)
+			err := fmt.Errorf("can't found groupId(%s) detail", id)
+			logrus.Errorf("getSecurityGroupNames meet error=%v", err)
+
+			return securityGroupNames, err
 		}
 	}
 
+	logrus.Infof("getSecurityGroupNames: return securityGroupNames=%++v", securityGroupNames)
 	return securityGroupNames, nil
 }
 
 //format ip-auto-2
 func createNewAutomationSecurityGroups(providerParams string, ip string, newCreatedSecurityGroupNum int, auotNumIndex int) ([]string, error) {
+	logrus.Infof("createNewAutomationSecurityGroups: input ip=%v newCreatedSecurityGroupNum=%v auotNumIndex=%v", ip, newCreatedSecurityGroupNum, auotNumIndex)
+
 	newSecurityGroupIds := []string{}
 	for i := 0; i < newCreatedSecurityGroupNum; i++ {
 		securityGroupName := fmt.Sprintf("%s-auto-%d", ip, auotNumIndex+i)
 		securityGroupId, err := plugins.CreateSecurityGroup(providerParams, securityGroupName, "automation created")
 		if err != nil {
-			logrus.Errorf("CreateSecurityGroup meet err=%v", err)
+			logrus.Errorf("createNewAutomationSecurityGroups CreateSecurityGroup meet err=%v", err)
 			return newSecurityGroupIds, err
 		}
 		newSecurityGroupIds = append(newSecurityGroupIds, securityGroupId)
 	}
 
+	logrus.Errorf("createNewAutomationSecurityGroups: return newSecurityGroupIds=%++v", newSecurityGroupIds)
 	return newSecurityGroupIds, nil
 }
 
 func newSecurityPolicySet(policies []*SecurityPolicy, direction string, isSetPolicyIndex bool) vpc.SecurityGroupPolicySet {
+	logrus.Infof("newSecurityPolicySet: input policies=%++v direction=%v isSetPolicyIndex=%v", policies, direction, isSetPolicyIndex)
+
 	securityPolicies := []*vpc.SecurityGroupPolicy{}
 	var policyIndex int64 = 0
 
@@ -656,10 +796,13 @@ func newSecurityPolicySet(policies []*SecurityPolicy, direction string, isSetPol
 		securityGroupPolicySet.Egress = securityPolicies
 	}
 
+	logrus.Infof("newSecurityPolicySet: return securityGroupPolicySet=%++v", securityGroupPolicySet)
 	return securityGroupPolicySet
 }
 
 func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, policies []*SecurityPolicy, direction string) error {
+	logrus.Infof("addPoliciesToSecurityGroup: input securityGroupId=%v policies=%++v direction=%v", securityGroupId, policies, direction)
+
 	req := vpc.NewCreateSecurityGroupPoliciesRequest()
 	req.SecurityGroupId = &securityGroupId
 	var err error
@@ -669,8 +812,8 @@ func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, p
 	}
 	defer func() {
 		if err != nil {
-			logrus.Errorf("add policy to securityGroup(%s) meet err =%v", securityGroupId, err)
-			errMsg := fmt.Sprintf("add policy to securityGroup(%s) meet err =%v", securityGroupId, err)
+			logrus.Errorf("addPoliciesToSecurityGroup add policy to securityGroup(%s) meet err =%v", securityGroupId, err)
+			errMsg := fmt.Sprintf("addPoliciesToSecurityGroup add policy to securityGroup(%s) meet err =%v", securityGroupId, err)
 			for _, policy := range policies {
 				policy.ErrorMsg = errMsg
 			}
@@ -680,6 +823,7 @@ func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, p
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	client, err := plugins.CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		logrus.Errorf("addPoliciesToSecurityGroup CreateVpcClient meet error=%v", err)
 		return err
 	}
 
@@ -695,6 +839,8 @@ func addPoliciesToSecurityGroup(providerParams string, securityGroupId string, p
 }
 
 func createPolicies(providerParams string, existSecurityGroups []string, policies []*SecurityPolicy, direction string) ([]string, error) {
+	logrus.Infof("createPolicies: input existSecurityGroups=%++v policies=%++v direction=%v", existSecurityGroups, policies, direction)
+
 	newSecurityGroups := []string{}
 	freePolicyNumMap := make(map[string]int)
 	freePoliciesNum := 0
@@ -706,20 +852,23 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 
 	securityGroupsNames, err := getSecurityGroupNames(providerParams, existSecurityGroups)
 	if err != nil {
+		logrus.Errorf("createPolicies getSecurityGroupNames meet error=%v", err)
 		return newSecurityGroups, err
 	}
-	logrus.Infof("securityGroupsNames:%v", securityGroupsNames)
+	logrus.Infof("createPolicies getSecurityGroupNames: securityGroupsNames:%v", securityGroupsNames)
 
 	createdSecurityGroups, autoCreatedStartIndex, err := getAutoCreatedSecurityGroups(policies[0].Ip, securityGroupsNames, existSecurityGroups)
 	if err != nil {
+		logrus.Errorf("createPolicies getAutoCreatedSecurityGroups meet error=%v", err)
 		return newSecurityGroups, err
 	}
-	logrus.Infof("createdSecurityGroups=%v, autoCreatedStartIndex=%v", createdSecurityGroups, autoCreatedStartIndex)
+	logrus.Infof("createPolicies createdSecurityGroups=%v, autoCreatedStartIndex=%v", createdSecurityGroups, autoCreatedStartIndex)
 
 	//计算已经存在的安全组中还能插入多少条
 	for _, securityGroup := range createdSecurityGroups {
 		freeNum, err := getSecurityGroupFreePolicyNum(providerParams, securityGroup, direction)
 		if err != nil {
+			logrus.Errorf("createPolicies getSecurityGroupFreePolicyNum meet error=%v", err)
 			return newSecurityGroups, err
 		}
 		freePolicyNumMap[securityGroup] = freeNum
@@ -732,9 +881,10 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 		newSecurityGroupNum := (len(policies) - freePoliciesNum + MAX_SEUCRITY_RULE_NUM - 1) / MAX_SEUCRITY_RULE_NUM
 		newSecurityGroups, err = createNewAutomationSecurityGroups(providerParams, policies[0].Ip, newSecurityGroupNum, autoCreatedStartIndex)
 		if err != nil {
+			logrus.Errorf("createPolicies createNewAutomationSecurityGroups meet error=%v", err)
 			return newSecurityGroups, err
 		}
-		logrus.Infof("newSecurityGroups=%v", newSecurityGroups)
+		logrus.Infof("createPolicies newSecurityGroups=%v", newSecurityGroups)
 		securityGroupsIds = append(securityGroupsIds, newSecurityGroups...)
 
 		for _, securityGroup := range newSecurityGroups {
@@ -742,7 +892,7 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 		}
 	}
 
-	logrus.Infof("freePolicyNumMap=%v", freePolicyNumMap)
+	logrus.Infof("createPolicies freePolicyNumMap=%v", freePolicyNumMap)
 	//开始将策略加到安全组中
 	offset, limit := 0, 0
 
@@ -755,6 +905,7 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 			limit = len(policies) - offset
 		}
 		if err := addPoliciesToSecurityGroup(providerParams, securityGroupId, policies[offset:offset+limit], direction); err != nil {
+			logrus.Errorf("createPolicies addPoliciesToSecurityGroup meet error=%v", err)
 			return newSecurityGroups, err
 		}
 
@@ -763,10 +914,14 @@ func createPolicies(providerParams string, existSecurityGroups []string, policie
 		}
 		offset += limit
 	}
+
+	logrus.Infof("createPolicies: return newSecurityGroups=%++v", newSecurityGroups)
 	return newSecurityGroups, nil
 }
 
 func destroyPolicies(providerParams string, policies []*SecurityPolicy, direction string) error {
+	logrus.Infof("destroyPolicies: input policies=%++v direction=%v", policies, direction)
+
 	securityGroupMap := make(map[string][]*SecurityPolicy)
 	for _, policy := range policies {
 		securityGroupMap[policy.SecurityGroupId] = append(securityGroupMap[policy.SecurityGroupId], policy)
@@ -776,6 +931,7 @@ func destroyPolicies(providerParams string, policies []*SecurityPolicy, directio
 	paramsMap, err := plugins.GetMapFromProviderParams(providerParams)
 	client, err := plugins.CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		logrus.Errorf("destroyPolicies CreateVpcClient meet error=%v", err)
 		return err
 	}
 
@@ -787,9 +943,10 @@ func destroyPolicies(providerParams string, policies []*SecurityPolicy, directio
 
 		_, err := client.DeleteSecurityGroupPolicies(req)
 		if err != nil {
-			logrus.Errorf("DeleteSecurityGroupPolicies meet err=%v,req=%++v", err, *req)
+			logrus.Errorf("destroyPolicies DeleteSecurityGroupPolicies meet error=%v,req=%++v", err, *req)
 			return err
 		}
 	}
+
 	return nil
 }
