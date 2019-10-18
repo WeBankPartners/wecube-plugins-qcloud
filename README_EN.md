@@ -6,7 +6,7 @@
 
 ## Introduction
 
-QCloud plugin is an open-source project used by Wecube to manage life cycle of IAAS and PAAS resource on Tencent Cloud.
+QCloud plugin is an open-source project used by WeCube to manage life cycle of IaaS and PaaS resource on Tencent Cloud.
 
 The QCloud plugin makes resource management feasible by providing features such as:
 - Create subnet with route table
