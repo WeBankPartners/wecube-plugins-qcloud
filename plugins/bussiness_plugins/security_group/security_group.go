@@ -135,11 +135,10 @@ func queryRegionInstance(providerParams string,region string,queryResourceType [
 	}()
 
 	for resourceTypeName, resType := range resourceTypeMap {
-		if len(queryResourceType) > 0 {
-			if !isContainInList(resourceTypeName,queryResourceType){
+		if !isContainInList(resourceTypeName,queryResourceType){
 				continue
-			}
 		}
+		
 		instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
 		logrus.Infof("findInstanceByIp QueryInstancesByIp instanceMap:%++v", instanceMap)
 		if err != nil {
