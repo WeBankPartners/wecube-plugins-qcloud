@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strconv"
 	"time"
-
+        "strings"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -646,7 +646,7 @@ type VmBindSecurityGroupInput struct {
 }
 
 type VmBindSecurityGroupOutputs struct {
-	Inputs []VmBindSecurityGroupOutput `json:"inputs,omitempty"`
+	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
 }
 
 type VmBindSecurityGroupOutput struct {
@@ -691,11 +691,11 @@ func (action *VMBindSecurityGroupsAction)Do(input interface{}) (interface{}, err
 
 	for _,input:=range inputs.Inputs{
 		securityGroups:=strings.Split(input.SecurityGroupIds,",")
-		err:=BindCvmInstanceSecurityGroups(input.ProviderParam,input.InstanceId,securityGroups)
+		err:=BindCvmInstanceSecurityGroups(input.ProviderParams,input.InstanceId,securityGroups)
 		if err != nil {
 			return nil,err
 		}
-		ouput:=VmBindSecurityGroupOutput{
+		output:=VmBindSecurityGroupOutput{
 			Guid:input.Guid,
 		}
 		outputs.Outputs=append(outputs.Outputs,output)
