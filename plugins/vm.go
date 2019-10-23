@@ -77,6 +77,7 @@ func init() {
 	VMActions["terminate"] = new(VMTerminateAction)
 	VMActions["start"] = new(VMStartAction)
 	VMActions["stop"] = new(VMStopAction)
+	VMActions["bind-security-groups"] = new(VMBindSecurityGroupsAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
@@ -626,4 +627,79 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 	}
 
 	return err
+}
+
+//--------------bind security group to vm--------------------//
+type VMBindSecurityGroupsAction struct {
+
+}
+
+type VmBindSecurityGroupInputs struct {
+	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type VmBindSecurityGroupInput struct {
+	Guid                 string `json:"guid,omitempty"`
+	ProviderParams       string `json:"provider_params,omitempty"`
+	InstanceId           string `json:"instance_id,omitempty"`
+	SecurityGroupIds     string `json:"security_group_ids,omitempty"`
+}
+
+type VmBindSecurityGroupOutputs struct {
+	Inputs []VmBindSecurityGroupOutput `json:"inputs,omitempty"`
+}
+
+type VmBindSecurityGroupOutput struct {
+	Guid                 string `json:"guid,omitempty"`
+}
+
+func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmBindSecurityGroupInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMBindSecurityGroupsAction) CheckParam(input interface{}) error {
+	inputs, ok := input.(VmBindSecurityGroupInputs)
+	if !ok {
+		return fmt.Errorf("VMBindSecurityGroupsAction:input type=%T not right", input)
+	}
+
+	for _,input:=range inputs.Inputs{
+		if input.ProviderParams == ""{
+			return errors.New("providerParams is empty")
+		}
+
+		if input.InstanceId == "" {
+			return errors.New("instanceId is empty")
+		}
+
+		if input.SecurityGroupIds == "" {
+			return errors.New("securityGroupIds is empty")
+		}
+	}
+
+	return nil
+}
+
+func (action *VMBindSecurityGroupsAction)Do(input interface{}) (interface{}, error) {
+	inputs, _ := input.(VmBindSecurityGroupInputs)
+	outputs:=VmBindSecurityGroupOutputs{}
+
+	for _,input:=range inputs.Inputs{
+		securityGroups:=strings.Split(input.SecurityGroupIds,",")
+		err:=BindCvmInstanceSecurityGroups(input.ProviderParam,input.InstanceId,securityGroups)
+		if err != nil {
+			return nil,err
+		}
+		ouput:=VmBindSecurityGroupOutput{
+			Guid:input.Guid,
+		}
+		outputs.Outputs=append(outputs.Outputs,output)
+	}
+
+	return outputs,nil 
 }
