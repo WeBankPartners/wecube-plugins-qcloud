@@ -15,6 +15,7 @@ The QCloud plugin makes resource management feasible by providing two kinds of A
 	It simplifies the native QCloud API parameters to make these APIs more friendly and easyier to use. We now support the following resource APIs: VPC, SUBNET, ROUTETABLE, CVM, CLB, MYSQL, REDIS, MARIADB, etc.
 
 2. Advanced API
+	
 	It provides combinational business capabilities based on TencentCloud's native APIs to complete more complex operations.
 
 QCloud plugin 1.0.0 is now released, its architecture & APIs are as follows: 
