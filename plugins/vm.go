@@ -288,7 +288,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if input.Password == ""{
+		if vm.Password == ""{
 			vm.Password = utils.CreateRandomPassword()
 		}
 		
@@ -420,7 +420,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		md5sum := utils.Md5Encode(vm.Guid + vm.Seed)
-		if output.Password, err = utils.AesEncode(md5sum[0:16], VMAction.Password); err != nil {
+		if output.Password, err = utils.AesEncode(md5sum[0:16], vm.Password); err != nil {
 			logrus.Errorf("AesEncode meet error(%v)", err)
 			return nil, errors.New("aes encode error")
 		}
@@ -581,7 +581,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 		return nil, err
 	}
 
-	if err := IsValidValue(filter.Name, validFilterNames); err != nil {
+	if err := isValidValue(filter.Name, validFilterNames); err != nil {
 		return nil, err
 	}
 
