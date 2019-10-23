@@ -213,7 +213,7 @@
         <interface name="create" path="/v1/qcloud/vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
-                 <parameter datatype="string">seed</parameter>
+                <parameter datatype="string">seed</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
@@ -224,7 +224,9 @@
                 <parameter datatype="string">instance_charge_type</parameter>
                 <parameter datatype="number">instance_charge_period</parameter>
                 <parameter datatype="string">instance_private_ip</parameter>
-                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">password</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">project_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
