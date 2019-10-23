@@ -49,6 +49,8 @@ type VmInput struct {
 	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
 	InstanceChargePeriod int64  `json:"instance_charge_period,omitempty"`
 	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
+	Password             string `json:"password,omitempty"`
+	ProjectId            int64  `json:"project_id,omitempty"`
 }
 
 type VmOutputs struct {
@@ -286,8 +288,10 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		password := utils.CreateRandomPassword()
-
+		if vm.Password == ""{
+			vm.Password = utils.CreateRandomPassword()
+		}
+		
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
 				Zone: paramsMap["AvailableZone"],
@@ -304,12 +308,15 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				SubnetId: vm.SubnetId,
 			},
 			LoginSettings: LoginSettingsStruct{
-				Password: password,
+				Password: vm.Password,
 			},
 			InternetAccessible: InternetAccessible{
 				PublicIpAssigned:        false,
 				InternetMaxBandwidthOut: 10,
 			},
+		}
+		if vm.ProjectId != 0 {
+			runInstanceRequest.Placement.ProjectId=vm.ProjectId
 		}
 
 		if vm.InstancePrivateIp != "" {
@@ -386,6 +393,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		byteRunInstancesRequestData, _ := json.Marshal(runInstanceRequest)
 		logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRunInstancesRequestData))
 		request.FromJsonString(string(byteRunInstancesRequestData))
+		if vm.InstanceName!=""{
+			request.InstanceName=&vm.InstanceName
+		}
 
 		resp, err := client.RunInstances(request)
 		if err != nil {
@@ -410,7 +420,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		md5sum := utils.Md5Encode(vm.Guid + vm.Seed)
-		if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
+		if output.Password, err = utils.AesEncode(md5sum[0:16], vm.Password); err != nil {
 			logrus.Errorf("AesEncode meet error(%v)", err)
 			return nil, errors.New("aes encode error")
 		}
@@ -582,6 +592,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 	if err != nil {
 		return nil, err
 	}
+	
 	cvmFilter := &cvm.Filter{
 		Name:   common.StringPtr(name),
 		Values: common.StringPtrs(filter.Values),
