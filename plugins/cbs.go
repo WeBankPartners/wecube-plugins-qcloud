@@ -19,7 +19,7 @@ var cbsActions = make(map[string]Action)
 //将监听器藏起来
 func init() {
 	cbsActions["create-mount"] = new(CreateAndMountCbsDiskAction)
-	//cbsActions["umount-terminate"] = new(UmountAndTerminateDiskAction)
+	cbsActions["umount-terminate"] = new(UmountAndTerminateDiskAction)
 }
 
 type CbsPlugin struct {
@@ -98,6 +98,10 @@ func (action *CreateAndMountCbsDiskAction) CheckParam(input interface{}) error {
 
 		if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
 			return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
+		}
+
+		if input.InstancePassword == "" {
+			return errors.New("instancePassword is empty")
 		}
 
 		if input.MountDir == "" {
@@ -350,6 +354,133 @@ func (action *CreateAndMountCbsDiskAction) Do(input interface{}) (interface{}, e
 		output, err := createAndMountCbsDisk(input)
 		if err != nil {
 			return outputs, err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+	return outputs, nil
+}
+
+//-----------umount action ------------//
+type UmountAndTerminateDiskAction struct {
+}
+
+type UmountCbsDiskInputs struct {
+	Inputs []UmountCbsDiskInput `json:"inputs,omitempty"`
+}
+
+type UmountCbsDiskInput struct {
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	Id               string `json:"id,omitempty"`
+	VolumeName       string `json:"volume_name,omitempty"`
+	MountDir         string `json:"mount_dir,omitempty"`
+
+	//use to attch and format
+	InstanceId       string `json:"instance_id,omitempty"`
+	InstanceGuid     string `json:"instance_guid,omitempty"`
+	InstanceSeed     string `json:"seed,omitempty"`
+	InstancePassword string `json:"password,omitempty"`
+}
+
+type UmountCbsDiskOutputs struct {
+	Outputs []UmountCbsDiskOutput `json:"outputs,omitempty"`
+}
+
+type UmountCbsDiskOutput struct {
+	Guid       string `json:"guid,omitempty"`
+}
+
+func (action *UmountAndTerminateDiskAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs UmountCbsDiskInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *UmountAndTerminateDiskAction) CheckParam(input interface{}) error {
+	inputs, ok := input.(UmountCbsDiskInputs)
+	if !ok {
+		return fmt.Errorf("UmountAndTerminateDiskAction:input type=%T not right", input)
+	}
+
+	for _, input := range inputs.Inputs {
+		if input.ProviderParams == "" {
+			return errors.New("providerParams is empty")
+		}
+
+		if input.Id == "" {
+			return errors.New("id is empty")
+		}
+
+		if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
+			return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
+		}
+
+		if input.InstancePassword == "" {
+			return errors.New("instancePassword is empty")
+		}
+
+		if input.MountDir == "" || input.VolumeName==""{
+			return errors.New("mountDir or volume name is empty")
+		}
+	}
+	return nil
+}
+func umountDisk(ip, password, volumeName, mountDir string) error {
+	if err := copyFileToRemoteHost(ip, password, "./scripts/umountDisk.py", "/tmp/umountDisk.py"); err != nil {
+		return err
+	}
+
+	execArgs := " -d " + volumeName +  " -m " + mountDir
+	_, err := runRemoteHostScript(ip, password, "python /tmp/umountDisk.py"+execArgs)
+	return err
+}
+
+func terminateDisk(providerParams,id string)error{
+	action:=StorageTerminateAction{}
+	input:=StorageInput {
+		ProviderParams:providerParams,
+		Id:id,
+	}
+	
+	inputs:=StorageInputs{}
+	inputs.Inputs=append(inputs.Inputs,input)
+	_,err：=action.Do(inputs)
+	return err 
+}
+
+func umountAndTerminateCbsDisk(input UmountCbsDiskInput)error {
+	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
+	if err != nil {
+		return  err
+	}
+
+	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
+	password, err := utils.AesDecode(md5sum[0:16], input.InstancePassword)
+	if err != nil {
+		return err
+	}
+
+	if err = umountDisk(privateIp,password,input.VolumeName,input.MountDir);err!= nil {
+		return err 
+	}
+
+	return terminateDisk(input.ProviderParams,input.Id)
+}
+
+func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, error) {
+	inputs, _ := input.(UmountCbsDiskInputs)
+	outputs := UmountCbsDiskOutputs{}
+
+	for _, input := range inputs.Inputs {
+		err := umountAndTerminateCbsDisk(input)
+		if err != nil {
+			return outputs, err
+		}
+		output:=UmountCbsDiskOutput{
+			Guid:input.Guid
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}

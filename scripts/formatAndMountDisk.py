@@ -49,7 +49,7 @@ def formatDisk(diskName,fileSystemType):
     cmd=formatDict[fileSystemType] + diskName
     result = os.system(cmd)
     if result != 0:
-        print "execute format disk failed cmd=%s,result=%d" %(cmd,resullt)
+        print "execute format disk failed cmd=%s,result=%d" %(cmd,result)
         sys.exit(1)
 
 def main(argv):
@@ -67,7 +67,7 @@ def main(argv):
         if opt=='-h':
             print 'formatAndMountDisk.py -d <diskName> -f <formatFileSystemType> -m <mountDir>'
             sys.exit(0)
-        elif opt in ("-d","--diskName>"):
+        elif opt in ("-d","--diskName"):
             diskName=arg
         elif opt in ("-f","--formatFileSystemType"):
             fileSystemType=arg
