@@ -268,6 +268,18 @@
                 <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
+
+        <interface name="bind security group to vm" path="/v1/qcloud/vm/bind-security-groups">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">security_group_ids</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
     </plugin>
     <plugin id="storage" name="Storage Management">
         <interface name="create" path="/v1/qcloud/storage/create">
