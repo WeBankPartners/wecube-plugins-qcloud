@@ -23,9 +23,9 @@ def isFormatedDisk(diskName):
 
 def mountDisk(diskName,mountDir,fileSystemType):
     mountOptions={
-        "ext3":"    noatime,acl,user_xattr 1 1",
-        "ext4":"    noatime,acl,user_xattr 1 1",
-        "xfs":"    defaults     0    2",
+        "ext3":"    noatime,acl,user_xattr 1 1\n",
+        "ext4":"    noatime,acl,user_xattr 1 1\n",
+        "xfs":"     defaults     0    2 \n",
     }
 
     cmd="mount " + diskName+" " + mountDir

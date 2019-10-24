@@ -60,7 +60,7 @@ func init() {
 	RegisterPlugin("mariadb", new(MariadbPlugin))
 	RegisterPlugin("route-policy", new(RoutePolicyPlugin))
 	RegisterPlugin("clb", new(ClbPlugin))
-	RegisterPlugin("cbs",new(CbsPlugin))
+	RegisterPlugin("cbs", new(CbsPlugin))
 
 }
 

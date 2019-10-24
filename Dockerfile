@@ -8,7 +8,7 @@ ENV LOG_PATH=$APP_HOME/logs
 RUN apk add ca-certificates
 RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
-ADD scripts  $APP_HOME/
+ADD scripts  $APP_HOME/scripts/
 ADD wecube-plugins-qcloud $APP_HOME/
 ADD build/start.sh $APP_HOME/
 ADD build/stop.sh $APP_HOME/

@@ -1,21 +1,17 @@
 package plugins
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
+	"github.com/pkg/sftp"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 	"net"
 	"os"
-	"github.com/sirupsen/logrus"
-	clb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
-	"strconv"
-	"strings"
 	"time"
-	"golang.org/x/crypto/ssh"
-	"github.com/pkg/sftp"
-	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
-	"encoding/json"
 )
 
 var cbsActions = make(map[string]Action)
@@ -29,7 +25,7 @@ func init() {
 type CbsPlugin struct {
 }
 
-func (plugin *ClbPlugin) GetActionByName(actionName string) (Action, error) {
+func (plugin *CbsPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := cbsActions[actionName]
 	if !found {
 		return nil, fmt.Errorf("clb plugin,action = %s not found", actionName)
@@ -44,7 +40,7 @@ type CreateAndMountCbsDiskInputs struct {
 	Inputs []CreateAndMountCbsDiskInput `json:"inputs,omitempty"`
 }
 
-type CreateAndMountCbsDiskInput struct{
+type CreateAndMountCbsDiskInput struct {
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
@@ -55,13 +51,12 @@ type CreateAndMountCbsDiskInput struct{
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
 
 	//use to attch and format
-	InstanceId        string `json:"instance_id,omitempty"`
-	InstanceGuid      string `json:"instance_guid,omitempty"`
-	InstanceSeed      string `json:"seed,omitempty"`
-	InstancePassword  string `json:"password,omitempty"`
-	FileSystemType    string `json:"file_system_type,omitempty"`
-	MountDir          string `json:"mount_dir,omitempty"`
-
+	InstanceId       string `json:"instance_id,omitempty"`
+	InstanceGuid     string `json:"instance_guid,omitempty"`
+	InstanceSeed     string `json:"seed,omitempty"`
+	InstancePassword string `json:"password,omitempty"`
+	FileSystemType   string `json:"file_system_type,omitempty"`
+	MountDir         string `json:"mount_dir,omitempty"`
 }
 
 type CreateAndMountCbsDiskOutputs struct {
@@ -69,9 +64,9 @@ type CreateAndMountCbsDiskOutputs struct {
 }
 
 type CreateAndMountCbsDiskOutput struct {
-	Guid           string `json:"guid,omitempty"`
-	VolumeName       string `json:"volume_name,omitempty"`
-	DiskId         string `json:"disk_id,omitempty"`
+	Guid       string `json:"guid,omitempty"`
+	VolumeName string `json:"volume_name,omitempty"`
+	DiskId     string `json:"disk_id,omitempty"`
 }
 
 func (action *CreateAndMountCbsDiskAction) ReadParam(param interface{}) (interface{}, error) {
@@ -93,15 +88,15 @@ func (action *CreateAndMountCbsDiskAction) CheckParam(input interface{}) error {
 		if input.ProviderParams == "" {
 			return errors.New("providerParams is empty")
 		}
-		if input.DiskSize==0 {
+		if input.DiskSize == 0 {
 			return errors.New("diskSize is empty")
 		}
 
-		if input.DiskChargeType=="" || input.DiskChargePeriod==""{
+		if input.DiskChargeType == "" {
 			return errors.New("diskCharge param is empty")
 		}
 
-		if input.InstanceId=="" || input.InstanceGuid == "" ||input.IntanceSeed ==""  {
+		if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
 			return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
 		}
 
@@ -109,58 +104,62 @@ func (action *CreateAndMountCbsDiskAction) CheckParam(input interface{}) error {
 			return errors.New(" mountDir is empty")
 		}
 
-		if !isValidValue(input.FileSystemType,[]string{"ext3","ext4","xfs"}){
-			return fmt.Errorf("%s is not valid file system type",input.FileSystemType)
+		if err := isValidValue(input.FileSystemType, []string{"ext3", "ext4", "xfs"}); err != nil {
+			return fmt.Errorf("%s is not valid file system type", input.FileSystemType)
 		}
 	}
-	return inputs, nil
+	return nil
 }
 
-func buyCbsAndAttachToVm(input  CreateAndMountCbsDiskInput)(string,error){
-	storageAction:=StorageCreateAction{}
+func buyCbsAndAttachToVm(input CreateAndMountCbsDiskInput) (string, error) {
+	storageAction := StorageCreateAction{}
 
-	storageInput:=StorageInput{
-		Guid :input.Guid,
-		ProviderParams:input.ProviderParams,
-		DiskType:input.DiskType,
-		DiskSize:input.DiskSize, 
-		DiskName:input.DiskName,
-		DiskChargeType:input.DiskChargeType,
-		DiskChargePeriod:input.DiskChargePeriod,
-		InstanceId:input.InstanceId,
+	storageInput := StorageInput{
+		Guid:             input.Guid,
+		ProviderParams:   input.ProviderParams,
+		DiskType:         input.DiskType,
+		DiskSize:         input.DiskSize,
+		DiskName:         input.DiskName,
+		DiskChargeType:   input.DiskChargeType,
+		DiskChargePeriod: input.DiskChargePeriod,
+		InstanceId:       input.InstanceId,
 	}
 	if input.Id != "" {
-		storageInput.Id = input.Id 
+		storageInput.Id = input.Id
 	}
-	storageInputs:=StorageInputs{}
-	storageInputs.Inputs=append(storageInputs,input)
+	storageInputs := StorageInputs{}
+	storageInputs.Inputs = append(storageInputs.Inputs, storageInput)
 
-	outputs,err:=storageAction.Do(storageInputs)
-	storageOutputs = outputs.(StorageOutputs)
+	outputs, err := storageAction.Do(storageInputs)
 	if err != nil {
-		return "",err
+		return "", err
 	}
-	
+	storageOutputs := outputs.(*StorageOutputs)
+	if err != nil {
+		return "", err
+	}
+
 	if len(storageOutputs.Outputs) != 1 {
-		return "",fmt.Errorf("storage outputs have %d entries",len(storageOutputs.Output))
+		return "", fmt.Errorf("storage outputs have %d entries", len(storageOutputs.Outputs))
 	}
-	return storageOutputs.Outputs[0].Id,nil
+	return storageOutputs.Outputs[0].Id, nil
 }
-func getInstancePrivateIp(providerParam string,instanceId string)(string,error){
+
+func getInstancePrivateIp(providerParam string, instanceId string) (string, error) {
 	filter := Filter{
 		Name:   "instanceId",
-		Values: input.InstanceId,
+		Values: []string{instanceId},
 	}
 
-	items, err := QueryCvmInstance(input.ProviderParams, filter)
+	items, err := QueryCvmInstance(providerParam, filter)
 	if err != nil {
 		return "", err
 	}
 	if len(items) != 1 {
-		return "",fmt.Errorf("queryCvmInstance get %d items",len(items))
+		return "", fmt.Errorf("queryCvmInstance get %d items", len(items))
 	}
 
-	return *items[0].PrivateIpAddresses[0],nil
+	return *items[0].PrivateIpAddresses[0], nil
 }
 
 func createSshClient(ip string, password string) (*ssh.Client, error) {
@@ -231,42 +230,38 @@ func runRemoteHostScript(ip string, password string, remoteFile string) (string,
 	}
 	defer session.Close()
 
-	var stdout,stderr bytes.Buffer
+	var stdout, stderr bytes.Buffer
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 	if err := session.Run(remoteFile); err != nil {
-		logrus.Errorf("runRemoteHostScript stdout=%s,stderr=%s\n",stdout,stderr)
+		logrus.Errorf("runRemoteHostScript stdout=%s,stderr=%s\n", stdout, stderr)
 		return "", err
 	}
 	return stdout.String(), nil
 }
 
 type UnformatedDisks struct {
-	Volumes []string   `json:"unformatedDisks,omitempty"`
+	Volumes []string `json:"unformatedDisks,omitempty"`
 }
 
-func getUnformatDisk(privateIp string,password string)(string,error){
-	if err := copyFileToRemoteHost(privateIp,password,"./scripts/getUnformatedDisk.py","/tmp/getUnformatedDisk.py");err!=nil{
-		return "",err
+func getUnformatDisks(privateIp string, password string) ([]string, error) {
+	if err := copyFileToRemoteHost(privateIp, password, "./scripts/getUnformatedDisk.py", "/tmp/getUnformatedDisk.py"); err != nil {
+		return []string{}, err
 	}
-	output,err:=runRemoteHostScript(privateIp,password,"python /tmp/getUnformatedDisk.py")
+	output, err := runRemoteHostScript(privateIp, password, "python /tmp/getUnformatedDisk.py")
 	if err != nil {
-		return "",err
+		return []string{}, err
 	}
 
-	unformatedDisks:=UnformatedDisks{}
+	unformatedDisks := UnformatedDisks{}
 	if err := json.Unmarshal([]byte(output), &unformatedDisks); err != nil {
-		return "",err
+		return []string{}, err
 	}
-	if len(unformatedDisks.Volumes) !=1 {
-		return "",fmt.Errorf("have %d unformat disks,but want 1",len(unformatedDisks.Volumes))
-	}
-	return unformatedDisks.Volumes[0],nil 
+
+	return unformatedDisks.Volumes, nil
 }
 
 func formatAndMountDisk(ip, password, volumeName, fileSystemType, mountDir string) error {
-	runRemoteHostScript(ip, password, "mkdir -p "+mountDir)
-
 	if err := copyFileToRemoteHost(ip, password, "./scripts/formatAndMountDisk.py", "/tmp/formatAndMountDisk.py"); err != nil {
 		return err
 	}
@@ -276,53 +271,87 @@ func formatAndMountDisk(ip, password, volumeName, fileSystemType, mountDir strin
 	return err
 }
 
-func createAndMountCbsDisk(input  CreateAndMountCbsDiskInput)( CreateAndMountCbsDiskOutput,error){
-	output:=CreateAndMountCbsDiskOutput{
-		Guid:input.Guid,
-	}
-	//buy and attach disk to vm 
-	output.DiskId,err:=buyCbsAndAttachToVm(input)
-	if err != nil {
-		return output,err
+func getNewCreateDiskVolumeName(ip, password string, lastUnformatedDisks []string) (string, error) {
+	lastUnformatedDiskNum := len(lastUnformatedDisks)
+
+	for i := 0; i < 20; i++ {
+		newDisks, err := getUnformatDisks(ip, password)
+		if err != nil {
+			return "", err
+		}
+		if len(newDisks) == lastUnformatedDiskNum {
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		for _, volumeName := range newDisks {
+			bFind := false
+			for _, oldDisk := range lastUnformatedDisks {
+				if volumeName == oldDisk {
+					bFind = true
+					break
+				}
+			}
+			if bFind == false {
+				return volumeName, nil
+			}
+		}
 	}
 
-	privateIp,err:=getInstancePrivateIp(input.ProviderParams,input.InstanceId)
-	if err != nil {
-		return output,err
+	return "", errors.New("getNewCreateDiskVolumeName timeout")
+}
+
+func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (CreateAndMountCbsDiskOutput, error) {
+	var err error
+	output := CreateAndMountCbsDiskOutput{
+		Guid: input.Guid,
 	}
 
-	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
-	password,err:= utils.AesDecode(md5sum[0:16], input.InstancePassword)
+	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
 		return output, err
 	}
-	
-	//get unformated disk 
-	output.VolumeName ,err := getUnformatDisk(privateIp,password)
+
+	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
+	password, err := utils.AesDecode(md5sum[0:16], input.InstancePassword)
 	if err != nil {
-		return output,err
+		return output, err
+	}
+
+	//get unformated disk
+	oldUnformatDisks, err := getUnformatDisks(privateIp, password)
+	if err != nil {
+		return output, err
+	}
+
+	//buy and attach disk to vm
+	output.DiskId, err = buyCbsAndAttachToVm(input)
+	if err != nil {
+		return output, err
+	}
+
+	output.VolumeName, err = getNewCreateDiskVolumeName(privateIp, password, oldUnformatDisks)
+	if err != nil {
+		return output, err
 	}
 
 	//format and mount
-	err=formatAndMountDisk(privateIp,password,output.VolumeName,input.FileSystemType,input.MountDir)
+	err = formatAndMountDisk(privateIp, password, output.VolumeName, input.FileSystemType, input.MountDir)
 	if err != nil {
-		logrus.Errorf("formatAndMountDisk meet err=%v",err)
+		logrus.Errorf("formatAndMountDisk meet err=%v", err)
 	}
-	return output,err 
+	return output, err
 }
 
-func (action *CreateAndMountCbsDiskAction)  Do(input interface{}) (interface{}, error) {
+func (action *CreateAndMountCbsDiskAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(CreateAndMountCbsDiskInputs)
 	outputs := CreateAndMountCbsDiskOutputs{}
 
 	for _, input := range inputs.Inputs {
-		output,err:=createAndMountCbsDisk(input)
+		output, err := createAndMountCbsDisk(input)
 		if err != nil {
-			return outputs,err
+			return outputs, err
 		}
-		outputs.Outputs = append(outputs.Outputs,output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs,nil 
+	return outputs, nil
 }
-
-
