@@ -369,11 +369,11 @@ type UmountCbsDiskInputs struct {
 }
 
 type UmountCbsDiskInput struct {
-	Guid             string `json:"guid,omitempty"`
-	ProviderParams   string `json:"provider_params,omitempty"`
-	Id               string `json:"id,omitempty"`
-	VolumeName       string `json:"volume_name,omitempty"`
-	MountDir         string `json:"mount_dir,omitempty"`
+	Guid           string `json:"guid,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	Id             string `json:"id,omitempty"`
+	VolumeName     string `json:"volume_name,omitempty"`
+	MountDir       string `json:"mount_dir,omitempty"`
 
 	//use to attch and format
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -387,7 +387,7 @@ type UmountCbsDiskOutputs struct {
 }
 
 type UmountCbsDiskOutput struct {
-	Guid       string `json:"guid,omitempty"`
+	Guid string `json:"guid,omitempty"`
 }
 
 func (action *UmountAndTerminateDiskAction) ReadParam(param interface{}) (interface{}, error) {
@@ -422,7 +422,7 @@ func (action *UmountAndTerminateDiskAction) CheckParam(input interface{}) error 
 			return errors.New("instancePassword is empty")
 		}
 
-		if input.MountDir == "" || input.VolumeName==""{
+		if input.MountDir == "" || input.VolumeName == "" {
 			return errors.New("mountDir or volume name is empty")
 		}
 	}
@@ -433,28 +433,28 @@ func umountDisk(ip, password, volumeName, mountDir string) error {
 		return err
 	}
 
-	execArgs := " -d " + volumeName +  " -m " + mountDir
+	execArgs := " -d " + volumeName + " -m " + mountDir
 	_, err := runRemoteHostScript(ip, password, "python /tmp/umountDisk.py"+execArgs)
 	return err
 }
 
-func terminateDisk(providerParams,id string)error{
-	action:=StorageTerminateAction{}
-	input:=StorageInput {
-		ProviderParams:providerParams,
-		Id:id,
+func terminateDisk(providerParams, id string) error {
+	action := StorageTerminateAction{}
+	input := StorageInput{
+		ProviderParams: providerParams,
+		Id:             id,
 	}
-	
-	inputs:=StorageInputs{}
-	inputs.Inputs=append(inputs.Inputs,input)
-	_,err：=action.Do(inputs)
-	return err 
+
+	inputs := StorageInputs{}
+	inputs.Inputs = append(inputs.Inputs, input)
+	_, err := action.Do(inputs)
+	return err
 }
 
-func umountAndTerminateCbsDisk(input UmountCbsDiskInput)error {
+func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
@@ -463,11 +463,11 @@ func umountAndTerminateCbsDisk(input UmountCbsDiskInput)error {
 		return err
 	}
 
-	if err = umountDisk(privateIp,password,input.VolumeName,input.MountDir);err!= nil {
-		return err 
+	if err = umountDisk(privateIp, password, input.VolumeName, input.MountDir); err != nil {
+		return err
 	}
 
-	return terminateDisk(input.ProviderParams,input.Id)
+	return terminateDisk(input.ProviderParams, input.Id)
 }
 
 func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, error) {
@@ -479,8 +479,8 @@ func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, 
 		if err != nil {
 			return outputs, err
 		}
-		output:=UmountCbsDiskOutput{
-			Guid:input.Guid
+		output := UmountCbsDiskOutput{
+			Guid: input.Guid,
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
