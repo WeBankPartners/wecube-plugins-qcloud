@@ -303,7 +303,6 @@
                 <parameter datatype="string">disk_type</parameter>
                 <parameter datatype="number">disk_size</parameter>
                 <parameter datatype="string">disk_name</parameter>
-                <parameter datatype="string">id</parameter>
                 <parameter datatype="string">disk_charge_type</parameter>
                 <parameter datatype="string">disk_charge_period</parameter>
                 <parameter datatype="string">instance_id</parameter>
@@ -319,6 +318,23 @@
                 <parameter datatype="string">disk_id</parameter>
             </output-parameters>
         </interface>
+        <interface name="umount and destroy cbs disk" path="/v1/qcloud/cbs/umount-terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">volume_name</parameter>
+                <parameter datatype="string">mount_dir</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">instance_guid</parameter>
+                <parameter datatype="string">seed</parameter>
+                <parameter datatype="string">password</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+
     </plugin>
     <plugin id="nat-gateway" name="Nat Gateway Management">
         <interface name="create" path="/v1/qcloud/nat-gateway/create">
