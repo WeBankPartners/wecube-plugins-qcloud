@@ -108,7 +108,7 @@ func (action *CreateAndMountCbsDiskAction) CheckParam(input interface{}) error {
 			return errors.New(" mountDir is empty")
 		}
 
-		if err := isValidValue(input.FileSystemType, []string{"ext3", "ext4", "xfs"}); err != nil {
+		if err := IsValidValue(input.FileSystemType, []string{"ext3", "ext4", "xfs"}); err != nil {
 			return fmt.Errorf("%s is not valid file system type", input.FileSystemType)
 		}
 	}
