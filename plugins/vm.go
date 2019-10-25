@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strconv"
 	"time"
-
+        "strings"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -49,6 +49,8 @@ type VmInput struct {
 	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
 	InstanceChargePeriod int64  `json:"instance_charge_period,omitempty"`
 	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
+	Password             string `json:"password,omitempty"`
+	ProjectId            int64  `json:"project_id,omitempty"`
 }
 
 type VmOutputs struct {
@@ -75,6 +77,7 @@ func init() {
 	VMActions["terminate"] = new(VMTerminateAction)
 	VMActions["start"] = new(VMStartAction)
 	VMActions["stop"] = new(VMStopAction)
+	VMActions["bind-security-groups"] = new(VMBindSecurityGroupsAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
@@ -286,8 +289,10 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		password := utils.CreateRandomPassword()
-
+		if vm.Password == ""{
+			vm.Password = utils.CreateRandomPassword()
+		}
+		
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
 				Zone: paramsMap["AvailableZone"],
@@ -304,12 +309,15 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				SubnetId: vm.SubnetId,
 			},
 			LoginSettings: LoginSettingsStruct{
-				Password: password,
+				Password: vm.Password,
 			},
 			InternetAccessible: InternetAccessible{
 				PublicIpAssigned:        false,
 				InternetMaxBandwidthOut: 10,
 			},
+		}
+		if vm.ProjectId != 0 {
+			runInstanceRequest.Placement.ProjectId=vm.ProjectId
 		}
 
 		if vm.InstancePrivateIp != "" {
@@ -386,6 +394,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		byteRunInstancesRequestData, _ := json.Marshal(runInstanceRequest)
 		logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRunInstancesRequestData))
 		request.FromJsonString(string(byteRunInstancesRequestData))
+		if vm.InstanceName!=""{
+			request.InstanceName=&vm.InstanceName
+		}
 
 		resp, err := client.RunInstances(request)
 		if err != nil {
@@ -410,7 +421,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		md5sum := utils.Md5Encode(vm.Guid + vm.Seed)
-		if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
+		if output.Password, err = utils.AesEncode(md5sum[0:16], vm.Password); err != nil {
 			logrus.Errorf("AesEncode meet error(%v)", err)
 			return nil, errors.New("aes encode error")
 		}
@@ -571,7 +582,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 		return nil, err
 	}
 
-	if err := IsValidValue(filter.Name, validFilterNames); err != nil {
+	if err := isValidValue(filter.Name, validFilterNames); err != nil {
 		return nil, err
 	}
 
@@ -582,6 +593,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 	if err != nil {
 		return nil, err
 	}
+	
 	cvmFilter := &cvm.Filter{
 		Name:   common.StringPtr(name),
 		Values: common.StringPtrs(filter.Values),
@@ -615,4 +627,79 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 	}
 
 	return err
+}
+
+//--------------bind security group to vm--------------------//
+type VMBindSecurityGroupsAction struct {
+
+}
+
+type VmBindSecurityGroupInputs struct {
+	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type VmBindSecurityGroupInput struct {
+	Guid                 string `json:"guid,omitempty"`
+	ProviderParams       string `json:"provider_params,omitempty"`
+	InstanceId           string `json:"instance_id,omitempty"`
+	SecurityGroupIds     string `json:"security_group_ids,omitempty"`
+}
+
+type VmBindSecurityGroupOutputs struct {
+	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
+}
+
+type VmBindSecurityGroupOutput struct {
+	Guid                 string `json:"guid,omitempty"`
+}
+
+func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmBindSecurityGroupInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VMBindSecurityGroupsAction) CheckParam(input interface{}) error {
+	inputs, ok := input.(VmBindSecurityGroupInputs)
+	if !ok {
+		return fmt.Errorf("VMBindSecurityGroupsAction:input type=%T not right", input)
+	}
+
+	for _,input:=range inputs.Inputs{
+		if input.ProviderParams == ""{
+			return errors.New("providerParams is empty")
+		}
+
+		if input.InstanceId == "" {
+			return errors.New("instanceId is empty")
+		}
+
+		if input.SecurityGroupIds == "" {
+			return errors.New("securityGroupIds is empty")
+		}
+	}
+
+	return nil
+}
+
+func (action *VMBindSecurityGroupsAction)Do(input interface{}) (interface{}, error) {
+	inputs, _ := input.(VmBindSecurityGroupInputs)
+	outputs:=VmBindSecurityGroupOutputs{}
+
+	for _,input:=range inputs.Inputs{
+		securityGroups:=strings.Split(input.SecurityGroupIds,",")
+		err:=BindCvmInstanceSecurityGroups(input.ProviderParams,input.InstanceId,securityGroups)
+		if err != nil {
+			return nil,err
+		}
+		output:=VmBindSecurityGroupOutput{
+			Guid:input.Guid,
+		}
+		outputs.Outputs=append(outputs.Outputs,output)
+	}
+
+	return outputs,nil 
 }
