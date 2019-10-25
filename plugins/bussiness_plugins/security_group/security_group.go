@@ -18,9 +18,7 @@ const (
 )
 
 var (
-	ErrorIpNotFound      = errors.New("ip not found")
-	LbResoureTypeNames   = []string{}
-	ALLResourceTypeNames = []string{}
+	ErrorIpNotFound = errors.New("ip not found")
 )
 
 //interface definition
@@ -113,86 +111,99 @@ func init() {
 	//action
 	SecurityGroupActions["calc-security-policies"] = new(CalcSecurityPolicyAction)
 	SecurityGroupActions["apply-security-policies"] = new(ApplySecurityPolicyAction)
-
-	LbResoureTypeNames = []string{"clb"}
-	ALLResourceTypeNames = []string{"cvm", "clb", "mysql"}
 }
 
-type QueryIpResult struct {
-	Err      error
-	Instance ResourceInstance
+type QueryIpsResult struct {
+	Err         error
+	InstanceMap map[string]ResourceInstance
 }
 
-func queryRegionInstance(providerParams string, region string, queryResourceType []string, ip string, ch chan QueryIpResult) {
-	result := QueryIpResult{
-		Err:      nil,
-		Instance: nil,
+func queryOneRegionInstanceByIps(providerParams string, region string, ips []string, ch chan QueryIpsResult) {
+	result := QueryIpsResult{
+		Err:         nil,
+		InstanceMap: make(map[string]ResourceInstance),
 	}
 	start := time.Now()
 	defer func() {
-		logrus.Infof("queryRegionInstance region(%s) ip (%s) taken %v,result=%++v", region, ip, time.Since(start), result)
+		logrus.Infof("queryOneRegionInstanceByIps region(%s) ips (%v) taken %v,result=%++v", region, ips, time.Since(start), result)
 	}()
 
-	for resourceTypeName, resType := range resourceTypeMap {
-		if !isContainInList(resourceTypeName, queryResourceType) {
-			continue
-		}
-
-		instanceMap, err := resType.QueryInstancesByIp(providerParams, []string{ip})
+	rtnIps := 0
+	for _, resType := range resourceTypeMap {
+		instanceMap, err := resType.QueryInstancesByIp(providerParams, ips)
 		logrus.Infof("findInstanceByIp QueryInstancesByIp instanceMap:%++v", instanceMap)
 		if err != nil {
 			result.Err = err
 			logrus.Errorf("findInstanceByIp QueryInstancesByIp meet error=%v\n", err)
 			break
 		}
-		instance, ok := instanceMap[ip]
-		if ok {
-			result.Instance = instance
-			logrus.Infof("findInstanceByIp: return instance=%v", instance)
+
+		for key, value := range instanceMap {
+			result.InstanceMap[key] = value
+			rtnIps++
+		}
+		if rtnIps == len(ips) {
 			break
 		}
-	}
-
-	if result.Err == nil && result.Instance == nil {
-		result.Err = ErrorIpNotFound
 	}
 
 	ch <- result
 }
 
-func findInstanceByIp(ip string, queryResourceType []string) (ResourceInstance, error) {
-	chResult := make(chan QueryIpResult)
+func getResourceAllIp(sourceIps []string, destIps []string) (map[string]ResourceInstance, error) {
+	totalMap := make(map[string]ResourceInstance)
+	chResult := make(chan QueryIpsResult)
 	regions, err := getRegions()
 	if err != nil {
 		logrus.Errorf("findInstanceByIp getRegions meet err=%v\n", err)
 		return nil, err
 	}
 
-	logrus.Infof("findInstanceByIp: request ip=%v", ip)
+	ips := []string{}
+	ipmap := make(map[string]bool)
+	for _, ip := range sourceIps {
+		ipmap[ip] = true
+	}
+	for _, ip := range destIps {
+		ipmap[ip] = true
+	}
+	for key := range ipmap {
+		ips = append(ips, key)
+	}
+
 	for _, region := range regions {
 		providerParams, err := getProviderParams(region)
 		if err != nil {
-			logrus.Errorf("findInstanceByIp getProviderParams meet err=%v\n", err)
-			return nil, err
+			return totalMap, err
 		}
-
-		go queryRegionInstance(providerParams, region, queryResourceType, ip, chResult)
+		go queryOneRegionInstanceByIps(providerParams, region, ips, chResult)
 	}
 
+	returnedIp := 0
 	for _, _ = range regions {
 		result := <-chResult
-		if result.Instance != nil && result.Err == nil {
-			return result.Instance, nil
+		if result.Err != nil {
+			return totalMap, result.Err
+		}
+		for key, value := range result.InstanceMap {
+			totalMap[key] = value
+			returnedIp++
 		}
 
-		if result.Err != nil && result.Err != ErrorIpNotFound {
-			return nil, result.Err
+		if returnedIp == len(ips) {
+			return totalMap, nil
 		}
 	}
 
-	err = fmt.Errorf("ip(%s),can't be found", ip)
-	logrus.Infof("findInstanceByIp(%v) meet error=%v", ip, err)
-	return nil, err
+	return totalMap, nil
+}
+
+func findInstanceByIp(ip string, ipMap map[string]ResourceInstance) (ResourceInstance, error) {
+	instance, ok := ipMap[ip]
+	if ok {
+		return instance, nil
+	}
+	return nil, fmt.Errorf("Ip(%s) not found", ip)
 }
 
 //---------------calc security policy action------------------------------//
@@ -333,7 +344,6 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 		}
 		if len(instances) == 0 {
 			err := fmt.Errorf("loadbalancer(%s) port (%v) do not have any backends", instance.GetIp(), splitPort)
-
 			logrus.Errorf("newPolicies GetBackendTargets meet error=%v", err)
 			return policies, err
 		}
@@ -359,14 +369,14 @@ func newPolicies(instance ResourceInstance, myIp string, peerIp string, proto st
 	return policies, nil
 }
 
-func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
+func calcPolicies(devIp string, ipMap map[string]ResourceInstance, peerIps []string, proto string, ports []string,
 	action string, description string, direction string) ([]SecurityPolicy, error) {
 	logrus.Infof("calcPolicies: reuqest devIp=%v, peerIps=%++v, protocol=%v, ports=%++v, action=%v, description=%v, direction=%v", devIp, peerIps, proto, ports, action, description, direction)
 
 	policies := []SecurityPolicy{}
 
 	//check if dev exist
-	instance, err := findInstanceByIp(devIp, ALLResourceTypeNames)
+	instance, err := findInstanceByIp(devIp, ipMap)
 	if err != nil {
 		logrus.Errorf("calcPolicies findInstanceByIp meet error=%v", err)
 		return policies, err
@@ -387,7 +397,7 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 	}
 
 	for _, peerIp := range peerIps {
-		peerInstance, err := findInstanceByIp(peerIp, LbResoureTypeNames)
+		peerInstance, err := findInstanceByIp(peerIp, ipMap)
 		logrus.Infof("calcPolicies findInstanceByip peerIp=%s, instance=%++v, err=%v\n", peerIp, peerInstance, err)
 		if err == nil {
 			peerResType, _ := getResouceTypeByName(peerInstance.ResourceTypeName())
@@ -415,7 +425,6 @@ func calcPolicies(devIp string, peerIps []string, proto string, ports []string,
 }
 
 func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, error) {
-	var finalError error
 	req, _ := input.(CalcSecurityPoliciesRequest)
 	logrus.Infof("CalcSecurityPolicyAction Do: request input=%++v", input)
 
@@ -424,16 +433,22 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	ports, _ := getPortsByPolicyFormat(req.DestPort)
 	logrus.Infof("CalcSecurityPolicyAction Do: ports=%++v", ports)
 
+	ipMaps, err := getResourceAllIp(req.SourceIps, req.DestIps)
+	logrus.Infof("CalcSecurityPolicyAction Do getResourceAllIp: len(ipMaps)=%v ipMaps=%++v", len(ipMaps), ipMaps)
+
+	if err != nil {
+		logrus.Infof("getResourceAllIp meet err=%v", err)
+		result.TimeTaken = fmt.Sprintf("%v", time.Since(start))
+		return result, err
+	}
 	//calc egress policies
 	if isContainInList(EGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.SourceIps {
-			policies, err := calcPolicies(ip, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description, EGRESS_RULE)
+			policies, err := calcPolicies(ip, ipMaps, req.DestIps, req.Protocol, ports, req.PolicyAction, req.Description, EGRESS_RULE)
 			result.EgressPolicies = append(result.EgressPolicies, policies...)
-			if err != nil && finalError != nil {
-				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
-			}
-			if err != nil && finalError == nil {
-				finalError = err
+			if err != nil {
+				result.TimeTaken = fmt.Sprintf("%v", time.Since(start))
+				return result, err
 			}
 		}
 	}
@@ -441,13 +456,11 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	//calc ingress policies
 	if isContainInList(INGRESS_RULE, req.PolicyDirections) {
 		for _, ip := range req.DestIps {
-			policies, err := calcPolicies(ip, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description, INGRESS_RULE)
+			policies, err := calcPolicies(ip, ipMaps, req.SourceIps, req.Protocol, ports, req.PolicyAction, req.Description, INGRESS_RULE)
 			result.IngressPolicies = append(result.IngressPolicies, policies...)
-			if err != nil && finalError != nil {
-				finalError = fmt.Errorf("%s", finalError.Error()+err.Error())
-			}
-			if err != nil && finalError == nil {
-				finalError = err
+			if err != nil {
+				result.TimeTaken = fmt.Sprintf("%v", time.Since(start))
+				return result, err
 			}
 		}
 	}
@@ -456,8 +469,8 @@ func (action *CalcSecurityPolicyAction) Do(input interface{}) (interface{}, erro
 	result.IngressPoliciesTotal = len(result.IngressPolicies)
 	result.EgressPoliciesTotal = len(result.EgressPolicies)
 
-	logrus.Infof("CalcSecurityPolicyAction Do: return result=%++v, finalError=%++v", result, finalError)
-	return result, finalError
+	logrus.Infof("CalcSecurityPolicyAction Do: return result=%++v", result)
+	return result, nil
 }
 
 //---------------apply security policy action------------------------------//
