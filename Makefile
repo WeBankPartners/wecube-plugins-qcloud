@@ -30,6 +30,9 @@ clean:
 	rm -rf $(project_name)
 	rm -rf  ./*.tar
 	rm -rf ./*.zip
+fmt:
+	docker run --rm -v $(current_dir):/go/src/github.com/WeBankPartners/$(project_name) --name build_$(project_name) -w /go/src/github.com/WeBankPartners/$(project_name)/  golang:1.12.5 go fmt ./...
+
 
 build: clean
 	chmod +x ./build/*.sh

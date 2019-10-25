@@ -213,7 +213,7 @@
         <interface name="create" path="/v1/qcloud/vm/create">
             <input-parameters>
                 <parameter datatype="string">guid</parameter>
-                 <parameter datatype="string">seed</parameter>
+                <parameter datatype="string">seed</parameter>
                 <parameter datatype="string">provider_params</parameter>
                 <parameter datatype="string">vpc_id</parameter>
                 <parameter datatype="string">subnet_id</parameter>
@@ -224,7 +224,9 @@
                 <parameter datatype="string">instance_charge_type</parameter>
                 <parameter datatype="number">instance_charge_period</parameter>
                 <parameter datatype="string">instance_private_ip</parameter>
-                 <parameter datatype="string">id</parameter>
+                <parameter datatype="string">password</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">project_id</parameter>
             </input-parameters>
             <output-parameters>
                 <parameter datatype="string">guid</parameter>
@@ -266,6 +268,18 @@
                 <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
+
+        <interface name="bind security group to vm" path="/v1/qcloud/vm/bind-security-groups">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">security_group_ids</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
     </plugin>
     <plugin id="storage" name="Storage Management">
         <interface name="create" path="/v1/qcloud/storage/create">
@@ -295,6 +309,46 @@
                 <parameter datatype="string">guid</parameter>
             </output-parameters>
         </interface>
+        <interface name="buy cbs disk and mount" path="/v1/qcloud/cbs/create-mount">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">disk_type</parameter>
+                <parameter datatype="number">disk_size</parameter>
+                <parameter datatype="string">disk_name</parameter>
+                <parameter datatype="string">disk_charge_type</parameter>
+                <parameter datatype="string">disk_charge_period</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">instance_guid</parameter>
+                <parameter datatype="string">seed</parameter>
+                <parameter datatype="string">password</parameter>
+                <parameter datatype="string">file_system_type</parameter>
+                <parameter datatype="string">mount_dir</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">volume_name</parameter>
+                <parameter datatype="string">disk_id</parameter>
+            </output-parameters>
+        </interface>
+        <interface name="umount and destroy cbs disk" path="/v1/qcloud/cbs/umount-terminate">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">id</parameter>
+                <parameter datatype="string">volume_name</parameter>
+                <parameter datatype="string">mount_dir</parameter>
+                <parameter datatype="string">instance_id</parameter>
+                <parameter datatype="string">instance_guid</parameter>
+                <parameter datatype="string">seed</parameter>
+                <parameter datatype="string">password</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+            </output-parameters>
+        </interface>
+
     </plugin>
     <plugin id="nat-gateway" name="Nat Gateway Management">
         <interface name="create" path="/v1/qcloud/nat-gateway/create">

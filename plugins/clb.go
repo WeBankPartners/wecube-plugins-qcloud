@@ -431,7 +431,7 @@ func createListener(client *clb.Client, lbId string, proto string, port int64) (
 	}
 
 	//sleep  to wait listener create ok
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 
 	return *response.Response.ListenerIds[0], nil
 }
