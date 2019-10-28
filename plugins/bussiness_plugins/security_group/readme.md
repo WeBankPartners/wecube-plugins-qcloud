@@ -47,6 +47,7 @@ http://server:port/v1/bs-security-group/calc-security-policies
 
 
 Policy结构如下:
+
 |参数名称|参数类型|参数说明|
 |-------|------|----|
 |ip|string|需要设置策略的ip|
@@ -61,6 +62,7 @@ Policy结构如下:
 |description|string|需要设置安全组策略的描述字段|
 
 #### 示例
+
 ```
 request:
 {
@@ -137,6 +139,7 @@ http://server:port/v1/qcloud/bs-security-group/apply-security-policies
 |egress_policies|Policy数组|需要实施的出栈规则|
 
 #### 输出参数
+
 |参数名称|参数类型|参数说明|
 |-------|------|----|
 |policies_total|int|需要实施的入栈或出栈规则有多少条|
@@ -149,6 +152,7 @@ http://server:port/v1/qcloud/bs-security-group/apply-security-policies
 
 
 #### 示例
+
 ```
 request:
 {
@@ -238,6 +242,7 @@ response:
 
 ## <span id="deployment">部署说明</span>
 qcloud插件的相关接口调用关系如下:
+
 ```mermaid
 graph LR;
 第三方应用-->qcloud插件;
@@ -279,6 +284,7 @@ pidof wecube-plugins-qcloud | xargs kill -9
 
 #### 主要抽象接口
 ResourceType接口:
+
 ```
 type ResourceType interface {
     QueryInstancesById(providerParams string, instanceIds []string) (map[string]  ResourceInstance, error)
@@ -297,6 +303,7 @@ type ResourceType interface {
 
 
 ResourceInstance接口:
+
 ```
 type ResourceInstance interface {
      ResourceTypeName() string
@@ -334,6 +341,7 @@ type ResourceInstance interface {
 
 
 ## <span id="code_struct">接口局限性</span>
+
 1. 只有添加安全组策略的功能，没有销毁安全组策略的功能
 2. 自动添加的安全策略都新建在名称为ip_auoto_xx的安全策略里，当对应ip的主机销毁时，不会自动销毁对应的安全组。
 3. 当资源类型是负载均衡时，关联的安全组都关联在监听器里绑定的主机上。当对LB后端的主机进行添加或者删除时，安全组不会自动添加，需要重新调用接口才能生效。
