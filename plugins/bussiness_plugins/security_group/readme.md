@@ -1,9 +1,40 @@
-# 腾讯云安全组组合接口
-- [接口说明](#api) 
+# 腾讯云安全组业务接口
 - [部署说明](#deployment) 
+- [接口说明](#api) 
 - [代码说明](#source_code)
 - [接口局限性](#exist_problems)
 
+## <span id="deployment">部署说明</span>
+
+qcloud插件的相关接口调用关系如下:
+
+![deploy](images/deploy.png)
+
+qcloud插件部署时，需要设置如下环境变量:
+
+|环境变量名称|是否必填|说明|
+|-----|-----|-----|
+|SECRET_ID|是|腾讯云帐号的secretId，调用腾讯云API时鉴权使用|
+|SECRET_KEY|是|腾讯云帐号的secretKey，调用腾讯云API时鉴权使用|
+|REGIONS|是|查询资源时搜索哪些地域，多个地域之间用分号分割，如ap-guangzhou;ap-shanghai|
+|https_proxy|否|当需要通过https代理才能腾讯云API时，需要设置该环境变量
+
+当有https代理时需要启动qcloud二进制程序的脚本如下:
+
+```
+ env SECRET_ID=xxxx \
+     SECRET_KEY=xxx  \
+     REGIONS="ap-guangzhou;ap-shanghai" \
+     https_proxy="http_proxy_server:http_proxy_server_port" \
+     nohup ./wecube-plugins-qcloud >./stdout.txt 2>&1 &
+```
+
+停止qcloud二进制程序的脚本如下:
+
+```
+pidof wecube-plugins-qcloud | xargs kill -9
+
+```
 
 ## <span id="api">接口说明</span>
 安全组策略组合api用于在大规模、多地域使用腾讯云资源过程中，快速根据源ip和目标ip等参数自动生成对应的安全组策略并实施，避免用户通过腾讯云控制台对多个地域多个资源进行ip资源查询后然后进行手动关联安全组到具体资源实例的操作。
@@ -240,43 +271,6 @@ response:
 }
 ```
 
-## <span id="deployment">部署说明</span>
-qcloud插件的相关接口调用关系如下:
-
-```mermaid
-graph LR;
-第三方应用-->qcloud插件;
-qcloud插件-->https://cvm.tencentcloudapi.com/;
-qcloud插件-->https://clb.tencentcloudapi.com/;
-qcloud插件-->https://cdb.tencentcloudapi.com/;
-```
-
-qcloud插件部署时，需要设置如下环境变量:
-
-|环境变量名称|是否必填|说明|
-|-----|-----|-----|
-|SECRET_ID|是|腾讯云帐号的secretId，调用腾讯云API时鉴权使用|
-|SECRET_KEY|是|腾讯云帐号的secretKey，调用腾讯云API时鉴权使用|
-|REGIONS|是|查询资源时搜索哪些地域，多个地域之间用分号分割，如ap-guangzhou;ap-shanghai|
-|https_proxy|否|当需要通过https代理才能腾讯云API时，需要设置该环境变量
-
-当有https代理时需要启动qcloud二进制程序的脚本如下:
-
-```
- env SECRET_ID=xxxx \
-     SECRET_KEY=xxx  \
-     REGIONS="ap-guangzhou;ap-shanghai" \
-     https_proxy="http_proxy_server:http_proxy_server_port" \
-     nohup ./wecube-plugins-qcloud >./stdout.txt 2>&1 &
-```
-
-停止qcloud二进制程序的脚本如下:
-
-```
-pidof wecube-plugins-qcloud | xargs kill -9
-
-```
-
 ## <span id="source_code">代码流程说明</span>
 安全组相关代码:  https://github.com/WeBankPartners/wecube-plugins-qcloud/tree/master/plugins/bussiness_plugins/security_group
 
@@ -340,7 +334,7 @@ type ResourceInstance interface {
 实施安全组流程
 
 
-## <span id="code_struct">接口局限性</span>
+## <span id="exist_problems">接口局限性</span>
 
 1. 只有添加安全组策略的功能，没有销毁安全组策略的功能
 2. 自动添加的安全策略都新建在名称为ip_auoto_xx的安全策略里，当对应ip的主机销毁时，不会自动销毁对应的安全组。
