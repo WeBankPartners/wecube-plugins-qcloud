@@ -58,8 +58,8 @@ http://server:port/v1/bs-security-group/calc-security-policies
 |-------|------|----|
 |protocol|string|协议类型 tcp或udp|
 |source_ips|string数组|允许访问目标地址的源ip地址|
-|dest_ips|string数组|允许源IP访问的目标ip地址|
-|dest_port|string|需要放通的端口，如果有多个端口需要开通则用分号分隔|
+|dest_ips|string数组|允许源ip访问的目标ip地址|
+|dest_port|string|需要放通的端口，如果有多个端口需要开通则用分号分隔,如80;90;100-120|
 |policy_action|string|策略是放通还是拒绝，有效值为accept 和drop|
 |policy_directions|string数组|策略方向，如只开入栈，或者只开出栈，或者是入和出都开，有效值为ingress和egress|
 |description|string|通过接口创建的安全组和安全组策略都会带上该描述字段，可通过该字段和工单系统的编号做关联|
@@ -104,7 +104,7 @@ request:
     "dest_ips": [
         "172.16.0.2"
     ],
-    "dest_port": "80;8081,
+    "dest_port": "80;8081",
     "policy_action": "accept",
     "policy_directions": [
         "egress",
@@ -175,7 +175,7 @@ http://server:port/v1/qcloud/bs-security-group/apply-security-policies
 |-------|------|----|
 |policies_total|int|需要实施的入栈或出栈规则有多少条|
 |success_policies_total|int|成功实施的入栈或出栈规则有多少条|
-|undo_policies_totall|int|未实施的入栈或出栈规则有多少条|
+|undo_policies_total|int|未实施的入栈或出栈规则有多少条|
 |failed_policies_total|int|实施失败的入栈或出栈规则有多少条|
 |success_policies|Polciy数组|成功实施的入栈或出栈规则有哪些|
 |undo_policies|Polciy数组|未实施的入栈或出栈规则有哪些|
