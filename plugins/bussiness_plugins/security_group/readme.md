@@ -1,14 +1,14 @@
 # 腾讯云安全组业务接口
 - [部署说明](#deployment) 
 - [接口说明](#api) 
-- [代码说明](#source_code)
-- [接口局限性](#exist_problems)
+- [代码说明](#code)
+- [接口局限性](#problems)
 
 ## <span id="deployment">部署说明</span>
 
-qcloud插件的相关接口调用关系如下:
+qcloud插件ment接口调用关系如下:
 
-![deploy](images/deploy.png)
+![qcloud_deployment](images/deploy.png)
 
 qcloud插件部署时，需要设置如下环境变量:
 
@@ -37,7 +37,7 @@ pidof wecube-plugins-qcloud | xargs kill -9
 ```
 
 ## <span id="api">接口说明</span>
-安全组策略组合api用于在大规模、多地域使用腾讯云资源过程中，快速根据源ip和目标ip等参数自动生成对应的安全组策略并实施，避免用户通过腾讯云控制台对多个地域多个资源进行ip资源查询后然后进行手动关联安全组到具体资源实例的操作。
+安全组策略业务api用于在大规模、多地域使用腾讯云资源过程中，快速根据源ip和目标ip等参数自动生成对应的安全组策略并实施，避免用户通过腾讯云控制台对多个地域多个资源进行ip资源查询后然后进行手动关联安全组到具体资源实例的操作。
 
 目前提供的组合api有两个：
 - 计算安全组策略接口: 根据源ip，目标ip，目标端口，协议，action(drop 或accept)和安全组方向(入栈和出栈)这六元组，返回需要添加的安全组策略。用户可人工确认自动产生的安全组策略是否正确,如果正确可将该输出参数作为第二个实施接口的输入入参来实施对应的安全组。
@@ -271,12 +271,14 @@ response:
 }
 ```
 
-## <span id="source_code">代码流程说明</span>
+## <span id="code">代码说明</span>
+
 安全组相关代码:  https://github.com/WeBankPartners/wecube-plugins-qcloud/tree/master/plugins/bussiness_plugins/security_group
 
 主要的逻辑代码在security_group.go中，其他的文件都以具体的资源名称来命名，如果要支持新的资源类型，只要实现security_group.go中的实现ResourceInstanc和ResourceType中定义的接口即可。
 
 #### 主要抽象接口
+
 ResourceType接口:
 
 ```
@@ -326,15 +328,63 @@ type ResourceInstance interface {
 
 #### 主要流程
 
+##### 计算安全组流程
 
-计算安全组流程
+1. 入参有效性检查。检查端口格式，协议字段，ip格式，action值等是否有效。
+2. 根据输入的多个ip并行查询各个地域，获取ip对应的资源类型并保存为key-value
+3. 根据输入的direction确认是否需要生成入栈规则，如果需要就生成入栈规则，并添加到出参的入栈规则中。
+4. 根据输入的direction确认是否需要生成出栈规则，如果需要就生成出栈规则，并添加到出参的出栈规则中。
+
+生成规则的代码在如下函数中,生成入栈规则和出栈规则都是通过该函数生成，入参devIp，表示需要生成策略的资源ip，ipMap为查询腾讯云各个地域的key-value值，peerIps为安全策略对应的对端ip，proto为安全策略的协议，ports为安全策略的端口，direction为设置入栈还是出栈。
+
+```
+func calcPolicies(devIp string, ipMap map[string]ResourceInstance, peerIps []string, proto string, ports []string,action string, description string, direction string) ([]SecurityPolicy, error) 
+```
+
+该函数的流程如下:
+1. 根据devIp在ipMap中找是否能找到ip对应的资源，如果找不到就报错，报错提示为ip找不到
+2. 检查direction是否为出栈，如果是出栈检查devIp对应的资源是否支持出栈设置，如果不支持出栈规则设置，就报错，提示ip对应的资源类型不支持出栈规则设置
+3. 进入for循环，遍历peerIps，根据peerIp检查是否在ipMap中能找到资源类型，如果找到了且资源类型为负载均衡设备并且direction是入栈规则就报错，报错信息为入栈规则不支持对端为负载均衡的设备。
+4. 调用newPolicies函数生成安全策略
+
+newPolicies函数的定义如下,其中instance为需设置安全组的资源类型的实例信息,peerIp为对端设备ip。
+
+```
+func newPolicies(instance ResourceInstance, peerIp string, proto string, port string, action string, desc string) ([]SecurityPolicy, error) 
+```
+
+该函数的流程如下:
+1. 检查instance是不是负载均衡设备，如果不是就生成安全策略
+2. 如果是负载均衡设备，则根据port和proto查询监听器，如果查不到监听器就报错；如果查询成功，再获取监听器后端的主机，如果没有后端主机就报错
+3. 根据负载均衡设备后端的主机信息，instance和后端主机相关的安全策略。
+
+
+##### 实施安全组流程
+
+1. 入参检查。
+2. 调用applyPolicies生成入栈和出栈的安全组并关联到具体的资源实例,其中policies为安全规则，direction为入栈或出栈。
+
+applyPolicies的定义如下:
+
+```
+func applyPolicies(policies []SecurityPolicy, direction string) ApplyResult
+```
+
+该函数的流程如下:
+
+1. for循环每一条policies
+2. 根据当前policy的资源实例id和region查询实例信息，确认实例存在
+3. 查询实例关联的安全组信息，然后调用createPolicies函数，生成安全策略并放到对应的安全组中,createPolices函数的定义如下，其中existSecurityGroups为该实例已经关联的安全组，policies为需要新加的策略，返回参数的第一个参数，为本次创建安全组新建了几个安全组。
+
+```
+func createPolicies(providerParams string, existSecurityGroups []string, policies []*SecurityPolicy, direction string) ([]string, error) 
+```
+4. 根据createPolices返回的新建的安全组，调用实例的关联安全组接口，更新实例的安全组。
 
 
 
-实施安全组流程
 
-
-## <span id="exist_problems">接口局限性</span>
+## <span id="problems">接口局限性</span>
 
 1. 只有添加安全组策略的功能，没有销毁安全组策略的功能
 2. 自动添加的安全策略都新建在名称为ip_auoto_xx的安全策略里，当对应ip的主机销毁时，不会自动销毁对应的安全组。
