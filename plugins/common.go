@@ -77,6 +77,10 @@ func GetMapFromProviderParams(providerParams string) (map[string]string, error) 
 	return rtnMap, nil
 }
 
+type CommonInputs struct {
+	Inputs []interface `json:"inputs,omitempty"`
+}
+
 func UnmarshalJson(source interface{}, target interface{}) error {
 	reader, ok := source.(io.Reader)
 	if !ok {
@@ -86,6 +90,14 @@ func UnmarshalJson(source interface{}, target interface{}) error {
 	bodyBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return fmt.Errorf("parse http request (%v) meet error (%v)", reader, err)
+	}
+
+	commonInputs := CommonInputs{}
+	if err = json.Unmarshal(bodyBytes, &commonInputs); err != nil {
+		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
+	}
+	if len(commonInputs.Inputs) == 0 {
+		return fmt.Errorf("empty inputs")
 	}
 
 	if err = json.Unmarshal(bodyBytes, target); err != nil {
