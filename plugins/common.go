@@ -78,7 +78,7 @@ func GetMapFromProviderParams(providerParams string) (map[string]string, error) 
 }
 
 type CommonInputs struct {
-	Inputs []interface `json:"inputs,omitempty"`
+	Inputs []interface{} `json:"inputs,omitempty"`
 }
 
 func UnmarshalJson(source interface{}, target interface{}) error {
