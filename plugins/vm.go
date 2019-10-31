@@ -326,31 +326,31 @@ func getInstanceType(client *cvm.Client, zone string, chargeType string, hostTyp
 	}
 
 	var minScore int64 = 1000000
-	matchCpuItems:=[]*cvm.InstanceTypeQuotaItem{}
+	matchCpuItems := []*cvm.InstanceTypeQuotaItem{}
 	for _, item := range resp.Response.InstanceTypeQuotaSet {
 		if !strings.EqualFold(*item.Status, "SELL") {
 			continue
 		}
-		score := (cpu - *item.Cpu) 
+		score := *item.Cpu - cpu
 		if score < 0 {
 			continue
 		}
-		if score <=minScore {
+		if score <= minScore {
 			minScore = score
-			matchCpuItems= append(matchCpuItems,item)
+			matchCpuItems = append(matchCpuItems, item)
 		}
 	}
 
 	instanceType := ""
 	minScore = 1000000
-	for _,item:=range matchCpuItems{
-		score:=memory-*item.Memory
+	for _, item := range matchCpuItems {
+		score := *item.Memory - memory
 		if score < 0 {
 			continue
 		}
 		if score < minScore {
-			minScore =score
-            instanceType =*item.InstanceType
+			minScore = score
+			instanceType = *item.InstanceType
 		}
 	}
 
@@ -400,7 +400,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 		if vm.InstanceType == "" && vm.HostType != "" {
 			runInstanceRequest.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], vm.InstanceChargeType, vm.HostType)
-			fmt.Printf("getInstanceType(%v) instanceType=%v\n", vm.HostType, runInstanceRequest.InstanceType)
+			if runInstanceRequest.InstanceType == "" {
+				return nil, fmt.Errorf("can't found instanceType(%v)", vm.HostType)
+			}
 		}
 
 		if vm.ProjectId != 0 {
