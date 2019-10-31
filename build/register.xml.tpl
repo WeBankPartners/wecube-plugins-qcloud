@@ -220,6 +220,7 @@
                 <parameter datatype="string">instance_name</parameter>
                 <parameter datatype="string">instance_type</parameter>
                 <parameter datatype="string">image_id</parameter>
+                <parameter datatype="string">host_type</parameter>
                 <parameter datatype="number">system_disk_size</parameter>
                 <parameter datatype="string">instance_charge_type</parameter>
                 <parameter datatype="number">instance_charge_period</parameter>

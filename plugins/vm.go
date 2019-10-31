@@ -325,19 +325,32 @@ func getInstanceType(client *cvm.Client, zone string, chargeType string, hostTyp
 		return ""
 	}
 
-	instanceType := ""
 	var minScore int64 = 1000000
+	matchCpuItems:=[]*cvm.InstanceTypeQuotaItem{}
 	for _, item := range resp.Response.InstanceTypeQuotaSet {
 		if !strings.EqualFold(*item.Status, "SELL") {
 			continue
 		}
-		score := (cpu - *item.Cpu) + (memory - *item.Memory)
+		score := (cpu - *item.Cpu) 
+		if score < 0 {
+			continue
+		}
+		if score <=minScore {
+			minScore = score
+			matchCpuItems= append(matchCpuItems,item)
+		}
+	}
+
+	instanceType := ""
+	minScore = 1000000
+	for _,item:=range matchCpuItems{
+		score:=memory-*item.Memory
 		if score < 0 {
 			continue
 		}
 		if score < minScore {
-			minScore = score
-			instanceType = *item.InstanceType
+			minScore =score
+            instanceType =*item.InstanceType
 		}
 	}
 
