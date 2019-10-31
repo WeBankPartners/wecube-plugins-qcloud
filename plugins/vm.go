@@ -7,7 +7,8 @@ import (
 	"errors"
 	"strconv"
 	"time"
-        "strings"
+	"math"
+    "strings"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -43,6 +44,7 @@ type VmInput struct {
 	SubnetId             string `json:"subnet_id,omitempty"`
 	InstanceName         string `json:"instance_name,omitempty"`
 	Id                   string `json:"id,omitempty"`
+	HostType             string `json:"id,omitempty"`
 	InstanceType         string `json:"instance_type,omitempty"`
 	ImageId              string `json:"image_id,omitempty"`
 	SystemDiskSize       int64  `json:"system_disk_size,omitempty"`
@@ -277,6 +279,71 @@ func (action *VMCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
+
+func getCpuAndMemoryFromHostType(hostType string)(int64,int64,error){
+	//1C2G, 2C4G, 2C8G
+	upperCase:=strings.ToUpper(hostType)
+	index:=strings.Index(upperCase,"C")
+	if index <=0 {
+			return 0,0,fmt.Errorf("hostType(%v) invalid",hostType)
+	}
+	cpu,err:=strconv.ParseInt(upperCase[0:index], 10, 64)
+	if err != nil {
+			return 0,0,fmt.Errorf("hostType(%v) invalid",hostType)
+	}
+
+	memStr:=upperCase[index+1:]
+	index2:= strings.Index(memStr,"G")
+	if index2 <=0{
+			return 0,0,fmt.Errorf("hostType(%v) invalid",hostType)
+	}
+
+	mem,err:=strconv.ParseInt(memStr[0:index2], 10, 64)
+	if err != nil {
+			return 0,0,fmt.Errorf("hostType(%v) invalid",hostType)
+	}
+	return cpu,mem,nil
+}
+
+
+func getInstanceType(client *cvm.Client,zone string,chargeType string,hostType string)string{
+	cpu,memory,err:=getCpuAndMemoryFromHostType(hostType)
+	if err != nil {
+		return ""
+	}
+
+	request:=cvm.NewDescribeZoneInstanceConfigInfosRequest()
+	chargeTypeFilter:=cvm.Filter{
+		Name:common.StringPtr("instance-charge-type"),
+		Values:common.StringPtrs([]string{chargeType}),
+	}
+	zoneFilter:=cvm.Filter{
+		Name:common.StringPtr("zone"),
+		Values:common.StringPtrs([]string{zone}),
+	}
+	request.Filters:=[]*cvm.Filter{&chargeTypeFilter,&zoneFilter}
+
+	resp,err:=client.DescribeZoneInstanceConfigInfos(request)
+	if err != nil {
+		return ""
+	}
+
+	instanceType := ""
+	var minScore float64 = 10000000.0
+	for _,item:=range resp.Response.InstanceTypeQuotaSet{
+		if !strings.EqualFold(*item.Status,"SELL"){
+			continue
+		}
+		score:=math.Abs(float64(*item.Cpu-cpu))+min.Abs(float64(*item.Memory-memory))
+		if score < minScore {
+			minScore=score
+			instanceType =*item.InstanceType
+		}
+	}
+
+	return instanceType
+}
+
 func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
@@ -299,7 +366,6 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			},
 			ImageId:            vm.ImageId,
 			InstanceChargeType: vm.InstanceChargeType,
-			InstanceType:       vm.InstanceType,
 			SystemDisk: SystemDiskStruct{
 				DiskType: "CLOUD_PREMIUM",
 				DiskSize: vm.SystemDiskSize,
@@ -316,6 +382,14 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				InternetMaxBandwidthOut: 10,
 			},
 		}
+		if 	vm.InstanceType != "" {
+			runInstanceRequest.InstanceType=vm.InstanceType
+		}
+		if vm.InstanceType=="" && vm.HostType!=""{
+			runInstanceRequest.InstanceType= getInstanceType(client,paramsMap["AvailableZone"],vm.InstanceChargeType,vm.HostType)
+			fmt.Printf("getInstanceType(%v) instanceType=%v\n",vm.HostType,runInstanceRequest.InstanceType)
+		}
+		
 		if vm.ProjectId != 0 {
 			runInstanceRequest.Placement.ProjectId=vm.ProjectId
 		}
