@@ -5,14 +5,14 @@ import (
 
 	"encoding/json"
 	"errors"
-	"strconv"
-	"time"
-        "strings"
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
@@ -43,6 +43,7 @@ type VmInput struct {
 	SubnetId             string `json:"subnet_id,omitempty"`
 	InstanceName         string `json:"instance_name,omitempty"`
 	Id                   string `json:"id,omitempty"`
+	HostType             string `json:"host_type,omitempty"`
 	InstanceType         string `json:"instance_type,omitempty"`
 	ImageId              string `json:"image_id,omitempty"`
 	SystemDiskSize       int64  `json:"system_disk_size,omitempty"`
@@ -277,6 +278,85 @@ func (action *VMCreateAction) CheckParam(input interface{}) error {
 	return nil
 }
 
+func getCpuAndMemoryFromHostType(hostType string) (int64, int64, error) {
+	//1C2G, 2C4G, 2C8G
+	upperCase := strings.ToUpper(hostType)
+	index := strings.Index(upperCase, "C")
+	if index <= 0 {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+	cpu, err := strconv.ParseInt(upperCase[0:index], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+
+	memStr := upperCase[index+1:]
+	index2 := strings.Index(memStr, "G")
+	if index2 <= 0 {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+
+	mem, err := strconv.ParseInt(memStr[0:index2], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+	return cpu, mem, nil
+}
+
+func getInstanceType(client *cvm.Client, zone string, chargeType string, hostType string) string {
+	cpu, memory, err := getCpuAndMemoryFromHostType(hostType)
+	if err != nil {
+		return ""
+	}
+
+	request := cvm.NewDescribeZoneInstanceConfigInfosRequest()
+	chargeTypeFilter := cvm.Filter{
+		Name:   common.StringPtr("instance-charge-type"),
+		Values: common.StringPtrs([]string{chargeType}),
+	}
+	zoneFilter := cvm.Filter{
+		Name:   common.StringPtr("zone"),
+		Values: common.StringPtrs([]string{zone}),
+	}
+	request.Filters = []*cvm.Filter{&chargeTypeFilter, &zoneFilter}
+
+	resp, err := client.DescribeZoneInstanceConfigInfos(request)
+	if err != nil {
+		return ""
+	}
+
+	var minScore int64 = 1000000
+	matchCpuItems := []*cvm.InstanceTypeQuotaItem{}
+	for _, item := range resp.Response.InstanceTypeQuotaSet {
+		if !strings.EqualFold(*item.Status, "SELL") {
+			continue
+		}
+		score := *item.Cpu - cpu
+		if score < 0 {
+			continue
+		}
+		if score <= minScore {
+			minScore = score
+			matchCpuItems = append(matchCpuItems, item)
+		}
+	}
+
+	instanceType := ""
+	minScore = 1000000
+	for _, item := range matchCpuItems {
+		score := *item.Memory - memory
+		if score < 0 {
+			continue
+		}
+		if score < minScore {
+			minScore = score
+			instanceType = *item.InstanceType
+		}
+	}
+
+	return instanceType
+}
+
 func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
@@ -289,17 +369,16 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if vm.Password == ""{
+		if vm.Password == "" {
 			vm.Password = utils.CreateRandomPassword()
 		}
-		
+
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
 				Zone: paramsMap["AvailableZone"],
 			},
 			ImageId:            vm.ImageId,
 			InstanceChargeType: vm.InstanceChargeType,
-			InstanceType:       vm.InstanceType,
 			SystemDisk: SystemDiskStruct{
 				DiskType: "CLOUD_PREMIUM",
 				DiskSize: vm.SystemDiskSize,
@@ -316,8 +395,18 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				InternetMaxBandwidthOut: 10,
 			},
 		}
+		if vm.InstanceType != "" {
+			runInstanceRequest.InstanceType = vm.InstanceType
+		}
+		if vm.InstanceType == "" && vm.HostType != "" {
+			runInstanceRequest.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], vm.InstanceChargeType, vm.HostType)
+			if runInstanceRequest.InstanceType == "" {
+				return nil, fmt.Errorf("can't found instanceType(%v)", vm.HostType)
+			}
+		}
+
 		if vm.ProjectId != 0 {
-			runInstanceRequest.Placement.ProjectId=vm.ProjectId
+			runInstanceRequest.Placement.ProjectId = vm.ProjectId
 		}
 
 		if vm.InstancePrivateIp != "" {
@@ -394,8 +483,8 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		byteRunInstancesRequestData, _ := json.Marshal(runInstanceRequest)
 		logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRunInstancesRequestData))
 		request.FromJsonString(string(byteRunInstancesRequestData))
-		if vm.InstanceName!=""{
-			request.InstanceName=&vm.InstanceName
+		if vm.InstanceName != "" {
+			request.InstanceName = &vm.InstanceName
 		}
 
 		resp, err := client.RunInstances(request)
@@ -593,7 +682,7 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 	if err != nil {
 		return nil, err
 	}
-	
+
 	cvmFilter := &cvm.Filter{
 		Name:   common.StringPtr(name),
 		Values: common.StringPtrs(filter.Values),
@@ -631,7 +720,6 @@ func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, sec
 
 //--------------bind security group to vm--------------------//
 type VMBindSecurityGroupsAction struct {
-
 }
 
 type VmBindSecurityGroupInputs struct {
@@ -639,10 +727,10 @@ type VmBindSecurityGroupInputs struct {
 }
 
 type VmBindSecurityGroupInput struct {
-	Guid                 string `json:"guid,omitempty"`
-	ProviderParams       string `json:"provider_params,omitempty"`
-	InstanceId           string `json:"instance_id,omitempty"`
-	SecurityGroupIds     string `json:"security_group_ids,omitempty"`
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	InstanceId       string `json:"instance_id,omitempty"`
+	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 }
 
 type VmBindSecurityGroupOutputs struct {
@@ -650,7 +738,7 @@ type VmBindSecurityGroupOutputs struct {
 }
 
 type VmBindSecurityGroupOutput struct {
-	Guid                 string `json:"guid,omitempty"`
+	Guid string `json:"guid,omitempty"`
 }
 
 func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
@@ -668,8 +756,8 @@ func (action *VMBindSecurityGroupsAction) CheckParam(input interface{}) error {
 		return fmt.Errorf("VMBindSecurityGroupsAction:input type=%T not right", input)
 	}
 
-	for _,input:=range inputs.Inputs{
-		if input.ProviderParams == ""{
+	for _, input := range inputs.Inputs {
+		if input.ProviderParams == "" {
 			return errors.New("providerParams is empty")
 		}
 
@@ -685,21 +773,21 @@ func (action *VMBindSecurityGroupsAction) CheckParam(input interface{}) error {
 	return nil
 }
 
-func (action *VMBindSecurityGroupsAction)Do(input interface{}) (interface{}, error) {
+func (action *VMBindSecurityGroupsAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(VmBindSecurityGroupInputs)
-	outputs:=VmBindSecurityGroupOutputs{}
+	outputs := VmBindSecurityGroupOutputs{}
 
-	for _,input:=range inputs.Inputs{
-		securityGroups:=strings.Split(input.SecurityGroupIds,",")
-		err:=BindCvmInstanceSecurityGroups(input.ProviderParams,input.InstanceId,securityGroups)
+	for _, input := range inputs.Inputs {
+		securityGroups := strings.Split(input.SecurityGroupIds, ",")
+		err := BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, securityGroups)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
-		output:=VmBindSecurityGroupOutput{
-			Guid:input.Guid,
+		output := VmBindSecurityGroupOutput{
+			Guid: input.Guid,
 		}
-		outputs.Outputs=append(outputs.Outputs,output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return outputs,nil 
+	return outputs, nil
 }
