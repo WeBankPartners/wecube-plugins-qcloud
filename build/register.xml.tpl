@@ -39,17 +39,17 @@
         </authority >
     </authorities> -->
 
-    <!-- 6.运行资源 - 描述部署运行本插件包需要的基础资源(如主机、虚拟机、容器、数据库等)
+    <!-- 6.运行资源 - 描述部署运行本插件包需要的基础资源(如主机、虚拟机、容器、数据库等) -->
     <resourceDependencies>
-        <docker imageName="service_management" containerName="service_management" portBindings="22000:21000" volumeBindings="" envVariables="-e DATA_SOURCE_URL={%s} -e DB_USER={%s} -e DB_PWD={%s} -e CORE_ADDR={%s}"/>
-        <mysql schema="service_management" initFileName="init.sql" upgradeFileName="upgrade.sql"/>
-        <s3 bucketName="service_management"/>
-    </resourceDependencies> -->
+        <docker imageName="{{IMAGENAME}}" containerName="{{IMAGENAME}}" portBindings="{{PORTBINDINGS}}" volumeBindings="" envVariables=""/>
+        <!-- <mysql schema="service_management" initFileName="init.sql" upgradeFileName="upgrade.sql"/>
+        <s3 bucketName="service_management"/> -->
+    </resourceDependencies>
 
     <!-- 7.插件列表 - 描述插件包中单个插件的输入和输出 -->
     <plugins>
         <plugin name="vpc">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/vpc/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/vpc/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -62,7 +62,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/vpc/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/vpc/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -74,7 +74,7 @@
             </interface>
         </plugin>
         <plugin name="peering-connection">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/peering-connection/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/peering-connection/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -91,7 +91,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/peering-connection/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/peering-connection/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -104,7 +104,7 @@
             </interface>
         </plugin>
         <plugin name="security-group">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/security-group/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/security-group/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -117,7 +117,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/security-group/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/security-group/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -127,7 +127,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="create-policies" path="/qcloud-resource-management/v1/qcloud/security-group/create-policies">
+            <interface name="create-policies" path="/wecube-plugins-qcloud/v1/qcloud/security-group/create-policies">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -146,7 +146,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="delete-policies" path="/qcloud-resource-management/v1/qcloud/security-group/delete-policies">
+            <interface name="delete-policies" path="/wecube-plugins-qcloud/v1/qcloud/security-group/delete-policies">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -163,7 +163,7 @@
             </interface>
         </plugin>
         <plugin name="route-table">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/route-table/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/route-table/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -176,7 +176,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/route-table/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/route-table/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -186,7 +186,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="associate-subnet" path="/qcloud-resource-management/v1/qcloud/route-table/associate-subnet">
+            <interface name="associate-subnet" path="/wecube-plugins-qcloud/v1/qcloud/route-table/associate-subnet">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -199,7 +199,7 @@
             </interface>
         </plugin>
         <plugin name="subnet">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/subnet/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/subnet/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -213,7 +213,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/subnet/create-with-routetable">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/subnet/create-with-routetable">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -228,7 +228,7 @@
                     <parameter datatype="string">route_table_id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/subnet/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/subnet/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -238,7 +238,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/subnet/terminate-with-routetable">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/subnet/terminate-with-routetable">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -251,7 +251,7 @@
             </interface>
         </plugin>
         <plugin name="vm">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/vm/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/vm/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">seed</parameter>
@@ -280,7 +280,7 @@
                     <parameter datatype="string">instance_private_ip</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/vm/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/vm/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -290,7 +290,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="start" path="/qcloud-resource-management/v1/qcloud/vm/start">
+            <interface name="start" path="/wecube-plugins-qcloud/v1/qcloud/vm/start">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -300,7 +300,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="stop" path="/qcloud-resource-management/v1/qcloud/vm/stop">
+            <interface name="stop" path="/wecube-plugins-qcloud/v1/qcloud/vm/stop">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -310,7 +310,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="bind security group to vm" path="/qcloud-resource-management/v1/qcloud/vm/bind-security-groups">
+            <interface name="bind security group to vm" path="/wecube-plugins-qcloud/v1/qcloud/vm/bind-security-groups">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -323,7 +323,7 @@
             </interface>
         </plugin>
         <plugin name="storage">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/storage/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/storage/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -340,7 +340,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/storage/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/storage/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -350,7 +350,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="buy cbs disk and mount" path="/qcloud-resource-management/v1/qcloud/cbs/create-mount">
+            <interface name="buy cbs disk and mount" path="/wecube-plugins-qcloud/v1/qcloud/cbs/create-mount">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -373,7 +373,7 @@
                     <parameter datatype="string">disk_id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="umount and destroy cbs disk" path="/qcloud-resource-management/v1/qcloud/cbs/umount-terminate">
+            <interface name="umount and destroy cbs disk" path="/wecube-plugins-qcloud/v1/qcloud/cbs/umount-terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -392,7 +392,7 @@
 
         </plugin>
         <plugin name="nat-gateway">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/nat-gateway/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/nat-gateway/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -409,7 +409,7 @@
                     <parameter datatype="string">eip_id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/nat-gateway/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/nat-gateway/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -422,7 +422,7 @@
             </interface>
         </plugin>
         <plugin name="mysql-vm">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/mysql-vm/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/mysql-vm/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">seed</parameter>
@@ -448,7 +448,7 @@
                     <parameter datatype="string">password</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/mysql-vm/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/mysql-vm/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -458,7 +458,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="restart" path="/qcloud-resource-management/v1/qcloud/mysql-vm/restart">
+            <interface name="restart" path="/wecube-plugins-qcloud/v1/qcloud/mysql-vm/restart">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -470,7 +470,7 @@
             </interface>
         </plugin>
         <plugin name="mariadb">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/mariadb/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/mariadb/create">
             <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">seed</parameter>
@@ -499,7 +499,7 @@
             </interface>
         </plugin>
         <plugin name="route-policy">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/route-policy/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/route-policy/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">id</parameter>
@@ -515,7 +515,7 @@
                     <parameter datatype="string">id</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/route-policy/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/route-policy/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -528,7 +528,7 @@
             </interface>
         </plugin>
         <plugin name="redis">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/redis/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/redis/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -549,7 +549,7 @@
             </interface>
         </plugin>
         <plugin name="clb">
-            <interface name="create" path="/qcloud-resource-management/v1/qcloud/clb/create">
+            <interface name="create" path="/wecube-plugins-qcloud/v1/qcloud/clb/create">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -565,7 +565,7 @@
                     <parameter datatype="string">vip</parameter>
                 </output-parameters>
             </interface>
-            <interface name="terminate" path="/qcloud-resource-management/v1/qcloud/clb/terminate">
+            <interface name="terminate" path="/wecube-plugins-qcloud/v1/qcloud/clb/terminate">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -575,7 +575,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="add-backtarget" path="/qcloud-resource-management/v1/qcloud/clb/add-backtarget">
+            <interface name="add-backtarget" path="/wecube-plugins-qcloud/v1/qcloud/clb/add-backtarget">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>
@@ -589,7 +589,7 @@
                     <parameter datatype="string">guid</parameter>
                 </output-parameters>
             </interface>
-            <interface name="del-backtarget" path="/qcloud-resource-management/v1/qcloud/clb/del-backtarget">
+            <interface name="del-backtarget" path="/wecube-plugins-qcloud/v1/qcloud/clb/del-backtarget">
                 <input-parameters>
                     <parameter datatype="string">guid</parameter>
                     <parameter datatype="string">provider_params</parameter>

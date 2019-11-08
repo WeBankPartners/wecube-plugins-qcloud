@@ -2,10 +2,11 @@ export GOPATH=$(PWD)
 
 current_dir=$(shell pwd)
 version=${PLUGIN_VERSION}
-project_name=$(shell basename "${current_dir}" )
+project_name=$(shell basename "${current_dir}")
 
 
 APP_HOME=src/github.com/WeBankPartners/wecube-plugins-qcloud
+PORT_BINDINGS={{host_port}}:8081
 
 ifndef RUN_MODE
   RUN_MODE=dev
@@ -43,7 +44,9 @@ image: build
      
 package: image 
 	sed 's/{{IMAGE_TAG}}/$(version)/' ./build/register.xml.tpl > ./register.xml
-	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./register.xml 
+	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./register.xml
+	sed -i 's/{{PORTBINDINGS}}/$(PORT_BINDINGS)/' ./register.xml
+	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/' ./register.xml 
 	docker save -o  image.tar $(project_name):$(version)
 	zip  $(project_name)_$(version).zip image.tar register.xml
 	rm -rf ./*.tar

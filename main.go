@@ -57,7 +57,7 @@ func initConfig() {
 
 func initRouter() {
 	//path should be defined as "/[package name]/[version]/[provider]/[plugin]/[action]"
-	http.HandleFunc("/qcloud-resource-management/v1/qcloud/", routeDispatcher)
+	http.HandleFunc("/wecube-plugins-qcloud/v1/qcloud/", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
