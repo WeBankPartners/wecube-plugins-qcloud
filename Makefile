@@ -1,7 +1,7 @@
 export GOPATH=$(PWD)
 
 current_dir=$(shell pwd)
-version=$(shell ./build/version.sh)
+version=${PLUGIN_VERSION}
 project_name=$(shell basename "${current_dir}" )
 
 
@@ -43,9 +43,9 @@ image: build
      
 package: image 
 	sed 's/{{IMAGE_TAG}}/$(version)/' ./build/register.xml.tpl > ./register.xml
-	sed -i 's/{{PLUGIN_VERSION}}/$(PLUGIN_VERSION)/' ./register.xml 
-	docker save -o  $(project_name).tar $(project_name):$(version)
-	zip  $(project_name)_$(PLUGIN_VERSION).zip $(project_name).tar register.xml
+	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./register.xml 
+	docker save -o  image.tar $(project_name):$(version)
+	zip  $(project_name)_$(version).zip image.tar register.xml
 	rm -rf ./*.tar
 	docker rmi $(project_name):$(version)
 	rm -rf $(project_name)
