@@ -43,7 +43,7 @@ image: build
 	docker build -t $(project_name):$(version) .
      
 package: image 
-	sed 's/{{IMAGE_TAG}}/$(version)/' ./build/register.xml.tpl > ./register.xml
+	./build/register.xml.tpl > ./register.xml
 	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./register.xml
 	sed -i 's/{{PORTBINDINGS}}/$(PORT_BINDINGS)/' ./register.xml
 	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/' ./register.xml 
