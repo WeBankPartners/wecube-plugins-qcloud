@@ -41,7 +41,7 @@
 
     <!-- 6.运行资源 - 描述部署运行本插件包需要的基础资源(如主机、虚拟机、容器、数据库等) -->
     <resourceDependencies>
-        <docker imageName="{{IMAGENAME}}" containerName="{{IMAGENAME}}" portBindings="{{PORTBINDINGS}}" volumeBindings="" envVariables=""/>
+        <docker imageName="{{IMAGENAME}}" containerName="{{IMAGENAME}}" portBindings="{{PORTBINDINGS}}" volumeBindings="/etc/localtime:/etc/localtime,/home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs" envVariables=""/>
         <!-- <mysql schema="service_management" initFileName="init.sql" upgradeFileName="upgrade.sql"/>
         <s3 bucketName="service_management"/> -->
     </resourceDependencies>
