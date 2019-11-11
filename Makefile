@@ -1,5 +1,3 @@
-export GOPATH=$(PWD)
-
 current_dir=$(shell pwd)
 version=${PLUGIN_VERSION}
 project_name=$(shell basename "${current_dir}")
