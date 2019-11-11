@@ -10,21 +10,6 @@ ifndef RUN_MODE
   RUN_MODE=dev
 endif
 
-archive:
-	tar cvfz source.tar.gz *
-	rm -rf src
-	mkdir -p $(APP_HOME)
-	rm -rf target
-	mkdir target
-	tar zxvf source.tar.gz -C $(APP_HOME)
-	rm -rf source.tar.gz
-	cd $(APP_HOME) && CGO_ENABLED=0 GOOS=linux go build
-	cp -R $(APP_HOME)/conf target
-	cp start.sh stop.sh docker_run.sh docker_stop.sh makefile dockerfile register.xml target
-	cd target && chmod 755 *.sh
-	cp $(APP_HOME)/wecube-plugins-qcloud target
-	cd target && tar cvfz $(PKG_NAME) *
-
 clean:
 	rm -rf $(project_name)
 	rm -rf  ./*.tar
@@ -40,9 +25,9 @@ build: clean
 image: build
 	docker build -t $(project_name):$(version) .
      
-package: image 
-	./build/register.xml.tpl > ./register.xml
-	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./register.xml
+package: image
+	chmod +x ./build/register.xml.tpl
+	sed -i 's/{{PLUGIN_VERSION}}/$(version)/' ./build/register.xml.tpl > ./register.xml
 	sed -i 's/{{PORTBINDINGS}}/$(PORT_BINDINGS)/' ./register.xml
 	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/' ./register.xml 
 	docker save -o  image.tar $(project_name):$(version)
