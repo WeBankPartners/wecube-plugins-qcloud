@@ -1,11 +1,10 @@
-FROM alpine
+FROM webankpartners/alpine-ca-certificate
 LABEL maintainer = "Webank CTB Team"
 
 ENV APP_HOME=/home/app/wecube-plugins-qcloud
 ENV APP_CONF=$APP_HOME/conf
 ENV LOG_PATH=$APP_HOME/logs
 
-RUN apk add ca-certificates
 RUN mkdir -p $APP_HOME $APP_CONF $LOG_PATH
 
 ADD scripts  $APP_HOME/scripts/
