@@ -37,9 +37,9 @@ package: image
 	rm -rf $(project_name)
 
 upload: package
-	$(eval container_id:=$(docker run -v $(current_dir):/package -itd --entrypoint=/bin/sh minio/mc))
+	$(eval container_id:=$(shell docker run -v $(current_dir):/package -itd --entrypoint=/bin/sh minio/mc))
 	docker exec $(container_id) mc config host add wecubeS3 $(s3_server_url) $(s3_access_key) $(s3_secret_key) wecubeS3
 	docker exec $(container_id) mc cp /package/$(project_name)-$(version).zip wecubeS3/wecube-plugin-package-bucket
 	docker stop $(container_id)
-	docker rm $(container_id)
+	docker rm -f $(container_id)
 	rm -rf $(project_name)-$(version).zip
