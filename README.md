@@ -72,6 +72,73 @@ make package PLUGIN_VERSION=v{$package_version}
 
 ![qcloud_package](docs/compile/images/qcloud_plugin_package.png)
 
+## How to Work with Wecube
+Wecube work with plugin by use Wecube's plugin management function. Plugin package have a config file called register.xml,which describe the plugin api's input and output parameters.
+
+A register.xml's content have following parts:
+
+1. run plugin instance as docker container parameter. 
+```
+    <package name="qcloud-resource-management" version="v1.10">
+    <docker-image-file>wecube-plugins-qcloud.tar</docker-image-file>
+    <docker-image-repository>wecube-plugins-qcloud</docker-image-repository>
+    <docker-image-tag>v1.10</docker-image-tag>
+    <container-port>8081</container-port>
+    <container-start-param>-v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
+```
+
+2. plugin api description.
+```
+<plugin id="vpc" name="Vpc Management" >
+        <interface name="create" path="/v1/qcloud/vpc/create">
+            <input-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">provider_params</parameter>
+                <parameter datatype="string">name</parameter>
+                <parameter datatype="string">cidr_block</parameter>
+                <parameter datatype="string">id</parameter>
+            </input-parameters>
+            <output-parameters>
+                <parameter datatype="string">guid</parameter>
+                <parameter datatype="string">id</parameter>
+            </output-parameters>
+        </interface>
+</plugin>
+
+```
+
+The above api descirbe the input and output as following curl command:
+
+```
+curl -X POST \
+  http://10.107.117.154:8081/v1/qcloud/vpc/create \
+  -H 'content-type: application/json' \
+  -d '{
+	"inputs":[
+		{
+		"guid": "1234",
+		"name": "VPC-C",
+		"cidr_block": "10.5.0.0/16",
+		"provider_params": "Region=ap-chengdu;AvailableZone=ap-chengdu-1;SecretID=xxx;SecretKey=xxxx"
+		}
+	]
+}'
+
+curl result as following:
+{
+    "result_code": "0",
+    "result_message": "success",
+    "results": {
+        "outputs": [
+            {
+                "guid": "1234",
+                "id": "vpc-12345"
+            }
+        ]
+    }
+} 
+
+```
 
 ## License
 QCloud Plugin is licensed under the Apache License Version 2.0.
