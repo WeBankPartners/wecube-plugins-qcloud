@@ -28,7 +28,8 @@ image: build
 package: image
 	sed 's/{{PLUGIN_VERSION}}/$(version)/' ./build/register.xml.tpl > ./register.xml
 	sed -i 's/{{PORTBINDINGS}}/$(PORT_BINDINGS)/' ./register.xml
-	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/g' ./register.xml 
+	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/g' ./register.xml
+	sed -i 's/{{CONTAINERNAME}}/$(project_name)-$(version)/g' ./register.xml 
 	docker save -o  image.tar $(project_name):$(version)
 	zip  $(project_name)-$(version).zip image.tar register.xml
 	rm -rf ./*.tar
