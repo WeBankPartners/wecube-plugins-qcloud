@@ -1,30 +1,14 @@
-export GOPATH=$(PWD)
-
 current_dir=$(shell pwd)
-version=$(shell ./build/version.sh)
-project_name=$(shell basename "${current_dir}" )
+version=${PLUGIN_VERSION}
+project_name=$(shell basename "${current_dir}")
 
 
 APP_HOME=src/github.com/WeBankPartners/wecube-plugins-qcloud
+PORT_BINDINGS={{host_port}}:8081
 
 ifndef RUN_MODE
   RUN_MODE=dev
 endif
-
-archive:
-	tar cvfz source.tar.gz *
-	rm -rf src
-	mkdir -p $(APP_HOME)
-	rm -rf target
-	mkdir target
-	tar zxvf source.tar.gz -C $(APP_HOME)
-	rm -rf source.tar.gz
-	cd $(APP_HOME) && CGO_ENABLED=0 GOOS=linux go build
-	cp -R $(APP_HOME)/conf target
-	cp start.sh stop.sh docker_run.sh docker_stop.sh makefile dockerfile register.xml target
-	cd target && chmod 755 *.sh
-	cp $(APP_HOME)/wecube-plugins-qcloud target
-	cd target && tar cvfz $(PKG_NAME) *
 
 clean:
 	rm -rf $(project_name)
@@ -41,11 +25,22 @@ build: clean
 image: build
 	docker build -t $(project_name):$(version) .
      
-package: image 
-	sed 's/{{IMAGE_TAG}}/$(version)/' ./build/register.xml.tpl > ./register.xml
-	sed -i 's/{{PLUGIN_VERSION}}/$(PLUGIN_VERSION)/' ./register.xml 
-	docker save -o  $(project_name).tar $(project_name):$(version)
-	zip  $(project_name)_$(PLUGIN_VERSION).zip $(project_name).tar register.xml
+package: image
+	sed 's/{{PLUGIN_VERSION}}/$(version)/' ./build/register.xml.tpl > ./register.xml
+	sed -i 's/{{PORTBINDINGS}}/$(PORT_BINDINGS)/' ./register.xml
+	sed -i 's/{{IMAGENAME}}/$(project_name):$(version)/g' ./register.xml
+	sed -i 's/{{CONTAINERNAME}}/$(project_name)-$(version)/g' ./register.xml 
+	docker save -o  image.tar $(project_name):$(version)
+	zip  $(project_name)-$(version).zip image.tar register.xml
 	rm -rf ./*.tar
+	rm -f register.xml
 	docker rmi $(project_name):$(version)
 	rm -rf $(project_name)
+
+upload: package
+	$(eval container_id:=$(shell docker run -v $(current_dir):/package -itd --entrypoint=/bin/sh minio/mc))
+	docker exec $(container_id) mc config host add wecubeS3 $(s3_server_url) $(s3_access_key) $(s3_secret_key) wecubeS3
+	docker exec $(container_id) mc cp /package/$(project_name)-$(version).zip wecubeS3/wecube-plugin-package-bucket
+	docker stop $(container_id)
+	docker rm -f $(container_id)
+	rm -rf $(project_name)-$(version).zip

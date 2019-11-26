@@ -1,568 +1,586 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package name="qcloud-resource-management" version="{{PLUGIN_VERSION}}">
-    <docker-image-file>wecube-plugins-qcloud.tar</docker-image-file>
-    <docker-image-repository>wecube-plugins-qcloud</docker-image-repository>
-    <docker-image-tag>{{IMAGE_TAG}}</docker-image-tag>
-    <container-port>8081</container-port>
-    <container-config-directory>/home/app/wecube-plugins-qcloud/conf</container-config-directory>
-    <container-log-directory>/home/app/wecube-plugins-qcloud/log</container-log-directory>
-    <container-start-param>-v /etc/localtime:/etc/localtime -v /home/app/wecube-plugins-qcloud/logs:/home/app/wecube-plugins-qcloud/logs</container-start-param>
-    <plugin id="vpc" name="Vpc Management" >
-        <interface name="create" path="/v1/qcloud/vpc/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">cidr_block</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/vpc/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="peering-connection" name="Peer Connection Management">
-        <interface name="create" path="/v1/qcloud/peering-connection/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">peer_provider_params</parameter>
-                <parameter datatype="string">peer_vpc_id</parameter>
-                <parameter datatype="string">peer_uin</parameter>
-                <parameter datatype="string">bandwidth</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/peering-connection/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">peer_provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="security-group" name="Security Group Management">
-        <interface name="create" path="/v1/qcloud/security-group/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">description</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/security-group/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="create-policies" path="/v1/qcloud/security-group/create-policies">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">description</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">policy_type</parameter>
-                <parameter datatype="string">policy_cidr_block</parameter>
-                <parameter datatype="string">policy_protocol</parameter>
-                <parameter datatype="string">policy_port</parameter>
-                <parameter datatype="string">policy_action</parameter>
-                <parameter datatype="string">policy_description</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="delete-policies" path="/v1/qcloud/security-group/delete-policies">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">policy_type</parameter>
-                <parameter datatype="string">policy_cidr_block</parameter>
-                <parameter datatype="string">policy_protocol</parameter>
-                <parameter datatype="string">policy_port</parameter>
-                <parameter datatype="string">policy_action</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="route-table" name="Route Table Management">
-        <interface name="create" path="/v1/qcloud/route-table/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/route-table/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="associate-subnet" path="/v1/qcloud/route-table/associate-subnet">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">subnet_id</parameter>
-                <parameter datatype="string">route_table_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="subnet" name="Subnet Management">
-        <interface name="create" path="/v1/qcloud/subnet/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">cidr_block</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-         <interface name="create" path="/v1/qcloud/subnet/create-with-routetable">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">cidr_block</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">route_table_id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/subnet/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/subnet/terminate-with-routetable">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">route_table_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="vm" name="Virtual Machine Management">
-        <interface name="create" path="/v1/qcloud/vm/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">seed</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">subnet_id</parameter>
-                <parameter datatype="string">instance_name</parameter>
-                <parameter datatype="string">instance_type</parameter>
-                <parameter datatype="string">image_id</parameter>
-                <parameter datatype="string">host_type</parameter>
-                <parameter datatype="number">system_disk_size</parameter>
-                <parameter datatype="string">instance_charge_type</parameter>
-                <parameter datatype="number">instance_charge_period</parameter>
-                <parameter datatype="string">instance_private_ip</parameter>
-                <parameter datatype="string">password</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">project_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">cpu</parameter>
-                <parameter datatype="string">memory</parameter>
-                <parameter datatype="string">password</parameter>
-                <parameter datatype="string">instance_state</parameter>
-                <parameter datatype="string">instance_private_ip</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/vm/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="start" path="/v1/qcloud/vm/start">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="stop" path="/v1/qcloud/vm/stop">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
+<package name="qcloud" version="{{PLUGIN_VERSION}}">
+    <!-- 1.依赖分析 - 描述运行本插件包需要的其他插件包 -->
+    <packageDependencies>
+    </packageDependencies>
 
-        <interface name="bind security group to vm" path="/v1/qcloud/vm/bind-security-groups">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">instance_id</parameter>
-                <parameter datatype="string">security_group_ids</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="storage" name="Storage Management">
-        <interface name="create" path="/v1/qcloud/storage/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">disk_type</parameter>
-                <parameter datatype="number">disk_size</parameter>
-                <parameter datatype="string">disk_name</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">disk_charge_type</parameter>
-                <parameter datatype="string">disk_charge_period</parameter>
-                <parameter datatype="string">instance_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/storage/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="buy cbs disk and mount" path="/v1/qcloud/cbs/create-mount">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">disk_type</parameter>
-                <parameter datatype="number">disk_size</parameter>
-                <parameter datatype="string">disk_name</parameter>
-                <parameter datatype="string">disk_charge_type</parameter>
-                <parameter datatype="string">disk_charge_period</parameter>
-                <parameter datatype="string">instance_id</parameter>
-                <parameter datatype="string">instance_guid</parameter>
-                <parameter datatype="string">seed</parameter>
-                <parameter datatype="string">password</parameter>
-                <parameter datatype="string">file_system_type</parameter>
-                <parameter datatype="string">mount_dir</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">volume_name</parameter>
-                <parameter datatype="string">disk_id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="umount and destroy cbs disk" path="/v1/qcloud/cbs/umount-terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">volume_name</parameter>
-                <parameter datatype="string">mount_dir</parameter>
-                <parameter datatype="string">instance_id</parameter>
-                <parameter datatype="string">instance_guid</parameter>
-                <parameter datatype="string">seed</parameter>
-                <parameter datatype="string">password</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
+    <!-- 2.菜单注入 - 描述运行本插件包需要注入的菜单 -->
+    <menus>
+    </menus>
 
-    </plugin>
-    <plugin id="nat-gateway" name="Nat Gateway Management">
-        <interface name="create" path="/v1/qcloud/nat-gateway/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="number">max_concurrent</parameter>
-                <parameter datatype="number">bandwidth</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">eip</parameter>
-                <parameter datatype="string">eip_id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/nat-gateway/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="mysql-vm" name="Mysql Management">
-        <interface name="create" path="/v1/qcloud/mysql-vm/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">seed</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">engine_version</parameter>
-                <parameter datatype="number">memory</parameter>
-                <parameter datatype="number">volume</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">subnet_id</parameter>
-                <parameter datatype="string">name</parameter>
-                <parameter datatype="string">charge_type</parameter>
-                <parameter datatype="number">charge_period</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">character_set</parameter>
-                <parameter datatype="string">lower_case_table_names</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">private_ip</parameter>
-                <parameter datatype="string">private_port</parameter>
-                <parameter datatype="string">user_name</parameter>
-                <parameter datatype="string">password</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/mysql-vm/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="restart" path="/v1/qcloud/mysql-vm/restart">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="mariadb" name="Mariadb Management">
-        <interface name="create" path="/v1/qcloud/mariadb/create">
-         <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">seed</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">user_name</parameter>
-                <parameter datatype="string">zones</parameter>
-                <parameter datatype="number">node_count</parameter>
-                <parameter datatype="number">memory_size</parameter>
-                <parameter datatype="number">storage_size</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">subnet_id</parameter>
-                <parameter datatype="number">charge_period</parameter>
-                <parameter datatype="string">db_version</parameter>
-                <parameter datatype="string">character_set</parameter>
-                <parameter datatype="string">lower_case_table_names</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">private_port</parameter>
-                <parameter datatype="string">private_ip</parameter>
-                <parameter datatype="string">user_name</parameter>
-                <parameter datatype="string">password</parameter>
-             </output-parameters>
-        </interface>
-    </plugin>
+    <!-- 3.数据模型 - 描述本插件包的数据模型,并且描述和Framework数据模型的关系 -->
+    <dataModel>
+    </dataModel>
 
-    <plugin id="route-policy" name="Route Policy Management">
-        <interface name="create" path="/v1/qcloud/route-policy/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">route_table_id</parameter>
-                <parameter datatype="string">dest_cidr</parameter>
-                <parameter datatype="string">gateway_type</parameter>
-                <parameter datatype="string">gateway_id</parameter>
-                <parameter datatype="string">desc</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/route-policy/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">route_table_id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="redis" name="Redis Management">
-        <interface name="create" path="/v1/qcloud/redis/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="number">type_id</parameter>
-                <parameter datatype="number">mem_size</parameter>
-                <parameter datatype="number">goods_num</parameter>
-                <parameter datatype="number">period</parameter>
-                <parameter datatype="string">password</parameter>
-                <parameter datatype="number">billing_mode</parameter>
-                <parameter datatype="string">vpc_id</parameter>
-                <parameter datatype="string">subnet_id</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
-    <plugin id="clb" name="Clb Management">
-        <interface name="create" path="/v1/qcloud/clb/create">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="number">name</parameter>
-                <parameter datatype="number">type</parameter>
-                <parameter datatype="number">vpc_id</parameter>
-                <parameter datatype="number">subnet_id</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">id</parameter>
-                <parameter datatype="string">vip</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="terminate" path="/v1/qcloud/clb/terminate">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">id</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-        <interface name="add-backtarget" path="/v1/qcloud/clb/add-backtarget">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">lb_id</parameter>
-                <parameter datatype="string">lb_port</parameter>
-                <parameter datatype="string">protocol</parameter>
-                <parameter datatype="string">host_id</parameter>
-                <parameter datatype="string">host_port</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-         <interface name="del-backtarget" path="/v1/qcloud/clb/del-backtarget">
-            <input-parameters>
-                <parameter datatype="string">guid</parameter>
-                <parameter datatype="string">provider_params</parameter>
-                <parameter datatype="string">lb_id</parameter>
-                <parameter datatype="string">lb_port</parameter>
-                <parameter datatype="string">protocol</parameter>
-                <parameter datatype="string">host_id</parameter>
-                <parameter datatype="string">host_port</parameter>
-            </input-parameters>
-            <output-parameters>
-                <parameter datatype="string">guid</parameter>
-            </output-parameters>
-        </interface>
-    </plugin>
+    <!-- 4.系统参数 - 描述运行本插件包需要的系统参数 -->
+    <systemParameters>
+    </systemParameters>
+
+    <!-- 5.权限设定 -->
+    <authorities>
+    </authorities>
+
+    <!-- 6.运行资源 - 描述部署运行本插件包需要的基础资源(如主机、虚拟机、容器、数据库等) -->
+    <resourceDependencies>
+        <docker imageName="{{IMAGENAME}}" containerName="{{CONTAINERNAME}}" portBindings="{{PORTBINDINGS}}" volumeBindings="/etc/localtime:/etc/localtime,{{base_mount_path}}/qcloud/logs:/home/app/qcloud/logs" envVariables=""/>
+    </resourceDependencies>
+
+    <!-- 7.插件列表 - 描述插件包中单个插件的输入和输出 -->
+    <plugins>
+        <plugin name="vpc">
+            <interface action="create" path="/qcloud/v1/qcloud/vpc/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/vpc/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="peering-connection">
+            <interface action="create" path="/qcloud/v1/qcloud/peering-connection/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">peer_provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">peer_vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">peer_uin</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">bandwidth</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/peering-connection/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">peer_provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="security-group">
+            <interface action="create" path="/qcloud/v1/qcloud/security-group/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">description</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/security-group/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="create-policies" path="/qcloud/v1/qcloud/security-group/create-policies">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">description</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_protocol</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_port</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_action</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_description</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="delete-policies" path="/qcloud/v1/qcloud/security-group/delete-policies">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_protocol</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_port</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">policy_action</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="route-table">
+            <interface action="create" path="/qcloud/v1/qcloud/route-table/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/route-table/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="associate-subnet" path="/qcloud/v1/qcloud/route-table/associate-subnet">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">route_table_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="subnet">
+            <interface action="create" path="/qcloud/v1/qcloud/subnet/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="create" path="/qcloud/v1/qcloud/subnet/create-with-routetable">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>route_table_id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/subnet/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/subnet/terminate-with-routetable">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">route_table_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="vm">
+            <interface action="create" path="/qcloud/v1/qcloud/vm/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">instance_name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">image_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">host_type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">system_disk_size</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_charge_type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">instance_charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">instance_private_ip</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">password</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">project_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>cpu</parameter>
+                    <parameter datatype="string" mappingType='context'>memory</parameter>
+                    <parameter datatype="string" mappingType='context'>password</parameter>
+                    <parameter datatype="string" mappingType='context'>instance_state</parameter>
+                    <parameter datatype="string" mappingType='context'>instance_private_ip</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/vm/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="start" path="/qcloud/v1/qcloud/vm/start">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="stop" path="/qcloud/v1/qcloud/vm/stop">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="bind security group to vm" path="/qcloud/v1/qcloud/vm/bind-security-groups">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">security_group_ids</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="storage">
+            <interface action="create" path="/qcloud/v1/qcloud/storage/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">disk_size</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">disk_name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_charge_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/storage/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="buy cbs disk and mount" path="/qcloud/v1/qcloud/cbs/create-mount">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">disk_size</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">disk_name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_charge_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">disk_charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">password</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">file_system_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">mount_dir</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>volume_name</parameter>
+                    <parameter datatype="string" mappingType='context'>disk_id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="umount and destroy cbs disk" path="/qcloud/v1/qcloud/cbs/umount-terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">volume_name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">mount_dir</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">instance_guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">password</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="nat-gateway">
+            <interface action="create" path="/qcloud/v1/qcloud/nat-gateway/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">max_concurrent</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">bandwidth</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>eip</parameter>
+                    <parameter datatype="string" mappingType='context'>eip_id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/nat-gateway/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="mysql-vm">
+            <interface action="create" path="/qcloud/v1/qcloud/mysql-vm/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">engine_version</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">memory</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">volume</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">charge_type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">character_set</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lower_case_table_names</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>private_ip</parameter>
+                    <parameter datatype="string" mappingType='context'>private_port</parameter>
+                    <parameter datatype="string" mappingType='context'>user_name</parameter>
+                    <parameter datatype="string" mappingType='context'>password</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/mysql-vm/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="restart" path="/qcloud/v1/qcloud/mysql-vm/restart">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="mariadb">
+            <interface action="create" path="/qcloud/v1/qcloud/mariadb/create">
+            <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">user_name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">zones</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">node_count</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">memory_size</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">storage_size</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">db_version</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">character_set</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lower_case_table_names</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>private_port</parameter>
+                    <parameter datatype="string" mappingType='context'>private_ip</parameter>
+                    <parameter datatype="string" mappingType='context'>user_name</parameter>
+                    <parameter datatype="string" mappingType='context'>password</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="route-policy">
+            <interface action="create" path="/qcloud/v1/qcloud/route-policy/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">route_table_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">dest_cidr</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">gateway_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">gateway_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">desc</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/route-policy/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">route_table_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="redis">
+            <interface action="create" path="/qcloud/v1/qcloud/redis/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">type_id</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">mem_size</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">goods_num</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">password</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">billing_mode</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+        <plugin name="clb">
+            <interface action="create" path="/qcloud/v1/qcloud/clb/create">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="number" mappingType='entity' required="N">name</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">type</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">vpc_id</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">subnet_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>vip</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="terminate" path="/qcloud/v1/qcloud/clb/terminate">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="add-backtarget" path="/qcloud/v1/qcloud/clb/add-backtarget">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lb_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lb_port</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">protocol</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">host_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">host_port</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string">guid</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="del-backtarget" path="/qcloud/v1/qcloud/clb/del-backtarget">
+                <inputParameters>
+                    <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lb_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">lb_port</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">protocol</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">host_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">host_port</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                </outputParameters>
+            </interface>
+        </plugin>
+    </plugins>
 </package>
