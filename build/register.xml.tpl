@@ -28,7 +28,7 @@
     <!-- 7.插件列表 - 描述插件包中单个插件的输入和输出 -->
     <plugins>
         <plugin name="vpc">
-            <interface action="create" path="/qcloud/v1/qcloud/vpc/create">
+            <interface action="create" path="/qcloud/v1/vpc/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -41,7 +41,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/vpc/terminate">
+            <interface action="terminate" path="/qcloud/v1/vpc/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -53,7 +53,7 @@
             </interface>
         </plugin>
         <plugin name="peering-connection">
-            <interface action="create" path="/qcloud/v1/qcloud/peering-connection/create">
+            <interface action="create" path="/qcloud/v1/peering-connection/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -70,7 +70,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/peering-connection/terminate">
+            <interface action="terminate" path="/qcloud/v1/peering-connection/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -83,7 +83,7 @@
             </interface>
         </plugin>
         <plugin name="security-group">
-            <interface action="create" path="/qcloud/v1/qcloud/security-group/create">
+            <interface action="create" path="/qcloud/v1/security-group/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -96,7 +96,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/security-group/terminate">
+            <interface action="terminate" path="/qcloud/v1/security-group/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -106,7 +106,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="create-policies" path="/qcloud/v1/qcloud/security-group/create-policies">
+            <interface action="create-policies" path="/qcloud/v1/security-group/create-policies">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -125,7 +125,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="delete-policies" path="/qcloud/v1/qcloud/security-group/delete-policies">
+            <interface action="delete-policies" path="/qcloud/v1/security-group/delete-policies">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -142,7 +142,7 @@
             </interface>
         </plugin>
         <plugin name="route-table">
-            <interface action="create" path="/qcloud/v1/qcloud/route-table/create">
+            <interface action="create" path="/qcloud/v1/route-table/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -155,7 +155,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/route-table/terminate">
+            <interface action="terminate" path="/qcloud/v1/route-table/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -165,7 +165,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="associate-subnet" path="/qcloud/v1/qcloud/route-table/associate-subnet">
+            <interface action="associate-subnet" path="/qcloud/v1/route-table/associate-subnet">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -178,7 +178,7 @@
             </interface>
         </plugin>
         <plugin name="subnet">
-            <interface action="create" path="/qcloud/v1/qcloud/subnet/create">
+            <interface action="create" path="/qcloud/v1/subnet/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -192,7 +192,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="create" path="/qcloud/v1/qcloud/subnet/create-with-routetable">
+            <interface action="create" path="/qcloud/v1/subnet/create-with-routetable">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -207,7 +207,7 @@
                     <parameter datatype="string" mappingType='context'>route_table_id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/subnet/terminate">
+            <interface action="terminate" path="/qcloud/v1/subnet/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -217,7 +217,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/subnet/terminate-with-routetable">
+            <interface action="terminate" path="/qcloud/v1/subnet/terminate-with-routetable">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -230,7 +230,7 @@
             </interface>
         </plugin>
         <plugin name="vm">
-            <interface action="create" path="/qcloud/v1/qcloud/vm/create">
+            <interface action="create" path="/qcloud/v1/vm/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
@@ -259,7 +259,7 @@
                     <parameter datatype="string" mappingType='context'>instance_private_ip</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/vm/terminate">
+            <interface action="terminate" path="/qcloud/v1/vm/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -269,7 +269,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="start" path="/qcloud/v1/qcloud/vm/start">
+            <interface action="start" path="/qcloud/v1/vm/start">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -279,7 +279,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="stop" path="/qcloud/v1/qcloud/vm/stop">
+            <interface action="stop" path="/qcloud/v1/vm/stop">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -289,7 +289,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="bind security group to vm" path="/qcloud/v1/qcloud/vm/bind-security-groups">
+            <interface action="bind security group to vm" path="/qcloud/v1/vm/bind-security-groups">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -302,7 +302,7 @@
             </interface>
         </plugin>
         <plugin name="storage">
-            <interface action="create" path="/qcloud/v1/qcloud/storage/create">
+            <interface action="create" path="/qcloud/v1/storage/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -319,7 +319,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/storage/terminate">
+            <interface action="terminate" path="/qcloud/v1/storage/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -329,7 +329,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="buy cbs disk and mount" path="/qcloud/v1/qcloud/cbs/create-mount">
+            <interface action="buy cbs disk and mount" path="/qcloud/v1/cbs/create-mount">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -352,7 +352,7 @@
                     <parameter datatype="string" mappingType='context'>disk_id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="umount and destroy cbs disk" path="/qcloud/v1/qcloud/cbs/umount-terminate">
+            <interface action="umount and destroy cbs disk" path="/qcloud/v1/cbs/umount-terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -370,7 +370,7 @@
             </interface>
         </plugin>
         <plugin name="nat-gateway">
-            <interface action="create" path="/qcloud/v1/qcloud/nat-gateway/create">
+            <interface action="create" path="/qcloud/v1/nat-gateway/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -387,7 +387,7 @@
                     <parameter datatype="string" mappingType='context'>eip_id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/nat-gateway/terminate">
+            <interface action="terminate" path="/qcloud/v1/nat-gateway/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -400,7 +400,7 @@
             </interface>
         </plugin>
         <plugin name="mysql-vm">
-            <interface action="create" path="/qcloud/v1/qcloud/mysql-vm/create">
+            <interface action="create" path="/qcloud/v1/mysql-vm/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
@@ -426,7 +426,7 @@
                     <parameter datatype="string" mappingType='context'>password</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/mysql-vm/terminate">
+            <interface action="terminate" path="/qcloud/v1/mysql-vm/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -436,7 +436,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="restart" path="/qcloud/v1/qcloud/mysql-vm/restart">
+            <interface action="restart" path="/qcloud/v1/mysql-vm/restart">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -448,7 +448,7 @@
             </interface>
         </plugin>
         <plugin name="mariadb">
-            <interface action="create" path="/qcloud/v1/qcloud/mariadb/create">
+            <interface action="create" path="/qcloud/v1/mariadb/create">
             <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
@@ -477,7 +477,7 @@
             </interface>
         </plugin>
         <plugin name="route-policy">
-            <interface action="create" path="/qcloud/v1/qcloud/route-policy/create">
+            <interface action="create" path="/qcloud/v1/route-policy/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="N">id</parameter>
@@ -493,7 +493,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/route-policy/terminate">
+            <interface action="terminate" path="/qcloud/v1/route-policy/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -506,7 +506,7 @@
             </interface>
         </plugin>
         <plugin name="redis">
-            <interface action="create" path="/qcloud/v1/qcloud/redis/create">
+            <interface action="create" path="/qcloud/v1/redis/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -527,7 +527,7 @@
             </interface>
         </plugin>
         <plugin name="clb">
-            <interface action="create" path="/qcloud/v1/qcloud/clb/create">
+            <interface action="create" path="/qcloud/v1/clb/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -543,7 +543,7 @@
                     <parameter datatype="string" mappingType='context'>vip</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/qcloud/clb/terminate">
+            <interface action="terminate" path="/qcloud/v1/clb/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -553,7 +553,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="add-backtarget" path="/qcloud/v1/qcloud/clb/add-backtarget">
+            <interface action="add-backtarget" path="/qcloud/v1/clb/add-backtarget">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -567,7 +567,7 @@
                     <parameter datatype="string">guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="del-backtarget" path="/qcloud/v1/qcloud/clb/del-backtarget">
+            <interface action="del-backtarget" path="/qcloud/v1/clb/del-backtarget">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
