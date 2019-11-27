@@ -192,7 +192,7 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="create" path="/qcloud/v1/subnet/create-with-routetable">
+            <interface action="create-with-routetable" path="/qcloud/v1/subnet/create-with-routetable">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -217,7 +217,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/subnet/terminate-with-routetable">
+            <interface action="terminate-with-routetable" path="/qcloud/v1/subnet/terminate-with-routetable">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
