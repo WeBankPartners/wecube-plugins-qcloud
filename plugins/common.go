@@ -13,6 +13,10 @@ const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
 )
 
+type CallBackParameter struct {
+	Parameter string `json:"callbackParameter,omitempty"`
+}
+
 type Filter struct {
 	Name   string
 	Values []string

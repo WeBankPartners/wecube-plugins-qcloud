@@ -50,6 +50,7 @@ type SecurityGroupInputs struct {
 }
 
 type SecurityGroupInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Name           string `json:"name,omitempty"`
@@ -62,6 +63,7 @@ type SecurityGroupOutputs struct {
 }
 
 type SecurityGroupOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -72,6 +74,7 @@ type SecurityGroupPolicyInputs struct {
 }
 
 type SecurityGroupPolicyInput struct {
+	CallBackParameter
 	Guid              string `json:"guid,omitempty"`
 	ProviderParams    string `json:"provider_params,omitempty"`
 	Name              string `json:"name,omitempty"`
@@ -90,12 +93,14 @@ type SecurityGroupPolicyOutputs struct {
 }
 
 type SecurityGroupPolicyOutput struct {
+	CallBackParameter
 	RequestId string `json:"requestId,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
 }
 
 type SecurityGroupParam struct {
+	CallBackParameter
 	Guid                   string
 	ProviderParams         string
 	GroupName              string
@@ -166,6 +171,7 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 			RequestId: *createSecurityGroupresp.Response.RequestId,
 			Guid:      securityGroup.Guid,
 		}
+		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
 
 		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
 		logrus.Infof("create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
@@ -202,6 +208,7 @@ func buildNewSecurityGroup(actionParam SecurityGroupInput) (SecurityGroupParam, 
 			Ingress: []*vpc.SecurityGroupPolicy{},
 		},
 	}
+	SecurityGroup.CallBackParameter.Parameter = actionParam.CallBackParameter.Parameter
 
 	return SecurityGroup, nil
 }
@@ -276,6 +283,7 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 		output.Guid = securityGroup.Guid
 		output.RequestId = *resp.Response.RequestId
 		output.Id = securityGroup.Id
+		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -456,6 +464,7 @@ func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) 
 	logrus.Infof("Create SecurityGroup Policy's request has been submitted, RequestID is [%v]", *createPoliciesResp.Response.RequestId)
 
 	output := SecurityGroupPolicyOutput{}
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	output.Guid = input.Guid
 	output.RequestId = *createPoliciesResp.Response.RequestId
 	output.Id = input.SecurityGroupId
@@ -534,6 +543,7 @@ func deleteSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) 
 	output.Guid = input.Guid
 	output.RequestId = *deletePoliciesResp.Response.RequestId
 	output.Id = input.SecurityGroupId
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 
 	return output, nil
 }
@@ -558,6 +568,7 @@ func querySecurityGroupsInfo(client *vpc.Client, input *SecurityGroupParam) (Sec
 	}
 
 	output.Guid = input.Guid
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	output.Id = input.SecurityGroupId
 	output.RequestId = *response.Response.RequestId
 

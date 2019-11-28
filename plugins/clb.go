@@ -3,13 +3,14 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	clb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -56,6 +57,7 @@ type CreateClbInputs struct {
 }
 
 type CreateClbInput struct {
+	CallBackParameter
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	Name           string `json:"name"`
@@ -70,6 +72,7 @@ type CreateClbOutputs struct {
 }
 
 type CreateClbOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 	Id   string `json:"id,omitempty"`
 	Vip  string `json:"vip,omitempty"`
@@ -233,6 +236,7 @@ func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output, err := createClb(client, input)
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -250,6 +254,7 @@ type TerminateClbInputs struct {
 }
 
 type TerminateClbInput struct {
+	CallBackParameter
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	Id             string `json:"id"`
@@ -260,6 +265,7 @@ type TerminateClbOutputs struct {
 }
 
 type TerminateClbOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -313,6 +319,7 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 		output := TerminateClbOutput{
 			Guid: input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -328,6 +335,7 @@ type BackTargetInputs struct {
 }
 
 type BackTargetInput struct {
+	CallBackParameter
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	LbId           string `json:"lb_id"`
@@ -342,6 +350,7 @@ type BackTargetOutputs struct {
 }
 
 type BackTargetOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -504,6 +513,7 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		output := BackTargetOutput{
 			Guid: input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return &outputs, nil
@@ -517,6 +527,7 @@ type DelBackTargetOutputs struct {
 }
 
 type DelBackTargetOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -575,6 +586,7 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 		output := BackTargetOutput{
 			Guid: input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 

@@ -5,14 +5,15 @@ import (
 
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -36,6 +37,7 @@ type VmInputs struct {
 }
 
 type VmInput struct {
+	CallBackParameter
 	Guid                 string `json:"guid,omitempty"`
 	Seed                 string `json:"seed,omitempty"`
 	ProviderParams       string `json:"provider_params,omitempty"`
@@ -59,6 +61,7 @@ type VmOutputs struct {
 }
 
 type VmOutput struct {
+	CallBackParameter
 	Guid              string `json:"guid,omitempty"`
 	RequestId         string `json:"request_id,omitempty"`
 	Id                string `json:"id,omitempty"`
@@ -362,6 +365,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := VmOutputs{}
 	for _, vm := range vms.Inputs {
 		output := VmOutput{}
+		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		logrus.Debugf("actionParam:%v", vm)
@@ -561,6 +565,7 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 			return nil, err
 		}
 		output := VmOutput{}
+		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		output.RequestId = *response.Response.RequestId
 		output.Guid = vm.Guid
 		output.Id = vm.Id
@@ -587,6 +592,7 @@ func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		output := VmOutput{}
+		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		output.RequestId = requestId
 		output.Guid = vm.Guid
 		output.Id = vm.Id
@@ -623,6 +629,7 @@ func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
 	outputs := VmOutputs{}
 	for _, vm := range vms.Inputs {
 		output, err := action.stopInstance(&vm)
+		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -727,6 +734,7 @@ type VmBindSecurityGroupInputs struct {
 }
 
 type VmBindSecurityGroupInput struct {
+	CallBackParameter
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -738,6 +746,7 @@ type VmBindSecurityGroupOutputs struct {
 }
 
 type VmBindSecurityGroupOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -786,6 +795,7 @@ func (action *VMBindSecurityGroupsAction) Do(input interface{}) (interface{}, er
 		output := VmBindSecurityGroupOutput{
 			Guid: input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 

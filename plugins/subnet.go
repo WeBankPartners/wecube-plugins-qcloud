@@ -34,6 +34,7 @@ type SubnetInputs struct {
 }
 
 type SubnetInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
@@ -48,6 +49,7 @@ type SubnetOutputs struct {
 }
 
 type SubnetOutput struct {
+	CallBackParameter
 	RequestId    string `json:"request_id,omitempty"`
 	Guid         string `json:"guid,omitempty"`
 	Id           string `json:"id,omitempty"`
@@ -144,6 +146,7 @@ func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := action.createSubnet(&subnet)
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -206,6 +209,7 @@ func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) 
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := action.terminateSubnet(&subnet)
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -326,6 +330,7 @@ func (action *CreateSubnetWithRouteTableAction) Do(input interface{}) (interface
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := createSubnetWithRouteTable(&subnet)
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -369,6 +374,7 @@ func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interf
 			Guid: input.Guid,
 			Id:   input.Id,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return outputs, nil

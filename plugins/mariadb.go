@@ -42,6 +42,7 @@ type MariadbInputs struct {
 }
 
 type MariadbInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	Seed           string `json:"seed,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
@@ -67,6 +68,7 @@ type MariadbOutputs struct {
 }
 
 type MariadbOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -148,6 +150,7 @@ func (action *MariadbCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := MariadbOutputs{}
 	for _, input := range req.Inputs {
 		output, err := action.createAndInitMariadb(&input)
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}

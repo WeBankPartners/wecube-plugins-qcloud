@@ -3,12 +3,13 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
-	"time"
 )
 
 const (
@@ -42,6 +43,7 @@ type MysqlVmInputs struct {
 }
 
 type MysqlVmInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	Seed           string `json:"seed,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
@@ -66,6 +68,7 @@ type MysqlVmOutputs struct {
 }
 
 type MysqlVmOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -343,6 +346,7 @@ func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.createMysqlVm(&mysqlVm)
+		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -436,6 +440,7 @@ func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error)
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.terminateMysqlVm(&mysqlVm)
+		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -523,6 +528,7 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 			return outputs, err
 		}
 		output := MysqlVmOutput{}
+		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		output.Guid = mysqlVm.Guid
 		output.Id = mysqlVm.Id
 		outputs.Outputs = append(outputs.Outputs, output)

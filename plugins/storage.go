@@ -32,6 +32,7 @@ type StorageInputs struct {
 }
 
 type StorageInput struct {
+	CallBackParameter
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
@@ -48,6 +49,7 @@ type StorageOutputs struct {
 }
 
 type StorageOutput struct {
+	CallBackParameter
 	Guid      string `json:"guid,omitempty"`
 	RequestId string `json:"request_id,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -93,6 +95,7 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 
 	for _, storage := range storages.Inputs {
 		output, err := action.createStorage(&storage)
+		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -231,6 +234,7 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 		}
 
 		output, err := action.terminateStorage(&storage)
+		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
