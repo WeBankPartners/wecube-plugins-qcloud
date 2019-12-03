@@ -46,6 +46,7 @@ type EIPInputs struct {
 }
 
 type EIPInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	AddressCount   string `json:"address_count,omitempty"`
@@ -61,6 +62,7 @@ type EIPOutputs struct {
 }
 
 type EIPOutput struct {
+	CallBackParameter
 	RequestId string    `json:"request_id,omitempty"`
 	Guid      string    `json:"guid,omitempty"`
 	EIPS      []EIPInfo `json:"eips,omitempty"`
@@ -172,6 +174,7 @@ func (action *EIPCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, subnet := range eips.Inputs {
 		output, err := action.createEIP(&subnet)
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -228,6 +231,7 @@ func (action *EIPTerminateAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.terminateEIP(&eip)
+		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -320,6 +324,7 @@ func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.attachEIP(&eip)
+		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -378,6 +383,7 @@ func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.detachEIP(&eip)
+		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -466,6 +472,7 @@ func (action *EIPBindNatAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.bindNatGateway(&eip)
+		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -555,6 +562,7 @@ func (action *EIPUnBindNatAction) Do(input interface{}) (interface{}, error) {
 	outputs := EIPOutputs{}
 	for _, eip := range eips.Inputs {
 		output, err := action.unbindNatGateway(&eip)
+		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}

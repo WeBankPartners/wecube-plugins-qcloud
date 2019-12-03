@@ -32,6 +32,7 @@ type VpcInputs struct {
 }
 
 type VpcInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
@@ -44,6 +45,7 @@ type VpcOutputs struct {
 }
 
 type VpcOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -131,6 +133,7 @@ func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
 		vpcOutput, err := action.createVpc(&vpc)
+		vpcOutput.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -191,6 +194,7 @@ func (action *VpcTerminateAction) Do(input interface{}) (interface{}, error) {
 	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
 		output, err := action.terminateVpc(&vpc)
+		output.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}

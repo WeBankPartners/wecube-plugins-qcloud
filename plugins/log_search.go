@@ -47,6 +47,7 @@ type SearchInputs struct {
 
 //SearchInput .
 type SearchInput struct {
+	CallBackParameter
 	Guid       string `json:"guid,omitempty"`
 	KeyWord    string `json:"key_word,omitempty"`
 	LineNumber int    `json:"line_number,omitempty"`
@@ -59,6 +60,7 @@ type SearchOutputs struct {
 
 //SearchOutput .
 type SearchOutput struct {
+	CallBackParameter
 	FileName string `json:"file_name,omitempty"`
 	Line     string `json:"line_number,omitempty"`
 	Log      string `json:"log,omitempty"`
@@ -158,6 +160,7 @@ func (action *LogSearchAction) Search(input *SearchInput) (interface{}, error) {
 	if len(output) > 0 {
 		for k := 0; k < len(output); k++ {
 			var info SearchOutput
+			info.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 
 			if output[k] == "" {
 				continue
@@ -212,6 +215,7 @@ type SearchDetailInputs struct {
 
 //SearchDetailInput .
 type SearchDetailInput struct {
+	CallBackParameter
 	FileName        string `json:"file_name,omitempty"`
 	LineNumber      string `json:"line_number,omitempty"`
 	RelateLineCount int    `json:"relate_line_count,omitempty"`
@@ -224,6 +228,7 @@ type SearchDetailOutputs struct {
 
 //SearchDetailOutput .
 type SearchDetailOutput struct {
+	CallBackParameter
 	FileName   string `json:"file_name,omitempty"`
 	LineNumber string `json:"line_number,omitempty"`
 	Logs       string `json:"logs,omitempty"`
@@ -270,6 +275,7 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 			return nil, err
 		}
 		var info SearchDetailOutput
+		info.CallBackParameter.Parameter = logs.Inputs[i].CallBackParameter.Parameter
 		info.FileName = logs.Inputs[i].FileName
 		info.LineNumber = logs.Inputs[i].LineNumber
 		info.Logs = text

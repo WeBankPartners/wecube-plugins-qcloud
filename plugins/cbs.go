@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
+	"os"
+	"time"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/pkg/sftp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"net"
-	"os"
-	"time"
 )
 
 var cbsActions = make(map[string]Action)
@@ -41,6 +42,7 @@ type CreateAndMountCbsDiskInputs struct {
 }
 
 type CreateAndMountCbsDiskInput struct {
+	CallBackParameter
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
@@ -64,6 +66,7 @@ type CreateAndMountCbsDiskOutputs struct {
 }
 
 type CreateAndMountCbsDiskOutput struct {
+	CallBackParameter
 	Guid       string `json:"guid,omitempty"`
 	VolumeName string `json:"volume_name,omitempty"`
 	DiskId     string `json:"disk_id,omitempty"`
@@ -352,6 +355,7 @@ func (action *CreateAndMountCbsDiskAction) Do(input interface{}) (interface{}, e
 
 	for _, input := range inputs.Inputs {
 		output, err := createAndMountCbsDisk(input)
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return outputs, err
 		}
@@ -369,6 +373,7 @@ type UmountCbsDiskInputs struct {
 }
 
 type UmountCbsDiskInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
@@ -387,6 +392,7 @@ type UmountCbsDiskOutputs struct {
 }
 
 type UmountCbsDiskOutput struct {
+	CallBackParameter
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -482,6 +488,7 @@ func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, 
 		output := UmountCbsDiskOutput{
 			Guid: input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return outputs, nil

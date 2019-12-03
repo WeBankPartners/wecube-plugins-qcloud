@@ -3,10 +3,11 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
 var RoutePolicyActions = make(map[string]Action)
@@ -34,6 +35,7 @@ type CreateRoutePolicyInputs struct {
 }
 
 type CreateRoutePolicyInput struct {
+	CallBackParameter
 	Guid            string `json:"guid,omitempty"`
 	Id              string `json:"id,omitempty"`
 	ProviderParams  string `json:"provider_params,omitempty"`
@@ -49,6 +51,7 @@ type CreateRoutePolicyOutputs struct {
 }
 
 type CreateRoutePolicyOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -183,6 +186,7 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 			RequestId: *response.Response.RequestId,
 			Guid:      input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Id = fmt.Sprintf("%d", *response.Response.RouteTableSet[0].RouteSet[0].RouteId)
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -195,6 +199,7 @@ type DeleteRoutePolicyInputs struct {
 	Inputs []CreateRoutePolicyInput `json:"inputs,omitempty"`
 }
 type DeleteRoutePolicyInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	Id             string `json:"id,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
@@ -206,6 +211,7 @@ type DeleteRoutePolicyOutputs struct {
 }
 
 type DeleteRoutePolicyOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 }
@@ -271,6 +277,7 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 			RequestId: *response.Response.RequestId,
 			Guid:      input.Guid,
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return &outputs, nil

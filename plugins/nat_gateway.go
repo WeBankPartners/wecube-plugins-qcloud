@@ -3,10 +3,11 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 	unversioned "github.com/zqfan/tencentcloud-sdk-go/services/vpc/unversioned"
-	"time"
 )
 
 var NatGatewayActions = make(map[string]Action)
@@ -36,6 +37,7 @@ type NatGatewayInputs struct {
 }
 
 type NatGatewayInput struct {
+	CallBackParameter
 	Guid            string `json:"guid,omitempty"`
 	ProviderParams  string `json:"provider_params,omitempty"`
 	Name            string `json:"name,omitempty"`
@@ -54,6 +56,7 @@ type NatGatewayOutputs struct {
 }
 
 type NatGatewayOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -166,6 +169,7 @@ func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error)
 	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
 		output, err := action.createNatGateway(&natGateway)
+		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -252,6 +256,7 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
 		output, err := action.terminateNatGateway(&natGateway)
+		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}

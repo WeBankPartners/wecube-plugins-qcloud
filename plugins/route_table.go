@@ -44,6 +44,7 @@ type RouteTableInputs struct {
 }
 
 type RouteTableInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
@@ -56,6 +57,7 @@ type RouteTableOutputs struct {
 }
 
 type RouteTableOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -135,6 +137,7 @@ func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error)
 	outputs := RouteTableOutputs{}
 	for _, input := range inputs.Inputs {
 		output, err := action.createRouteTable(&input)
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -224,6 +227,7 @@ func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := RouteTableOutputs{}
 	for _, routeTable := range routeTables.Inputs {
 		output, err := action.terminateRouteTable(&routeTable)
+		output.CallBackParameter.Parameter = routeTable.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
@@ -259,6 +263,7 @@ type AssociateRouteTableInputs struct {
 }
 
 type AssociateRouteTableInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	SubnetId       string `json:"subnet_id,omitempty"`
@@ -270,6 +275,7 @@ type AssociateRouteTableOutputs struct {
 }
 
 type AssociateRouteTableOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 }
@@ -326,6 +332,7 @@ func (action *RouteTableAssociateSubnetAction) Do(input interface{}) (interface{
 			return outputs, err
 		}
 		output := AssociateRouteTableOutput{}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Guid = input.Guid
 		outputs.Outputs = append(outputs.Outputs, output)
 	}

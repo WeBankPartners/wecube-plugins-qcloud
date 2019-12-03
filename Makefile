@@ -4,7 +4,7 @@ project_name=$(shell basename "${current_dir}")
 
 
 APP_HOME=src/github.com/WeBankPartners/wecube-plugins-qcloud
-PORT_BINDINGS={{host_port}}:8081
+PORT_BINDINGS={{ALLOCATE_PORT}}:8081
 
 ifndef RUN_MODE
   RUN_MODE=dev

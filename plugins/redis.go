@@ -38,6 +38,7 @@ type RedisInputs struct {
 }
 
 type RedisInput struct {
+	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	TypeID         uint64 `json:"type_id,omitempty"`
@@ -56,6 +57,7 @@ type RedisOutputs struct {
 }
 
 type RedisOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	DealID    string `json:"deal_id,omitempty"`
@@ -194,6 +196,7 @@ func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := RedisOutputs{}
 	for _, redis := range rediss.Inputs {
 		redisOutput, err := action.createRedis(&redis)
+		redisOutput.CallBackParameter.Parameter = redis.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}

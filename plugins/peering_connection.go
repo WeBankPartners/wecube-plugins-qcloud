@@ -32,6 +32,7 @@ type PeeringConnectionInputs struct {
 }
 
 type PeeringConnectionInput struct {
+	CallBackParameter
 	Guid               string `json:"guid,omitempty"`
 	ProviderParams     string `json:"provider_params,omitempty"`
 	Name               string `json:"name,omitempty"`
@@ -48,6 +49,7 @@ type PeeringConnectionOutputs struct {
 }
 
 type PeeringConnectionOutput struct {
+	CallBackParameter
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -180,6 +182,7 @@ func (action *PeeringConnectionCreateAction) Do(input interface{}) (interface{},
 			return nil, err
 		}
 		output := PeeringConnectionOutput{}
+		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
 		output.Id = peeringConnectionId
 		output.Guid = peeringConnection.Guid
 		output.RequestId = "legacy qcloud API doesn't support returnning request id"
@@ -291,6 +294,7 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 			return nil, err
 		}
 		output := PeeringConnectionOutput{}
+		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
 		output.Guid = peeringConnection.Guid
 		output.RequestId = "legacy qcloud API doesn't support returnning request id"
 		output.Id = peeringConnection.Id
