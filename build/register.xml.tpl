@@ -289,7 +289,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="bind security group to vm" path="/qcloud/v1/vm/bind-security-groups">
+            <interface action="bind-security-group-to-vm" path="/qcloud/v1/vm/bind-security-groups">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -329,7 +329,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="buy cbs disk and mount" path="/qcloud/v1/cbs/create-mount">
+            <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -352,7 +352,7 @@
                     <parameter datatype="string" mappingType='context'>disk_id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="umount and destroy cbs disk" path="/qcloud/v1/cbs/umount-terminate">
+            <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
