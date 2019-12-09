@@ -1,8 +1,11 @@
 package securitygroup
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,6 +76,23 @@ func getResouceTypeByName(name string) (ResourceType, error) {
 	}
 
 	return resType, nil
+}
+
+func unmarshalJson(source interface{}, target interface{}) error {
+	reader, ok := source.(io.Reader)
+	if !ok {
+		return fmt.Errorf("the source to be unmarshaled is not a io.reader type")
+	}
+
+	bodyBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("parse http request (%v) meet error (%v)", reader, err)
+	}
+
+	if err = json.Unmarshal(bodyBytes, target); err != nil {
+		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
+	}
+	return nil
 }
 
 type BussinessSecurityGroupPlugin struct {
@@ -248,7 +268,7 @@ type CalcSecurityPolicyAction struct {
 
 func (action *CalcSecurityPolicyAction) ReadParam(param interface{}) (interface{}, error) {
 	var input CalcSecurityPoliciesRequest
-	err := plugins.UnmarshalJson(param, &input)
+	err := unmarshalJson(param, &input)
 	if err != nil {
 		logrus.Errorf("CalcSecurityPolicyAction ReadParam UnmarshalJson: failed to unmarsh, err=%v, param=%v", err, param)
 		return nil, err
@@ -502,7 +522,7 @@ type ApplySecurityPoliciesResult struct {
 
 func (action *ApplySecurityPolicyAction) ReadParam(param interface{}) (interface{}, error) {
 	var input ApplySecurityPoliciesRequest
-	err := plugins.UnmarshalJson(param, &input)
+	err := unmarshalJson(param, &input)
 	if err != nil {
 		logrus.Errorf("ApplySecurityPolicyAction:unmarshal failed,err=%v,param=%v", err, param)
 		return nil, err

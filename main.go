@@ -57,7 +57,7 @@ func initConfig() {
 
 func initRouter() {
 	//path should be defined as "/[package name]/[version]/[plugin]/[action]"
-	http.HandleFunc("/qcloud/v1/", routeDispatcher)
+	http.HandleFunc("/", routeDispatcher)
 }
 
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
@@ -80,11 +80,11 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 	var pluginInput = plugins.PluginRequest{}
 	pathStrings := strings.Split(r.URL.Path, "/")
 	logrus.Infof("path strings = %v", pathStrings)
-	if len(pathStrings) >= 5 {
+	if len(pathStrings) >= 4 {
 		pluginInput.Version = pathStrings[1]
 		pluginInput.ProviderName = pathStrings[2]
-		pluginInput.Name = pathStrings[3]
-		pluginInput.Action = pathStrings[4]
+		pluginInput.Name = pathStrings[len(pathStrings)-2]
+		pluginInput.Action = pathStrings[len(pathStrings)-1]
 	}
 	pluginInput.Parameters = r.Body
 	logrus.Infof("parsed request = %v", pluginInput)
