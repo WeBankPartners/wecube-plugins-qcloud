@@ -305,10 +305,10 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 	defer func() {
 		output.Guid = input.Guid
 		if err != nil {
-			ouput.Result.Code = RESULT_CODE_SUCCESS
+			output.Result.Code = RESULT_CODE_SUCCESS
 		}else {
-			ouput.Result.Code = RESULT_CODE_ERROR
-			ouput.Result.Message = err.Error()
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 		}
 	}()
 	
