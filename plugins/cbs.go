@@ -310,7 +310,7 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 			ouput.Result.Code = RESULT_CODE_ERROR
 			ouput.Result.Message = err.Error()
 		}
-	}
+	}()
 	
 	if err=checkParam(input);err != nil{
 		return output,err
