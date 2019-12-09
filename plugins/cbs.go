@@ -304,7 +304,7 @@ func getNewCreateDiskVolumeName(ip, password string, lastUnformatedDisks []strin
 func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMountCbsDiskOutput, err error) {
 	defer func() {
 		output.Guid = input.Guid
-		if err != nil {
+		if err == nil {
 			output.Result.Code = RESULT_CODE_SUCCESS
 		}else {
 			output.Result.Code = RESULT_CODE_ERROR
@@ -312,7 +312,7 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 		}
 	}()
 	
-	if err=checkParam(input);err != nil{
+	if err = checkParam(input);err != nil{
 		return output,err
 	} 
 

@@ -52,6 +52,7 @@ type ElasticNicOutputs struct {
 
 type ElasticNicOutput struct {
 	CallBackParameter
+	Result 
 	RequestId       string   `json:"request_id,omitempty"`
 	Guid            string   `json:"guid,omitempty"`
 	Id              string   `json:"id,omitempty"`
@@ -64,7 +65,6 @@ type ElasticNicPlugin struct {
 
 func (plugin *ElasticNicPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := ElasticNicActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("ElasticNic plugin,action = %s not found", actionName)
 	}
@@ -84,13 +84,7 @@ func (action *ElasticNicCreateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *ElasticNicCreateAction) CheckParam(input interface{}) error {
-	elasticNics, ok := input.(ElasticNicInputs)
-	if !ok {
-		return fmt.Errorf("ElasticNicCreateAction:input type=%T not right", input)
-	}
-
-	for _, elasticNic := range elasticNics.Inputs {
+func elasticNicCreateCheckParam(input *ElasticNicInput) error {
 		if elasticNic.SubnetId == "" {
 			return errors.New("ElasticNicCreateAction input SubnetId is empty")
 		}
@@ -100,12 +94,22 @@ func (action *ElasticNicCreateAction) CheckParam(input interface{}) error {
 		if elasticNic.Name == "" {
 			return errors.New("ElasticNicCreateAction input Name is empty")
 		}
-	}
-
+	
 	return nil
 }
 
-func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticNicInput) (ElasticNicOutput, error) {
+	output := ElasticNicOutput{
+		Guid:ElasticNicInput.Guid,
+	}
+	output.Result.Code = RESULT_CODE_SUCCESS
+	
+	if err:=elasticNicCreateCheckParam(ElasticNicInput);err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message=err.Error()
+		return output,err 
+	}
+
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -113,11 +117,16 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	if ElasticNicInput.Id != "" {
 		queryElasticNiResponse, flag, err := queryElasticNicInfo(client, ElasticNicInput)
 		if err != nil && flag == false {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+		    output.Result.Message = err.Error()
+		    return output,err 
 		}
 
 		if err == nil && flag == true {
-			return queryElasticNiResponse, nil
+			output.Id = queryElasticNiResponse.Id
+			output.PrivateIp = queryElasticNiResponse.PrivateIp
+			output.AttachGroupList =queryElasticNiResponse.AttachGroupList
+			return output, nil
 		}
 	}
 	request := vpc.NewCreateNetworkInterfaceRequest()
@@ -132,11 +141,12 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	response, err := client.CreateNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to create elastic nic, error=%s", err)
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message=err.Error()
+		return output,err 
 	}
-	output := ElasticNicOutput{}
+
 	output.RequestId = *response.Response.RequestId
-	output.Guid = ElasticNicInput.Guid
 	output.Id = *response.Response.NetworkInterface.NetworkInterfaceId
 	if len(response.Response.NetworkInterface.PrivateIpAddressSet) > 0 {
 		output.PrivateIp = *response.Response.NetworkInterface.PrivateIpAddressSet[0].PrivateIpAddress
@@ -147,23 +157,25 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 		}
 	}
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *ElasticNicCreateAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
+	var finalErr error
+
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.createElasticNic(&elasticNic)
 		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are created", elasticNics)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type ElasticNicTerminateAction struct {
@@ -179,56 +191,64 @@ func (action *ElasticNicTerminateAction) ReadParam(param interface{}) (interface
 	return inputs, nil
 }
 
-func (action *ElasticNicTerminateAction) CheckParam(input interface{}) error {
-	elasticNics, ok := input.(ElasticNicInputs)
-	if !ok {
-		return fmt.Errorf("ElasticNicTerminateAction:input type=%T not right", input)
-	}
-	for _, elasticNic := range elasticNics.Inputs {
-		if elasticNic.Id == "" {
+func elasticNicTerminateCheckParam(elasticNic *ElasticNicInput) error {
+	if elasticNic.Id == "" {
 			return errors.New("ElasticNicTerminateAction input Id is empty")
-		}
 	}
 
 	return nil
 }
 
-func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *ElasticNicInput) (ElasticNicOutput, error) {
+	output := ElasticNicOutput{
+		Guid : ElasticNicInput.Guid,
+	}
+	output.Result.Code = RESULT_CODE_SUCCESS 
+
+	if err :=elasticNicTerminateCheckParam(ElasticNicInput);err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
+	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	//check elastic nic status can detach
 	err = ensureElasticNicDetach(client, ElasticNicInput)
 	if err != nil {
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
 	}
 	request := vpc.NewDeleteNetworkInterfaceRequest()
 	request.NetworkInterfaceId = &ElasticNicInput.Id
 	response, err := client.DeleteNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to terminate elastic nic, error=%s", err)
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
 	}
-	output := ElasticNicOutput{}
-	output.Guid = ElasticNicInput.Guid
+
 	output.RequestId = *response.Response.RequestId
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *ElasticNicTerminateAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
+	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.terminateElasticNic(&elasticNic)
 		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err 
 		}
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are terminate", elasticNics)
-	return &outputs, nil
+	return outputs, nil
 }
 
 func queryElasticNicInfo(client *vpc.Client, input *ElasticNicInput) (*ElasticNicOutput, bool, error) {
@@ -279,25 +299,28 @@ func (action *ElasticNicAttachAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *ElasticNicAttachAction) CheckParam(input interface{}) error {
-	elasticNics, ok := input.(ElasticNicInputs)
-	if !ok {
-		return fmt.Errorf("ElasticNicAttachAction:input type=%T not right", input)
-	}
-
-	for _, elasticNic := range elasticNics.Inputs {
+func elasticNicAttachCheckParam(elasticNic *ElasticNicInput) error {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicAttachAction input Id is empty")
 		}
 		if elasticNic.InstanceId == "" {
 			return errors.New("ElasticNicAttachAction input InstanceId is empty")
 		}
-	}
 
 	return nil
 }
 
-func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticNicInput) (ElasticNicOutput, error) {
+	output := ElasticNicOutput{
+		Guid :ElasticNicInput.Guid,
+	}
+	output.Result.Code = RESULT_CODE_SUCCESS 
+	if err:=elasticNicAttachCheckParam(ElasticNicInput);err!= nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
+	}
+
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -309,30 +332,31 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 	response, err := client.AttachNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to attach elastic nic, error=%s", err)
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
 	}
 
-	output := ElasticNicOutput{}
-	output.Guid = ElasticNicInput.Guid
 	output.RequestId = *response.Response.RequestId
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
+	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.attachElasticNic(&elasticNic)
 		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are attach", elasticNics)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type ElasticNicDetachAction struct {
@@ -347,25 +371,30 @@ func (action *ElasticNicDetachAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *ElasticNicDetachAction) CheckParam(input interface{}) error {
-	elasticNics, ok := input.(ElasticNicInputs)
-	if !ok {
-		return fmt.Errorf("ElasticNicDetachAction:input type=%T not right", input)
-	}
-
-	for _, elasticNic := range elasticNics.Inputs {
+func elasticNicDetachCheckParam(elasticNic *ElasticNicInput) error {
 		if elasticNic.Id == "" {
 			return errors.New("ElasticNicDetachAction input Id is empty")
 		}
 		if elasticNic.InstanceId == "" {
 			return errors.New("ElasticNicDetachAction input InstanceId is empty")
 		}
-	}
+	
 
 	return nil
 }
 
 func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+	output := ElasticNicOutput{
+		Guid:ElasticNicInput.Guid,
+	}
+	output.Result.Code = RESULT_CODE_SUCCESS 
+
+	if err :=elasticNicDetachCheckParam(ElasticNicInput);err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
+	}
+
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -377,24 +406,24 @@ func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticN
 	response, err := client.DetachNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to detach elastic nic, error=%s", err)
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output,err
 	}
-
-	output := ElasticNicOutput{}
-	output.Guid = ElasticNicInput.Guid
 	output.RequestId = *response.Response.RequestId
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error) {
 	elasticNics, _ := input.(ElasticNicInputs)
 	outputs := ElasticNicOutputs{}
+	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.detachElasticNic(&elasticNic)
 		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr =err
 		}
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}

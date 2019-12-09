@@ -11,8 +11,8 @@ import (
 
 const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
-	RESULT_CODE_SUCCESS = "ok"
-	RESULT_CODE_ERROR =  "error"
+	RESULT_CODE_SUCCESS = "0"
+	RESULT_CODE_ERROR =  "1"
 )
 
 type CallBackParameter struct {
@@ -20,8 +20,8 @@ type CallBackParameter struct {
 }
 
 type Result struct {
-	Code string    `json:"code,omitempty"`
-	Message string `json:"msg,omitempty"`
+	Code string    `json:"errorCode,omitempty"`
+	Message string `json:"errorMessage,omitempty"`
 }
 
 
