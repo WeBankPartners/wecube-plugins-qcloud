@@ -67,6 +67,7 @@ type CreateAndMountCbsDiskOutputs struct {
 
 type CreateAndMountCbsDiskOutput struct {
 	CallBackParameter
+	Result
 	Guid       string `json:"guid,omitempty"`
 	VolumeName string `json:"volume_name,omitempty"`
 	DiskId     string `json:"disk_id,omitempty"`
@@ -81,39 +82,32 @@ func (action *CreateAndMountCbsDiskAction) ReadParam(param interface{}) (interfa
 	return inputs, nil
 }
 
-func (action *CreateAndMountCbsDiskAction) CheckParam(input interface{}) error {
-	inputs, ok := input.(CreateAndMountCbsDiskInputs)
-	if !ok {
-		return fmt.Errorf("CreateAndMountCbsDiskAction:input type=%T not right", input)
+func  checkParam(input CreateAndMountCbsDiskInput) error {
+	if input.ProviderParams == "" {
+		return errors.New("providerParams is empty")
+	}
+	if input.DiskSize == 0 {
+		return errors.New("diskSize is empty")
 	}
 
-	for _, input := range inputs.Inputs {
-		if input.ProviderParams == "" {
-			return errors.New("providerParams is empty")
-		}
-		if input.DiskSize == 0 {
-			return errors.New("diskSize is empty")
-		}
+	if input.DiskChargeType == "" {
+		return errors.New("diskCharge param is empty")
+	}
 
-		if input.DiskChargeType == "" {
-			return errors.New("diskCharge param is empty")
-		}
+	if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
+		return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
+	}
 
-		if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
-			return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
-		}
+	if input.InstancePassword == "" {
+		return errors.New("instancePassword is empty")
+	}
 
-		if input.InstancePassword == "" {
-			return errors.New("instancePassword is empty")
-		}
+	if input.MountDir == "" {
+		return errors.New(" mountDir is empty")
+	}
 
-		if input.MountDir == "" {
-			return errors.New(" mountDir is empty")
-		}
-
-		if err := IsValidValue(input.FileSystemType, []string{"ext3", "ext4", "xfs"}); err != nil {
-			return fmt.Errorf("%s is not valid file system type", input.FileSystemType)
-		}
+	if err := IsValidValue(input.FileSystemType, []string{"ext3", "ext4", "xfs"}); err != nil {
+		return fmt.Errorf("%s is not valid file system type", input.FileSystemType)
 	}
 	return nil
 }
@@ -241,7 +235,7 @@ func runRemoteHostScript(ip string, password string, remoteFile string) (string,
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 	if err := session.Run(remoteFile); err != nil {
-		logrus.Errorf("runRemoteHostScript stdout=%s,stderr=%s\n", stdout, stderr)
+		logrus.Errorf("runRemoteHostScript stdout=%v,stderr=%v\n", stdout, stderr)
 		return "", err
 	}
 	return stdout.String(), nil
@@ -307,11 +301,20 @@ func getNewCreateDiskVolumeName(ip, password string, lastUnformatedDisks []strin
 	return "", errors.New("getNewCreateDiskVolumeName timeout")
 }
 
-func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (CreateAndMountCbsDiskOutput, error) {
-	var err error
-	output := CreateAndMountCbsDiskOutput{
-		Guid: input.Guid,
+func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMountCbsDiskOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		if err != nil {
+			ouput.Result.Code = RESULT_CODE_SUCCESS
+		}else {
+			ouput.Result.Code = RESULT_CODE_ERROR
+			ouput.Result.Message = err.Error()
+		}
 	}
+	
+	if err=checkParam(input);err != nil{
+		return output,err
+	} 
 
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
@@ -352,16 +355,18 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (CreateAndMountCbsD
 func (action *CreateAndMountCbsDiskAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(CreateAndMountCbsDiskInputs)
 	outputs := CreateAndMountCbsDiskOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
 		output, err := createAndMountCbsDisk(input)
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
-			return outputs, err
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs, nil
+
+	return outputs, finalErr
 }
 
 //-----------umount action ------------//
@@ -393,6 +398,7 @@ type UmountCbsDiskOutputs struct {
 
 type UmountCbsDiskOutput struct {
 	CallBackParameter
+	Result
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -405,35 +411,29 @@ func (action *UmountAndTerminateDiskAction) ReadParam(param interface{}) (interf
 	return inputs, nil
 }
 
-func (action *UmountAndTerminateDiskAction) CheckParam(input interface{}) error {
-	inputs, ok := input.(UmountCbsDiskInputs)
-	if !ok {
-		return fmt.Errorf("UmountAndTerminateDiskAction:input type=%T not right", input)
+func  checkUmountDiskParam(input UmountCbsDiskInput) error {
+	if input.ProviderParams == "" {
+		return errors.New("providerParams is empty")
 	}
 
-	for _, input := range inputs.Inputs {
-		if input.ProviderParams == "" {
-			return errors.New("providerParams is empty")
-		}
+	if input.Id == "" {
+		return errors.New("id is empty")
+	}
 
-		if input.Id == "" {
-			return errors.New("id is empty")
-		}
+	if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
+		return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
+	}
 
-		if input.InstanceId == "" || input.InstanceGuid == "" || input.InstanceSeed == "" {
-			return errors.New("instanceId、instanceGuid  or instanceSeed is empty")
-		}
+	if input.InstancePassword == "" {
+		return errors.New("instancePassword is empty")
+	}
 
-		if input.InstancePassword == "" {
-			return errors.New("instancePassword is empty")
-		}
-
-		if input.MountDir == "" || input.VolumeName == "" {
-			return errors.New("mountDir or volume name is empty")
-		}
+	if input.MountDir == "" || input.VolumeName == "" {
+		return errors.New("mountDir or volume name is empty")
 	}
 	return nil
 }
+
 func umountDisk(ip, password, volumeName, mountDir string) error {
 	if err := copyFileToRemoteHost(ip, password, "./scripts/umountDisk.py", "/tmp/umountDisk.py"); err != nil {
 		return err
@@ -458,6 +458,9 @@ func terminateDisk(providerParams, id string) error {
 }
 
 func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
+	if err := checkUmountDiskParam(input) ;err !=nil {
+		return err 
+	}
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
 		return err
@@ -479,17 +482,23 @@ func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
 func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(UmountCbsDiskInputs)
 	outputs := UmountCbsDiskOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
-		err := umountAndTerminateCbsDisk(input)
-		if err != nil {
-			return outputs, err
-		}
 		output := UmountCbsDiskOutput{
 			Guid: input.Guid,
 		}
+
+		output.Result.Code = RESULT_CODE_SUCCESS 
+		if err := umountAndTerminateCbsDisk(input);err != nil {
+		   output.Result.Code = RESULT_CODE_ERROR
+		   output.Result.Message  = err.Error()
+		   finalErr = err
+		}
+
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs, nil
+
+	return outputs, finalErr
 }
