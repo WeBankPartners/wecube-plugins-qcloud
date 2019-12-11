@@ -28,7 +28,6 @@ type LogPlugin struct {
 //GetActionByName .
 func (plugin *LogPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := LogActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("Log plugin,action = %s not found", actionName)
 	}
@@ -61,6 +60,7 @@ type SearchOutputs struct {
 //SearchOutput .
 type SearchOutput struct {
 	CallBackParameter
+	Result
 	FileName string `json:"file_name,omitempty"`
 	Line     string `json:"line_number,omitempty"`
 	Log      string `json:"log,omitempty"`
@@ -77,47 +77,38 @@ func (action *LogSearchAction) ReadParam(param interface{}) (interface{}, error)
 }
 
 //CheckParam .
-func (action *LogSearchAction) CheckParam(input interface{}) error {
-	logs, ok := input.(SearchInputs)
-	if !ok {
-		return fmt.Errorf("LogSearchAction:input type=%T not right", input)
+func logSearchCheckParam(log *SearchInput) error {
+	if log.KeyWord == "" {
+		return errors.New("LogSearchAction input KeyWord can not be empty")
 	}
-
-	for _, log := range logs.Inputs {
-		if log.KeyWord == "" {
-			return errors.New("LogSearchAction input KeyWord can not be empty")
-		}
-	}
-
+	
 	return nil
 }
 
 //Do .
 func (action *LogSearchAction) Do(input interface{}) (interface{}, error) {
 	logs, _ := input.(SearchInputs)
-
 	var logoutputs SearchOutputs
+	var finalErr error
 
 	for i := 0; i < len(logs.Inputs); i++ {
 		output, err := action.Search(&logs.Inputs[i])
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
 
 		loginfo, _ := output.(SearchOutputs)
-
 		for k := 0; k < len(loginfo.Outputs); k++ {
 			logoutputs.Outputs = append(logoutputs.Outputs, loginfo.Outputs[k])
 		}
 
 	}
 
-	return &logoutputs, nil
+	return &logoutputs, finalErr
 }
 
 //Search .
 func (action *LogSearchAction) Search(input *SearchInput) (interface{}, error) {
-
 	sh := "cd logs && "
 
 	keystring := []string{}
@@ -161,7 +152,7 @@ func (action *LogSearchAction) Search(input *SearchInput) (interface{}, error) {
 		for k := 0; k < len(output); k++ {
 			var info SearchOutput
 			info.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-
+			info.Result.Code = RESULT_CODE_SUCCESS
 			if output[k] == "" {
 				continue
 			}
@@ -229,6 +220,7 @@ type SearchDetailOutputs struct {
 //SearchDetailOutput .
 type SearchDetailOutput struct {
 	CallBackParameter
+	Result 
 	FileName   string `json:"file_name,omitempty"`
 	LineNumber string `json:"line_number,omitempty"`
 	Logs       string `json:"logs,omitempty"`
@@ -245,20 +237,14 @@ func (action *LogSearchDetailAction) ReadParam(param interface{}) (interface{}, 
 }
 
 //CheckParam .
-func (action *LogSearchDetailAction) CheckParam(input interface{}) error {
-	logs, ok := input.(SearchDetailInputs)
-	if !ok {
-		return fmt.Errorf("LogSearchDetailAction:input type=%T not right", input)
-	}
-
-	for _, log := range logs.Inputs {
+func logSearchDetailCheckParam(log *SearchDetailInput) error {
 		if log.FileName == "" {
 			return errors.New("LogSearchDetailAction input finename can not be empty")
 		}
 		if log.LineNumber == "" {
 			return errors.New("LogSearchDetailAction input LineNumber can not be empty")
 		}
-	}
+	
 
 	return nil
 }
@@ -266,16 +252,30 @@ func (action *LogSearchDetailAction) CheckParam(input interface{}) error {
 //Do .
 func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) {
 	logs, _ := input.(SearchDetailInputs)
-
+	var finalErr error
 	var logoutputs SearchDetailOutputs
 
 	for i := 0; i < len(logs.Inputs); i++ {
-		text, err := action.SearchDetail(&logs.Inputs[i])
-		if err != nil {
-			return nil, err
-		}
 		var info SearchDetailOutput
 		info.CallBackParameter.Parameter = logs.Inputs[i].CallBackParameter.Parameter
+		info.Result.Code = RESULT_CODE_SUCCESS
+		if err:=logSearchDetailCheckParam(&logs.Inputs[i]);err != nil {
+			info.Result.Code = RESULT_CODE_ERROR
+			info.Result.Message=err.Error()
+			finalErr = err
+			logoutputs.Outputs = append(logoutputs.Outputs, info)
+			continue
+		}
+
+		text, err := action.SearchDetail(&logs.Inputs[i])
+		if err != nil {
+			info.Result.Code = RESULT_CODE_ERROR
+			info.Result.Message=err.Error()
+			finalErr = err
+			logoutputs.Outputs = append(logoutputs.Outputs, info)
+			continue
+		}
+
 		info.FileName = logs.Inputs[i].FileName
 		info.LineNumber = logs.Inputs[i].LineNumber
 		info.Logs = text
@@ -283,7 +283,7 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 		logoutputs.Outputs = append(logoutputs.Outputs, info)
 	}
 
-	return &logoutputs, nil
+	return &logoutputs, finalErr
 }
 
 //SearchDetail .

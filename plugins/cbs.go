@@ -302,8 +302,9 @@ func getNewCreateDiskVolumeName(ip, password string, lastUnformatedDisks []strin
 }
 
 func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMountCbsDiskOutput, err error) {
+	output.Guid = input.Guid
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	defer func() {
-		output.Guid = input.Guid
 		if err == nil {
 			output.Result.Code = RESULT_CODE_SUCCESS
 		}else {
@@ -359,7 +360,6 @@ func (action *CreateAndMountCbsDiskAction) Do(input interface{}) (interface{}, e
 
 	for _, input := range inputs.Inputs {
 		output, err := createAndMountCbsDisk(input)
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err
 		}
@@ -488,15 +488,16 @@ func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, 
 		output := UmountCbsDiskOutput{
 			Guid: input.Guid,
 		}
-
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS 
+		
 		if err := umountAndTerminateCbsDisk(input);err != nil {
 		   output.Result.Code = RESULT_CODE_ERROR
 		   output.Result.Message  = err.Error()
 		   finalErr = err
+		   continue
 		}
 
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 

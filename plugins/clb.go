@@ -176,11 +176,11 @@ func waitClbReady(client *clb.Client, id string) (*ClbDetail, error) {
 
 func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput, err error) {
 	var lbForward int64 = 1
+	output.Guid=input.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter 
 
 	defer func(){
-		output.Guid=input.Guid
-		output.Result.Code = RESULT_CODE_SUCCESS 
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			output.Result.Code =RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
@@ -195,8 +195,10 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 	if err != nil {
 		return output, err
 	}
+
+	var clbDetail *ClbDetail
 	if input.Id != "" {
-		clbDetail, err := queryClbDetailById(client, input.Id)
+		clbDetail, err = queryClbDetailById(client, input.Id)
 		if err != nil {
 			return output, err
 		}
@@ -204,7 +206,7 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 		if clbDetail != nil {
 			output.Vip = clbDetail.Vip
 			output.Id = input.Id
-			return output, nil
+			return output, err
 		}
 	}
 	//create new clb
@@ -221,7 +223,8 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 		return output, err
 	}
 	if len(resp.Response.LoadBalancerIds) == 0 {
-		return output, fmt.Errorf("createClb Response do not have lb id")
+		err = fmt.Errorf("createClb Response do not have lb id")
+		return output, err
 	}
 
 	clbDetail, err := waitClbReady(client, *resp.Response.LoadBalancerIds[0])
@@ -231,7 +234,7 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 
 	output.Vip = clbDetail.Vip
 	output.Id = *resp.Response.LoadBalancerIds[0]
-	return output, nil
+	return output,err
 }
 
 func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
@@ -298,7 +301,7 @@ func terminateClb(client *clb.Client, input TerminateClbInput) error {
 	request := clb.NewDeleteLoadBalancerRequest()
 	request.LoadBalancerIds = loadBalancerIds
 
-	if err :=terminateClbCheckParam(input);err != nil {
+	if err := terminateClbCheckParam(input);err != nil {
 		return err 
 	}
 
@@ -319,8 +322,9 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 		output := TerminateClbOutput{
 			Guid: input.Guid,
 		}
-
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
+
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err := terminateClb(client, input); err != nil {
@@ -328,7 +332,7 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 			output.Result.Message = err.Error()
 			finalErr= err 
 		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
@@ -508,6 +512,7 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
+		
 		err := addBackTargetCheckParam(input) {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()

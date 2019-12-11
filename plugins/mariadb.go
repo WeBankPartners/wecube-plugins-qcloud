@@ -69,6 +69,7 @@ type MariadbOutputs struct {
 
 type MariadbOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -83,7 +84,6 @@ type MariadbPlugin struct {
 
 func (plugin *MariadbPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := MariadbActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("mariadb plugin,action = %s not found", actionName)
 	}
@@ -103,13 +103,7 @@ func (action *MariadbCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-func (action *MariadbCreateAction) CheckParam(input interface{}) error {
-	req, ok := input.(MariadbInputs)
-	if !ok {
-		return fmt.Errorf("MariadbCreateAction:input type=%T not right", input)
-	}
-
-	for _, input := range req.Inputs {
+func mariadbCreateCheckParam(input *MariadbInput) error {
 		if input.Guid == "" {
 			return errors.New("guid is empty")
 		}
@@ -140,26 +134,24 @@ func (action *MariadbCreateAction) CheckParam(input interface{}) error {
 		if input.Zones == "" {
 			return errors.New("zones is empty")
 		}
-	}
-
+	
 	return nil
 }
 
 func (action *MariadbCreateAction) Do(input interface{}) (interface{}, error) {
 	req, _ := input.(MariadbInputs)
 	outputs := MariadbOutputs{}
+	var finalErr error
 	for _, input := range req.Inputs {
 		output, err := action.createAndInitMariadb(&input)
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr= err
 		}
-
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all mariadb instances = %v are created", outputs)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func isValidMariadbVersion(version string) error {
@@ -294,7 +286,6 @@ func waitMariadbToDesireStatus(client *mariadb.Client, instanceId string, desire
 			return "", 0, errors.New("waitMariadbRunning timeout")
 		}
 	}
-
 }
 
 func waitFlowSuccess(client *mariadb.Client, flowId *int64) error {
@@ -389,11 +380,23 @@ func grantAccountPrivileges(client *mariadb.Client, userName string, instanceId 
 	return err
 }
 
-func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (MariadbOutput, error) {
-	output := MariadbOutput{
-		Guid: input.Guid,
-		Id:   input.Id,
+func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (output MariadbOutput, err error) {
+	output.Guid=input.Guid
+	output.Id= input.Id
+	ouput.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+	
+	defer func(){
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err=mariadbCreateCheckParam(input);err != nil {
+		return output,err 
 	}
+
 	if input.UserName == "" {
 		input.UserName = DEFAULT_MARIADB_USER_NAME
 	}
@@ -404,7 +407,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 		input.LowerCaseTableNames = DEFAULT_MARIADB_LOWER_CASE_TABLE_NAMES
 	}
 
-	if err := isValidMariadbVersion(input.DbVersion); err != nil {
+	if err = isValidMariadbVersion(input.DbVersion); err != nil {
 		logrus.Errorf("invalid mariadb version(%s)", input.DbVersion)
 		return output, err
 	}
@@ -417,15 +420,16 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 		logrus.Errorf("CreateMariadbClient meet error(%v)", err)
 		return output, err
 	}
-
+	
 	exit, err := isMariadbExist(client, input.Id)
 	if err != nil {
 		logrus.Errorf("isMariadbExist(%s) meet error", input.DbVersion)
 		return output, err
 	}
 	if exit {
-		logrus.Infof("mariadb instance(%s) is already exist", input.DbVersion)
-		return output, nil
+		logrus.Infof("mariadb instance(%s) is already exist", input.Id)
+		err = fmt.Errorf("mariadb instance(%s) is already exist", input.Id)
+		return output, err
 	}
 
 	requestId, instanceId, err := createMariadbInstance(client, input)
@@ -473,7 +477,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (Ma
 	output.Port = fmt.Sprintf("%v", vport)
 	output.UserName = input.UserName
 
-	return output, nil
+	return output,err
 }
 
 func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBInstance, error) {

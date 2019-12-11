@@ -69,6 +69,7 @@ type MysqlVmOutputs struct {
 
 type MysqlVmOutput struct {
 	CallBackParameter
+	Result 
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -85,7 +86,6 @@ type MysqlVmPlugin struct {
 
 func (plugin *MysqlVmPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := MysqlVmActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("Mysql vm plugin,action = %s not found", actionName)
 	}
@@ -234,7 +234,11 @@ func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowe
 	return "", "", fmt.Errorf("timeout")
 }
 
-func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*MysqlVmOutput, error) {
+func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (output MysqlVmOutput, err error) {
+	output.Guid = mysqlVmInput.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
+
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -242,29 +246,36 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	if mysqlVmInput.Id != "" {
 		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
 		if err != nil && flag == false {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
 		}
 
 		if err == nil && flag == true {
-			return queryMysqlVmInstanceInfoResponse, nil
+			output.Id =   mysqlVmInput.Id
+			output.PrivateIp =queryMysqlVmInstanceInfoResponse.Guid
+			return output, nil
 		}
 	}
 
 	var instanceId, requestId, privateIp string
-	var err error
 	if mysqlVmInput.ChargeType == CHARGE_TYPE_PREPAID {
 		instanceId, requestId, err = action.createMysqlVmWithPrepaid(client, mysqlVmInput)
 	} else {
 		instanceId, requestId, err = action.createMysqlVmWithPostByHour(client, mysqlVmInput)
 	}
 	if err != nil {
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
 	if instanceId != "" {
 		privateIp, err = action.waitForMysqlVmCreationToFinish(client, instanceId)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+		    output.Result.Message = err.Error()
+		    return output, err
 		}
 	}
 
@@ -278,11 +289,11 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 
 	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames)
 	if err != nil {
-		return nil, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
-	output := MysqlVmOutput{}
-	output.Guid = mysqlVmInput.Guid
 	output.PrivateIp = privateIp
 	output.Id = instanceId
 	output.RequestId = requestId
@@ -292,10 +303,12 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (*M
 	md5sum := utils.Md5Encode(mysqlVmInput.Guid + mysqlVmInput.Seed)
 	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
 		logrus.Errorf("AesEncode meet error(%v)", err)
-		return &output, err
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
-	return &output, nil
+	return output, err
 }
 
 func queryMySqlInstanceInitFlag(client *cdb.Client, instanceId string) (int64, error) {
@@ -318,6 +331,7 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 	request := cdb.NewDescribeDBInstancesRequest()
 	request.InstanceIds = append(request.InstanceIds, &instanceId)
 	count := 0
+
 	for {
 		response, err := client.DescribeDBInstances(request)
 		if err != nil {
@@ -344,18 +358,19 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
 	outputs := MysqlVmOutputs{}
+	var finalErr error
+
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.createMysqlVm(&mysqlVm)
-		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
 
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all mysqlVms = %v are created", mysqlVms)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type MysqlVmTerminateAction struct {
@@ -370,21 +385,29 @@ func (action *MysqlVmTerminateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *MysqlVmTerminateAction) CheckParam(input interface{}) error {
-	mysqlVms, ok := input.(MysqlVmInputs)
-	if !ok {
-		return fmt.Errorf("mysqlVmTerminateAtion:input type=%T not right", input)
+func mysqlVmTerminateCheckParam(mysqlVm *MysqlVmInput) error {
+	if mysqlVm.Id == "" {
+		return errors.New("mysqlVmTerminateAtion input mysqlVmId is empty")
 	}
-
-	for _, mysqlVm := range mysqlVms.Inputs {
-		if mysqlVm.Id == "" {
-			return errors.New("mysqlVmTerminateAtion input mysqlVmId is empty")
-		}
-	}
+	
 	return nil
 }
 
-func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInput) (*MysqlVmOutput, error) {
+func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInput) (output MysqlVmOutput, err error) {
+	output.Guid = mysqlVmInput.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	
+	defer func (){
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+		}
+	}()
+
+	if err = mysqlVmTerminateCheckParam(mysqlVmInput);err != nil {
+		return output,err
+	}
+
 	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -393,20 +416,19 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 
 	response, err := client.IsolateDBInstance(request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
+		err = fmt.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
+		return output, err
 	}
 
 	err = action.waitForMysqlVmTerminationToFinish(client, mysqlVmInput.Id)
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
-	output := MysqlVmOutput{}
-	output.Guid = mysqlVmInput.Guid
 	output.RequestId = *response.Response.RequestId
 	output.Id = mysqlVmInput.Id
 
-	return &output, nil
+	return output, err
 }
 
 func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *cdb.Client, instanceId string) error {
@@ -438,16 +460,18 @@ func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *
 func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
 	outputs := MysqlVmOutputs{}
+	var finalErr error
+
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.terminateMysqlVm(&mysqlVm)
 		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type MysqlVmRestartAction struct {
@@ -462,17 +486,11 @@ func (action *MysqlVmRestartAction) ReadParam(param interface{}) (interface{}, e
 	return inputs, nil
 }
 
-func (action *MysqlVmRestartAction) CheckParam(input interface{}) error {
-	mysqlVms, ok := input.(MysqlVmInputs)
-	if !ok {
-		return fmt.Errorf("mysqlVmRestartAtion:input type=%T not right", input)
-	}
-
-	for _, mysqlVm := range mysqlVms.Inputs {
-		if mysqlVm.Id == "" {
+func  mysqlVmRestartCheckParam(mysqlVm *MysqlVmInput) error {
+	if mysqlVm.Id == "" {
 			return errors.New("mysqlVmRestartAtion input mysqlVmId is empty")
-		}
 	}
+	
 	return nil
 }
 
@@ -522,19 +540,33 @@ func waitForAsyncTaskToFinish(client *cdb.Client, requestId string) error {
 func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	mysqlVms, _ := input.(MysqlVmInputs)
 	outputs := MysqlVmOutputs{}
+	var finalErr error
+
 	for _, mysqlVm := range mysqlVms.Inputs {
-		err := action.restartMysqlVm(mysqlVm)
-		if err != nil {
-			return outputs, err
+		output := MysqlVmOutput{
+			Guid:mysqlVm.Guid,
 		}
-		output := MysqlVmOutput{}
 		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
-		output.Guid = mysqlVm.Guid
 		output.Id = mysqlVm.Id
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		if err:=mysqlVmRestartCheckParam(mysqlVm);err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Reuslt.Message= err.Error()
+			finalErr = err
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+	
+		if 	err := action.restartMysqlVm(mysqlVm);err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Reuslt.Message= err.Error()
+			finalErr = err
+		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return outputs, nil
+	return outputs, finalErr
 }
 
 func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlVmOutput, bool, error) {

@@ -50,6 +50,7 @@ type SubnetOutputs struct {
 
 type SubnetOutput struct {
 	CallBackParameter
+	Result
 	RequestId    string `json:"request_id,omitempty"`
 	Guid         string `json:"guid,omitempty"`
 	Id           string `json:"id,omitempty"`
@@ -61,7 +62,6 @@ type SubnetPlugin struct {
 
 func (plugin *SubnetPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := SubnetActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("Subnet plugin,action = %s not found", actionName)
 	}
@@ -81,13 +81,7 @@ func (action *SubnetCreateAction) ReadParam(param interface{}) (interface{}, err
 	return inputs, nil
 }
 
-func (action *SubnetCreateAction) CheckParam(input interface{}) error {
-	subnets, ok := input.(SubnetInputs)
-	if !ok {
-		return fmt.Errorf("subnetCreateAtion:input type=%T not right", input)
-	}
-
-	for _, subnet := range subnets.Inputs {
+func subnetCreateCheckParam(subnet *SubnetInput) error {
 		if subnet.VpcId == "" {
 			return errors.New("subnetCreateAtion input vpc_id is empty")
 		}
@@ -97,27 +91,44 @@ func (action *SubnetCreateAction) CheckParam(input interface{}) error {
 		if _, _, err := net.ParseCIDR(subnet.CidrBlock); err != nil {
 			return fmt.Errorf("subnetCreateAtion invalid cidr_block [%s]", subnet.CidrBlock)
 		}
-	}
-
+	
 	return nil
 }
 
-func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (*SubnetOutput, error) {
+func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output SubnetOutput, err error) {
+	output.Guid = subnet.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
+
+	defer func(){
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+		}
+	}()
+
+	if err = subnetCreateCheckParam(subnet);err != nil {
+		return output,err 
+	}
+
 	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
 	client, err := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	//check resource exist
+	var querysubnetresponse *SubnetOutput
+	var flag bool 
 	if subnet.Id != "" {
 		querysubnetresponse, flag, err := querySubnetsInfo(client, subnet)
 		if err != nil && flag == false {
-			return nil, err
+			return output, err
 		}
 
 		if err == nil && flag == true {
-			return querysubnetresponse, nil
+			output.Id = querysubnetresponse.Id
+			return output, err
 		}
 	}
 
@@ -130,32 +141,32 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (*SubnetOutp
 
 	response, err := client.CreateSubnet(request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to CreateSubnet, error=%s", err)
+		err = fmt.Errorf("failed to CreateSubnet, error=%s", err)
+		return output, err
 	}
 
-	output := SubnetOutput{}
-	output.Guid = subnet.Guid
 	output.RequestId = *response.Response.RequestId
 	output.Id = *response.Response.Subnet.SubnetId
 
-	return &output, nil
+	return output, err
 }
 
 func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
 	subnets, _ := input.(SubnetInputs)
 	outputs := SubnetOutputs{}
+	var finalErr error
+
 	for _, subnet := range subnets.Inputs {
 		output, err := action.createSubnet(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
 
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all subnet = %v are created", subnets)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type SubnetTerminateAction struct {
@@ -170,21 +181,13 @@ func (action *SubnetTerminateAction) ReadParam(param interface{}) (interface{}, 
 	return inputs, nil
 }
 
-func (action *SubnetTerminateAction) CheckParam(input interface{}) error {
-	subnets, ok := input.(SubnetInputs)
-	if !ok {
-		return fmt.Errorf("subnetTerminateAtion:input type=%T not right", input)
+func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (SubnetOutput, error) {
+	output := SubnetOutput{
+		Guid :subnet.Guid,
 	}
+	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
+	output.Result.Code = RESULT_CODE_SUCCESS
 
-	for _, subnet := range subnets.Inputs {
-		if subnet.Id == "" {
-			return errors.New("subnetTerminateAtion param subnetId is empty")
-		}
-	}
-	return nil
-}
-
-func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (*SubnetOutput, error) {
 	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -193,30 +196,31 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (*Subn
 
 	response, err := client.DeleteSubnet(request)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to DeleteSubnet(subnetId=%v), error=%s", subnet.Id, err)
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = fmt.Sprintf("Failed to DeleteSubnet(subnetId=%v), error=%s", subnet.Id, err)
+		return output, fmt.Errorf("Failed to DeleteSubnet(subnetId=%v), error=%s", subnet.Id, err)
 	}
 
-	output := SubnetOutput{}
-	output.Guid = subnet.Guid
 	output.RequestId = *response.Response.RequestId
 	output.Id = subnet.Id
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) {
 	subnets, _ := input.(SubnetInputs)
 	outputs := SubnetOutputs{}
+	var finalErr error
+
 	for _, subnet := range subnets.Inputs {
 		output, err := action.terminateSubnet(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func querySubnetsInfo(client *vpc.Client, input *SubnetInput) (*SubnetOutput, bool, error) {
@@ -254,11 +258,6 @@ func (action *CreateSubnetWithRouteTableAction) ReadParam(param interface{}) (in
 	return createAction.ReadParam(param)
 }
 
-func (action *CreateSubnetWithRouteTableAction) CheckParam(input interface{}) error {
-	createAction := SubnetCreateAction{}
-	return createAction.CheckParam(input)
-}
-
 func destroySubnetWithRouteTable(providerParams string, subnetId string, routeTableId string) error {
 	//destroy subnet
 	terminateSubnetAction := SubnetTerminateAction{}
@@ -285,17 +284,22 @@ func destroySubnetWithRouteTable(providerParams string, subnetId string, routeTa
 	return nil
 }
 
-func createSubnetWithRouteTable(input *SubnetInput) (*SubnetOutput, error) {
-	var err error
-	output := &SubnetOutput{
-		Guid: input.Guid,
-	}
+func createSubnetWithRouteTable(input *SubnetInput) (output SubnetOutput, err error) {
+	output.Guid = input.Guid
+	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
+	output.Result.Code = RESULT_CODE_SUCCESS
 
 	defer func() {
 		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			destroySubnetWithRouteTable(input.ProviderParams, output.Id, output.RouteTableId)
 		}
 	}()
+
+	if err = subnetCreateCheckParam(input);err != nil {
+		return output,err 
+	}
 
 	action := SubnetCreateAction{}
 	createSubnetOutput, err := action.createSubnet(input)
@@ -328,16 +332,16 @@ func createSubnetWithRouteTable(input *SubnetInput) (*SubnetOutput, error) {
 func (action *CreateSubnetWithRouteTableAction) Do(input interface{}) (interface{}, error) {
 	subnets, _ := input.(SubnetInputs)
 	outputs := SubnetOutputs{}
+	var finalErr error
 	for _, subnet := range subnets.Inputs {
 		output, err := createSubnetWithRouteTable(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type TerminateSubnetWithRouteTableAction struct {
@@ -348,34 +352,46 @@ func (action *TerminateSubnetWithRouteTableAction) ReadParam(param interface{}) 
 	return terminateAction.ReadParam(param)
 }
 
-func (action *TerminateSubnetWithRouteTableAction) CheckParam(input interface{}) error {
-	terminateAction := SubnetTerminateAction{}
-	if err := terminateAction.CheckParam(input); err != nil {
-		return err
+func terminateSubnetWithRouteTableCheckParam(input SubnetInput) error {
+	if input.Id == "" {
+		return errors.New("TerminateSubnetWithRouteTableAction param Id is empty")
 	}
 
-	subnets, _ := input.(SubnetInputs)
-	for _, subnet := range subnets.Inputs {
-		if subnet.RouteTableId == "" {
-			return errors.New("TerminateSubnetWithRouteTableAction param RouteTableId is empty")
-		}
+	if subnet.RouteTableId == "" {
+		return errors.New("TerminateSubnetWithRouteTableAction param RouteTableId is empty")
 	}
+	
 	return nil
 }
 
 func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(SubnetInputs)
 	outputs := SubnetOutputs{}
+	var finalErr error
+
 	for _, input := range inputs.Inputs {
-		if err := destroySubnetWithRouteTable(input.ProviderParams, input.Id, input.RouteTableId); err != nil {
-			return &outputs, err
-		}
 		output := SubnetOutput{
 			Guid: input.Guid,
 			Id:   input.Id,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
+		
+		if err := terminateSubnetWithRouteTableCheckParam(input);err != nil{
+			finalErr = err 
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()	
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
+		if err := destroySubnetWithRouteTable(input.ProviderParams, input.Id, input.RouteTableId); err != nil {
+			finalErr = err 
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs, nil
+	return outputs, finalErr
 }

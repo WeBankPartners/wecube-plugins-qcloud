@@ -102,8 +102,9 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 	output:= EIPOutput{
 		Guid : eip.Guid,
 	}
-	
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code =RESULT_CODE_SUCCESS
+
 	paramsMap, _ := GetMapFromProviderParams(eip.ProviderParams)
 	client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -180,7 +181,6 @@ func (action *EIPCreateAction) Do(input interface{}) (interface{}, error) {
 
 	for _, subnet := range eips.Inputs {
 		output, err := action.createEIP(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err 
 		}
@@ -205,9 +205,12 @@ func (action *EIPTerminateAction) ReadParam(param interface{}) (interface{}, err
 }
 
 func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error) {
-	output := EIPOutput{}
-	output.Guid = eip.Guid
+	output := EIPOutput{
+		Guid : eip.Guid,
+	}
 	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
+
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -220,7 +223,6 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error)
 		output.Result.Message = fmt.Sprintf("Failed to release EIP(Id=%v), error=%s", eip.Id, err)
 		return output, fmt.Errorf("Failed to release EIP(Id=%v), error=%s", eip.Id, err)
 	}
-
 	output.RequestId = *response.Response.RequestId
 
 	return output, nil
@@ -232,11 +234,10 @@ func (action *EIPTerminateAction) Do(input interface{}) (interface{}, error) {
 	var finalErr  error
 	for _, eip := range eips.Inputs {
 		output, err := action.terminateEIP(&eip)
-		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return &outputs, finalErr
@@ -294,10 +295,11 @@ func eipAttachCheckParam(input *EIPInput) error {
 	return nil
 }
 
-func (action *EIPAttachAction) attachEIP(eip *EIPInput) (*EIPOutput, error) {
+func (action *EIPAttachAction) attachEIP(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
 		Guid : eip.Guid,
 	}
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 	
 	if err :=eipAttachCheckParam(eip);err != nil {
@@ -321,7 +323,7 @@ func (action *EIPAttachAction) attachEIP(eip *EIPInput) (*EIPOutput, error) {
 
 	output.RequestId = *response.Response.RequestId
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
@@ -331,11 +333,10 @@ func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
 
 	for _, eip := range eips.Inputs {
 		output, err := action.attachEIP(&eip)
-		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err 
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return &outputs, finalErr
@@ -366,6 +367,7 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
 		Guid : eip.Guid,
 	}
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
 	if err := eipDetachCheckParam(eip);err != nil {
@@ -388,7 +390,7 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (EIPOutput, error) {
 	
 	output.RequestId = *response.Response.RequestId
 
-	return &output, nil
+	return output, nil
 }
 
 func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
@@ -397,11 +399,10 @@ func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 	for _, eip := range eips.Inputs {
 		output, err := action.detachEIP(&eip)
-		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			finalErr= err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return &outputs, finalErr
@@ -438,7 +439,9 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error)
 	output := EIPOutput{
 		Guid : eip.Guid,
 	}
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
+
 	if err := eIPBindNatActionCheckParam(eip);err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
@@ -446,7 +449,6 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error)
 	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
 
 	eIPBindNatActionCheckParam(eip)
 	request := unversioned.NewEipBindNatGatewayRequest()
@@ -497,7 +499,6 @@ func (action *EIPBindNatAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 	for _, eip := range eips.Inputs {
 		output, err := action.bindNatGateway(&eip)
-		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err
 		}
@@ -521,7 +522,6 @@ func (action *EIPUnBindNatAction) ReadParam(param interface{}) (interface{}, err
 }
 
 func eIPUnBindNatCheckParam(input *EIPInput) error {
-
 		if eip.Eip == "" {
 			return errors.New("EIPUnBindNatAction param Eip is empty")
 		}
@@ -539,6 +539,7 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (EIPOutput, er
 	output := EIPOutput{
 		Guid:eip.Guid,
 	}
+	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
 	if err := eIPUnBindNatCheckParam(eip);err != nil {
@@ -568,7 +569,9 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (EIPOutput, er
 	for {
 		taskResp, err := client.DescribeVpcTaskResult(taskReq)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
 		}
 		if *taskResp.Data.Status == 0 {
 			break
@@ -599,11 +602,10 @@ func (action *EIPUnBindNatAction) Do(input interface{}) (interface{}, error) {
 
 	for _, eip := range eips.Inputs {
 		output, err := action.unbindNatGateway(&eip)
-		output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 		if err != nil {
 			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return &outputs, finalErr

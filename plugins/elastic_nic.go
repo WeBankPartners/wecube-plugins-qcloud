@@ -102,6 +102,7 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 	output := ElasticNicOutput{
 		Guid:ElasticNicInput.Guid,
 	}
+	output.CallBackParameter.Parameter = ElasticNic.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 	
 	if err:=elasticNicCreateCheckParam(ElasticNicInput);err != nil {
@@ -166,12 +167,11 @@ func (action *ElasticNicCreateAction) Do(input interface{}) (interface{}, error)
 	var finalErr error
 
 	for _, elasticNic := range elasticNics.Inputs {
-		ElasticNicOutput, err := action.createElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
+		elasticNicOutput, err := action.createElasticNic(&elasticNic)
 		if err != nil {
 			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
+		outputs.Outputs = append(outputs.Outputs, elasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are created", elasticNics)
@@ -204,6 +204,7 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 		Guid : ElasticNicInput.Guid,
 	}
 	output.Result.Code = RESULT_CODE_SUCCESS 
+	output.CallBackParameter.Parameter = ElasticNicInput.CallBackParameter.Parameter
 
 	if err :=elasticNicTerminateCheckParam(ElasticNicInput);err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
@@ -239,12 +240,11 @@ func (action *ElasticNicTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := ElasticNicOutputs{}
 	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
-		ElasticNicOutput, err := action.terminateElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
+		elasticNicOutput, err := action.terminateElasticNic(&elasticNic)
 		if err != nil {
 			finalErr = err 
 		}
-		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
+		outputs.Outputs = append(outputs.Outputs, elasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are terminate", elasticNics)
@@ -315,6 +315,8 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 		Guid :ElasticNicInput.Guid,
 	}
 	output.Result.Code = RESULT_CODE_SUCCESS 
+	output.CallBackParameter.Parameter = ElasticNicInput.CallBackParameter.Parameter
+	
 	if err:=elasticNicAttachCheckParam(ElasticNicInput);err!= nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
@@ -347,12 +349,11 @@ func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error)
 	outputs := ElasticNicOutputs{}
 	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
-		ElasticNicOutput, err := action.attachElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
+		elasticNicOutput, err := action.attachElasticNic(&elasticNic)
 		if err != nil {
 			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
+		outputs.Outputs = append(outputs.Outputs, elasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are attach", elasticNics)
@@ -383,10 +384,11 @@ func elasticNicDetachCheckParam(elasticNic *ElasticNicInput) error {
 	return nil
 }
 
-func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticNicInput) (*ElasticNicOutput, error) {
+func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticNicInput) (ElasticNicOutput, error) {
 	output := ElasticNicOutput{
 		Guid:ElasticNicInput.Guid,
 	}
+	output.CallBackParameter.Parameter = ElasticNicInput.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS 
 
 	if err :=elasticNicDetachCheckParam(ElasticNicInput);err != nil {
@@ -420,12 +422,11 @@ func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error)
 	outputs := ElasticNicOutputs{}
 	var finalErr error
 	for _, elasticNic := range elasticNics.Inputs {
-		ElasticNicOutput, err := action.detachElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
+		elasticNicOutput, err := action.detachElasticNic(&elasticNic)
 		if err != nil {
 			finalErr =err
 		}
-		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
+		outputs.Outputs = append(outputs.Outputs, *elasticNicOutput)
 	}
 
 	logrus.Infof("all elasticNics = %v are detach", elasticNics)

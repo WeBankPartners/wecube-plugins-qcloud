@@ -50,6 +50,7 @@ type PeeringConnectionOutputs struct {
 
 type PeeringConnectionOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -76,21 +77,14 @@ func (action *PeeringConnectionCreateAction) ReadParam(param interface{}) (inter
 	return inputs, nil
 }
 
-func (action *PeeringConnectionCreateAction) CheckParam(input interface{}) error {
-	peeringConnections, ok := input.(PeeringConnectionInputs)
-	if !ok {
-		return fmt.Errorf("peeringConnectionCreateAction:input type=%T not right", input)
-	}
-
-	for _, peeringConnection := range peeringConnections.Inputs {
-		if peeringConnection.VpcId == "" {
+func peeringConnectionCreateCheckParam(peeringConnection PeeringConnectionInput) error {
+	if peeringConnection.VpcId == "" {
 			return errors.New("peeringConnectionCreateAction input vpcId is empty")
 		}
-		if peeringConnection.Name == "" {
+	if peeringConnection.Name == "" {
 			return errors.New("peeringConnectionCreateAction input name is empty")
 		}
-	}
-
+	
 	return nil
 }
 
@@ -176,21 +170,39 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 func (action *PeeringConnectionCreateAction) Do(input interface{}) (interface{}, error) {
 	peeringConnections, _ := input.(PeeringConnectionInputs)
 	outputs := PeeringConnectionOutputs{}
+	var finalErr error
+
 	for _, peeringConnection := range peeringConnections.Inputs {
+		output := PeeringConnectionOutput{
+			Guid:peeringConnection.Guid,
+		}
+		output.Result.Code = RESULT_CODE_SUCCESS
+		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
+
+		if err :=peeringConnectionCreateCheckParam(peeringConnection);err != nil {
+			finalErr = err
+			output.Result.Code=RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
 		peeringConnectionId, err := action.createPeeringConnection(peeringConnection)
 		if err != nil {
-			return nil, err
+			finalErr = err
+			output.Result.Code=RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
 		}
-		output := PeeringConnectionOutput{}
-		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
+		
 		output.Id = peeringConnectionId
-		output.Guid = peeringConnection.Guid
 		output.RequestId = "legacy qcloud API doesn't support returnning request id"
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all PeeringConnections = %v are created", peeringConnections)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type PeeringConnectionTerminateAction struct {
@@ -205,13 +217,7 @@ func (action *PeeringConnectionTerminateAction) ReadParam(param interface{}) (in
 	return inputs, nil
 }
 
-func (action *PeeringConnectionTerminateAction) CheckParam(input interface{}) error {
-	peeringConnections, ok := input.(PeeringConnectionInputs)
-	if !ok {
-		return fmt.Errorf("peeringConnectionTerminateAction:input type=%T not right", input)
-	}
-
-	for _, peeringConnection := range peeringConnections.Inputs {
+func peeringConnectionTerminateCheckParam(peeringConnection *PeeringConnectionInput) error {
 		if peeringConnection.Id == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection is empty")
 		}
@@ -221,7 +227,7 @@ func (action *PeeringConnectionTerminateAction) CheckParam(input interface{}) er
 		if peeringConnection.ProviderParams == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection.ProviderParams is empty")
 		}
-	}
+	
 
 	return nil
 }
@@ -289,13 +295,27 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 	peeringConnections, _ := input.(PeeringConnectionInputs)
 	outputs := PeeringConnectionOutputs{}
 	for _, peeringConnection := range peeringConnections.Inputs {
+		output := PeeringConnectionOutput{
+			Guid : peeringConnection.Guid,
+		}
+		output.Result.Code = RESULT_CODE_SUCCESS
+		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
+	
+		if err := peeringConnectionTerminateCheckParam(peeringConnection);err != nil {
+			output.Result.Code =RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
 		err := action.terminatePeeringConnection(peeringConnection)
 		if err != nil {
-			return nil, err
+			output.Result.Code =RESULT_CODE_ERROR
+			output.Result.Message= err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
 		}
-		output := PeeringConnectionOutput{}
-		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
-		output.Guid = peeringConnection.Guid
+	
 		output.RequestId = "legacy qcloud API doesn't support returnning request id"
 		output.Id = peeringConnection.Id
 		outputs.Outputs = append(outputs.Outputs, output)
@@ -305,7 +325,6 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 }
 
 func queryPeeringConnectionsInfo(client *vpcExtend.Client, input PeeringConnectionInput) (string, error) {
-
 	request := vpcExtend.NewDescribeVpcPeeringConnectionRequest()
 	request.PeeringConnectionId = &input.Id
 	response, err := client.DescribeVpcPeeringConnections(request)
