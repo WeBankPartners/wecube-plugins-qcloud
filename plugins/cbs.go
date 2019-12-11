@@ -495,7 +495,6 @@ func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, 
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			finalErr = err
-			continue
 		}
 
 		outputs.Outputs = append(outputs.Outputs, output)
