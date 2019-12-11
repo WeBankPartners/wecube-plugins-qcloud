@@ -39,6 +39,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vpc/terminate">
@@ -49,6 +51,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -68,6 +72,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/peering-connection/terminate">
@@ -79,6 +85,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -94,6 +102,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/security-group/terminate">
@@ -104,6 +114,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="create-policies" path="/qcloud/v1/security-group/create-policies">
@@ -123,6 +135,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="delete-policies" path="/qcloud/v1/security-group/delete-policies">
@@ -138,6 +152,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -153,6 +169,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/route-table/terminate">
@@ -163,6 +181,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="associate-subnet" path="/qcloud/v1/route-table/associate-subnet">
@@ -174,6 +194,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -190,6 +212,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="create-with-routetable" path="/qcloud/v1/subnet/create-with-routetable">
@@ -205,6 +229,8 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
                     <parameter datatype="string" mappingType='context'>route_table_id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/subnet/terminate">
@@ -215,6 +241,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate-with-routetable" path="/qcloud/v1/subnet/terminate-with-routetable">
@@ -226,6 +254,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -257,6 +287,8 @@
                     <parameter datatype="string" mappingType='context'>password</parameter>
                     <parameter datatype="string" mappingType='context'>instance_state</parameter>
                     <parameter datatype="string" mappingType='context'>instance_private_ip</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vm/terminate">
@@ -267,6 +299,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="start" path="/qcloud/v1/vm/start">
@@ -277,6 +311,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="stop" path="/qcloud/v1/vm/stop">
@@ -287,6 +323,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="bind-security-group-to-vm" path="/qcloud/v1/vm/bind-security-groups">
@@ -298,6 +336,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -317,6 +357,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/storage/terminate">
@@ -327,6 +369,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
@@ -350,6 +394,8 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>volume_name</parameter>
                     <parameter datatype="string" mappingType='context'>disk_id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate">
@@ -366,6 +412,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -385,6 +433,8 @@
                     <parameter datatype="string" mappingType='context'>id</parameter>
                     <parameter datatype="string" mappingType='context'>eip</parameter>
                     <parameter datatype="string" mappingType='context'>eip_id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/nat-gateway/terminate">
@@ -396,6 +446,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -424,6 +476,8 @@
                     <parameter datatype="string" mappingType='context'>private_port</parameter>
                     <parameter datatype="string" mappingType='context'>user_name</parameter>
                     <parameter datatype="string" mappingType='context'>password</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/mysql-vm/terminate">
@@ -434,6 +488,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="restart" path="/qcloud/v1/mysql-vm/restart">
@@ -444,6 +500,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -473,6 +531,8 @@
                     <parameter datatype="string" mappingType='context'>private_ip</parameter>
                     <parameter datatype="string" mappingType='context'>user_name</parameter>
                     <parameter datatype="string" mappingType='context'>password</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -491,6 +551,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/route-policy/terminate">
@@ -502,6 +564,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -523,6 +587,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -541,6 +607,8 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
                     <parameter datatype="string" mappingType='context'>vip</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/clb/terminate">
@@ -551,6 +619,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="add-backtarget" path="/qcloud/v1/clb/add-backtarget">
@@ -564,7 +634,9 @@
                     <parameter datatype="string" mappingType='entity' required="Y">host_port</parameter>
                 </inputParameters>
                 <outputParameters>
-                    <parameter datatype="string">guid</parameter>
+                    <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
             <interface action="del-backtarget" path="/qcloud/v1/clb/del-backtarget">
@@ -579,6 +651,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
