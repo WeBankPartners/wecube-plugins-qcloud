@@ -258,13 +258,15 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 			break
 		}
 		if *taskResp.Data.Status == 1 {
-			return output, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			err = fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			return output, err
 		}
 
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			return output, fmt.Errorf("terminateNatGateway query result timeout")
+			err = fmt.Errorf("terminateNatGateway query result timeout")
+			return output, err
 		}
 	}
 

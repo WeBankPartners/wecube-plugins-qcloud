@@ -20,8 +20,8 @@ type CallBackParameter struct {
 }
 
 type Result struct {
-	Code    string `json:"errorCode,omitempty"`
-	Message string `json:"errorMessage,omitempty"`
+	Code    string `json:"code,omitempty"`
+	Message string `json:"msg,omitempty"`
 }
 
 type Filter struct {

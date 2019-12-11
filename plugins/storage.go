@@ -106,7 +106,6 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
 		}
 
