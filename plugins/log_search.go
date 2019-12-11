@@ -81,7 +81,7 @@ func logSearchCheckParam(log *SearchInput) error {
 	if log.KeyWord == "" {
 		return errors.New("LogSearchAction input KeyWord can not be empty")
 	}
-	
+
 	return nil
 }
 
@@ -220,7 +220,7 @@ type SearchDetailOutputs struct {
 //SearchDetailOutput .
 type SearchDetailOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	FileName   string `json:"file_name,omitempty"`
 	LineNumber string `json:"line_number,omitempty"`
 	Logs       string `json:"logs,omitempty"`
@@ -238,13 +238,12 @@ func (action *LogSearchDetailAction) ReadParam(param interface{}) (interface{}, 
 
 //CheckParam .
 func logSearchDetailCheckParam(log *SearchDetailInput) error {
-		if log.FileName == "" {
-			return errors.New("LogSearchDetailAction input finename can not be empty")
-		}
-		if log.LineNumber == "" {
-			return errors.New("LogSearchDetailAction input LineNumber can not be empty")
-		}
-	
+	if log.FileName == "" {
+		return errors.New("LogSearchDetailAction input finename can not be empty")
+	}
+	if log.LineNumber == "" {
+		return errors.New("LogSearchDetailAction input LineNumber can not be empty")
+	}
 
 	return nil
 }
@@ -259,9 +258,9 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 		var info SearchDetailOutput
 		info.CallBackParameter.Parameter = logs.Inputs[i].CallBackParameter.Parameter
 		info.Result.Code = RESULT_CODE_SUCCESS
-		if err:=logSearchDetailCheckParam(&logs.Inputs[i]);err != nil {
+		if err := logSearchDetailCheckParam(&logs.Inputs[i]); err != nil {
 			info.Result.Code = RESULT_CODE_ERROR
-			info.Result.Message=err.Error()
+			info.Result.Message = err.Error()
 			finalErr = err
 			logoutputs.Outputs = append(logoutputs.Outputs, info)
 			continue
@@ -270,7 +269,7 @@ func (action *LogSearchDetailAction) Do(input interface{}) (interface{}, error) 
 		text, err := action.SearchDetail(&logs.Inputs[i])
 		if err != nil {
 			info.Result.Code = RESULT_CODE_ERROR
-			info.Result.Message=err.Error()
+			info.Result.Message = err.Error()
 			finalErr = err
 			logoutputs.Outputs = append(logoutputs.Outputs, info)
 			continue

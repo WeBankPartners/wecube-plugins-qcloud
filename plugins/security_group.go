@@ -95,7 +95,7 @@ type SecurityGroupPolicyOutputs struct {
 
 type SecurityGroupPolicyOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	RequestId string `json:"requestId,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -134,12 +134,12 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 			Guid: securityGroup.Guid,
 		}
 		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
-		output.Result.Code =  RESULT_CODE_SUCCESS
+		output.Result.Code = RESULT_CODE_SUCCESS
 
 		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
-			output.Result.Code =  RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
@@ -150,7 +150,7 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 		if securityGroup.SecurityGroupId != "" {
 			querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, &securityGroup)
 			if err != nil && flag == false {
-				output.Result.Code =  RESULT_CODE_ERROR
+				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				finalErr = err
 				outputs.Outputs = append(outputs.Outputs, output)
@@ -171,21 +171,21 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 		createSecurityGroupresp, err := client.CreateSecurityGroup(createSecurityGroup)
 		if err != nil {
 			finalErr = err
-			output.Result.Code =  RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
 
-		output.Id= *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
-		output.RequestId= *createSecurityGroupresp.Response.RequestId
+		output.Id = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
+		output.RequestId = *createSecurityGroupresp.Response.RequestId
 
 		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
 		logrus.Infof("create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return outputs, finalErr 
+	return outputs, finalErr
 }
 
 func checkSecurityGroup(actionParams []SecurityGroupInput) ([]SecurityGroupParam, error) {
@@ -240,20 +240,19 @@ func (action *SecurityGroupTermination) ReadParam(param interface{}) (interface{
 	return inputs, nil
 }
 
-
 func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, error) {
 	securityGroups, _ := input.(SecurityGroupInputs)
 	outputs := SecurityGroupOutputs{}
 	var deletedSecurityGroups []string
-	var finalErr error 
+	var finalErr error
 
 	for _, securityGroup := range securityGroups.Inputs {
 		output := SecurityGroupOutput{
-			Guid : securityGroup.Guid,
+			Guid: securityGroup.Guid,
 		}
-		output.Result.Code= RESULT_CODE_SUCCESS
+		output.Result.Code = RESULT_CODE_SUCCESS
 		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
-	
+
 		continueFlag := false
 		for _, deletedSecurityGroupId := range deletedSecurityGroups {
 			if deletedSecurityGroupId == securityGroup.Id {
@@ -266,7 +265,7 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 
 		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 		if err != nil {
-			output.Result.Code =  RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			finalErr = err
 			outputs.Outputs = append(outputs.Outputs, output)
@@ -275,11 +274,11 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 
 		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
-			output.Result.Code =  RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				finalErr = err
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
 		}
 
 		deleteSecurityGroupRequest := vpc.NewDeleteSecurityGroupRequest()
@@ -287,11 +286,11 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 
 		resp, err := client.DeleteSecurityGroup(deleteSecurityGroupRequest)
 		if err != nil {
-			output.Result.Code =  RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				finalErr = err
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
 		}
 		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", securityGroup.Id, *resp.Response.RequestId)
 		logrus.Infof("Terminated SecurityGroup[%v] has been done", securityGroup.Id)
@@ -324,9 +323,9 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 	securityGroups, err := checkSecurityGroupPolicy(securityGroupPolicies.Inputs)
 
 	if err != nil {
-		for _,input:=range securityGroupPolicies{
+		for _, input := range securityGroupPolicies.Inputs {
 			output := SecurityGroupPolicyOutput{
-				output.Guid :input.Guid,
+				Guid: input.Guid,
 			}
 			output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 			output.Result.Code = RESULT_CODE_ERROR
@@ -337,7 +336,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 
 	for _, securityGroup := range securityGroups {
 		output := SecurityGroupPolicyOutput{
-			output.Guid = securityGroup.Guid
+			Guid: securityGroup.Guid,
 		}
 		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
@@ -348,7 +347,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err 
+			finalErr = err
 			continue
 		}
 
@@ -357,12 +356,12 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err 
+			finalErr = err
 			continue
 		}
 
-		output.Id = result.Id
-		outputs.Outputs = append(outputs.Outputs, output.(SecurityGroupPolicyOutput))
+		output.Id = result.(SecurityGroupPolicyOutput).Id
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return outputs, finalErr
@@ -423,7 +422,7 @@ func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy 
 			Ingress: []*vpc.SecurityGroupPolicy{},
 		},
 	}
-	SecurityGroup.CallBackParameter = actionParam.allBackParameter
+	SecurityGroup.CallBackParameter = actionParam.CallBackParameter
 	if actionParam.PolicyType == "Egress" {
 		SecurityGroup.SecurityGroupPolicySet.Egress = append(SecurityGroup.SecurityGroupPolicySet.Egress, policy)
 	} else if actionParam.PolicyType == "Ingress" {
@@ -466,7 +465,7 @@ func updateSecurityGroupPolicies(securityGroup *SecurityGroupParam, securityGrou
 func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
 	output := SecurityGroupPolicyOutput{}
 	//check resource exsit
-	
+
 	if input.SecurityGroupId != "" {
 		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
 		if flag == false {
@@ -524,21 +523,21 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 	var finalErr error
 
 	if err != nil {
-		for _,input:=range securityGroupPolicies{
+		for _, input := range securityGroupPolicies.Inputs {
 			output := SecurityGroupPolicyOutput{
-				output.Guid : input.Guid,
+				Guid: input.Guid,
 			}
 			output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 			output.Result.Code = RESULT_CODE_ERROR
 			outputs.Outputs = append(outputs.Outputs, output)
 		}
-		
+
 		return outputs, err
 	}
 
 	for _, securityGroup := range securityGroups {
 		output := SecurityGroupPolicyOutput{
-			output.Guid : securityGroup.Guid,
+			Guid: securityGroup.Guid,
 		}
 		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
@@ -558,9 +557,9 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 			output.Result.Message = err.Error()
 			finalErr = err
 			outputs.Outputs = append(outputs.Outputs, output)
-			continue;
+			continue
 		}
-		output.Id = result.Id 
+		output.Id = result.(SecurityGroupPolicyOutput).Id
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return outputs, finalErr

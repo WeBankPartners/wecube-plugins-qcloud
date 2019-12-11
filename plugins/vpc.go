@@ -46,7 +46,7 @@ type VpcOutputs struct {
 
 type VpcOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -78,11 +78,11 @@ func (action *VpcCreateAction) ReadParam(param interface{}) (interface{}, error)
 
 func vpcCreateCheckParam(vpc *VpcInput) error {
 	if vpc.Name == "" {
-			return errors.New("vpcCreateAtion input name is empty")
+		return errors.New("vpcCreateAtion input name is empty")
 	}
 
 	if _, _, err := net.ParseCIDR(vpc.CidrBlock); err != nil {
-			return fmt.Errorf("vpcCreateAtion invalid vpcCidr[%s]", vpc.CidrBlock)
+		return fmt.Errorf("vpcCreateAtion invalid vpcCidr[%s]", vpc.CidrBlock)
 	}
 	return nil
 }
@@ -95,29 +95,29 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (output VpcOutput, 
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	defer func(){
+	defer func() {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err = vpcCreateCheckParam(vpcInput);err != nil {
-		return output,err
+	if err = vpcCreateCheckParam(vpcInput); err != nil {
+		return output, err
 	}
 
 	//check resource exist
-	var queryVpcsResponse *VpcOutput 
-	var flag bool 
+	var queryVpcsResponse *VpcOutput
+	var flag bool
 	if vpcInput.Id != "" {
 		queryVpcsResponse, flag, err = queryVpcsInfo(client, vpcInput)
 		if err != nil && flag == false {
-			return output,err
+			return output, err
 		}
 
 		if err == nil && flag == true {
 			output.Id = queryVpcsResponse.Id
-			return output,err
+			return output, err
 		}
 	}
 
@@ -169,7 +169,7 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (output VpcOu
 	output.Guid = vpcInput.Guid
 	output.Id = vpcInput.Id
 	output.Result.Code = RESULT_CODE_SUCCESS
-	output.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
+	output.CallBackParameter.Parameter = vpcInput.CallBackParameter.Parameter
 
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -181,11 +181,11 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (output VpcOu
 	if err != nil {
 		err = fmt.Errorf("Failed to DeleteVpc(vpcId=%v), error=%s", vpcInput.Id, err)
 		output.Result.Code = RESULT_CODE_ERROR
-		output.Result.Message  = err.Error()
-		return output, err 
+		output.Result.Message = err.Error()
+		return output, err
 	}
 	output.RequestId = *response.Response.RequestId
-	
+
 	return output, err
 }
 

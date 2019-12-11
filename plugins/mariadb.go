@@ -104,37 +104,37 @@ func (action *MariadbCreateAction) ReadParam(param interface{}) (interface{}, er
 }
 
 func mariadbCreateCheckParam(input *MariadbInput) error {
-		if input.Guid == "" {
-			return errors.New("guid is empty")
-		}
+	if input.Guid == "" {
+		return errors.New("guid is empty")
+	}
 
-		if input.Seed == "" {
-			return errors.New("seed is empty")
-		}
+	if input.Seed == "" {
+		return errors.New("seed is empty")
+	}
 
-		if input.ProviderParams == "" {
-			return errors.New("providerParams is empty")
-		}
+	if input.ProviderParams == "" {
+		return errors.New("providerParams is empty")
+	}
 
-		if input.MemorySize == 0 {
-			return errors.New("memory size is empty")
-		}
+	if input.MemorySize == 0 {
+		return errors.New("memory size is empty")
+	}
 
-		if input.StorageSize == 0 {
-			return errors.New("storage size is empty")
-		}
+	if input.StorageSize == 0 {
+		return errors.New("storage size is empty")
+	}
 
-		if input.VpcId == "" {
-			return errors.New("vpcId is empty")
-		}
+	if input.VpcId == "" {
+		return errors.New("vpcId is empty")
+	}
 
-		if input.SubnetId == "" {
-			return errors.New("subnetId is empty")
-		}
-		if input.Zones == "" {
-			return errors.New("zones is empty")
-		}
-	
+	if input.SubnetId == "" {
+		return errors.New("subnetId is empty")
+	}
+	if input.Zones == "" {
+		return errors.New("zones is empty")
+	}
+
 	return nil
 }
 
@@ -145,7 +145,7 @@ func (action *MariadbCreateAction) Do(input interface{}) (interface{}, error) {
 	for _, input := range req.Inputs {
 		output, err := action.createAndInitMariadb(&input)
 		if err != nil {
-			finalErr= err
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -381,20 +381,20 @@ func grantAccountPrivileges(client *mariadb.Client, userName string, instanceId 
 }
 
 func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (output MariadbOutput, err error) {
-	output.Guid=input.Guid
-	output.Id= input.Id
-	ouput.Result.Code = RESULT_CODE_SUCCESS
+	output.Guid = input.Guid
+	output.Id = input.Id
+	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-	
-	defer func(){
+
+	defer func() {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err=mariadbCreateCheckParam(input);err != nil {
-		return output,err 
+	if err = mariadbCreateCheckParam(input); err != nil {
+		return output, err
 	}
 
 	if input.UserName == "" {
@@ -420,7 +420,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 		logrus.Errorf("CreateMariadbClient meet error(%v)", err)
 		return output, err
 	}
-	
+
 	exit, err := isMariadbExist(client, input.Id)
 	if err != nil {
 		logrus.Errorf("isMariadbExist(%s) meet error", input.DbVersion)
@@ -477,7 +477,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 	output.Port = fmt.Sprintf("%v", vport)
 	output.UserName = input.UserName
 
-	return output,err
+	return output, err
 }
 
 func QueryMariadbInstance(providerParams string, filter Filter) ([]*mariadb.DBInstance, error) {

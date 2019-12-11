@@ -82,7 +82,7 @@ func (action *CreateAndMountCbsDiskAction) ReadParam(param interface{}) (interfa
 	return inputs, nil
 }
 
-func  checkParam(input CreateAndMountCbsDiskInput) error {
+func checkParam(input CreateAndMountCbsDiskInput) error {
 	if input.ProviderParams == "" {
 		return errors.New("providerParams is empty")
 	}
@@ -307,15 +307,15 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 	defer func() {
 		if err == nil {
 			output.Result.Code = RESULT_CODE_SUCCESS
-		}else {
+		} else {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 		}
 	}()
-	
-	if err = checkParam(input);err != nil{
-		return output,err
-	} 
+
+	if err = checkParam(input); err != nil {
+		return output, err
+	}
 
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
@@ -411,7 +411,7 @@ func (action *UmountAndTerminateDiskAction) ReadParam(param interface{}) (interf
 	return inputs, nil
 }
 
-func  checkUmountDiskParam(input UmountCbsDiskInput) error {
+func checkUmountDiskParam(input UmountCbsDiskInput) error {
 	if input.ProviderParams == "" {
 		return errors.New("providerParams is empty")
 	}
@@ -458,8 +458,8 @@ func terminateDisk(providerParams, id string) error {
 }
 
 func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
-	if err := checkUmountDiskParam(input) ;err !=nil {
-		return err 
+	if err := checkUmountDiskParam(input); err != nil {
+		return err
 	}
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
@@ -489,13 +489,13 @@ func (action *UmountAndTerminateDiskAction) Do(input interface{}) (interface{}, 
 			Guid: input.Guid,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS 
-		
-		if err := umountAndTerminateCbsDisk(input);err != nil {
-		   output.Result.Code = RESULT_CODE_ERROR
-		   output.Result.Message  = err.Error()
-		   finalErr = err
-		   continue
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		if err := umountAndTerminateCbsDisk(input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+			continue
 		}
 
 		outputs.Outputs = append(outputs.Outputs, output)

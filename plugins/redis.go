@@ -91,29 +91,28 @@ func (action *RedisCreateAction) ReadParam(param interface{}) (interface{}, erro
 }
 
 func redisCreateCheckParam(redis *RedisInput) error {
-		if redis.GoodsNum == 0 {
-			return errors.New("RedisCreateAction input goodsnum is invalid")
-		}
-		if redis.Password == "" {
-			return errors.New("RedisCreateAction input password is empty")
-		}
-		if redis.BillingMode != 0 && redis.BillingMode != 1 {
-			return errors.New("RedisCreateAction input password is invalid")
-		}
-	
+	if redis.GoodsNum == 0 {
+		return errors.New("RedisCreateAction input goodsnum is invalid")
+	}
+	if redis.Password == "" {
+		return errors.New("RedisCreateAction input password is empty")
+	}
+	if redis.BillingMode != 0 && redis.BillingMode != 1 {
+		return errors.New("RedisCreateAction input password is invalid")
+	}
 
 	return nil
 }
 
 func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output RedisOutput, err error) {
 	output.Guid = redisInput.Guid
-	output.Result.Code=RESULT_CODE_SUCCESS
-	redisOutput.CallBackParameter.Parameter = redis.CallBackParameter.Parameter
-	
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = redisInput.CallBackParameter.Parameter
+
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	
-	defer func(){
+
+	defer func() {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
@@ -121,6 +120,8 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	}()
 
 	//check resource exist
+	var queryRedisInstanceResponse *RedisOutput
+	var flag bool
 	if redisInput.ID != "" {
 		queryRedisInstanceResponse, flag, err = queryRedisInstancesInfo(client, redisInput)
 		if err != nil && flag == false {
@@ -144,11 +145,8 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		return output, err
 	}
 
-	var queryRedisInstanceResponse *RedisOutput
-	var flag bool 
-
 	if redisInput.ID != "" {
-		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
+		queryRedisInstanceResponse, flag, err = queryRedisInstancesInfo(client, redisInput)
 		if err != nil && flag == false {
 			return output, err
 		}
@@ -199,7 +197,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 	rediss, _ := input.(RedisInputs)
 	outputs := RedisOutputs{}
-	var finalErr  error
+	var finalErr error
 
 	for _, redis := range rediss.Inputs {
 		redisOutput, err := action.createRedis(&redis)
@@ -218,7 +216,7 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 	request.DealIds = append(request.DealIds, &dealid)
 	var instanceids string
 	count := 0
-	
+
 	for {
 		response, err := client.DescribeInstanceDealDetail(request)
 		if err != nil {

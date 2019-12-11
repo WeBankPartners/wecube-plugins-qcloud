@@ -80,7 +80,6 @@ func (action *StorageCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-
 func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 	storages, _ := input.(StorageInputs)
 	outputs := StorageOutputs{}
@@ -88,7 +87,7 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 
 	for _, storage := range storages.Inputs {
 		output := StorageOutput{
-			Guid:storage.Guid,
+			Guid: storage.Guid,
 		}
 		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
@@ -212,10 +211,10 @@ func (action *StorageTerminateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func storageTerminateACheckParam(input StorageInput) error {
-		if storage.Id == "" {
-			return fmt.Errorf("storageTerminateAction storage_id is empty")
-		}
+func storageTerminateACheckParam(storage StorageInput) error {
+	if storage.Id == "" {
+		return fmt.Errorf("storageTerminateAction storage_id is empty")
+	}
 
 	return nil
 }
@@ -223,17 +222,17 @@ func storageTerminateACheckParam(input StorageInput) error {
 func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error) {
 	storages, _ := input.(StorageInputs)
 	outputs := StorageOutputs{}
-	var finalErr error 
+	var finalErr error
 
 	for _, storage := range storages.Inputs {
 		output := StorageOutput{
-			Guid:storage.Guid,
-			Id:storage.Id,
+			Guid: storage.Guid,
+			Id:   storage.Id,
 		}
 		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		
-		if err :=storageTerminateACheckParam(storage);err != nil {
+
+		if err := storageTerminateACheckParam(storage); err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)

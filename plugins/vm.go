@@ -62,7 +62,7 @@ type VmOutputs struct {
 
 type VmOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	Guid              string `json:"guid,omitempty"`
 	RequestId         string `json:"request_id,omitempty"`
 	Id                string `json:"id,omitempty"`
@@ -258,7 +258,6 @@ type VMCreateAction struct {
 	VMAction
 }
 
-
 func getCpuAndMemoryFromHostType(hostType string) (int64, int64, error) {
 	//1C2G, 2C4G, 2C8G
 	upperCase := strings.ToUpper(hostType)
@@ -341,10 +340,10 @@ func getInstanceType(client *cvm.Client, zone string, chargeType string, hostTyp
 func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
-	var finalErr err 
+	var finalErr error
 	for _, vm := range vms.Inputs {
 		output := VmOutput{
-			Guid:vm.Guid,
+			Guid: vm.Guid,
 		}
 		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
@@ -356,7 +355,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err 
+			finalErr = err
 			continue
 		}
 		if vm.Password == "" {
@@ -391,11 +390,11 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		if vm.InstanceType == "" && vm.HostType != "" {
 			runInstanceRequest.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], vm.InstanceChargeType, vm.HostType)
 			if runInstanceRequest.InstanceType == "" {
-				err= fmt.Errorf("can't found instanceType(%v)", vm.HostType)
+				err = fmt.Errorf("can't found instanceType(%v)", vm.HostType)
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
+				finalErr = err
 				continue
 			}
 		}
@@ -426,7 +425,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
+				finalErr = err
 				continue
 			}
 
@@ -435,7 +434,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
+				finalErr = err
 				continue
 			}
 
@@ -462,7 +461,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
+				finalErr = err
 				continue
 			}
 
@@ -472,7 +471,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
+				finalErr = err
 				continue
 			}
 
@@ -499,22 +498,22 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 
 		resp, err := client.RunInstances(request)
 		if err != nil {
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
-				continue
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
 		vm.Id = *resp.Response.InstanceIdSet[0]
 		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", vm.Id, *resp.Response.RequestId)
 
 		if err = waitVmInDesireState(client, vm.Id, INSTANCE_STATE_RUNNING, 120); err != nil {
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err 
-				continue
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 		logrus.Infof("Created VM's state is [%v] now", INSTANCE_STATE_RUNNING)
 
@@ -527,7 +526,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err 
+			finalErr = err
 			continue
 		}
 
@@ -537,7 +536,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err 
+			finalErr = err
 			continue
 		}
 
@@ -565,12 +564,12 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 
 	for _, vm := range vms.Inputs {
 		output := VmOutput{
-			Guid : vm.Guid,
-			Id   : vm.Id,
+			Guid: vm.Guid,
+			Id:   vm.Id,
 		}
 		output.Result.Code = RESULT_CODE_SUCCESS
 		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
-		
+
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		terminateInstancesRequestData := cvm.TerminateInstancesRequest{
 			InstanceIds: []*string{&vm.Id},
@@ -605,7 +604,7 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-	
+
 		output.RequestId = *response.Response.RequestId
 		outputs.Outputs = append(outputs.Outputs, output)
 
@@ -625,24 +624,24 @@ func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 	for _, vm := range vms.Inputs {
 		output := VmOutput{
-			output.Guid : vm.Guid,
-			output.Id : vm.Id,
+			Guid: vm.Guid,
+			Id:   vm.Id,
 		}
 		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
-		output.Result.Code=RESULT_CODE_SUCCESS
-		
+		output.Result.Code = RESULT_CODE_SUCCESS
+
 		requestId, err := action.startInstance(vm)
 		if err != nil {
 			finalErr = err
-			output.Result.Code=RESULT_CODE_ERROR
-			output.Result.Message=err.Error() 
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 		}
 
 		output.RequestId = requestId
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs,finalErr
+	return &outputs, finalErr
 }
 
 func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
@@ -670,32 +669,32 @@ type VMStopAction struct {
 func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
 	vms, _ := input.(VmInputs)
 	outputs := VmOutputs{}
-	var finalErr error 
+	var finalErr error
 	for _, vm := range vms.Inputs {
 		output, err := action.stopInstance(&vm)
 		if err != nil {
-			finalErr = err 
+			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, finalErr 
+	return &outputs, finalErr
 }
 
 func (action *VMStopAction) stopInstance(vm *VmInput) (VmOutput, error) {
 	output := VmOutput{
-		Guid : vm.Guid,
-		Id : vm.Id,
+		Guid: vm.Guid,
+		Id:   vm.Id,
 	}
-	output.Result.Code =RESULT_CODE_SUCCESS
+	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 
 	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		output.Result.Code =RESULT_CODE_ERROR
-		output.Result.Message=err.Error()
-		return output,err 
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
 	request := cvm.NewStopInstancesRequest()
@@ -703,15 +702,12 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (VmOutput, error) {
 
 	response, err := client.StopInstances(request)
 	if err != nil {
-		output.Result.Code =RESULT_CODE_ERROR
-		output.Result.Message=err.Error()
-		return output,err 
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
-	output := VmOutput{}
 	output.RequestId = *response.Response.RequestId
-	output.Guid = vm.Guid
-	output.Id = vm.Id
 
 	return output, nil
 }
@@ -813,17 +809,17 @@ func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interfac
 }
 
 func vmBindSecurityGroupsCheckParam(input VmBindSecurityGroupInput) error {
-		if input.ProviderParams == "" {
-			return errors.New("providerParams is empty")
-		}
+	if input.ProviderParams == "" {
+		return errors.New("providerParams is empty")
+	}
 
-		if input.InstanceId == "" {
-			return errors.New("instanceId is empty")
-		}
+	if input.InstanceId == "" {
+		return errors.New("instanceId is empty")
+	}
 
-		if input.SecurityGroupIds == "" {
-			return errors.New("securityGroupIds is empty")
-		}
+	if input.SecurityGroupIds == "" {
+		return errors.New("securityGroupIds is empty")
+	}
 
 	return nil
 }
@@ -832,32 +828,32 @@ func (action *VMBindSecurityGroupsAction) Do(input interface{}) (interface{}, er
 	inputs, _ := input.(VmBindSecurityGroupInputs)
 	outputs := VmBindSecurityGroupOutputs{}
 	var finalErr error
-	
+
 	for _, input := range inputs.Inputs {
 		output := VmBindSecurityGroupOutput{
 			Guid: input.Guid,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Result.Code=RESULT_CODE_SUCCESS
+		output.Result.Code = RESULT_CODE_SUCCESS
 
-		if err :=vmBindSecurityGroupsCheckParam(input);err != nil {
-			output.Result.Code=RESULT_CODE_ERROR
-			output.Result.Message=err.Error()
+		if err := vmBindSecurityGroupsCheckParam(input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
 			continue
 		}
-		
+
 		securityGroups := strings.Split(input.SecurityGroupIds, ",")
 		err := BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, securityGroups)
 		if err != nil {
-			output.Result.Code=RESULT_CODE_ERROR
-			output.Result.Message=err.Error()
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
 			continue
 		}
-		
+
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 

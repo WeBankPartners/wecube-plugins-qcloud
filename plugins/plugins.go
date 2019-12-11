@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	pluginsMutex sync.Mutex 
+	pluginsMutex sync.Mutex
 	plugins      = make(map[string]Plugin)
 )
 
@@ -77,8 +77,6 @@ type PluginResponse struct {
 	ResultMsg  string      `json:"resultMessage"`
 	Results    interface{} `json:"results"`
 }
-
-resultCode
 
 func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	var pluginResponse = PluginResponse{}

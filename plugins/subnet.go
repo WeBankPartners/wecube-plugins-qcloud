@@ -82,16 +82,16 @@ func (action *SubnetCreateAction) ReadParam(param interface{}) (interface{}, err
 }
 
 func subnetCreateCheckParam(subnet *SubnetInput) error {
-		if subnet.VpcId == "" {
-			return errors.New("subnetCreateAtion input vpc_id is empty")
-		}
-		if subnet.Name == "" {
-			return errors.New("subnetCreateAtion input name is empty")
-		}
-		if _, _, err := net.ParseCIDR(subnet.CidrBlock); err != nil {
-			return fmt.Errorf("subnetCreateAtion invalid cidr_block [%s]", subnet.CidrBlock)
-		}
-	
+	if subnet.VpcId == "" {
+		return errors.New("subnetCreateAtion input vpc_id is empty")
+	}
+	if subnet.Name == "" {
+		return errors.New("subnetCreateAtion input name is empty")
+	}
+	if _, _, err := net.ParseCIDR(subnet.CidrBlock); err != nil {
+		return fmt.Errorf("subnetCreateAtion invalid cidr_block [%s]", subnet.CidrBlock)
+	}
+
 	return nil
 }
 
@@ -100,15 +100,15 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 
-	defer func(){
+	defer func() {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message= err.Error()
+			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err = subnetCreateCheckParam(subnet);err != nil {
-		return output,err 
+	if err = subnetCreateCheckParam(subnet); err != nil {
+		return output, err
 	}
 
 	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
@@ -119,9 +119,9 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 
 	//check resource exist
 	var querysubnetresponse *SubnetOutput
-	var flag bool 
+	var flag bool
 	if subnet.Id != "" {
-		querysubnetresponse, flag, err := querySubnetsInfo(client, subnet)
+		querysubnetresponse, flag, err = querySubnetsInfo(client, subnet)
 		if err != nil && flag == false {
 			return output, err
 		}
@@ -183,7 +183,7 @@ func (action *SubnetTerminateAction) ReadParam(param interface{}) (interface{}, 
 
 func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (SubnetOutput, error) {
 	output := SubnetOutput{
-		Guid :subnet.Guid,
+		Guid: subnet.Guid,
 	}
 	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
@@ -286,7 +286,7 @@ func destroySubnetWithRouteTable(providerParams string, subnetId string, routeTa
 
 func createSubnetWithRouteTable(input *SubnetInput) (output SubnetOutput, err error) {
 	output.Guid = input.Guid
-	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
 	defer func() {
@@ -297,8 +297,8 @@ func createSubnetWithRouteTable(input *SubnetInput) (output SubnetOutput, err er
 		}
 	}()
 
-	if err = subnetCreateCheckParam(input);err != nil {
-		return output,err 
+	if err = subnetCreateCheckParam(input); err != nil {
+		return output, err
 	}
 
 	action := SubnetCreateAction{}
@@ -357,10 +357,10 @@ func terminateSubnetWithRouteTableCheckParam(input SubnetInput) error {
 		return errors.New("TerminateSubnetWithRouteTableAction param Id is empty")
 	}
 
-	if subnet.RouteTableId == "" {
+	if input.RouteTableId == "" {
 		return errors.New("TerminateSubnetWithRouteTableAction param RouteTableId is empty")
 	}
-	
+
 	return nil
 }
 
@@ -376,21 +376,21 @@ func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interf
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		
-		if err := terminateSubnetWithRouteTableCheckParam(input);err != nil{
-			finalErr = err 
+
+		if err := terminateSubnetWithRouteTableCheckParam(input); err != nil {
+			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()	
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
 
 		if err := destroySubnetWithRouteTable(input.ProviderParams, input.Id, input.RouteTableId); err != nil {
-			finalErr = err 
+			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 		}
-	
+
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 	return outputs, finalErr

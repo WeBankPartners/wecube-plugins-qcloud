@@ -69,7 +69,7 @@ type MysqlVmOutputs struct {
 
 type MysqlVmOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -237,7 +237,7 @@ func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowe
 func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (output MysqlVmOutput, err error) {
 	output.Guid = mysqlVmInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
-	output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
+	output.CallBackParameter.Parameter = mysqlVmInput.CallBackParameter.Parameter
 
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -252,8 +252,8 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		}
 
 		if err == nil && flag == true {
-			output.Id =   mysqlVmInput.Id
-			output.PrivateIp =queryMysqlVmInstanceInfoResponse.Guid
+			output.Id = mysqlVmInput.Id
+			output.PrivateIp = queryMysqlVmInstanceInfoResponse.Guid
 			return output, nil
 		}
 	}
@@ -274,8 +274,8 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		privateIp, err = action.waitForMysqlVmCreationToFinish(client, instanceId)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = err.Error()
-		    return output, err
+			output.Result.Message = err.Error()
+			return output, err
 		}
 	}
 
@@ -389,23 +389,23 @@ func mysqlVmTerminateCheckParam(mysqlVm *MysqlVmInput) error {
 	if mysqlVm.Id == "" {
 		return errors.New("mysqlVmTerminateAtion input mysqlVmId is empty")
 	}
-	
+
 	return nil
 }
 
 func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInput) (output MysqlVmOutput, err error) {
 	output.Guid = mysqlVmInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
-	
-	defer func (){
+
+	defer func() {
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message= err.Error()
+			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err = mysqlVmTerminateCheckParam(mysqlVmInput);err != nil {
-		return output,err
+	if err = mysqlVmTerminateCheckParam(mysqlVmInput); err != nil {
+		return output, err
 	}
 
 	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
@@ -486,11 +486,11 @@ func (action *MysqlVmRestartAction) ReadParam(param interface{}) (interface{}, e
 	return inputs, nil
 }
 
-func  mysqlVmRestartCheckParam(mysqlVm *MysqlVmInput) error {
+func mysqlVmRestartCheckParam(mysqlVm *MysqlVmInput) error {
 	if mysqlVm.Id == "" {
-			return errors.New("mysqlVmRestartAtion input mysqlVmId is empty")
+		return errors.New("mysqlVmRestartAtion input mysqlVmId is empty")
 	}
-	
+
 	return nil
 }
 
@@ -544,23 +544,23 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output := MysqlVmOutput{
-			Guid:mysqlVm.Guid,
+			Guid: mysqlVm.Guid,
 		}
 		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		output.Id = mysqlVm.Id
 		output.Result.Code = RESULT_CODE_SUCCESS
 
-		if err:=mysqlVmRestartCheckParam(mysqlVm);err != nil {
+		if err := mysqlVmRestartCheckParam(&mysqlVm); err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Reuslt.Message= err.Error()
+			output.Result.Message = err.Error()
 			finalErr = err
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-	
-		if 	err := action.restartMysqlVm(mysqlVm);err != nil {
+
+		if err := action.restartMysqlVm(mysqlVm); err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Reuslt.Message= err.Error()
+			output.Result.Message = err.Error()
 			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)

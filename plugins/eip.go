@@ -99,11 +99,11 @@ func (action *EIPCreateAction) ReadParam(param interface{}) (interface{}, error)
 }
 
 func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
-	output:= EIPOutput{
-		Guid : eip.Guid,
+	output := EIPOutput{
+		Guid: eip.Guid,
 	}
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
-	output.Result.Code =RESULT_CODE_SUCCESS
+	output.Result.Code = RESULT_CODE_SUCCESS
 
 	paramsMap, _ := GetMapFromProviderParams(eip.ProviderParams)
 	client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -144,12 +144,12 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 		queryEIPResponse, err := client.DescribeAddresses(req)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("query eip info meet error : %s", err)
+			output.Result.Message = fmt.Sprintf("query eip info meet error : %s", err)
 			return output, fmt.Errorf("query eip info meet error : %s", err)
 		}
 		if len(queryEIPResponse.Response.AddressSet) == 0 {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("after create eip can't get eip info")
+			output.Result.Message = fmt.Sprintf("after create eip can't get eip info")
 			return output, fmt.Errorf("after create eip can't get eip info")
 		}
 		count := 0
@@ -177,15 +177,15 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 func (action *EIPCreateAction) Do(input interface{}) (interface{}, error) {
 	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
-	var finalErr error 
+	var finalErr error
 
 	for _, subnet := range eips.Inputs {
 		output, err := action.createEIP(&subnet)
 		if err != nil {
-			finalErr = err 
+			finalErr = err
 		}
 
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all eip = %v are created", eips)
@@ -206,7 +206,7 @@ func (action *EIPTerminateAction) ReadParam(param interface{}) (interface{}, err
 
 func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
-		Guid : eip.Guid,
+		Guid: eip.Guid,
 	}
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
@@ -231,7 +231,7 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error)
 func (action *EIPTerminateAction) Do(input interface{}) (interface{}, error) {
 	eips, _ := input.(EIPInputs)
 	outputs := EIPOutputs{}
-	var finalErr  error
+	var finalErr error
 	for _, eip := range eips.Inputs {
 		output, err := action.terminateEIP(&eip)
 		if err != nil {
@@ -291,21 +291,21 @@ func eipAttachCheckParam(input *EIPInput) error {
 	if input.InstanceId == "" {
 		return errors.New("EIPAttachAction param InstanceId is empty")
 	}
-	
+
 	return nil
 }
 
 func (action *EIPAttachAction) attachEIP(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
-		Guid : eip.Guid,
+		Guid: eip.Guid,
 	}
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
-	
-	if err :=eipAttachCheckParam(eip);err != nil {
+
+	if err := eipAttachCheckParam(eip); err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
-		output.Result.Message= err.Error()
-		return output,err 
+		output.Result.Message = err.Error()
+		return output, err
 	}
 
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
@@ -317,8 +317,8 @@ func (action *EIPAttachAction) attachEIP(eip *EIPInput) (EIPOutput, error) {
 	response, err := client.AssociateAddress(request)
 	if err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
-		output.Result.Message= fmt.Sprintf("Failed to attach EIP(Id=%v), error=%s", eip.Id, err)
-		return output,fmt.Errorf("Failed to attach EIP(Id=%v), error=%s", eip.Id, err)
+		output.Result.Message = fmt.Sprintf("Failed to attach EIP(Id=%v), error=%s", eip.Id, err)
+		return output, fmt.Errorf("Failed to attach EIP(Id=%v), error=%s", eip.Id, err)
 	}
 
 	output.RequestId = *response.Response.RequestId
@@ -334,7 +334,7 @@ func (action *EIPAttachAction) Do(input interface{}) (interface{}, error) {
 	for _, eip := range eips.Inputs {
 		output, err := action.attachEIP(&eip)
 		if err != nil {
-			finalErr = err 
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -355,25 +355,25 @@ func (action *EIPDetachAction) ReadParam(param interface{}) (interface{}, error)
 	return inputs, nil
 }
 
-func eipDetachCheckParam(input *EIPInput) error {
+func eipDetachCheckParam(eip *EIPInput) error {
 	if eip.Id == "" {
 		return errors.New("EIPDetachAction param Id is empty")
 	}
-	
+
 	return nil
 }
 
 func (action *EIPDetachAction) detachEIP(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
-		Guid : eip.Guid,
+		Guid: eip.Guid,
 	}
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
-	if err := eipDetachCheckParam(eip);err != nil {
+	if err := eipDetachCheckParam(eip); err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
-		return output,err
+		return output, err
 	}
 
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
@@ -387,7 +387,7 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (EIPOutput, error) {
 		output.Result.Message = fmt.Sprintf("Failed to detach EIP(Id=%v), error=%s", eip.Id, err)
 		return output, fmt.Errorf("Failed to detach EIP(Id=%v), error=%s", eip.Id, err)
 	}
-	
+
 	output.RequestId = *response.Response.RequestId
 
 	return output, nil
@@ -400,7 +400,7 @@ func (action *EIPDetachAction) Do(input interface{}) (interface{}, error) {
 	for _, eip := range eips.Inputs {
 		output, err := action.detachEIP(&eip)
 		if err != nil {
-			finalErr= err
+			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -421,31 +421,31 @@ func (action *EIPBindNatAction) ReadParam(param interface{}) (interface{}, error
 	return inputs, nil
 }
 
-func eIPBindNatActionCheckParam(input *EIPInput) error {
-		if eip.Eip == "" {
-			return errors.New("EIPBindNatAction param Eip is empty")
-		}
-		if eip.NatId == "" {
-			return errors.New("EIPBindNatAction param NatId is empty")
-		}
-		if eip.VpcId == "" {
-			return errors.New("EIPBindNatAction param VpcId is empty")
-		}
-	
+func eIPBindNatActionCheckParam(eip *EIPInput) error {
+	if eip.Eip == "" {
+		return errors.New("EIPBindNatAction param Eip is empty")
+	}
+	if eip.NatId == "" {
+		return errors.New("EIPBindNatAction param NatId is empty")
+	}
+	if eip.VpcId == "" {
+		return errors.New("EIPBindNatAction param VpcId is empty")
+	}
+
 	return nil
 }
 
 func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
-		Guid : eip.Guid,
+		Guid: eip.Guid,
 	}
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
-	if err := eIPBindNatActionCheckParam(eip);err != nil {
+	if err := eIPBindNatActionCheckParam(eip); err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
-		return output,err
+		return output, err
 	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -461,7 +461,7 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error)
 	if err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
-		return output,err
+		return output, err
 	}
 	taskReq := unversioned.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = response.TaskId
@@ -469,25 +469,25 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error)
 	for {
 		taskResp, err := client.DescribeVpcTaskResult(taskReq)
 		if err != nil {
-			return nil, err
+			return output, err
 		}
 		if *taskResp.Data.Status == 0 {
 			break
 		}
 		if *taskResp.Data.Status == 1 {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			output.Result.Message = fmt.Sprintf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 			return output, fmt.Errorf("terminateNatGateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 		time.Sleep(5 * time.Second)
 		count++
 		if count >= 20 {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("terminateNatGateway query result timeout")
+			output.Result.Message = fmt.Sprintf("terminateNatGateway query result timeout")
 			return output, fmt.Errorf("terminateNatGateway query result timeout")
 		}
 	}
-	
+
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 
 	return output, nil
@@ -502,7 +502,7 @@ func (action *EIPBindNatAction) Do(input interface{}) (interface{}, error) {
 		if err != nil {
 			finalErr = err
 		}
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	return &outputs, finalErr
@@ -521,28 +521,28 @@ func (action *EIPUnBindNatAction) ReadParam(param interface{}) (interface{}, err
 	return inputs, nil
 }
 
-func eIPUnBindNatCheckParam(input *EIPInput) error {
-		if eip.Eip == "" {
-			return errors.New("EIPUnBindNatAction param Eip is empty")
-		}
-		if eip.NatId == "" {
-			return errors.New("EIPUnBindNatAction param NatId is empty")
-		}
-		if eip.VpcId == "" {
-			return errors.New("EIPUnBindNatAction param VpcId is empty")
-		}
+func eIPUnBindNatCheckParam(eip *EIPInput) error {
+	if eip.Eip == "" {
+		return errors.New("EIPUnBindNatAction param Eip is empty")
+	}
+	if eip.NatId == "" {
+		return errors.New("EIPUnBindNatAction param NatId is empty")
+	}
+	if eip.VpcId == "" {
+		return errors.New("EIPUnBindNatAction param VpcId is empty")
+	}
 
 	return nil
 }
 
 func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (EIPOutput, error) {
 	output := EIPOutput{
-		Guid:eip.Guid,
+		Guid: eip.Guid,
 	}
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
-	if err := eIPUnBindNatCheckParam(eip);err != nil {
+	if err := eIPUnBindNatCheckParam(eip); err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
 		return output, err
@@ -578,15 +578,15 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (EIPOutput, er
 		}
 		if *taskResp.Data.Status == 1 {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("eip unbind nat gateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
-		    return output, fmt.Errorf("eip unbind nat gateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			output.Result.Message = fmt.Sprintf("eip unbind nat gateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
+			return output, fmt.Errorf("eip unbind nat gateway execute failed, err = %v", *taskResp.Data.Output.ErrorMsg)
 		}
 		time.Sleep(5 * time.Second)
 		count++
 		if count >= 20 {
 			output.Result.Code = RESULT_CODE_ERROR
-		    output.Result.Message = fmt.Sprintf("eip unbind nat gateway query result timeout")
-		    return output, fmt.Errorf("eip unbind nat gateway query result timeout")
+			output.Result.Message = fmt.Sprintf("eip unbind nat gateway query result timeout")
+			return output, fmt.Errorf("eip unbind nat gateway query result timeout")
 		}
 	}
 

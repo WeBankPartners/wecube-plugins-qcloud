@@ -75,37 +75,37 @@ func (action *NatGatewayCreateAction) ReadParam(param interface{}) (interface{},
 }
 
 func natGatewayCreateCheckParam(natGateway *NatGatewayInput) error {
-		if natGateway.VpcId == "" {
-			return errors.New("natGatewayCreateAction input vpcId is empty")
-		}
-		if natGateway.Name == "" {
-			return errors.New("natGatewayCreateAction input name is empty")
-		}
+	if natGateway.VpcId == "" {
+		return errors.New("natGatewayCreateAction input vpcId is empty")
+	}
+	if natGateway.Name == "" {
+		return errors.New("natGatewayCreateAction input name is empty")
+	}
 
 	return nil
 }
 
-func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInput) (output NatGatewayOutput,err error) {
-	output.Guid=natGateway.Guid
+func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInput) (output NatGatewayOutput, err error) {
+	output.Guid = natGateway.Guid
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	defer func(){
+	defer func() {
 		if err != nil {
-			output.Result.Code =RESULT_CODE_ERROR
-			output.Result.Message=err.Error()
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err=natGatewayCreateCheckParam(natGateway);err != nil {
-		return output,err 
+	if err = natGatewayCreateCheckParam(natGateway); err != nil {
+		return output, err
 	}
 	//check resource exist
 	var queryNatGatewayResponse *NatGatewayOutput
-	var flag  bool
+	var flag bool
 	if natGateway.Id != "" {
 		queryNatGatewayResponse, flag, err = queryNatGatewayInfo(client, natGateway)
 		if err != nil && flag == false {
@@ -135,7 +135,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err != nil || createResp.NatGatewayId == nil {
 		return output, err
 	}
-	
+
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 	output.Id = *createResp.NatGatewayId
 
@@ -147,7 +147,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	}
 
 	count := 0
-	var queryEIPResponse *vpc.DescribeAddressesResponse 
+	var queryEIPResponse *vpc.DescribeAddressesResponse
 	for {
 		queryEIPResponse, err = Client.DescribeAddresses(req)
 		if err != nil {
@@ -170,7 +170,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 			break
 		}
 		if count > 20 {
-			return nil, fmt.Errorf("query nat eip info timeout")
+			return output, fmt.Errorf("query nat eip info timeout")
 		}
 		time.Sleep(10 * time.Second)
 		count++
@@ -212,7 +212,7 @@ func natGatewayTerminateCheckParam(natGateway *NatGatewayInput) error {
 	if natGateway.Id == "" {
 		return errors.New("natGatewayTerminateAction input natGateway is empty")
 	}
-	
+
 	return nil
 }
 
@@ -224,15 +224,15 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	defer func (){
+	defer func() {
 		if err != nil {
-			output.Result.Code =RESULT_CODE_ERROR
-			output.Result.Message=err.Error()
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 		}
 	}()
 
-	if err=natGatewayTerminateCheckParam(natGateway);err != nil {
-		return output,err
+	if err = natGatewayTerminateCheckParam(natGateway); err != nil {
+		return output, err
 	}
 
 	deleteReq := unversioned.NewDeleteNatGatewayRequest()
@@ -240,18 +240,18 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	deleteReq.NatId = &natGateway.Id
 	deleteResp, err := c.DeleteNatGateway(deleteReq)
 	if err != nil {
-		return output,err
+		return output, err
 	}
 
 	taskReq := unversioned.NewDescribeVpcTaskResultRequest()
 	taskReq.TaskId = deleteResp.TaskId
 	count := 0
-	var  taskResp *unversioned.DescribeVpcTaskResultResponse
+	var taskResp *unversioned.DescribeVpcTaskResultResponse
 
 	for {
 		taskResp, err = c.DescribeVpcTaskResult(taskReq)
 		if err != nil {
-			return output,err
+			return output, err
 		}
 
 		if *taskResp.Data.Status == 0 {
@@ -264,7 +264,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			return nil, fmt.Errorf("terminateNatGateway query result timeout")
+			return output, fmt.Errorf("terminateNatGateway query result timeout")
 		}
 	}
 
