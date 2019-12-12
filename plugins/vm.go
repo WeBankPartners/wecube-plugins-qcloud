@@ -629,10 +629,10 @@ func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
 	outputs := VmOutputs{}
 	for _, vm := range vms.Inputs {
 		output, err := action.stopInstance(&vm)
-		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}

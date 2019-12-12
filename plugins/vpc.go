@@ -133,10 +133,10 @@ func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
 		vpcOutput, err := action.createVpc(&vpc)
-		vpcOutput.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		vpcOutput.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *vpcOutput)
 	}
 
@@ -194,10 +194,10 @@ func (action *VpcTerminateAction) Do(input interface{}) (interface{}, error) {
 	outputs := VpcOutputs{}
 	for _, vpc := range vpcs.Inputs {
 		output, err := action.terminateVpc(&vpc)
-		output.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = vpc.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 

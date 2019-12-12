@@ -169,11 +169,11 @@ func (action *NatGatewayCreateAction) Do(input interface{}) (interface{}, error)
 	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
 		output, err := action.createNatGateway(&natGateway)
-		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
 
+		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
@@ -256,10 +256,10 @@ func (action *NatGatewayTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := NatGatewayOutputs{}
 	for _, natGateway := range natGateways.Inputs {
 		output, err := action.terminateNatGateway(&natGateway)
-		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 

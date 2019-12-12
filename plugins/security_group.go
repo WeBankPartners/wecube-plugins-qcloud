@@ -393,6 +393,7 @@ func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy 
 			Ingress: []*vpc.SecurityGroupPolicy{},
 		},
 	}
+	SecurityGroup.CallBackParameter.Parameter = actionParam.CallBackParameter.Parameter
 	if actionParam.PolicyType == "Egress" {
 		SecurityGroup.SecurityGroupPolicySet.Egress = append(SecurityGroup.SecurityGroupPolicySet.Egress, policy)
 	} else if actionParam.PolicyType == "Ingress" {

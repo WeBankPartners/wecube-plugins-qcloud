@@ -146,10 +146,10 @@ func (action *SubnetCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := action.createSubnet(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
@@ -209,10 +209,10 @@ func (action *SubnetTerminateAction) Do(input interface{}) (interface{}, error) 
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := action.terminateSubnet(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
@@ -330,10 +330,10 @@ func (action *CreateSubnetWithRouteTableAction) Do(input interface{}) (interface
 	outputs := SubnetOutputs{}
 	for _, subnet := range subnets.Inputs {
 		output, err := createSubnetWithRouteTable(&subnet)
-		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 

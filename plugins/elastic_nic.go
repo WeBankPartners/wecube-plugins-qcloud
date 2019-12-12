@@ -155,10 +155,10 @@ func (action *ElasticNicCreateAction) Do(input interface{}) (interface{}, error)
 	outputs := ElasticNicOutputs{}
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.createElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
@@ -220,10 +220,10 @@ func (action *ElasticNicTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := ElasticNicOutputs{}
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.terminateElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
@@ -324,10 +324,10 @@ func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error)
 	outputs := ElasticNicOutputs{}
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.attachElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 
@@ -392,10 +392,10 @@ func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error)
 	outputs := ElasticNicOutputs{}
 	for _, elasticNic := range elasticNics.Inputs {
 		ElasticNicOutput, err := action.detachElasticNic(&elasticNic)
-		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		ElasticNicOutput.CallBackParameter.Parameter = elasticNic.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *ElasticNicOutput)
 	}
 

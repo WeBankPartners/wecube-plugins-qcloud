@@ -196,10 +196,10 @@ func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := RedisOutputs{}
 	for _, redis := range rediss.Inputs {
 		redisOutput, err := action.createRedis(&redis)
-		redisOutput.CallBackParameter.Parameter = redis.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		redisOutput.CallBackParameter.Parameter = redis.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *redisOutput)
 	}
 

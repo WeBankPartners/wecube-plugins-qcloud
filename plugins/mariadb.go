@@ -150,11 +150,11 @@ func (action *MariadbCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := MariadbOutputs{}
 	for _, input := range req.Inputs {
 		output, err := action.createAndInitMariadb(&input)
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
 
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 

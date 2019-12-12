@@ -95,17 +95,16 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 
 	for _, storage := range storages.Inputs {
 		output, err := action.createStorage(&storage)
-		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
+
 		if err != nil {
 			return nil, err
 		}
-
 		storage.Id = output.Id
-
 		err = action.attachStorage(&storage)
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
@@ -234,11 +233,12 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 		}
 
 		output, err := action.terminateStorage(&storage)
-		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
+
 		if err != nil {
 			return nil, err
 		}
 
+		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
