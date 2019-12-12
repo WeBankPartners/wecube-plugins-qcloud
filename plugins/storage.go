@@ -267,10 +267,10 @@ func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*
 	request := cbs.NewTerminateDisksRequest()
 	request.DiskIds = []*string{&storage.Id}
 
-	tryTimes := 10
+	tryTimes := 20
 	requestId := ""
 	for i := 1; i <= tryTimes; i++ {
-		time.Sleep(time.Duration(5) * time.Second)
+		time.Sleep(time.Duration(15) * time.Second)
 
 		response, err := client.TerminateDisks(request)
 		if err != nil {
