@@ -346,11 +346,10 @@ func (action *MysqlVmCreateAction) Do(input interface{}) (interface{}, error) {
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.createMysqlVm(&mysqlVm)
-		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
-
+		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
@@ -440,10 +439,10 @@ func (action *MysqlVmTerminateAction) Do(input interface{}) (interface{}, error)
 	outputs := MysqlVmOutputs{}
 	for _, mysqlVm := range mysqlVms.Inputs {
 		output, err := action.terminateMysqlVm(&mysqlVm)
-		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = mysqlVm.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 

@@ -236,10 +236,10 @@ func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output, err := createClb(client, input)
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 

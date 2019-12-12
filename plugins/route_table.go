@@ -137,10 +137,10 @@ func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error)
 	outputs := RouteTableOutputs{}
 	for _, input := range inputs.Inputs {
 		output, err := action.createRouteTable(&input)
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
@@ -227,10 +227,10 @@ func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, err
 	outputs := RouteTableOutputs{}
 	for _, routeTable := range routeTables.Inputs {
 		output, err := action.terminateRouteTable(&routeTable)
-		output.CallBackParameter.Parameter = routeTable.CallBackParameter.Parameter
 		if err != nil {
 			return nil, err
 		}
+		output.CallBackParameter.Parameter = routeTable.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, *output)
 	}
 
