@@ -96,13 +96,13 @@ func UnmarshalJson(source interface{}, target interface{}) error {
 		return fmt.Errorf("parse http request (%v) meet error (%v)", reader, err)
 	}
 
-	commonInputs := CommonInputs{}
-	if err = json.Unmarshal(bodyBytes, &commonInputs); err != nil {
-		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
-	}
-	if len(commonInputs.Inputs) == 0 {
-		return fmt.Errorf("empty inputs")
-	}
+	// commonInputs := CommonInputs{}
+	// if err = json.Unmarshal(bodyBytes, &commonInputs); err != nil {
+	// 	return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)
+	// }
+	// if len(commonInputs.Inputs) == 0 {
+	// 	return fmt.Errorf("empty inputs")
+	// }
 
 	if err = json.Unmarshal(bodyBytes, target); err != nil {
 		return fmt.Errorf("unmarshal http request (%v) meet error (%v)", reader, err)

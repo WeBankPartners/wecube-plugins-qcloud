@@ -87,8 +87,8 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">description</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">description</parameter>
                     <parameter datatype="string" mappingType='entity' required="N">id</parameter>
                 </inputParameters>
                 <outputParameters>
@@ -106,35 +106,34 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="create-policies" path="/qcloud/v1/security-group/create-policies">
+        </plugin>
+        <plugin name="security-policy">
+            <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">description</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">security_group_id</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">policy_type</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">policy_cidr_block</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">policy_protocol</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">policy_port</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">policy_action</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_description</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_description</parameter>
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
-                    <parameter datatype="string" mappingType='context'>id</parameter>
                 </outputParameters>
             </interface>
-            <interface action="delete-policies" path="/qcloud/v1/security-group/delete-policies">
+            <interface action="delete-policies" path="/qcloud/v1/security-policy/delete-policies">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
-                    <parameter datatype="string" mappingType='entity' required="Y">id</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_type</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_cidr_block</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_protocol</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_port</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">policy_action</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">security_group_id</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_type</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_cidr_block</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_protocol</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_port</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">policy_action</parameter>
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
@@ -399,15 +398,15 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="mysql-vm">
-            <interface action="create" path="/qcloud/v1/mysql-vm/create">
+        <plugin name="mysql">
+            <interface action="create" path="/qcloud/v1/mysql/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">seed</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">engine_version</parameter>
                     <parameter datatype="number" mappingType='entity' required="Y">memory</parameter>
-                    <parameter datatype="number" mappingType='entity' required="Y">volume</parameter>
+                    <parameter datatype="number" mappingType='entity' required="Y">volume_size</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">vpc_id</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">subnet_id</parameter>
                     <parameter datatype="string" mappingType='entity' required="N">name</parameter>
@@ -426,7 +425,7 @@
                     <parameter datatype="string" mappingType='context'>password</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/mysql-vm/terminate">
+            <interface action="terminate" path="/qcloud/v1/mysql/terminate">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -436,7 +435,7 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="restart" path="/qcloud/v1/mysql-vm/restart">
+            <interface action="restart" path="/qcloud/v1/mysql/restart">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -512,7 +511,6 @@
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
                     <parameter datatype="number" mappingType='entity' required="Y">type_id</parameter>
                     <parameter datatype="number" mappingType='entity' required="Y">mem_size</parameter>
-                    <parameter datatype="number" mappingType='entity' required="Y">goods_num</parameter>
                     <parameter datatype="number" mappingType='entity' required="Y">period</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">password</parameter>
                     <parameter datatype="number" mappingType='entity' required="Y">billing_mode</parameter>
@@ -523,6 +521,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
+                    <parameter datatype="string" mappingType='context'>vip</parameter>
+                    <parameter datatype="string" mappingType='context'>port</parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -553,7 +553,9 @@
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="add-backtarget" path="/qcloud/v1/clb/add-backtarget">
+        </plugin>
+        <plugin name="clb-target">
+            <interface action="add-backtarget" path="/qcloud/v1/clb-target/add-backtarget">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
@@ -567,7 +569,7 @@
                     <parameter datatype="string">guid</parameter>
                 </outputParameters>
             </interface>
-            <interface action="del-backtarget" path="/qcloud/v1/clb/del-backtarget">
+            <interface action="del-backtarget" path="/qcloud/v1/clb-target/del-backtarget">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
