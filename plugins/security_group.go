@@ -68,37 +68,6 @@ type SecurityGroupOutput struct {
 	Id        string `json:"id,omitempty"`
 }
 
-type SecurityGroupPolicyInputs struct {
-	Inputs []SecurityGroupPolicyInput `json:"inputs,omitempty"`
-}
-
-type SecurityGroupPolicyInput struct {
-	CallBackParameter
-	Guid              string `json:"guid,omitempty"`
-	ProviderParams    string `json:"provider_params,omitempty"`
-	Name              string `json:"name,omitempty"`
-	Id                string `json:"id,omitempty"`
-	Description       string `json:"description,omitempty"`
-	PolicyType        string `json:"policy_type,omitempty"`
-	PolicyCidrBlock   string `json:"policy_cidr_block,omitempty"`
-	PolicyProtocol    string `json:"policy_protocol,omitempty"`
-	PolicyPort        string `json:"policy_port,omitempty"`
-	PolicyAction      string `json:"policy_action,omitempty"`
-	PolicyDescription string `json:"policy_description,omitempty"`
-}
-
-type SecurityGroupPolicyOutputs struct {
-	Outputs []SecurityGroupPolicyOutput `json:"outputs,omitempty"`
-}
-
-type SecurityGroupPolicyOutput struct {
-	CallBackParameter
-	Result
-	RequestId string `json:"requestId,omitempty"`
-	Guid      string `json:"guid,omitempty"`
-	Id        string `json:"id,omitempty"`
-}
-
 type SecurityGroupParam struct {
 	CallBackParameter
 	Guid                   string

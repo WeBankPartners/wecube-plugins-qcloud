@@ -91,32 +91,32 @@ func isValidProtocol(protocol string) error {
 }
 
 func clbTargetCheckParam(input BackTargetInput) error {
-		if input.LbId == "" {
-			return errors.New("empty lb id")
-		}
-		if input.HostId == "" {
-			return errors.New("empty host id")
-		}
-		if err := isValidPort(input.Port); err != nil {
-			return fmt.Errorf("port(%v) is invalid", input.Port)
-		}
-		if err := isValidPort(input.HostPort); err != nil {
-			return fmt.Errorf("hostPort(%v) is invalid", input.HostPort)
-		}
-		if err := isValidProtocol(input.Protocol); err != nil {
-			return fmt.Errorf("protocol(%v) is invalid", input.Protocol)
-		}
-		//check if lb exist
-		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
-		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		detail, err := queryClbDetailById(client, input.LbId)
-		if err != nil {
-			return err
-		}
-		if detail == nil {
-			return fmt.Errorf("loadbalancer(%v) can't be found", input.LbId)
-		}
-	
+	if input.LbId == "" {
+		return errors.New("empty lb id")
+	}
+	if input.HostId == "" {
+		return errors.New("empty host id")
+	}
+	if err := isValidPort(input.Port); err != nil {
+		return fmt.Errorf("port(%v) is invalid", input.Port)
+	}
+	if err := isValidPort(input.HostPort); err != nil {
+		return fmt.Errorf("hostPort(%v) is invalid", input.HostPort)
+	}
+	if err := isValidProtocol(input.Protocol); err != nil {
+		return fmt.Errorf("protocol(%v) is invalid", input.Protocol)
+	}
+	//check if lb exist
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	detail, err := queryClbDetailById(client, input.LbId)
+	if err != nil {
+		return err
+	}
+	if detail == nil {
+		return fmt.Errorf("loadbalancer(%v) can't be found", input.LbId)
+	}
+
 	return nil
 }
 
@@ -196,7 +196,7 @@ func ensureAddListenerBackHost(client *clb.Client, lbId string, listenerId strin
 func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(BackTargetInputs)
 	outputs := BackTargetOutputs{}
-	var finalErr error 
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
 		output := BackTargetOutput{
@@ -205,9 +205,9 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
-		if err :=clbTargetCheckParam(input);err != nil {
+		if err := clbTargetCheckParam(input); err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
@@ -219,7 +219,7 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		listenerId, err := ensureListenerExist(client, input.LbId, input.Protocol, portInt64)
 		if err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
@@ -227,12 +227,12 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 		hostPort, _ := strconv.ParseInt(input.HostPort, 10, 64)
 		if err = ensureAddListenerBackHost(client, input.LbId, listenerId, input.HostId, hostPort); err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-	
+
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
@@ -248,7 +248,7 @@ type DelBackTargetOutputs struct {
 
 type DelBackTargetOutput struct {
 	CallBackParameter
-	Result 
+	Result
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -283,6 +283,7 @@ func ensureDelListenerBackHost(client *clb.Client, lbId string, listenerId strin
 func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(BackTargetInputs)
 	outputs := BackTargetOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
 		output := BackTargetOutput{
@@ -291,9 +292,9 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
-		if err :=clbTargetCheckParam(input);err != nil {
+		if err := clbTargetCheckParam(input); err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
@@ -305,14 +306,14 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 		listenerId, err := queryClbListener(client, input.LbId, input.Protocol, portInt64)
 		if err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
 		if listenerId == "" {
 			finalErr = fmt.Errorf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = fmt.Sprintf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
@@ -320,15 +321,15 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 		hostPort, _ := strconv.ParseInt(input.HostPort, 10, 64)
 		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, input.HostId); err != nil {
 			finalErr = err
-            output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-		
+
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return outputs, nil
+	return outputs, finalErr
 }

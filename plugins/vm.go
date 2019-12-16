@@ -813,13 +813,12 @@ func vmBindSecurityGroupsCheckParam(input VmBindSecurityGroupInput) error {
 		return errors.New("providerParams is empty")
 	}
 
-		if input.InstanceId == "" {
-			return errors.New("instanceId is empty")
-		}
+	if input.InstanceId == "" {
+		return errors.New("instanceId is empty")
+	}
 
-		if input.SecurityGroupIds == "" {
-			return errors.New("securityGroupIds is empty")
-		}
+	if input.SecurityGroupIds == "" {
+		return errors.New("securityGroupIds is empty")
 	}
 
 	return nil

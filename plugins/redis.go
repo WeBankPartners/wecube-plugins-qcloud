@@ -122,10 +122,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	}()
 
 	//check resource exist
-	var queryRedisInstanceResponse *RedisOutput
 	var flag bool
 	if redisInput.ID != "" {
-		queryRedisInstanceResponse, flag, err = queryRedisInstancesInfo(client, redisInput)
+		_, flag, err = queryRedisInstancesInfo(client, redisInput)
 		if err != nil && flag == false {
 			return output, err
 		}
@@ -146,8 +145,6 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		err = errors.New("not found available zone info")
 		return output, err
 	}
-
-	output := RedisOutput{}
 
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid

@@ -247,7 +247,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		if err := getSecurityGroupById(input.ProviderParams, input.Id); err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message= err.Error()
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -257,7 +257,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		if err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message= err.Error()
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -269,7 +269,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		if err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message= err.Error()
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}

@@ -170,7 +170,7 @@ func waitClbReady(client *clb.Client, id string) (*ClbDetail, error) {
 	return nil, fmt.Errorf("wait lb(%s) ready timeout", id)
 }
 
-func createClb(client *clb.Client, input CreateClbInput) (*CreateClbOutput, error) {
+func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput, err error) {
 	var lbForward int64 = 1
 	output.Guid = input.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
