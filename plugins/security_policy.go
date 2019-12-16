@@ -8,6 +8,11 @@ import (
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
+const (
+	ARRAY_SIZE_REAL = "realSize"
+	ARRAY_SIZE_AS_EXPECTED = "fillArrayWithExpectedNum"
+)
+
 type SecurityPolicyPlugin struct {
 }
 
@@ -74,166 +79,147 @@ func (action *SecurityGroupCreatePolicies) CheckParam(input interface{}) error {
 	return nil
 }
 
+func getArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
+	data := rawData
+	startChar := rawData[0:1]
+	endChar := rawData[len(rawData)-1 : len(rawData)]
+	if startChar == "[" && endChar == "]" {
+			data = rawData[1 : len(rawData)-1]
+	}
+
+	entries := strings.Split(data, ",")
+	if arraySizeType == ARRAY_SIZE_REAL {
+			return entries, nil
+	} else if arraySizeType == ARRAY_SIZE_AS_EXPECTED {
+			if len(entries) == expectedLen {
+					return entries, nil
+			}
+
+			if len(entries) == 1 {
+					rtnData := []string{}
+					for i := 0; i < expectedLen; i++ {
+							rtnData = append(rtnData, entries[0])
+					}
+					return rtnData, nil
+			}
+	}
+	return []string{}, fmt.Errorf("getArrayFromString not in desire state rawData=%v,arraySizeType=%v,expectedLen=%v", rawData, arraySizeType, expectedLen)
+}
+
+func createSecurityPolices(input SecurityGroupPolicyInput)([]vpc.SecurityGroupPolicy,error){
+	policies:=[]*vpc.SecurityGroupPolicy{}
+	
+	upperPolicyType:=strings.ToUpper(input.PolicyType)
+	if upperPolicyType !="EGRESS" &&  upperPolicyType !="INGRESS" {
+		return policies,errors.New("%s is unknown security policy type",upperPolicyType)
+	}
+
+	action:=strings.ToUpper()
+	if action != "ACCEPT" && action != "DROP" {
+		return policies,errors.New("%s is unkown security policy action",action)
+	}
+
+	policyIps,err:=getArrayFromString(input.PolicyCidrBlock,ARRAY_SIZE_REAL,0)
+	if err != nil{
+		return policies,err 
+	}
+
+	ports,err :=getArrayFromString(input.PolicyPort,ARRAY_SIZE_AS_EXPECTED,len(policyIps))
+	if err != nil {
+		return ports,err
+	}
+
+	protos,err:=getArrayFromString(input.PolicyProtocol,ARRAY_SIZE_AS_EXPECTED,len(policyIps))
+	if err != nil {
+		return protos,err
+	}
+
+	for i,ip:=range policIps {
+		policy:= &vpc.SecurityGroupPolicy {
+			Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
+			Port:              common.StringPtr(ports[i]),
+			CidrBlock:         common.StringPtr(ip),
+			Action:            common.StringPtr(action),
+			PolicyDescription: common.StringPtr(input.Description),
+		}
+		policies=append(policies,policy)
+	}
+	return policies,nil 
+}
+
+func newSecurityPolicySet(policyType string,policies []*vpc.SecurityGroupPolicy)(*vpc.SecurityGroupPolicySet) {
+	policySet :=&vpc.SecurityGroupPolicySet{
+		Egress:  []*vpc.SecurityGroupPolicy{},
+		Ingress: []*vpc.SecurityGroupPolicy{},
+	}
+	upperPolicyType:=strings.ToUpper(policyType)
+		if upperPolicyType == "EGRESS" {
+			policySet.Egress = policies
+		} else if upperPolicyType == "INGRESS" {
+			policySet.Ingress = policies
+		} 
+		return policySet
+}
+
+func getSecurityGroupById(providerParam string,id string)error{
+	if id == ""{
+		return errors.Errorf("securityGroup id is empty")
+	}
+	
+	groups,err :=QuerySecurityGroups(providerParam,[]string{input.Id})
+	if err != nil || len(groups)==0 {
+		return  fmt.Errorf("check securityGroupId(%s):err=%v,len(groups)=%v",input.Id,err,len(groups))
+	}
+	return nil 
+}
+
 func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, error) {
 	securityGroupPolicies, _ := input.(SecurityGroupPolicyInputs)
 	outputs := SecurityGroupPolicyOutputs{}
-	securityGroups, err := checkSecurityGroupPolicy(securityGroupPolicies.Inputs)
-	if err != nil {
-		return outputs, err
-	}
+	var finalErr error
 
-	for _, securityGroup := range securityGroups {
-		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
-		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	for _,input:=range securityGroupPolicies{
+		output:=SecurityGroupPolicyOutput{
+			Guid:input.Guid,
+		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
+		//check if securityGroup exist
+		if err:= getSecurityGroupById(input.ProviderParams,input.Id;err != nil {
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
+		}
+
+		//create policies 
+		policies,err := createSecurityPolices(input)
 		if err != nil {
-			return outputs, err
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
+		}
+		for _,policy:=range policies{
+			policy.PolicyIndex=common.Int64Ptr(0)
 		}
 
-		output, err := createSecurityGroupPolicies(client, &securityGroup)
+		//add policies to securityGroups
+		req := vpc.NewCreateSecurityGroupPoliciesRequest()
+	    req.SecurityGroupId = common.StringPtr(input.Id)
+		req.SecurityGroupPolicySet=newSecurityPolicySet(input.PolicyType)
+		rsp, err := client.CreateSecurityGroupPolicies(createPolicies)
 		if err != nil {
-			return outputs, err
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
 		}
-
-		outputs.Outputs = append(outputs.Outputs, output.(SecurityGroupPolicyOutput))
+		outputs =append(outputs,output)
 	}
 
-	return outputs, nil
-}
-
-func checkSecurityGroupPolicy(actionParams []SecurityGroupPolicyInput) ([]SecurityGroupParam, error) {
-	securityGroups := []SecurityGroupParam{}
-
-	for i := 0; i < len(actionParams); i++ {
-		policy := &vpc.SecurityGroupPolicy{
-			Protocol:          common.StringPtr(actionParams[i].PolicyProtocol),
-			Port:              common.StringPtr(actionParams[i].PolicyPort),
-			CidrBlock:         common.StringPtr(actionParams[i].PolicyCidrBlock),
-			Action:            common.StringPtr(actionParams[i].PolicyAction),
-			PolicyDescription: common.StringPtr(actionParams[i].PolicyDescription),
-		}
-
-		securityGroupExisted, index := checkSecurityGroupById(securityGroups, actionParams[i].Id)
-		if index == -1 {
-			securityGroup, err := buildNewSecurityGroupByPolicy(actionParams[i], policy)
-			if err != nil {
-				return securityGroups, err
-			}
-			securityGroups = append(securityGroups, securityGroup)
-		} else {
-			securityGroup, err := buildExistedSecurityGroupByPolicy(&securityGroupExisted, actionParams[i], policy)
-			if err != nil {
-				return securityGroups, err
-			}
-			securityGroups, err = updateSecurityGroupPolicies(securityGroup, securityGroups)
-			if err != nil {
-				return securityGroups, err
-			}
-		}
-	}
-
-	return securityGroups, nil
-}
-
-func checkSecurityGroupById(SecurityGroups []SecurityGroupParam, id string) (SecurityGroupParam, int) {
-	for i := 0; i < len(SecurityGroups); i++ {
-		if SecurityGroups[i].SecurityGroupId == id {
-			return SecurityGroups[i], i
-		}
-	}
-	return SecurityGroupParam{}, -1
-}
-
-func buildNewSecurityGroupByPolicy(actionParam SecurityGroupPolicyInput, policy *vpc.SecurityGroupPolicy) (SecurityGroupParam, error) {
-	SecurityGroup := SecurityGroupParam{
-		Guid:            actionParam.Guid,
-		ProviderParams:  actionParam.ProviderParams,
-		SecurityGroupId: actionParam.Id,
-		SecurityGroupPolicySet: &vpc.SecurityGroupPolicySet{
-			Egress:  []*vpc.SecurityGroupPolicy{},
-			Ingress: []*vpc.SecurityGroupPolicy{},
-		},
-	}
-	SecurityGroup.CallBackParameter.Parameter = actionParam.CallBackParameter.Parameter
-	if actionParam.PolicyType == "Egress" {
-		SecurityGroup.SecurityGroupPolicySet.Egress = append(SecurityGroup.SecurityGroupPolicySet.Egress, policy)
-	} else if actionParam.PolicyType == "Ingress" {
-		SecurityGroup.SecurityGroupPolicySet.Ingress = append(SecurityGroup.SecurityGroupPolicySet.Ingress, policy)
-	} else {
-		return SecurityGroup, fmt.Errorf("Invalid policy type[%v]", actionParam.PolicyType)
-	}
-	return SecurityGroup, nil
-}
-
-func buildExistedSecurityGroupByPolicy(securityGroupExisted *SecurityGroupParam, actionParam SecurityGroupPolicyInput, policy *vpc.SecurityGroupPolicy) (*SecurityGroupParam, error) {
-	if securityGroupExisted.SecurityGroupId == actionParam.Id {
-		policySet := securityGroupExisted.SecurityGroupPolicySet
-		if actionParam.PolicyType == "Ingress" && len(policySet.Ingress) > 0 {
-			securityGroupExisted.SecurityGroupPolicySet.Ingress = append(securityGroupExisted.SecurityGroupPolicySet.Ingress, policy)
-			return securityGroupExisted, nil
-		}
-		if actionParam.PolicyType == "Egress" && len(policySet.Egress) > 0 {
-			securityGroupExisted.SecurityGroupPolicySet.Egress = append(securityGroupExisted.SecurityGroupPolicySet.Egress, policy)
-			return securityGroupExisted, nil
-		}
-
-		return securityGroupExisted, fmt.Errorf("do not add Ingress and Egress policy to the same securityGroup at the same time")
-	}
-
-	return securityGroupExisted, nil
-}
-
-func updateSecurityGroupPolicies(securityGroup *SecurityGroupParam, securityGroups []SecurityGroupParam) ([]SecurityGroupParam, error) {
-	for i := 0; i < len(securityGroups); i++ {
-		if securityGroup.GroupName == securityGroups[i].GroupName {
-			securityGroups[i] = *securityGroup
-			return securityGroups, nil
-		}
-	}
-	return securityGroups, fmt.Errorf("not exist SecurityGroupParam[%v]", &securityGroup)
-}
-
-func createSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
-	//check resource exsit
-	if input.SecurityGroupId != "" {
-		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
-		if flag == false {
-			return querySecurityGroupResponse, err
-		}
-	}
-
-	createPolicies := vpc.NewCreateSecurityGroupPoliciesRequest()
-	createPolicies.SecurityGroupId = common.StringPtr(input.SecurityGroupId)
-
-	if len(input.SecurityGroupPolicySet.Ingress) > 0 || len(input.SecurityGroupPolicySet.Egress) > 0 {
-		createPolicies.SecurityGroupPolicySet = input.SecurityGroupPolicySet
-		if len(createPolicies.SecurityGroupPolicySet.Ingress) > 0 {
-			for i := 0; i < len(createPolicies.SecurityGroupPolicySet.Ingress); i++ {
-				createPolicies.SecurityGroupPolicySet.Ingress[i].PolicyIndex = common.Int64Ptr(0)
-			}
-		} else {
-			for i := 0; i < len(createPolicies.SecurityGroupPolicySet.Egress); i++ {
-				createPolicies.SecurityGroupPolicySet.Egress[i].PolicyIndex = common.Int64Ptr(0)
-			}
-		}
-	}
-
-	createPoliciesResp, err := client.CreateSecurityGroupPolicies(createPolicies)
-	if err != nil {
-		return nil, err
-	}
-
-	logrus.Infof("Create SecurityGroup Policy's request has been submitted, RequestID is [%v]", *createPoliciesResp.Response.RequestId)
-
-	output := SecurityGroupPolicyOutput{}
-	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-	output.Guid = input.Guid
-	output.RequestId = *createPoliciesResp.Response.RequestId
-	// output.Id = input.SecurityGroupId
-
-	return output, nil
+	return outputs, finalErr
 }
 
 type SecurityGroupDeletePolicies struct {
+
 }
 
 func (action *SecurityGroupDeletePolicies) ReadParam(param interface{}) (interface{}, error) {
@@ -257,83 +243,46 @@ func (action *SecurityGroupDeletePolicies) CheckParam(input interface{}) error {
 func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, error) {
 	securityGroupPolicies, _ := input.(SecurityGroupPolicyInputs)
 	outputs := SecurityGroupPolicyOutputs{}
-	securityGroups, err := checkSecurityGroupPolicy(securityGroupPolicies.Inputs)
-	if err != nil {
-		return outputs, err
-	}
+	var finalErr error
 
-	for _, securityGroup := range securityGroups {
-		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
-		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	for _,input:=range securityGroupPolicies{
+		output:=SecurityGroupPolicyOutput{
+			Guid:input.Guid,
+		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
+		//check if securityGroup exist
+		if err:= getSecurityGroupById(input.ProviderParams,input.Id;err != nil {
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
+		}
+
+		//create policies 
+		policies,err := createSecurityPolices(input)
 		if err != nil {
-			return outputs, err
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
 		}
-		output, err := deleteSecurityGroupPolicies(client, &securityGroup)
+		for _,policy:=range policies{
+			policy.PolicyIndex=common.Int64Ptr(0)
+		}
+
+		//add policies to securityGroups
+		req := vpc.NewDeleteSecurityGroupPoliciesRequest()
+	    req.SecurityGroupId = common.StringPtr(input.Id)
+		req.SecurityGroupPolicySet=newSecurityPolicySet(input.PolicyType)
+		rsp, err := client.client.DeleteSecurityGroupPolicies(req)
 		if err != nil {
-			return outputs, err
+			finalErr = err
+			outputs =append(outputs,output)
+			continue
 		}
-
-		outputs.Outputs = append(outputs.Outputs, output.(SecurityGroupPolicyOutput))
-	}
-	return outputs, nil
-
-}
-
-func deleteSecurityGroupPolicies(client *vpc.Client, input *SecurityGroupParam) (interface{}, error) {
-	//check resource exsit
-	if input.SecurityGroupId != "" {
-		querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, input)
-		if flag == false {
-			return querySecurityGroupResponse, err
-		}
-	}
-	deletePolicies := vpc.NewDeleteSecurityGroupPoliciesRequest()
-	deletePolicies.SecurityGroupId = common.StringPtr(input.SecurityGroupId)
-	if len(input.SecurityGroupPolicySet.Ingress) > 0 || len(input.SecurityGroupPolicySet.Egress) > 0 {
-		deletePolicies.SecurityGroupPolicySet = input.SecurityGroupPolicySet
+		outputs = append(outputs,output)
 	}
 
-	deletePoliciesResp, err := client.DeleteSecurityGroupPolicies(deletePolicies)
-	if err != nil {
-		return nil, err
-	}
-
-	logrus.Infof("Delete SecurityGroup Policy's request has been submitted, RequestID is [%v]", *deletePoliciesResp.Response.RequestId)
-
-	output := SecurityGroupPolicyOutput{}
-	output.Guid = input.Guid
-	output.RequestId = *deletePoliciesResp.Response.RequestId
-	// output.Id = input.SecurityGroupId
-	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-
-	return output, nil
-}
-
-func querySecurityGroupsInfo(client *vpc.Client, input *SecurityGroupParam) (SecurityGroupOutput, bool, error) {
-	output := SecurityGroupOutput{}
-
-	request := vpc.NewDescribeSecurityGroupsRequest()
-	request.SecurityGroupIds = append(request.SecurityGroupIds, &input.SecurityGroupId)
-	response, err := client.DescribeSecurityGroups(request)
-	if err != nil {
-		return SecurityGroupOutput{}, false, err
-	}
-
-	if len(response.Response.SecurityGroupSet) == 0 {
-		return SecurityGroupOutput{}, false, nil
-	}
-
-	if len(response.Response.SecurityGroupSet) > 1 {
-		logrus.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
-		return SecurityGroupOutput{}, false, fmt.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
-	}
-
-	output.Guid = input.Guid
-	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-	output.Id = input.SecurityGroupId
-	output.RequestId = *response.Response.RequestId
-
-	return output, true, nil
+	return outputs, finalErr
 }
 
 func QuerySecurityGroupPolicies(providerParam string, securityGroupId string) (vpc.SecurityGroupPolicySet, error) {
