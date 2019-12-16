@@ -50,6 +50,7 @@ type StorageOutputs struct {
 
 type StorageOutput struct {
 	CallBackParameter
+	Result
 	Guid      string `json:"guid,omitempty"`
 	RequestId string `json:"request_id,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -60,7 +61,6 @@ type StoragePlugin struct {
 
 func (plugin *StoragePlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := StorageActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("storage plugin,action = %s not found", actionName)
 	}
@@ -80,37 +80,40 @@ func (action *StorageCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-func (action *StorageCreateAction) CheckParam(input interface{}) error {
-	_, ok := input.(StorageInputs)
-	if !ok {
-		return fmt.Errorf("storageCreateAtion:input type=%T not right", input)
-	}
-
-	return nil
-}
-
 func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 	storages, _ := input.(StorageInputs)
 	outputs := StorageOutputs{}
+	var finalErr error
 
 	for _, storage := range storages.Inputs {
-		output, err := action.createStorage(&storage)
-
-		if err != nil {
-			return nil, err
-		}
-		storage.Id = output.Id
-		err = action.attachStorage(&storage)
-		if err != nil {
-			return nil, err
+		output := StorageOutput{
+			Guid: storage.Guid,
 		}
 		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
 
-		outputs.Outputs = append(outputs.Outputs, *output)
+		result, err := action.createStorage(&storage)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+		output.Id = result.Id
+		storage.Id = result.Id
+		err = action.attachStorage(&storage)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+		}
+
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all storages = %v are created", storages)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func (action *StorageCreateAction) attachStorage(storage *StorageInput) error {
@@ -207,16 +210,9 @@ func (action *StorageTerminateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *StorageTerminateAction) CheckParam(input interface{}) error {
-	storages, ok := input.(StorageInputs)
-	if !ok {
-		return fmt.Errorf("storageTerminationAtion:input type=%T not right", input)
-	}
-
-	for _, storage := range storages.Inputs {
-		if storage.Id == "" {
-			return fmt.Errorf("storageTerminateAction storage_id is empty")
-		}
+func storageTerminateACheckParam(storage StorageInput) error {
+	if storage.Id == "" {
+		return fmt.Errorf("storageTerminateAction storage_id is empty")
 	}
 
 	return nil
@@ -225,24 +221,44 @@ func (action *StorageTerminateAction) CheckParam(input interface{}) error {
 func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error) {
 	storages, _ := input.(StorageInputs)
 	outputs := StorageOutputs{}
+	var finalErr error
 
 	for _, storage := range storages.Inputs {
+		output := StorageOutput{
+			Guid: storage.Guid,
+			Id:   storage.Id,
+		}
+		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		if err := storageTerminateACheckParam(storage); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+
 		err := action.detachStorage(&storage)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
-		output, err := action.terminateStorage(&storage)
-
+		_, err = action.terminateStorage(&storage)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
 		}
 
-		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error {

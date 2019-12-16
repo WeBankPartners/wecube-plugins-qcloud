@@ -22,7 +22,6 @@ type RoutePolicyPlugin struct {
 
 func (plugin *RoutePolicyPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := RoutePolicyActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("RoutePolicy plugin,action = %s not found", actionName)
 	}
@@ -52,6 +51,7 @@ type CreateRoutePolicyOutputs struct {
 
 type CreateRoutePolicyOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -117,31 +117,28 @@ func isRouteConflicts(input CreateRoutePolicyInput) error {
 	return nil
 }
 
-func (action *CreateRoutePolicyAction) CheckParam(input interface{}) error {
-	inputs, _ := input.(CreateRoutePolicyInputs)
-	for _, input := range inputs.Inputs {
-		if input.ProviderParams == "" {
-			return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
-		}
-		if input.GatewayType == "" {
-			return errors.New("CreateRoutePolicyAction input GatewayType is empty")
-		}
-		if err := isValidGatewayType(input.GatewayType); err != nil {
-			return err
-		}
-		if err := isRouteConflicts(input); err != nil {
-			return err
-		}
+func createRoutePolicyCheckParam(input CreateRoutePolicyInput) error {
+	if input.ProviderParams == "" {
+		return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
+	}
+	if input.GatewayType == "" {
+		return errors.New("CreateRoutePolicyAction input GatewayType is empty")
+	}
+	if err := isValidGatewayType(input.GatewayType); err != nil {
+		return err
+	}
+	if err := isRouteConflicts(input); err != nil {
+		return err
+	}
 
-		if input.RouteTableId == "" {
-			return errors.New("CreateRoutePolicyAction input RouteTableId is empty")
-		}
-		if input.DestinationCidr == "" {
-			return errors.New("CreateRoutePolicyAction input DestinationCidr is empty")
-		}
-		if input.GatewayId == "" {
-			return errors.New("CreateRoutePolicyAction input GatewayId is empty")
-		}
+	if input.RouteTableId == "" {
+		return errors.New("CreateRoutePolicyAction input RouteTableId is empty")
+	}
+	if input.DestinationCidr == "" {
+		return errors.New("CreateRoutePolicyAction input DestinationCidr is empty")
+	}
+	if input.GatewayId == "" {
+		return errors.New("CreateRoutePolicyAction input GatewayId is empty")
 	}
 
 	return nil
@@ -151,12 +148,31 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 	outputs := CreateRoutePolicyOutputs{}
 	inputs, _ := input.(CreateRoutePolicyInputs)
 	enable := true
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
+		output := CreateRoutePolicyOutput{
+			Guid: input.Guid,
+		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		if err := createRoutePolicyCheckParam(input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
 		request := vpc.NewCreateRoutesRequest()
@@ -175,28 +191,33 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 
 		response, err := client.CreateRoutes(request)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
 		if *response.Response.TotalCount != 1 {
-			return nil, fmt.Errorf("createRoutePolicy add count(%d)!=1", response.Response.TotalCount)
+			err = fmt.Errorf("createRoutePolicy add count(%d)!=1", response.Response.TotalCount)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
-		output := CreateRoutePolicyOutput{
-			RequestId: *response.Response.RequestId,
-			Guid:      input.Guid,
-		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.RequestId = *response.Response.RequestId
 		output.Id = fmt.Sprintf("%d", *response.Response.RouteTableSet[0].RouteSet[0].RouteId)
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 //----------------------terminate route policy----------------------
 type DeleteRoutePolicyInputs struct {
-	Inputs []CreateRoutePolicyInput `json:"inputs,omitempty"`
+	Inputs []DeleteRoutePolicyInput `json:"inputs,omitempty"`
 }
 type DeleteRoutePolicyInput struct {
 	CallBackParameter
@@ -212,6 +233,7 @@ type DeleteRoutePolicyOutputs struct {
 
 type DeleteRoutePolicyOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 }
@@ -228,40 +250,61 @@ func (action *DeleteRoutePolicyAction) ReadParam(param interface{}) (interface{}
 	return inputs, nil
 }
 
-func (action *DeleteRoutePolicyAction) CheckParam(input interface{}) error {
-	inputs, _ := input.(DeleteRoutePolicyInputs)
-	for _, input := range inputs.Inputs {
-		if input.Id == "" {
-			return errors.New("DeleteRoutePolicyAction input Id is empty")
-		}
-
-		if input.ProviderParams == "" {
-			return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
-		}
-
-		if input.RouteTableId == "" {
-			return errors.New("DeleteRoutePolicyAction input RouteTableId is empty")
-		}
+func deleteRoutePolicyCheckParam(input DeleteRoutePolicyInput) error {
+	if input.Id == "" {
+		return errors.New("DeleteRoutePolicyAction input Id is empty")
 	}
+
+	if input.ProviderParams == "" {
+		return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
+	}
+
+	if input.RouteTableId == "" {
+		return errors.New("DeleteRoutePolicyAction input RouteTableId is empty")
+	}
+
 	return nil
 }
 
 func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(DeleteRoutePolicyInputs)
-	outputs := CreateRoutePolicyOutputs{}
+	outputs := DeleteRoutePolicyOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
+		output := DeleteRoutePolicyOutput{
+			Guid: input.Guid,
+		}
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		if err := deleteRoutePolicyCheckParam(input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
 		request := vpc.NewDeleteRoutesRequest()
 		request.RouteTableId = &input.RouteTableId
 		routePolicyId, err := strconv.ParseUint(input.Id, 10, 0)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 		route := vpc.Route{
 			RouteId: &routePolicyId,
@@ -270,15 +313,15 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 		request.Routes = []*vpc.Route{&route}
 		response, err := client.DeleteRoutes(request)
 		if err != nil {
-			return nil, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
 		}
 
-		output := CreateRoutePolicyOutput{
-			RequestId: *response.Response.RequestId,
-			Guid:      input.Guid,
-		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.RequestId = *response.Response.RequestId
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return &outputs, nil
+	return &outputs, finalErr
 }

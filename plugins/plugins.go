@@ -18,7 +18,7 @@ type Plugin interface {
 
 type Action interface {
 	ReadParam(param interface{}) (interface{}, error)
-	CheckParam(param interface{}) error
+	//CheckParam(param interface{}) error
 	Do(param interface{}) (interface{}, error)
 }
 
@@ -74,8 +74,8 @@ type PluginRequest struct {
 }
 
 type PluginResponse struct {
-	ResultCode string      `json:"result_code"`
-	ResultMsg  string      `json:"result_message"`
+	ResultCode string      `json:"resultCode"`
+	ResultMsg  string      `json:"resultMessage"`
 	Results    interface{} `json:"results"`
 }
 
@@ -109,11 +109,6 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	logrus.Infof("read parameters from http request = %v", pluginRequest.Parameters)
 	actionParam, err := action.ReadParam(pluginRequest.Parameters)
 	if err != nil {
-		return &pluginResponse, err
-	}
-
-	logrus.Infof("check parameters = %v", actionParam)
-	if err = action.CheckParam(actionParam); err != nil {
 		return &pluginResponse, err
 	}
 
