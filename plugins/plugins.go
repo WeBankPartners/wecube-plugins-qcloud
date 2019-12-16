@@ -47,12 +47,13 @@ func init() {
 	RegisterPlugin("vm", new(VmPlugin))
 	RegisterPlugin("storage", new(StoragePlugin))
 	RegisterPlugin("security-group", new(SecurityGroupPlugin))
+	RegisterPlugin("security-policy", new(SecurityPolicyPlugin))
 	RegisterPlugin("subnet", new(SubnetPlugin))
 	RegisterPlugin("nat-gateway", new(NatGatewayPlugin))
 	RegisterPlugin("vpc", new(VpcPlugin))
 	RegisterPlugin("peering-connection", new(PeeringConnectionPlugin))
 	RegisterPlugin("route-table", new(RouteTablePlugin))
-	RegisterPlugin("mysql-vm", new(MysqlVmPlugin))
+	RegisterPlugin("mysql", new(MysqlVmPlugin))
 	RegisterPlugin("redis", new(RedisPlugin))
 	RegisterPlugin("log", new(LogPlugin))
 	RegisterPlugin("elastic-nic", new(ElasticNicPlugin))
@@ -61,7 +62,7 @@ func init() {
 	RegisterPlugin("route-policy", new(RoutePolicyPlugin))
 	RegisterPlugin("clb", new(ClbPlugin))
 	RegisterPlugin("cbs", new(CbsPlugin))
-
+	RegisterPlugin("clb-target", new(ClbTargetPlugin))
 }
 
 type PluginRequest struct {

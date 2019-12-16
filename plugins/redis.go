@@ -63,6 +63,8 @@ type RedisOutput struct {
 	DealID    string `json:"deal_id,omitempty"`
 	TaskID    int64  `json:"task_id,omitempty"`
 	ID        string `json:"id,omitempty"`
+	Vip       string `json:"vip,omitempty"`
+	Port      string `json:"port,omitempty"`
 }
 
 type RedisPlugin struct {
@@ -97,9 +99,6 @@ func (action *RedisCreateAction) CheckParam(input interface{}) error {
 	}
 
 	for _, redis := range rediss.Inputs {
-		if redis.GoodsNum == 0 {
-			return errors.New("RedisCreateAction input goodsnum is invalid")
-		}
 		if redis.Password == "" {
 			return errors.New("RedisCreateAction input password is empty")
 		}
@@ -140,21 +139,11 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 
 	output := RedisOutput{}
 
-	if redisInput.ID != "" {
-		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
-		if err != nil && flag == false {
-			return nil, err
-		}
-
-		if err == nil && flag == true {
-			return queryRedisInstanceResponse, nil
-		}
-	}
-
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid
 	request.TypeId = &redisInput.TypeID
 	request.MemSize = &redisInput.MemSize
+	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
 	request.Period = &redisInput.Period
 	request.Password = &redisInput.Password
@@ -183,10 +172,26 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 		return nil, err
 	}
 
+	instanceRequest := redis.DescribeInstancesRequest{
+		InstanceId: &instanceid,
+	}
+
+	instanceResponse, err := client.DescribeInstances(&instanceRequest)
+	if err != nil {
+		logrus.Errorf("query redis instance info meet error: %s", err)
+		return &output, err
+	}
+
+	if len(instanceResponse.Response.InstanceSet) == 0 {
+		return &output, fmt.Errorf("not query the new redis instance[%v]", instanceid)
+	}
+
 	output.RequestId = *response.Response.RequestId
 	output.Guid = redisInput.Guid
 	output.DealID = *response.Response.DealId
-	output.ID = instanceid
+	output.ID = *instanceResponse.Response.InstanceSet[0].InstanceId
+	output.Vip = *instanceResponse.Response.InstanceSet[0].WanIp
+	output.Port = strconv.Itoa(int(*instanceResponse.Response.InstanceSet[0].Port))
 
 	return &output, nil
 }

@@ -49,7 +49,7 @@ type MysqlVmInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	EngineVersion  string `json:"engine_version,omitempty"`
 	Memory         int64  `json:"memory,omitempty"`
-	Volume         int64  `json:"volume,omitempty"`
+	Volume         int64  `json:"volume_size,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	SubnetId       string `json:"subnet_id,omitempty"`
 	Name           string `json:"name,omitempty"`
