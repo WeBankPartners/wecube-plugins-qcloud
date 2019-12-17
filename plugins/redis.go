@@ -58,6 +58,7 @@ type RedisOutputs struct {
 
 type RedisOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	DealID    string `json:"deal_id,omitempty"`
@@ -72,7 +73,6 @@ type RedisPlugin struct {
 
 func (plugin *RedisPlugin) GetActionByName(actionName string) (Action, error) {
 	action, found := RedisActions[actionName]
-
 	if !found {
 		return nil, fmt.Errorf("Redis plugin,action = %s not found", actionName)
 	}
@@ -92,52 +92,59 @@ func (action *RedisCreateAction) ReadParam(param interface{}) (interface{}, erro
 	return inputs, nil
 }
 
-func (action *RedisCreateAction) CheckParam(input interface{}) error {
-	rediss, ok := input.(RedisInputs)
-	if !ok {
-		return fmt.Errorf("RedisCreateAction:input type=%T not right", input)
+func redisCreateCheckParam(redis *RedisInput) error {
+	if redis.GoodsNum == 0 {
+		return errors.New("RedisCreateAction input goodsnum is invalid")
 	}
-
-	for _, redis := range rediss.Inputs {
-		if redis.Password == "" {
-			return errors.New("RedisCreateAction input password is empty")
-		}
-		if redis.BillingMode != 0 && redis.BillingMode != 1 {
-			return errors.New("RedisCreateAction input password is invalid")
-		}
+	if redis.Password == "" {
+		return errors.New("RedisCreateAction input password is empty")
+	}
+	if redis.BillingMode != 0 && redis.BillingMode != 1 {
+		return errors.New("RedisCreateAction input password is invalid")
 	}
 
 	return nil
 }
 
-func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutput, error) {
+func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output RedisOutput, err error) {
+	output.Guid = redisInput.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = redisInput.CallBackParameter.Parameter
+
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	defer func() {
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
 	//check resource exist
+	var flag bool
 	if redisInput.ID != "" {
-		queryRedisInstanceResponse, flag, err := queryRedisInstancesInfo(client, redisInput)
+		_, flag, err = queryRedisInstancesInfo(client, redisInput)
 		if err != nil && flag == false {
-			return nil, err
+			return output, err
 		}
 
 		if err == nil && flag == true {
-			return queryRedisInstanceResponse, nil
+			output.ID = redisInput.ID
+			return output, nil
 		}
 	}
 
 	zonemap, err := GetAvaliableZoneInfo(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	request := redis.NewCreateInstancesRequest()
 	if _, found := zonemap[paramsMap["AvailableZone"]]; !found {
 		err = errors.New("not found available zone info")
-		return nil, err
+		return output, err
 	}
-
-	output := RedisOutput{}
 
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid
@@ -159,17 +166,15 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 
 	response, err := client.CreateInstances(request)
 	if err != nil {
-		logrus.Errorf("failed to create redis, error=%s", err)
-		return nil, err
+		return output, err
 	}
 
 	logrus.Info("create redis instance response = ", *response.Response.RequestId)
-
 	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
 
 	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	instanceRequest := redis.DescribeInstancesRequest{
@@ -179,37 +184,38 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (*RedisOutp
 	instanceResponse, err := client.DescribeInstances(&instanceRequest)
 	if err != nil {
 		logrus.Errorf("query redis instance info meet error: %s", err)
-		return &output, err
+		return output, err
 	}
 
 	if len(instanceResponse.Response.InstanceSet) == 0 {
-		return &output, fmt.Errorf("not query the new redis instance[%v]", instanceid)
+		err = fmt.Errorf("not query the new redis instance[%v]", instanceid)
+		return output, err
 	}
 
 	output.RequestId = *response.Response.RequestId
-	output.Guid = redisInput.Guid
 	output.DealID = *response.Response.DealId
-	output.ID = *instanceResponse.Response.InstanceSet[0].InstanceId
+	output.ID = instanceid
 	output.Vip = *instanceResponse.Response.InstanceSet[0].WanIp
 	output.Port = strconv.Itoa(int(*instanceResponse.Response.InstanceSet[0].Port))
 
-	return &output, nil
+	return output, err
 }
 
 func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 	rediss, _ := input.(RedisInputs)
 	outputs := RedisOutputs{}
+	var finalErr error
+
 	for _, redis := range rediss.Inputs {
 		redisOutput, err := action.createRedis(&redis)
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		redisOutput.CallBackParameter.Parameter = redis.CallBackParameter.Parameter
-		outputs.Outputs = append(outputs.Outputs, *redisOutput)
+		outputs.Outputs = append(outputs.Outputs, redisOutput)
 	}
 
 	logrus.Infof("all rediss = %v are created", rediss)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *redis.Client, dealid string) (string, error) {
@@ -217,6 +223,7 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 	request.DealIds = append(request.DealIds, &dealid)
 	var instanceids string
 	count := 0
+
 	for {
 		response, err := client.DescribeInstanceDealDetail(request)
 		if err != nil {

@@ -11,10 +11,17 @@ import (
 
 const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
+	RESULT_CODE_SUCCESS = "0"
+	RESULT_CODE_ERROR   = "1"
 )
 
 type CallBackParameter struct {
 	Parameter string `json:"callbackParameter,omitempty"`
+}
+
+type Result struct {
+	Code    string `json:"code"`
+	Message string `json:"msg"`
 }
 
 type Filter struct {

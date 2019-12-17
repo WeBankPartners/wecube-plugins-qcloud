@@ -54,6 +54,7 @@ type SecurityGroupPolicyOutputs struct {
 
 type SecurityGroupPolicyOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"requestId,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 }
@@ -68,15 +69,6 @@ func (action *SecurityGroupCreatePolicies) ReadParam(param interface{}) (interfa
 		return nil, err
 	}
 	return inputs, nil
-}
-
-func (action *SecurityGroupCreatePolicies) CheckParam(input interface{}) error {
-	_, ok := input.(SecurityGroupPolicyInputs)
-	if !ok {
-		return INVALID_PARAMETERS
-	}
-
-	return nil
 }
 
 func getArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
@@ -185,10 +177,12 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			Guid: input.Guid,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-
+		output.Result.Code = RESULT_CODE_SUCCESS
 		//check if securityGroup exist
 		if err := getSecurityGroupById(input.ProviderParams, input.Id); err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -197,6 +191,8 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 		policies, err := createSecurityPolices(input)
 		if err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -211,12 +207,12 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 		_, err = client.CreateSecurityGroupPolicies(req)
 		if err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-
 			continue
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
-
 	}
 
 	return outputs, finalErr
@@ -234,15 +230,6 @@ func (action *SecurityGroupDeletePolicies) ReadParam(param interface{}) (interfa
 	return inputs, nil
 }
 
-func (action *SecurityGroupDeletePolicies) CheckParam(input interface{}) error {
-	_, ok := input.(SecurityGroupPolicyInputs)
-	if !ok {
-		return INVALID_PARAMETERS
-	}
-
-	return nil
-}
-
 func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, error) {
 	securityGroupPolicies, _ := input.(SecurityGroupPolicyInputs)
 	outputs := SecurityGroupPolicyOutputs{}
@@ -255,10 +242,12 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 			Guid: input.Guid,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-
+		output.Result.Code = RESULT_CODE_SUCCESS
 		//check if securityGroup exist
 		if err := getSecurityGroupById(input.ProviderParams, input.Id); err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -267,6 +256,8 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		policies, err := createSecurityPolices(input)
 		if err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
@@ -277,16 +268,15 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 		_, err = client.DeleteSecurityGroupPolicies(req)
 		if err != nil {
 			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
-
 			continue
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
-
 	}
 
 	return outputs, finalErr
-
 }
 
 func QuerySecurityGroupPolicies(providerParam string, securityGroupId string) (vpc.SecurityGroupPolicySet, error) {

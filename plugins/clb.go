@@ -69,6 +69,7 @@ type CreateClbOutputs struct {
 
 type CreateClbOutput struct {
 	CallBackParameter
+	Result
 	Guid string `json:"guid,omitempty"`
 	Id   string `json:"id,omitempty"`
 	Vip  string `json:"vip,omitempty"`
@@ -83,29 +84,22 @@ func (action *CreateClbAction) ReadParam(param interface{}) (interface{}, error)
 	return inputs, nil
 }
 
-func (action *CreateClbAction) CheckParam(input interface{}) error {
-	inputs, ok := input.(CreateClbInputs)
-	if !ok {
-		return fmt.Errorf("CreateClbAction:input type=%T not right", input)
+func createClbCheckParam(input CreateClbInput) error {
+	if input.ProviderParams == "" {
+		return errors.New("ProviderParams is empty")
+	}
+	if input.Type == "" {
+		return errors.New("Type is empty")
+	}
+	if input.VpcId == "" {
+		return errors.New("VpcId is empty")
 	}
 
-	for _, input := range inputs.Inputs {
-		if input.ProviderParams == "" {
-			return errors.New("ProviderParams is empty")
-		}
-		if input.Type == "" {
-			return errors.New("Type is empty")
-		}
-		if input.VpcId == "" {
-			return errors.New("VpcId is empty")
-		}
-
-		if input.Type != LB_TYPE_EXTERNAL && input.Type != LB_TYPE_INTERNAL {
-			return fmt.Errorf("invalid lbType(%v)", input.Type)
-		}
-		if input.Type == LB_TYPE_INTERNAL && input.SubnetId == "" {
-			return errors.New("SubnetId is empty")
-		}
+	if input.Type != LB_TYPE_EXTERNAL && input.Type != LB_TYPE_INTERNAL {
+		return fmt.Errorf("invalid lbType(%v)", input.Type)
+	}
+	if input.Type == LB_TYPE_INTERNAL && input.SubnetId == "" {
+		return errors.New("SubnetId is empty")
 	}
 	return nil
 }
@@ -176,25 +170,39 @@ func waitClbReady(client *clb.Client, id string) (*ClbDetail, error) {
 	return nil, fmt.Errorf("wait lb(%s) ready timeout", id)
 }
 
-func createClb(client *clb.Client, input CreateClbInput) (*CreateClbOutput, error) {
+func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput, err error) {
 	var lbForward int64 = 1
-	output := &CreateClbOutput{
-		Guid: input.Guid,
+	output.Guid = input.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
+	defer func() {
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = createClbCheckParam(input); err != nil {
+		return output, err
 	}
+
 	loadBalanceType, err := getLoadBalanceType(input.Type)
 	if err != nil {
-		return nil, err
+		return output, err
 	}
+
+	var clbDetail *ClbDetail
 	if input.Id != "" {
-		clbDetail, err := queryClbDetailById(client, input.Id)
+		clbDetail, err = queryClbDetailById(client, input.Id)
 		if err != nil {
-			return nil, err
+			return output, err
 		}
 		//clb alreay exist
 		if clbDetail != nil {
 			output.Vip = clbDetail.Vip
 			output.Id = input.Id
-			return output, nil
+			return output, err
 		}
 	}
 	//create new clb
@@ -208,38 +216,39 @@ func createClb(client *clb.Client, input CreateClbInput) (*CreateClbOutput, erro
 	}
 	resp, err := client.CreateLoadBalancer(request)
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 	if len(resp.Response.LoadBalancerIds) == 0 {
-		return nil, fmt.Errorf("createClb Response do not have lb id")
+		err = fmt.Errorf("createClb Response do not have lb id")
+		return output, err
 	}
 
-	clbDetail, err := waitClbReady(client, *resp.Response.LoadBalancerIds[0])
+	clbDetail, err = waitClbReady(client, *resp.Response.LoadBalancerIds[0])
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	output.Vip = clbDetail.Vip
 	output.Id = *resp.Response.LoadBalancerIds[0]
-	return output, nil
+	return output, err
 }
 
 func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(CreateClbInputs)
 	outputs := CreateClbOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output, err := createClb(client, input)
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type TerminateClbAction struct {
@@ -262,6 +271,7 @@ type TerminateClbOutputs struct {
 
 type TerminateClbOutput struct {
 	CallBackParameter
+	Result
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -274,17 +284,11 @@ func (action *TerminateClbAction) ReadParam(param interface{}) (interface{}, err
 	return inputs, nil
 }
 
-func (action *TerminateClbAction) CheckParam(input interface{}) error {
-	inputs, ok := input.(TerminateClbInputs)
-	if !ok {
-		return fmt.Errorf("TerminateClbAction:input type=%T not right", input)
+func terminateClbCheckParam(input TerminateClbInput) error {
+	if input.Id == "" {
+		return errors.New("empty input id")
 	}
 
-	for _, input := range inputs.Inputs {
-		if input.Id == "" {
-			return errors.New("empty input id")
-		}
-	}
 	return nil
 }
 
@@ -292,6 +296,10 @@ func terminateClb(client *clb.Client, input TerminateClbInput) error {
 	loadBalancerIds := []*string{&input.Id}
 	request := clb.NewDeleteLoadBalancerRequest()
 	request.LoadBalancerIds = loadBalancerIds
+
+	if err := terminateClbCheckParam(input); err != nil {
+		return err
+	}
 
 	_, err := client.DeleteLoadBalancer(request)
 	if err != nil {
@@ -304,21 +312,25 @@ func terminateClb(client *clb.Client, input TerminateClbInput) error {
 func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(TerminateClbInputs)
 	outputs := TerminateClbOutputs{}
+	var finalErr error
 
 	for _, input := range inputs.Inputs {
-		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
-		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		if err := terminateClb(client, input); err != nil {
-			return nil, err
-		}
-
 		output := TerminateClbOutput{
 			Guid: input.Guid,
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		output.Result.Code = RESULT_CODE_SUCCESS
+
+		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		if err := terminateClb(client, input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+		}
 
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }

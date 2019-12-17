@@ -58,6 +58,7 @@ type RouteTableOutputs struct {
 
 type RouteTableOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 	Id        string `json:"id,omitempty"`
@@ -76,44 +77,50 @@ func (action *RouteTableCreateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func (action *RouteTableCreateAction) CheckParam(input interface{}) error {
-	routeTables, ok := input.(RouteTableInputs)
-	if !ok {
-		return fmt.Errorf("routeTableCreateAtion:input type=%T not right", input)
+func routeTableCreateCheckParam(routeTable *RouteTableInput) error {
+	if routeTable.VpcId == "" {
+		return errors.New("routeTableCreateAtion input vpcId is empty")
 	}
-
-	for _, routeTable := range routeTables.Inputs {
-		if routeTable.VpcId == "" {
-			return errors.New("routeTableCreateAtion input vpcId is empty")
-		}
-		if routeTable.Name == "" {
-			return errors.New("routeTableCreateAtion input name is empty")
-		}
+	if routeTable.Name == "" {
+		return errors.New("routeTableCreateAtion input name is empty")
 	}
 
 	return nil
 }
 
-func (action *RouteTableCreateAction) createRouteTable(input *RouteTableInput) (*RouteTableOutput, error) {
-	output := RouteTableOutput{
-		Guid: input.Guid,
+func (action *RouteTableCreateAction) createRouteTable(input *RouteTableInput) (output RouteTableOutput, err error) {
+	output.Guid = input.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
+	defer func() {
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = routeTableCreateCheckParam(input); err != nil {
+		return output, err
 	}
+
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	//check resource exist
+	var exist bool
 	if input.Id != "" {
-		exist, err := queryRouteTablesInfo(client, input.Id)
+		exist, err = queryRouteTablesInfo(client, input.Id)
 		if err != nil {
-			return nil, err
+			return output, err
 		}
 
 		if exist {
 			output.Id = input.Id
-			return &output, nil
+			return output, err
 		}
 	}
 
@@ -123,30 +130,30 @@ func (action *RouteTableCreateAction) createRouteTable(input *RouteTableInput) (
 
 	response, err := client.CreateRouteTable(request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to CreateRouteTable, error=%s", err)
+		err = fmt.Errorf("failed to CreateRouteTable, error=%s", err)
+		return output, err
 	}
 	output.RequestId = *response.Response.RequestId
 	output.Id = *response.Response.RouteTable.RouteTableId
 
-	return &output, nil
+	return output, err
 }
 
 func (action *RouteTableCreateAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(RouteTableInputs)
-
+	var finalErr error
 	outputs := RouteTableOutputs{}
 	for _, input := range inputs.Inputs {
 		output, err := action.createRouteTable(&input)
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
 	logrus.Infof("all routeTable = %v are created", outputs)
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 type RouteTableTerminateAction struct {
@@ -161,19 +168,12 @@ func (action *RouteTableTerminateAction) ReadParam(param interface{}) (interface
 	return inputs, nil
 }
 
-func (action *RouteTableTerminateAction) CheckParam(input interface{}) error {
-	routeTables, ok := input.(RouteTableInputs)
-	if !ok {
-		return fmt.Errorf("routeTableTerminateAtion:input type=%T not right", input)
+func routeTableTerminateCheckParam(routeTable *RouteTableInput) error {
+	if routeTable.Id == "" {
+		return errors.New("routeTableTerminateAtion param routeTableId is empty")
 	}
-
-	for _, routeTable := range routeTables.Inputs {
-		if routeTable.Id == "" {
-			return errors.New("routeTableTerminateAtion param routeTableId is empty")
-		}
-		if err := makeSureRouteTableHasNoPolicy(routeTable); err != nil {
-			return err
-		}
+	if err := makeSureRouteTableHasNoPolicy(*routeTable); err != nil {
+		return err
 	}
 	return nil
 }
@@ -200,11 +200,26 @@ func makeSureRouteTableHasNoPolicy(input RouteTableInput) error {
 	return nil
 }
 
-func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTableInput) (*RouteTableOutput, error) {
+func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTableInput) (output RouteTableOutput, err error) {
+	output.Guid = routeTable.Guid
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = routeTable.CallBackParameter.Parameter
+
+	defer func() {
+		if err != nil {
+			output.Result.Message = err.Error()
+			output.Result.Code = RESULT_CODE_ERROR
+		}
+	}()
+
+	if err = routeTableTerminateCheckParam(routeTable); err != nil {
+		return output, err
+	}
+
 	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return nil, err
+		return output, err
 	}
 
 	request := vpc.NewDeleteRouteTableRequest()
@@ -212,29 +227,29 @@ func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTa
 
 	response, err := client.DeleteRouteTable(request)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to DeleteRouteTable(routeTableId=%v), error=%s", routeTable.Id, err)
+		err = fmt.Errorf("Failed to DeleteRouteTable(routeTableId=%v), error=%s", routeTable.Id, err)
+		return output, err
 	}
-	output := RouteTableOutput{}
-	output.Guid = routeTable.Guid
+
 	output.RequestId = *response.Response.RequestId
 	output.Id = routeTable.Id
 
-	return &output, nil
+	return output, err
 }
 
 func (action *RouteTableTerminateAction) Do(input interface{}) (interface{}, error) {
 	routeTables, _ := input.(RouteTableInputs)
 	outputs := RouteTableOutputs{}
+	var finalErr error
 	for _, routeTable := range routeTables.Inputs {
 		output, err := action.terminateRouteTable(&routeTable)
 		if err != nil {
-			return nil, err
+			finalErr = err
 		}
-		output.CallBackParameter.Parameter = routeTable.CallBackParameter.Parameter
-		outputs.Outputs = append(outputs.Outputs, *output)
+		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func queryRouteTablesInfo(client *vpc.Client, id string) (bool, error) {
@@ -276,6 +291,7 @@ type AssociateRouteTableOutputs struct {
 
 type AssociateRouteTableOutput struct {
 	CallBackParameter
+	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
 }
@@ -292,19 +308,17 @@ func (action *RouteTableAssociateSubnetAction) ReadParam(param interface{}) (int
 	return inputs, nil
 }
 
-func (action *RouteTableAssociateSubnetAction) CheckParam(input interface{}) error {
-	inputs, _ := input.(AssociateRouteTableInputs)
-	for _, input := range inputs.Inputs {
-		if input.ProviderParams == "" {
-			return errors.New("RouteTableAssociatSubnetAction input ProviderParams is empty")
-		}
-		if input.SubnetId == "" {
-			return errors.New("RouteTableAssociatSubnetAction input SubnetId is empty")
-		}
-		if input.RouteTableId == "" {
-			return errors.New("RouteTableAssociatSubnetAction input RouteTableId is empty")
-		}
+func routeTableAssociateSubnetCheckParam(input AssociateRouteTableInput) error {
+	if input.ProviderParams == "" {
+		return errors.New("RouteTableAssociatSubnetAction input ProviderParams is empty")
 	}
+	if input.SubnetId == "" {
+		return errors.New("RouteTableAssociatSubnetAction input SubnetId is empty")
+	}
+	if input.RouteTableId == "" {
+		return errors.New("RouteTableAssociatSubnetAction input RouteTableId is empty")
+	}
+
 	return nil
 }
 
@@ -326,16 +340,32 @@ func associateSubnetWithRouteTable(providerParams string, subnetId string, route
 func (action *RouteTableAssociateSubnetAction) Do(input interface{}) (interface{}, error) {
 	outputs := AssociateRouteTableOutputs{}
 	inputs, _ := input.(AssociateRouteTableInputs)
+	var finalErr error
+
 	for _, input := range inputs.Inputs {
+		output := AssociateRouteTableOutput{
+			Guid: input.Guid,
+		}
+		output.Result.Code = RESULT_CODE_SUCCESS
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+
+		if err := routeTableAssociateSubnetCheckParam(input); err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
 		err := associateSubnetWithRouteTable(input.ProviderParams, input.SubnetId, input.RouteTableId)
 		if err != nil {
-			return outputs, err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
 		}
-		output := AssociateRouteTableOutput{}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Guid = input.Guid
+
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
