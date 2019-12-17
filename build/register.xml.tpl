@@ -95,8 +95,8 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">provider_params</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">name</parameter>
-                    <parameter datatype="string" mappingType='entity' required="N">description</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">name</parameter>
+                    <parameter datatype="string" mappingType='entity' required="Y">description</parameter>
                     <parameter datatype="string" mappingType='entity' required="N">id</parameter>
                 </inputParameters>
                 <outputParameters>
