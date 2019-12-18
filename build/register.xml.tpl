@@ -27,7 +27,7 @@
 
     <!-- 7.插件列表 - 描述插件包中单个插件的输入和输出 -->
     <plugins>
-        <plugin name="vpc" entity="network_zone">
+        <plugin name="vpc" targetPackage="wecmdb" targetEntity="network_zone">
             <interface action="create" path="/qcloud/v1/vpc/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.id" required="Y">guid</parameter>
@@ -56,7 +56,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="peering-connection" entity="network_zone_link">
+        <plugin name="peering-connection" targetPackage="wecmdb" targetEntity="network_zone_link">
             <interface action="create" path="/qcloud/v1/peering-connection/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id" required="Y">guid</parameter>
@@ -90,7 +90,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="security-group" entity="service">
+        <plugin name="security-group" targetPackage="wecmdb" targetEntity="service">
             <interface action="create" path="/qcloud/v1/security-group/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id" required="Y">guid</parameter>
@@ -119,7 +119,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="security-policy" entity="invoke">
+        <plugin name="security-policy" targetPackage="wecmdb" targetEntity="invoke">
             <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:invoke.id" required="Y">guid</parameter>
@@ -156,7 +156,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-         <plugin name="route-table" entity="resource_set">
+        <plugin name="route-table" targetPackage="wecmdb" targetEntity="resource_set">
             <interface action="create" path="/qcloud/v1/route-table/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id" required="Y">guid</parameter>
@@ -198,7 +198,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="subnet" entity="resource_set">
+        <plugin name="subnet" targetPackage="wecmdb" targetEntity="resource_set">
             <interface action="create" path="/qcloud/v1/subnet/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id" required="Y">guid</parameter>
@@ -258,7 +258,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="vm" entity="resource_instance">
+        <plugin name="vm" targetPackage="wecmdb" targetEntity="resource_instance">
             <interface action="create" path="/qcloud/v1/vm/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id" required="Y">guid</parameter>
@@ -340,7 +340,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="storage" entity="block_storage">
+        <plugin name="storage" targetPackage="wecmdb" targetEntity="block_storage">
             <interface action="create" path="/qcloud/v1/storage/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType='entity' required="Y">guid</parameter>
@@ -394,7 +394,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.asset_code">disk_id</parameter>
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
-		</outputParameters>
+		        </outputParameters>
             </interface>
             <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate">
                 <inputParameters>
@@ -415,7 +415,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="nat-gateway" entity="network_zone_link">
+        <plugin name="nat-gateway" targetPackage="wecmdb" targetEntity="network_zone_link">
             <interface action="create" path="/qcloud/v1/nat-gateway/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id" required="Y">guid</parameter>
@@ -449,7 +449,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="mysql" entity="resource_instance">
+        <plugin name="mysql" targetPackage="wecmdb" targetEntity="resource_instance">
             <interface action="create" path="/qcloud/v1/mysql/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id" required="Y">guid</parameter>
@@ -478,7 +478,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password">password</parameter>
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
-		</outputParameters>
+		     </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/mysql/terminate">
                 <inputParameters>
@@ -505,7 +505,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="mariadb" entity="resource_instance">
+        <plugin name="mariadb" targetPackage="wecmdb" targetEntity="resource_instance">
             <interface action="create" path="/qcloud/v1/mariadb/create">
             <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id" required="Y">guid</parameter>
@@ -537,7 +537,7 @@
 		</outputParameters>
             </interface>
         </plugin>
-        <plugin name="route-policy" entity="routing_rule">
+        <plugin name="route-policy" targetPackage="wecmdb" targetEntity="routing_rule">
             <interface action="create" path="/qcloud/v1/route-policy/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:routing_rule.id" required="Y">guid</parameter>
@@ -570,7 +570,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="redis" entity="resource_instance">
+        <plugin name="redis" targetPackage="wecmdb" targetEntity="resource_instance">
             <interface action="create" path="/qcloud/v1/redis/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id" required="Y">guid</parameter>
@@ -594,7 +594,7 @@
 		</outputParameters>
             </interface>
         </plugin>
-        <plugin name="clb" entity="service">
+        <plugin name="clb" targetPackage="wecmdb" targetEntity="service">
             <interface action="create" path="/qcloud/v1/clb/create">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id" required="Y">guid</parameter>
@@ -611,7 +611,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.service_ip>wecmdb:ip_address.code">vip</parameter>
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
-		</outputParameters>
+		     </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/clb/terminate">
                 <inputParameters>
@@ -621,12 +621,12 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
-		    <parameter datatype="string" mappingType='context'>code</parameter>
+		            <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="clb-target" entity="service">
+        <plugin name="clb-target" targetPackage="wecmdb" targetEntity="service">
             <interface action="add-backtarget" path="/qcloud/v1/clb-target/add-backtarget">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id" required="Y">guid</parameter>
@@ -639,7 +639,7 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
-		    <parameter datatype="string" mappingType='context'>code</parameter>
+		            <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
             </interface>
