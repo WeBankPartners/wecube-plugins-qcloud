@@ -371,7 +371,8 @@
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
-            </interface>            <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
+            </interface>           
+	    <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.id" required="Y">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.resource_instance>wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">provider_params</parameter>
@@ -437,10 +438,10 @@
             </interface>
             <interface action="terminate" path="/qcloud/v1/nat-gateway/terminate">
                 <inputParameters>
-                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.id"required="Y">guid</parameter>
-                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.network_zone_2>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter"required="Y">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.asset_code"required="Y">id</parameter>
-                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.network_zone_2>wecmdb:network_zone.asset_code"required="Y">vpc_id</parameter>
+                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.id" required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.network_zone_2>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.asset_code" required="Y">id</parameter>
+                    <parameter datatype="string" mappingType="entity"  mappingEntityExpression="wecmdb:network_zone_link.network_zone_2>wecmdb:network_zone.asset_code" required="Y">vpc_id</parameter>
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id">guid</parameter>
