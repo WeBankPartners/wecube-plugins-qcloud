@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"strings"
@@ -51,12 +52,13 @@ type MariadbInput struct {
 	Id           string `json:"id,omitempty"`
 	Zones        string `json:"zones,omitempty"` //split by ,
 	NodeCount    int64  `json:"node_count,omitempty"`
-	MemorySize   int64  `json:"memory_size,omitempty"`
+	MemorySize   string `json:"memory_size,omitempty"`
 	StorageSize  int64  `json:"storage_size,omitempty"`
 	VpcId        string `json:"vpc_id,omitempty"`
 	SubnetId     string `json:"subnet_id,omitempty"`
 	ChargePeriod int64  `json:"charge_period,omitempty"`
 	DbVersion    string `json:"db_version,omitempty"`
+	Password     string `json:"password,omitempty"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -116,7 +118,7 @@ func mariadbCreateCheckParam(input *MariadbInput) error {
 		return errors.New("providerParams is empty")
 	}
 
-	if input.MemorySize == 0 {
+	if input.MemorySize == "0" {
 		return errors.New("memory size is empty")
 	}
 
@@ -219,7 +221,11 @@ func createMariadbInstance(client *mariadb.Client, input *MariadbInput) (string,
 	request := mariadb.NewCreateDBInstanceRequest()
 	request.Zones = zones
 	request.NodeCount = &input.NodeCount
-	request.Memory = &input.MemorySize
+	memory, err := strconv.ParseInt(input.MemorySize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	}
+	request.Memory = &memory
 	request.Storage = &input.StorageSize
 	request.Period = &input.ChargePeriod
 	request.VpcId = &input.VpcId
@@ -412,7 +418,9 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 		return output, err
 	}
 
-	password := utils.CreateRandomPassword()
+	if input.Password == "" {
+		input.Password = utils.CreateRandomPassword()
+	}
 
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMariadbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -455,8 +463,8 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 		return output, err
 	}
 
-	if err = createMariadbAccount(client, instanceId, input.UserName, password); err != nil {
-		logrus.Errorf("createMariadbAccount meet error(%v),password=%v", err, password)
+	if err = createMariadbAccount(client, instanceId, input.UserName, input.Password); err != nil {
+		logrus.Errorf("createMariadbAccount meet error(%v),password=%v", err, input.Password)
 		return output, err
 	}
 
@@ -466,7 +474,7 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 	}
 
 	md5sum := utils.Md5Encode(input.Guid + input.Seed)
-	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
+	if output.Password, err = utils.AesEncode(md5sum[0:16], input.Password); err != nil {
 		logrus.Errorf("AesEncode meet error(%v)", err)
 		return output, err
 	}

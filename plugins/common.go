@@ -13,6 +13,9 @@ const (
 	CHARGE_TYPE_PREPAID = "PREPAID"
 	RESULT_CODE_SUCCESS = "0"
 	RESULT_CODE_ERROR   = "1"
+
+	ARRAY_SIZE_REAL        = "realSize"
+	ARRAY_SIZE_AS_EXPECTED = "fillArrayWithExpectedNum"
 )
 
 type CallBackParameter struct {
@@ -127,4 +130,31 @@ func ExtractJsonFromStruct(s interface{}) map[string]string {
 		}
 	}
 	return fields
+}
+
+func GetArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
+	data := rawData
+	startChar := rawData[0:1]
+	endChar := rawData[len(rawData)-1 : len(rawData)]
+	if startChar == "[" && endChar == "]" {
+		data = rawData[1 : len(rawData)-1]
+	}
+
+	entries := strings.Split(data, ",")
+	if arraySizeType == ARRAY_SIZE_REAL {
+		return entries, nil
+	} else if arraySizeType == ARRAY_SIZE_AS_EXPECTED {
+		if len(entries) == expectedLen {
+			return entries, nil
+		}
+
+		if len(entries) == 1 {
+			rtnData := []string{}
+			for i := 0; i < expectedLen; i++ {
+				rtnData = append(rtnData, entries[0])
+			}
+			return rtnData, nil
+		}
+	}
+	return []string{}, fmt.Errorf("getArrayFromString not in desire state rawData=%v,arraySizeType=%v,expectedLen=%v", rawData, arraySizeType, expectedLen)
 }

@@ -2,15 +2,11 @@ package plugins
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
-	"strings"
-)
-
-const (
-	ARRAY_SIZE_REAL        = "realSize"
-	ARRAY_SIZE_AS_EXPECTED = "fillArrayWithExpectedNum"
 )
 
 type SecurityPolicyPlugin struct {
@@ -71,33 +67,6 @@ func (action *SecurityGroupCreatePolicies) ReadParam(param interface{}) (interfa
 	return inputs, nil
 }
 
-func getArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
-	data := rawData
-	startChar := rawData[0:1]
-	endChar := rawData[len(rawData)-1 : len(rawData)]
-	if startChar == "[" && endChar == "]" {
-		data = rawData[1 : len(rawData)-1]
-	}
-
-	entries := strings.Split(data, ",")
-	if arraySizeType == ARRAY_SIZE_REAL {
-		return entries, nil
-	} else if arraySizeType == ARRAY_SIZE_AS_EXPECTED {
-		if len(entries) == expectedLen {
-			return entries, nil
-		}
-
-		if len(entries) == 1 {
-			rtnData := []string{}
-			for i := 0; i < expectedLen; i++ {
-				rtnData = append(rtnData, entries[0])
-			}
-			return rtnData, nil
-		}
-	}
-	return []string{}, fmt.Errorf("getArrayFromString not in desire state rawData=%v,arraySizeType=%v,expectedLen=%v", rawData, arraySizeType, expectedLen)
-}
-
 func createSecurityPolices(input SecurityGroupPolicyInput) ([]*vpc.SecurityGroupPolicy, error) {
 	policies := []*vpc.SecurityGroupPolicy{}
 
@@ -111,17 +80,17 @@ func createSecurityPolices(input SecurityGroupPolicyInput) ([]*vpc.SecurityGroup
 		return policies, fmt.Errorf("%v is unkown security policy action", action)
 	}
 
-	policyIps, err := getArrayFromString(input.PolicyCidrBlock, ARRAY_SIZE_REAL, 0)
+	policyIps, err := GetArrayFromString(input.PolicyCidrBlock, ARRAY_SIZE_REAL, 0)
 	if err != nil {
 		return policies, err
 	}
 
-	ports, err := getArrayFromString(input.PolicyPort, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
+	ports, err := GetArrayFromString(input.PolicyPort, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
 	if err != nil {
 		return policies, err
 	}
 
-	protos, err := getArrayFromString(input.PolicyProtocol, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
+	protos, err := GetArrayFromString(input.PolicyProtocol, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
 	if err != nil {
 		return policies, err
 	}

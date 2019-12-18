@@ -16,7 +16,14 @@ import (
 const (
 	REDIS_STATUS_RUNNING  = 4
 	REDIS_STATUS_ISOLATED = 5
+	PREPAID               = "PREPAID"
+	POSTPAID_BY_HOUR      = "POSTPAID_BY_HOUR"
 )
+
+var BillingModeMap = map[string]int64{
+	POSTPAID_BY_HOUR: 0,
+	PREPAID:          1,
+}
 
 var RedisActions = make(map[string]Action)
 
@@ -41,12 +48,12 @@ type RedisInput struct {
 	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
-	TypeID         uint64 `json:"type_id,omitempty"`
+	TypeID         string `json:"type_id,omitempty"`
 	MemSize        uint64 `json:"mem_size,omitempty"`
 	GoodsNum       uint64 `json:"goods_num,omitempty"`
 	Period         uint64 `json:"period,omitempty"`
 	Password       string `json:"password,omitempty"`
-	BillingMode    int64  `json:"billing_mode,omitempty"`
+	BillingMode    string `json:"billing_mode,omitempty"`
 	VpcID          string `json:"vpc_id,omitempty"`
 	SubnetID       string `json:"subnet_id,omitempty"`
 	ID             string `json:"id,omitempty"`
@@ -99,7 +106,7 @@ func redisCreateCheckParam(redis *RedisInput) error {
 	if redis.Password == "" {
 		return errors.New("RedisCreateAction input password is empty")
 	}
-	if redis.BillingMode != 0 && redis.BillingMode != 1 {
+	if redis.BillingMode != PREPAID && redis.BillingMode != POSTPAID_BY_HOUR {
 		return errors.New("RedisCreateAction input password is invalid")
 	}
 
@@ -148,13 +155,20 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid
-	request.TypeId = &redisInput.TypeID
+	typeId, er := strconv.ParseInt(redisInput.TypeID, 10, 64)
+	if er != nil {
+		err = fmt.Errorf("wrong TypeID string, %v", er)
+		return output, err
+	}
+	uTypeId := uint64(typeId)
+	request.TypeId = &uTypeId
 	request.MemSize = &redisInput.MemSize
 	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
 	request.Period = &redisInput.Period
 	request.Password = &redisInput.Password
-	request.BillingMode = &redisInput.BillingMode
+	billmode := BillingModeMap[redisInput.BillingMode]
+	request.BillingMode = &billmode
 
 	if (*redisInput).VpcID != "" {
 		request.VpcId = &redisInput.VpcID

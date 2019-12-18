@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
@@ -48,7 +49,7 @@ type MysqlVmInput struct {
 	Seed           string `json:"seed,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	EngineVersion  string `json:"engine_version,omitempty"`
-	Memory         int64  `json:"memory,omitempty"`
+	MemorySize     string `json:"memory_size,omitempty"`
 	Volume         int64  `json:"volume_size,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	SubnetId       string `json:"subnet_id,omitempty"`
@@ -57,6 +58,7 @@ type MysqlVmInput struct {
 	Count          int64  `json:"count,omitempty"`
 	ChargeType     string `json:"charge_type,omitempty"`
 	ChargePeriod   int64  `json:"charge_period,omitempty"`
+	Password       string `json:"password,omitempty"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -116,7 +118,11 @@ func (action *MysqlVmCreateAction) CheckParam(input interface{}) error {
 
 func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, mysqlVmInput *MysqlVmInput) (string, string, error) {
 	request := cdb.NewCreateDBInstanceRequest()
-	request.Memory = &mysqlVmInput.Memory
+	memory, err := strconv.ParseInt(mysqlVmInput.MemorySize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	}
+	request.Memory = &memory
 	request.Volume = &mysqlVmInput.Volume
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
@@ -163,7 +169,11 @@ func getZoneFromProviderParams(ProviderParams string) (string, error) {
 
 func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Client, mysqlVmInput *MysqlVmInput) (string, string, error) {
 	request := cdb.NewCreateDBInstanceHourRequest()
-	request.Memory = &mysqlVmInput.Memory
+	memory, err := strconv.ParseInt(mysqlVmInput.MemorySize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	}
+	request.Memory = &memory
 	request.Volume = &mysqlVmInput.Volume
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
@@ -216,9 +226,12 @@ func initMysqlInstance(client *cdb.Client, instanceId string, charset string, lo
 	return password, fmt.Sprintf("%v", defaultPort), nil
 }
 
-func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string) (string, string, error) {
+func ensureMysqlInit(client *cdb.Client, instanceId string, charset string, lowerCaseTableName string, password string) (string, string, error) {
 	maxTryNum := 20
-	password := utils.CreateRandomPassword()
+
+	if password == "" {
+		password = utils.CreateRandomPassword()
+	}
 
 	for i := 0; i < maxTryNum; i++ {
 		password, port, _ := initMysqlInstance(client, instanceId, charset, lowerCaseTableName, password)
@@ -287,7 +300,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		mysqlVmInput.LowerCaseTableNames = DEFAULT_MARIADB_LOWER_CASE_TABLE_NAMES
 	}
 
-	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames)
+	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames, mysqlVmInput.Password)
 	if err != nil {
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
