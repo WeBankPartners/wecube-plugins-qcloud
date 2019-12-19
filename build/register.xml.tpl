@@ -635,8 +635,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.asset_code" required="Y">lb_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.service_port" required="Y">lb_port</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.service_type" required="Y">protocol</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.unit>wecmdb:unit~(unit)wecmdb:business_app_instance.resource_instance>wecmdb:resource_instance.asset_code" required="Y">host_id</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.unit>wecmdb:unit~(unit)wecmdb:business_app_instance.port" required="Y">host_port</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.unit>wecmdb:unit~(unit)wecmdb:business_app_instance.resource_instance>wecmdb:resource_instance.asset_code" required="Y">host_ids</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.unit>wecmdb:unit~(unit)wecmdb:business_app_instance.port" required="Y">host_ports</parameter>
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
