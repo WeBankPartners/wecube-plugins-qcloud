@@ -50,15 +50,16 @@ type MysqlVmInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	EngineVersion  string `json:"engine_version,omitempty"`
 	MemorySize     string `json:"memory_size,omitempty"`
-	Volume         int64  `json:"volume_size,omitempty"`
+	VolumeSize     string `json:"volume_size,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	SubnetId       string `json:"subnet_id,omitempty"`
 	Name           string `json:"name,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Count          int64  `json:"count,omitempty"`
 	ChargeType     string `json:"charge_type,omitempty"`
-	ChargePeriod   int64  `json:"charge_period,omitempty"`
+	ChargePeriod   string `json:"charge_period,omitempty"`
 	Password       string `json:"password,omitempty"`
+	UserName       string `json:"user_name,omitempty"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -107,12 +108,46 @@ func (action *MysqlVmCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-func (action *MysqlVmCreateAction) CheckParam(input interface{}) error {
-	_, ok := input.(MysqlVmInputs)
-	if !ok {
-		return fmt.Errorf("mysqlVmCreateAtion:input type=%T not right", input)
+func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) error {
+	if input.Guid == "" {
+		return fmt.Errorf("guid is empty")
 	}
-
+	if input.Seed == "" {
+		return fmt.Errorf("seed is empty")
+	}
+	if input.ProviderParams == "" {
+		return fmt.Errorf("provider_params is empty")
+	}
+	if input.EngineVersion == "" {
+		return fmt.Errorf("engine_version is empty")
+	}
+	if input.MemorySize == "" || input.MemorySize == "0" {
+		return fmt.Errorf("memory_size is empty")
+	}
+	if input.VolumeSize == "" || input.VolumeSize == "0" {
+		return fmt.Errorf("volume_size is empty")
+	}
+	if input.VpcId == "" {
+		return fmt.Errorf("vpc_id is empty")
+	}
+	if input.SubnetId == "" {
+		return fmt.Errorf("subnet_id is empty")
+	}
+	if input.UserName == "" {
+		return fmt.Errorf("user_name is empty")
+	}
+	if input.ChargeType != CHARGE_TYPE_PREPAID && input.ChargeType != CHARGE_TYPE_BY_HOUR {
+		return fmt.Errorf("charge_type is wrong")
+	}
+	if input.ChargePeriod == "0" || input.ChargePeriod == "" {
+		return fmt.Errorf("charge_period is wrong")
+	}
+	if input.CharacterSet == "" {
+		return fmt.Errorf("character_set is empty")
+	}
+	if input.LowerCaseTableNames == "" {
+		return fmt.Errorf("lower_case_table_names is empty")
+	}
 	return nil
 }
 
@@ -123,12 +158,20 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
 	}
 	request.Memory = &memory
-	request.Volume = &mysqlVmInput.Volume
+	volume, err := strconv.ParseInt(mysqlVmInput.VolumeSize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong VolumeSize string, %v", err)
+	}
+	request.Volume = &volume
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
 	request.InstanceName = &mysqlVmInput.Name
-	request.Period = &mysqlVmInput.ChargePeriod
+	period, err := strconv.ParseInt(mysqlVmInput.ChargePeriod, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong ChargePeriod string, %v", err)
+	}
+	request.Period = &period
 	mysqlVmInput.Count = 1
 	request.GoodsNum = &mysqlVmInput.Count
 
@@ -174,7 +217,11 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
 	}
 	request.Memory = &memory
-	request.Volume = &mysqlVmInput.Volume
+	volume, err := strconv.ParseInt(mysqlVmInput.VolumeSize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong VolumeSize string, %v", err)
+	}
+	request.Volume = &volume
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
@@ -251,6 +298,12 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	output.Guid = mysqlVmInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = mysqlVmInput.CallBackParameter.Parameter
+	err = action.MysqlVmCreateCheckParam(*mysqlVmInput)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
+	}
 
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -313,6 +366,40 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	output.Port = port
 	output.UserName = "root"
 
+	// create user and add user privileges
+	AsyncRequestId := ""
+	if mysqlVmInput.UserName != "root" {
+		// create user
+		AsyncRequestId, password, err = action.createMysqlVmAccount(client, instanceId, mysqlVmInput.UserName, password)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+		// if err == nil the task is successd
+		err = action.describeMysqlVmAsyncRequestInfo(client, AsyncRequestId)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+
+		// add privileges to user
+		AsyncRequestId, err = action.addMysqlVmAccountPrivileges(client, instanceId, mysqlVmInput.UserName)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+		// if err == nil the task is successd
+		err = action.describeMysqlVmAsyncRequestInfo(client, AsyncRequestId)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+	}
+
 	md5sum := utils.Md5Encode(mysqlVmInput.Guid + mysqlVmInput.Seed)
 	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
 		logrus.Errorf("AesEncode meet error(%v)", err)
@@ -322,6 +409,97 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	}
 
 	return output, err
+}
+
+func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, instanceId string, userName string, password string) (AsyncRequestId string, Password string, err error) {
+	request := cdb.NewCreateAccountsRequest()
+	request.InstanceId = &instanceId
+	if password == "" {
+		password = utils.CreateRandomPassword()
+	}
+	request.Password = &password
+	Password = password
+	accountHost := "%"
+	account := []*cdb.Account{
+		&cdb.Account{
+			User: &userName,
+			Host: &accountHost,
+		},
+	}
+	request.Accounts = account
+	response, err := client.CreateAccounts(request)
+	if err != nil {
+		return AsyncRequestId, Password, err
+	}
+	AsyncRequestId = *response.Response.AsyncRequestId
+	return AsyncRequestId, Password, err
+}
+
+func (acton *MysqlVmCreateAction) addMysqlVmAccountPrivileges(client *cdb.Client, instanceId string, userName string) (AsyncRequestId string, err error) {
+	request := cdb.NewModifyAccountPrivilegesRequest()
+	request.InstanceId = &instanceId
+	accountHost := "%"
+	account := []*cdb.Account{
+		&cdb.Account{
+			User: &userName,
+			Host: &accountHost,
+		},
+	}
+	request.Accounts = account
+	globalPrivileges := []string{
+		"SELECT",
+		"INSERT",
+		"UPDATE",
+		"DELETE",
+		"CREATE",
+		"PROCESS",
+		"DROP",
+		"REFERENCES",
+		"INDEX",
+		"ALTER",
+		"SHOW DATABASES",
+		"CREATE TEMPORARY TABLES",
+		"LOCK TABLES",
+		"EXECUTE",
+		"CREATE VIEW",
+		"SHOW VIEW",
+		"CREATE ROUTINE",
+		"ALTER ROUTINE",
+		"EVENT",
+		"TRIGGER",
+	}
+	request.GlobalPrivileges = common.StringPtrs(globalPrivileges)
+
+	response, err := client.ModifyAccountPrivileges(request)
+	if err != nil {
+		return AsyncRequestId, err
+	}
+	AsyncRequestId = *response.Response.AsyncRequestId
+
+	return AsyncRequestId, err
+}
+
+func (action *MysqlVmCreateAction) describeMysqlVmAsyncRequestInfo(client *cdb.Client, AsyncRequestId string) error {
+	request := cdb.NewDescribeAsyncRequestInfoRequest()
+	request.AsyncRequestId = &AsyncRequestId
+	count := 0
+
+	for {
+		response, err := client.DescribeAsyncRequestInfo(request)
+		if err != nil {
+			return err
+		}
+		status := *response.Response.Status
+		if status == "SUCCESS" {
+			return nil
+		}
+		time.Sleep(10 * time.Second)
+		count++
+		if count >= 20 {
+			break
+		}
+	}
+	return errors.New("describeMysqlVmAsyncRequestInfo timeout")
 }
 
 func queryMySqlInstanceInitFlag(client *cdb.Client, instanceId string) (int64, error) {

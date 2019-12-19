@@ -51,12 +51,12 @@ type MariadbInput struct {
 
 	Id           string `json:"id,omitempty"`
 	Zones        string `json:"zones,omitempty"` //split by ,
-	NodeCount    int64  `json:"node_count,omitempty"`
+	NodeCount    string `json:"node_count,omitempty"`
 	MemorySize   string `json:"memory_size,omitempty"`
-	StorageSize  int64  `json:"storage_size,omitempty"`
+	StorageSize  string `json:"storage_size,omitempty"`
 	VpcId        string `json:"vpc_id,omitempty"`
 	SubnetId     string `json:"subnet_id,omitempty"`
-	ChargePeriod int64  `json:"charge_period,omitempty"`
+	ChargePeriod string `json:"charge_period,omitempty"`
 	DbVersion    string `json:"db_version,omitempty"`
 	Password     string `json:"password,omitempty"`
 
@@ -118,11 +118,11 @@ func mariadbCreateCheckParam(input *MariadbInput) error {
 		return errors.New("providerParams is empty")
 	}
 
-	if input.MemorySize == "0" {
+	if input.MemorySize == "0" || input.MemorySize == "" {
 		return errors.New("memory size is empty")
 	}
 
-	if input.StorageSize == 0 {
+	if input.StorageSize == "" || input.StorageSize == "0" {
 		return errors.New("storage size is empty")
 	}
 
@@ -220,14 +220,26 @@ func createMariadbInstance(client *mariadb.Client, input *MariadbInput) (string,
 
 	request := mariadb.NewCreateDBInstanceRequest()
 	request.Zones = zones
-	request.NodeCount = &input.NodeCount
+	nodeCount, err := strconv.ParseInt(input.NodeCount, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong NodeCount string, %v", err)
+	}
+	request.NodeCount = &nodeCount
 	memory, err := strconv.ParseInt(input.MemorySize, 10, 64)
 	if err != nil {
 		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
 	}
 	request.Memory = &memory
-	request.Storage = &input.StorageSize
-	request.Period = &input.ChargePeriod
+	storage, err := strconv.ParseInt(input.StorageSize, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong StorageSize string, %v", err)
+	}
+	request.Storage = &storage
+	period, err := strconv.ParseInt(input.ChargePeriod, 10, 64)
+	if err != nil {
+		return "", "", fmt.Errorf("wrong ChargePeriod string, %v", err)
+	}
+	request.Period = &period
 	request.VpcId = &input.VpcId
 	request.SubnetId = &input.SubnetId
 	request.DbVersionId = &input.DbVersion

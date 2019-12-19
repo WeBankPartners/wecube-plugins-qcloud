@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -42,8 +43,8 @@ type NatGatewayInput struct {
 	ProviderParams  string `json:"provider_params,omitempty"`
 	Name            string `json:"name,omitempty"`
 	VpcId           string `json:"vpc_id,omitempty"`
-	MaxConcurrent   int    `json:"max_concurrent,omitempty"`
-	BandWidth       int    `json:"bandwidth,omitempty"`
+	MaxConcurrent   string `json:"max_concurrent,omitempty"`
+	BandWidth       string `json:"bandwidth,omitempty"`
 	AssignedEipSet  string `json:"assigned_eip_set,omitempty"`
 	AutoAllocEipNum int    `json:"auto_alloc_eip_num,omitempty"`
 	Id              string `json:"id,omitempty"`
@@ -123,8 +124,18 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	createReq := unversioned.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
-	createReq.MaxConcurrent = &natGateway.MaxConcurrent
-	createReq.Bandwidth = &natGateway.BandWidth
+	maxConcurrent, er := strconv.Atoi(natGateway.MaxConcurrent)
+	if er != nil {
+		err = fmt.Errorf("wrong MaxConcurrent string, %v", er)
+		return output, err
+	}
+	createReq.MaxConcurrent = &maxConcurrent
+	bandWidth, er := strconv.Atoi(natGateway.BandWidth)
+	if er != nil {
+		err = fmt.Errorf("wrong BandWidth string, %v", er)
+		return output, err
+	}
+	createReq.Bandwidth = &bandWidth
 	createReq.AutoAllocEipNum = &natGateway.AutoAllocEipNum
 
 	if natGateway.AssignedEipSet != "" {

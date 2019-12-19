@@ -36,7 +36,7 @@ type StorageInput struct {
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
-	DiskSize         uint64 `json:"disk_size,omitempty"`
+	DiskSize         string `json:"disk_size,omitempty"`
 	DiskName         string `json:"disk_name,omitempty"`
 	Id               string `json:"id,omitempty"`
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
@@ -165,7 +165,13 @@ func (action *StorageCreateAction) createStorage(storage *StorageInput) (*Storag
 	request := cbs.NewCreateDisksRequest()
 	request.DiskName = &storage.DiskName
 	request.DiskType = &storage.DiskType
-	request.DiskSize = &storage.DiskSize
+	diskSize, err := strconv.ParseInt(storage.DiskSize, 10, 64)
+	if err != nil {
+		err = fmt.Errorf("wrong DiskSize string, %v", err)
+		return nil, err
+	}
+	udiskSize := uint64(diskSize)
+	request.DiskSize = &udiskSize
 	request.DiskChargeType = &storage.DiskChargeType
 
 	if storage.DiskChargeType == CHARGE_TYPE_PREPAID {

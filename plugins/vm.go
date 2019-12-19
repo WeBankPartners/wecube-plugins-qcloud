@@ -48,12 +48,12 @@ type VmInput struct {
 	HostType             string `json:"host_type,omitempty"`
 	InstanceType         string `json:"instance_type,omitempty"`
 	ImageId              string `json:"image_id,omitempty"`
-	SystemDiskSize       int64  `json:"system_disk_size,omitempty"`
+	SystemDiskSize       string `json:"system_disk_size,omitempty"`
 	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
-	InstanceChargePeriod int64  `json:"instance_charge_period,omitempty"`
+	InstanceChargePeriod string `json:"instance_charge_period,omitempty"`
 	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
 	Password             string `json:"password,omitempty"`
-	ProjectId            int64  `json:"project_id,omitempty"`
+	ProjectId            string `json:"project_id,omitempty"`
 }
 
 type VmOutputs struct {
@@ -362,6 +362,16 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			vm.Password = utils.CreateRandomPassword()
 		}
 
+		diskSize, err := strconv.ParseInt(vm.SystemDiskSize, 10, 64)
+		if err != nil {
+			err = fmt.Errorf("wrong SystemDiskSize string, %v", err)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+
+		}
 		runInstanceRequest := QcloudRunInstanceStruct{
 			Placement: PlacementStruct{
 				Zone: paramsMap["AvailableZone"],
@@ -370,7 +380,7 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			InstanceChargeType: vm.InstanceChargeType,
 			SystemDisk: SystemDiskStruct{
 				DiskType: "CLOUD_PREMIUM",
-				DiskSize: vm.SystemDiskSize,
+				DiskSize: diskSize,
 			},
 			VirtualPrivateCloud: VirtualPrivateCloudStruct{
 				VpcId:    vm.VpcId,
@@ -399,8 +409,17 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			}
 		}
 
-		if vm.ProjectId != 0 {
-			runInstanceRequest.Placement.ProjectId = vm.ProjectId
+		if vm.ProjectId != "" {
+			projectId, er := strconv.ParseInt(vm.ProjectId, 10, 64)
+			if er != nil {
+				err = fmt.Errorf("wrong ProjectId string, %v", err)
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
+			runInstanceRequest.Placement.ProjectId = projectId
 		}
 
 		if vm.InstancePrivateIp != "" {
@@ -408,8 +427,25 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 
 		if vm.InstanceChargeType == INSTANCE_CHARGE_TYPE_PREPAID {
+			if vm.InstanceChargePeriod == "0" || vm.InstanceChargePeriod == "" {
+				err = fmt.Errorf("InstanceChargePeriod is empty")
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
+			period, er := strconv.ParseInt(vm.InstanceChargePeriod, 10, 64)
+			if er != nil {
+				err = fmt.Errorf("wrong InstanceChargePeriod string, %v", er)
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
 			runInstanceRequest.InstanceChargePrepaid = &InstanceChargePrepaidStruct{
-				Period:    vm.InstanceChargePeriod,
+				Period:    period,
 				RenewFlag: RENEW_FLAG_NOTIFY_AND_AUTO_RENEW,
 			}
 		}

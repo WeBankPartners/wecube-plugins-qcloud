@@ -16,13 +16,11 @@ import (
 const (
 	REDIS_STATUS_RUNNING  = 4
 	REDIS_STATUS_ISOLATED = 5
-	PREPAID               = "PREPAID"
-	POSTPAID_BY_HOUR      = "POSTPAID_BY_HOUR"
 )
 
 var BillingModeMap = map[string]int64{
-	POSTPAID_BY_HOUR: 0,
-	PREPAID:          1,
+	CHARGE_TYPE_BY_HOUR: 0,
+	CHARGE_TYPE_PREPAID: 1,
 }
 
 var RedisActions = make(map[string]Action)
@@ -49,9 +47,9 @@ type RedisInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	TypeID         string `json:"type_id,omitempty"`
-	MemSize        uint64 `json:"mem_size,omitempty"`
+	MemSize        string `json:"mem_size,omitempty"`
 	GoodsNum       uint64 `json:"goods_num,omitempty"`
-	Period         uint64 `json:"period,omitempty"`
+	Period         string `json:"period,omitempty"`
 	Password       string `json:"password,omitempty"`
 	BillingMode    string `json:"billing_mode,omitempty"`
 	VpcID          string `json:"vpc_id,omitempty"`
@@ -100,13 +98,13 @@ func (action *RedisCreateAction) ReadParam(param interface{}) (interface{}, erro
 }
 
 func redisCreateCheckParam(redis *RedisInput) error {
-	if redis.GoodsNum == 0 {
-		return errors.New("RedisCreateAction input goodsnum is invalid")
-	}
+	// if redis.GoodsNum == 0 {
+	// 	return errors.New("RedisCreateAction input goodsnum is invalid")
+	// }
 	if redis.Password == "" {
 		return errors.New("RedisCreateAction input password is empty")
 	}
-	if redis.BillingMode != PREPAID && redis.BillingMode != POSTPAID_BY_HOUR {
+	if redis.BillingMode != CHARGE_TYPE_BY_HOUR && redis.BillingMode != CHARGE_TYPE_PREPAID {
 		return errors.New("RedisCreateAction input password is invalid")
 	}
 
@@ -162,10 +160,22 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	}
 	uTypeId := uint64(typeId)
 	request.TypeId = &uTypeId
-	request.MemSize = &redisInput.MemSize
+	memory, err := strconv.ParseInt(redisInput.MemSize, 10, 64)
+	if err != nil {
+		err = fmt.Errorf("wrong MemSize string, %v", err)
+		return output, err
+	}
+	umemory := uint64(memory)
+	request.MemSize = &umemory
 	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
-	request.Period = &redisInput.Period
+	period, err := strconv.ParseInt(redisInput.Period, 10, 64)
+	if err != nil {
+		err = fmt.Errorf("wrong Period string, %v", err)
+		return output, err
+	}
+	uPeriod := uint64(period)
+	request.Period = &uPeriod
 	request.Password = &redisInput.Password
 	billmode := BillingModeMap[redisInput.BillingMode]
 	request.BillingMode = &billmode
