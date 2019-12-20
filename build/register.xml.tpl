@@ -78,7 +78,7 @@
             </interface>
             <interface action="terminate" path="/qcloud/v1/peering-connection/terminate">
                 <inputParameters>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id">guid</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id" required="Y">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.network_zone_1>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.network_zone_2>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">peer_provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.asset_code" required="Y">id</parameter>
