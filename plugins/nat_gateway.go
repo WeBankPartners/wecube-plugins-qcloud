@@ -125,14 +125,14 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
 	maxConcurrent, er := strconv.Atoi(natGateway.MaxConcurrent)
-	if er != nil {
-		err = fmt.Errorf("wrong MaxConcurrent string, %v", er)
+	if er != nil && maxConcurrent <= 0 {
+		err = fmt.Errorf("wrong MaxConcurrent string. %v", er)
 		return output, err
 	}
 	createReq.MaxConcurrent = &maxConcurrent
 	bandWidth, er := strconv.Atoi(natGateway.BandWidth)
-	if er != nil {
-		err = fmt.Errorf("wrong BandWidth string, %v", er)
+	if er != nil && bandWidth <= 0 {
+		err = fmt.Errorf("wrong BandWidth string. %v", er)
 		return output, err
 	}
 	createReq.Bandwidth = &bandWidth
