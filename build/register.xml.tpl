@@ -39,6 +39,7 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.asset_code">id</parameter>
+                    <!-- <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.asset_code">route_table_id</parameter> -->
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
