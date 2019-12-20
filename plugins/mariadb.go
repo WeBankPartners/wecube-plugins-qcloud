@@ -109,32 +109,44 @@ func mariadbCreateCheckParam(input *MariadbInput) error {
 	if input.Guid == "" {
 		return errors.New("guid is empty")
 	}
-
 	if input.Seed == "" {
 		return errors.New("seed is empty")
 	}
-
 	if input.ProviderParams == "" {
 		return errors.New("providerParams is empty")
 	}
-
 	if input.MemorySize == "0" || input.MemorySize == "" {
 		return errors.New("memory size is empty")
 	}
-
 	if input.StorageSize == "" || input.StorageSize == "0" {
 		return errors.New("storage size is empty")
 	}
-
+	if input.LowerCaseTableNames == "" {
+		return errors.New("lower_case_table_names is empty")
+	}
+	if input.CharacterSet == "" {
+		return errors.New("character_set is empty")
+	}
+	if input.NodeCount == "" || input.NodeCount == "0" {
+		return errors.New("node_count is invalid")
+	}
+	if input.DbVersion == "" {
+		return errors.New("db_version is empty")
+	}
+	if input.ChargePeriod == "" || input.ChargePeriod == "0" {
+		return errors.New("charge_period is empty")
+	}
 	if input.VpcId == "" {
 		return errors.New("vpcId is empty")
 	}
-
 	if input.SubnetId == "" {
 		return errors.New("subnetId is empty")
 	}
 	if input.Zones == "" {
 		return errors.New("zones is empty")
+	}
+	if input.UserName == "" {
+		return errors.New("user_name is empty")
 	}
 
 	return nil
@@ -221,23 +233,23 @@ func createMariadbInstance(client *mariadb.Client, input *MariadbInput) (string,
 	request := mariadb.NewCreateDBInstanceRequest()
 	request.Zones = zones
 	nodeCount, err := strconv.ParseInt(input.NodeCount, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong NodeCount string, %v", err)
+	if err != nil && nodeCount <= 0 {
+		return "", "", fmt.Errorf("wrong NodeCount string. %v", err)
 	}
 	request.NodeCount = &nodeCount
 	memory, err := strconv.ParseInt(input.MemorySize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	if err != nil && memory <= 0 {
+		return "", "", fmt.Errorf("wrong MemrorySize string. %v", err)
 	}
 	request.Memory = &memory
 	storage, err := strconv.ParseInt(input.StorageSize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong StorageSize string, %v", err)
+	if err != nil && storage <= 0 {
+		return "", "", fmt.Errorf("wrong StorageSize string. %v", err)
 	}
 	request.Storage = &storage
 	period, err := strconv.ParseInt(input.ChargePeriod, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong ChargePeriod string, %v", err)
+	if err != nil && period <= 0 {
+		return "", "", fmt.Errorf("wrong ChargePeriod string. %v", err)
 	}
 	request.Period = &period
 	request.VpcId = &input.VpcId
@@ -276,7 +288,6 @@ func isMariadbExist(client *mariadb.Client, instanceId string) (bool, error) {
 	}
 
 	return true, nil
-
 }
 
 func waitMariadbToDesireStatus(client *mariadb.Client, instanceId string, desireState int64) (string, int64, error) {

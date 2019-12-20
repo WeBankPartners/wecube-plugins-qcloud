@@ -272,7 +272,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_instance_spec" required="Y">host_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.storage" required="Y">system_disk_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.charge_type" required="Y">instance_charge_type</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="Y">instance_charge_period</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="N">instance_charge_period</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.intranet_ip>wecmdb:ip_address.code" required="N">instance_private_ip</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password" required="Y">password</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.asset_code" required="N">id</parameter>
@@ -350,7 +350,7 @@
                     <parameter datatype="string" mappingType='entity' required="N">disk_name</parameter>
                     <parameter datatype="string" mappingType='entity' required="N">id</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">disk_charge_type</parameter>
-                    <parameter datatype="string" mappingType='entity' required="Y">disk_charge_period</parameter>
+                    <parameter datatype="string" mappingType='entity' required="N">disk_charge_period</parameter>
                     <parameter datatype="string" mappingType='entity' required="Y">instance_id</parameter>
                 </inputParameters>
                 <outputParameters>
@@ -381,7 +381,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.disk_size" required="Y">disk_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.key_name" required="N">disk_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.key_name" required="Y">disk_charge_type</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.billing_cycle" required="Y">disk_charge_period</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.billing_cycle" required="N">disk_charge_period</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.resource_instance>wecmdb:resource_instance.asset_code" required="Y">instance_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.resource_instance>wecmdb:resource_instance.id" required="Y">instance_guid</parameter>
                     <parameter datatype="string" mappingType='system_variable' mappingSystemVariableName="encrypt_seed" required="Y">seed</parameter>
@@ -463,7 +463,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.subnet_asset_code" required="Y">subnet_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.key_name" required="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.charge_type" required="Y">charge_type</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="Y">charge_period</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="N">charge_period</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.asset_code" required="N">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_name" required="Y">user_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password" required="N">password</parameter>
@@ -578,7 +578,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_instance_type" required="Y">type_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.memory" required="Y">mem_size</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="Y">period</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="N">period</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password" required="Y">password</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.charge_type" required="Y">billing_mode</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.asset_code" required="Y">vpc_id</parameter>

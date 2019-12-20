@@ -139,9 +139,6 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 	if input.ChargeType != CHARGE_TYPE_PREPAID && input.ChargeType != CHARGE_TYPE_BY_HOUR {
 		return fmt.Errorf("charge_type is wrong")
 	}
-	if input.ChargePeriod == "0" || input.ChargePeriod == "" {
-		return fmt.Errorf("charge_period is wrong")
-	}
 	if input.CharacterSet == "" {
 		return fmt.Errorf("character_set is empty")
 	}
@@ -154,22 +151,25 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, mysqlVmInput *MysqlVmInput) (string, string, error) {
 	request := cdb.NewCreateDBInstanceRequest()
 	memory, err := strconv.ParseInt(mysqlVmInput.MemorySize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	if err != nil && memory <= 0 {
+		return "", "", fmt.Errorf("wrong MemrorySize string. %v", err)
 	}
+
 	request.Memory = &memory
 	volume, err := strconv.ParseInt(mysqlVmInput.VolumeSize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong VolumeSize string, %v", err)
+	if err != nil && volume <= 0 {
+		return "", "", fmt.Errorf("wrong VolumeSize string. %v", err)
 	}
 	request.Volume = &volume
+
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
 	request.UniqSubnetId = &mysqlVmInput.SubnetId
 	request.InstanceName = &mysqlVmInput.Name
+
 	period, err := strconv.ParseInt(mysqlVmInput.ChargePeriod, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong ChargePeriod string, %v", err)
+	if err != nil && period <= 0 {
+		return "", "", fmt.Errorf("wrong ChargePeriod string. %v", err)
 	}
 	request.Period = &period
 	mysqlVmInput.Count = 1
@@ -213,15 +213,17 @@ func getZoneFromProviderParams(ProviderParams string) (string, error) {
 func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Client, mysqlVmInput *MysqlVmInput) (string, string, error) {
 	request := cdb.NewCreateDBInstanceHourRequest()
 	memory, err := strconv.ParseInt(mysqlVmInput.MemorySize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong MemrorySize string, %v", err)
+	if err != nil && memory <= 0 {
+		return "", "", fmt.Errorf("wrong MemrorySize string. %v", err)
 	}
 	request.Memory = &memory
+
 	volume, err := strconv.ParseInt(mysqlVmInput.VolumeSize, 10, 64)
-	if err != nil {
-		return "", "", fmt.Errorf("wrong VolumeSize string, %v", err)
+	if err != nil && volume <= 0 {
+		return "", "", fmt.Errorf("wrong VolumeSize string. %v", err)
 	}
 	request.Volume = &volume
+
 	request.EngineVersion = &mysqlVmInput.EngineVersion
 	request.UniqVpcId = &mysqlVmInput.VpcId
 	request.UniqSubnetId = &mysqlVmInput.SubnetId

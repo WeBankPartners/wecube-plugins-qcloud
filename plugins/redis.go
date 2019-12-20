@@ -105,7 +105,25 @@ func redisCreateCheckParam(redis *RedisInput) error {
 		return errors.New("RedisCreateAction input password is empty")
 	}
 	if redis.BillingMode != CHARGE_TYPE_BY_HOUR && redis.BillingMode != CHARGE_TYPE_PREPAID {
-		return errors.New("RedisCreateAction input password is invalid")
+		return errors.New("RedisCreateAction input billing_mode is invalid")
+	}
+	if redis.Guid == "" {
+		return errors.New("RedisCreateAction input guid is empty")
+	}
+	if redis.ProviderParams == "" {
+		return errors.New("RedisCreateAction input provider_params is empty")
+	}
+	if redis.TypeID == "" {
+		return errors.New("RedisCreateAction input type_id is empty")
+	}
+	if redis.MemSize == "" || redis.MemSize == "0" {
+		return errors.New("RedisCreateAction input mem_size is invalid")
+	}
+	if redis.VpcID == "" {
+		return errors.New("RedisCreateAction input vpc_id is empty")
+	}
+	if redis.SubnetID == "" {
+		return errors.New("RedisCreateAction input subnet_id is empty")
 	}
 
 	return nil
@@ -155,27 +173,31 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	request.ZoneId = &zoneid
 	typeId, er := strconv.ParseInt(redisInput.TypeID, 10, 64)
 	if er != nil {
-		err = fmt.Errorf("wrong TypeID string, %v", er)
+		err = fmt.Errorf("wrong TypeID string. %v", er)
 		return output, err
 	}
 	uTypeId := uint64(typeId)
 	request.TypeId = &uTypeId
 	memory, err := strconv.ParseInt(redisInput.MemSize, 10, 64)
-	if err != nil {
-		err = fmt.Errorf("wrong MemSize string, %v", err)
+	if err != nil && memory <= 0 {
+		err = fmt.Errorf("wrong MemSize string. %v", err)
 		return output, err
 	}
 	umemory := uint64(memory)
 	request.MemSize = &umemory
 	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
-	period, err := strconv.ParseInt(redisInput.Period, 10, 64)
-	if err != nil {
-		err = fmt.Errorf("wrong Period string, %v", err)
-		return output, err
+
+	if redisInput.BillingMode == CHARGE_TYPE_PREPAID {
+		period, er := strconv.ParseInt(redisInput.Period, 10, 64)
+		if er != nil && period <= 0 {
+			err = fmt.Errorf("wrong Period string. %v", er)
+			return output, err
+		}
+		uPeriod := uint64(period)
+		request.Period = &uPeriod
 	}
-	uPeriod := uint64(period)
-	request.Period = &uPeriod
+
 	request.Password = &redisInput.Password
 	billmode := BillingModeMap[redisInput.BillingMode]
 	request.BillingMode = &billmode
