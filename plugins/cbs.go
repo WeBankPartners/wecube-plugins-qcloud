@@ -86,7 +86,7 @@ func checkParam(input CreateAndMountCbsDiskInput) error {
 	if input.ProviderParams == "" {
 		return errors.New("providerParams is empty")
 	}
-	if input.DiskSize == "" {
+	if input.DiskSize == "" || input.DiskSize == "0" {
 		return errors.New("diskSize is empty")
 	}
 
