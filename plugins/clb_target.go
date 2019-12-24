@@ -55,6 +55,7 @@ type BackTargetOutputs struct {
 type BackTargetOutput struct {
 	CallBackParameter
 	Result
+	ListenerId string `json:"listener_id,omitempty"`
 	Guid string `json:"guid,omitempty"`
 }
 
@@ -224,7 +225,7 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-
+		output.ListenerId = listenerId
 		hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
 		if err != nil {
 			finalErr = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
