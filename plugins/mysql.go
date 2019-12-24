@@ -130,7 +130,7 @@ func isValidMysqlMasterRole(r string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("role(%v) is invalid", r)
+	return fmt.Errorf("mysql master role(%v) is invalid", r)
 }
 
 func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) error {

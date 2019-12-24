@@ -585,6 +585,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.asset_code" required="Y">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.subnet_asset_code" required="Y">subnet_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.asset_code" required="N">id</parameter>
+                    <parameter datatype="string" mappingType="entity" required="N">security_group_ids</parameter>
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>

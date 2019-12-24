@@ -22,7 +22,7 @@ type ClbTargetPlugin struct {
 }
 
 func (plugin *ClbTargetPlugin) GetActionByName(actionName string) (Action, error) {
-	action, found := clbActions[actionName]
+	action, found := clbTargetActions[actionName]
 	if !found {
 		return nil, fmt.Errorf("clbTarget plugin,action = %s not found", actionName)
 	}
