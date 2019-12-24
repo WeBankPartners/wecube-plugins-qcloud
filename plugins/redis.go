@@ -54,6 +54,7 @@ type RedisInput struct {
 	BillingMode    string `json:"billing_mode,omitempty"`
 	VpcID          string `json:"vpc_id,omitempty"`
 	SubnetID       string `json:"subnet_id,omitempty"`
+	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 	ID             string `json:"id,omitempty"`
 }
 
@@ -144,6 +145,8 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 	}()
 
+	securityGroupIds:=GetArrayFromString(redisInput.SecurityGroupIds,ARRAY_SIZE_REAL,0)
+
 	//check resource exist
 	var flag bool
 	if redisInput.ID != "" {
@@ -187,6 +190,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	request.MemSize = &umemory
 	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
+
+	if len(securityGroupIds) > 0 {
+		request.SecurityGroupIdList =common.StringPtrs(securityGroupIds)
+	}
 
 	if redisInput.BillingMode == CHARGE_TYPE_PREPAID {
 		period, er := strconv.ParseInt(redisInput.Period, 10, 64)
