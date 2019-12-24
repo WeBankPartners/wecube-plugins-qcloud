@@ -44,18 +44,18 @@ type RedisInputs struct {
 
 type RedisInput struct {
 	CallBackParameter
-	Guid           string `json:"guid,omitempty"`
-	ProviderParams string `json:"provider_params,omitempty"`
-	TypeID         string `json:"type_id,omitempty"`
-	MemSize        string `json:"mem_size,omitempty"`
-	GoodsNum       uint64 `json:"goods_num,omitempty"`
-	Period         string `json:"period,omitempty"`
-	Password       string `json:"password,omitempty"`
-	BillingMode    string `json:"billing_mode,omitempty"`
-	VpcID          string `json:"vpc_id,omitempty"`
-	SubnetID       string `json:"subnet_id,omitempty"`
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	TypeID           string `json:"type_id,omitempty"`
+	MemSize          string `json:"mem_size,omitempty"`
+	GoodsNum         uint64 `json:"goods_num,omitempty"`
+	Period           string `json:"period,omitempty"`
+	Password         string `json:"password,omitempty"`
+	BillingMode      string `json:"billing_mode,omitempty"`
+	VpcID            string `json:"vpc_id,omitempty"`
+	SubnetID         string `json:"subnet_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
-	ID             string `json:"id,omitempty"`
+	ID               string `json:"id,omitempty"`
 }
 
 type RedisOutputs struct {
@@ -145,7 +145,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 	}()
 
-	securityGroupIds:=GetArrayFromString(redisInput.SecurityGroupIds,ARRAY_SIZE_REAL,0)
+	securityGroupIds, _ := GetArrayFromString(redisInput.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
 
 	//check resource exist
 	var flag bool
@@ -192,7 +192,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	request.GoodsNum = &redisInput.GoodsNum
 
 	if len(securityGroupIds) > 0 {
-		request.SecurityGroupIdList =common.StringPtrs(securityGroupIds)
+		request.SecurityGroupIdList = common.StringPtrs(securityGroupIds)
 	}
 
 	if redisInput.BillingMode == CHARGE_TYPE_PREPAID {

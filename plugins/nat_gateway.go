@@ -227,37 +227,37 @@ func natGatewayTerminateCheckParam(natGateway *NatGatewayInput) error {
 	return nil
 }
 
-func getNatGatewayEips(providerParams string,natGatewayId string)([]*string,error){
+func getNatGatewayEips(providerParams string, natGatewayId string) ([]*string, error) {
+	eips := []*string{}
 	if natGatewayId == "" {
-		return fmt.Errorf("natGatewayId is empty")
+		return eips, fmt.Errorf("natGatewayId is empty")
 	}
 
-	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
+	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	request :=vpc.NewDescribeNatGatewaysRequest()
-	request.NatGatewayIds= []*string{&natGatewayId}
+	request := vpc.NewDescribeNatGatewaysRequest()
+	request.NatGatewayIds = []*string{&natGatewayId}
 
-	rsp,err:= vpc.DescribeNatGateways(request)
+	rsp, err := client.DescribeNatGateways(request)
 	if err != nil {
-		return err 
+		return eips, err
 	}
 
-	if *rsp.Response.TotalCount !=1  {
-		return fmt.ErrorF("query natgateway(%s) get %v result not one",natGatewayId,*rsp.Response.TotalCount)
+	if *rsp.Response.TotalCount != 1 {
+		return eips, fmt.Errorf("query natgateway(%s) get %v result not one", natGatewayId, *rsp.Response.TotalCount)
 	}
 
-	eips:=[]*string{}
-	for _,publicIpAddress:=range *rsp.Response.NatGatewaySet[0].PublicIpAddressSet {
-		eips=append(eips,publicIpAddress.AddressId)
+	for _, publicIpAddress := range rsp.Response.NatGatewaySet[0].PublicIpAddressSet {
+		eips = append(eips, publicIpAddress.AddressId)
 	}
-	return eips,nil 
+	return eips, nil
 }
 
-func deleteNatGatewayEips(providerParams string,eips []*string)error{
+func deleteNatGatewayEips(providerParams string, eips []*string) error {
 	paramsMap, err := GetMapFromProviderParams(providerParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-    request := vpc.NewReleaseAddressesRequest()
+	request := vpc.NewReleaseAddressesRequest()
 	request.AddressIds = eips
 
 	_, err = client.ReleaseAddresses(request)
@@ -284,10 +284,10 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		return output, err
 	}
 
-	if eips,err=getNatGatewayEips(natGateway.ProviderParams,natGateway.Id);err != nil {
+	if eips, err = getNatGatewayEips(natGateway.ProviderParams, natGateway.Id); err != nil {
 		return output, err
 	}
-	
+
 	deleteReq := unversioned.NewDeleteNatGatewayRequest()
 	deleteReq.VpcId = &natGateway.VpcId
 	deleteReq.NatId = &natGateway.Id
@@ -308,7 +308,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 
 		if *taskResp.Data.Status == 0 {
-			err = deleteNatGatewayEips(natGateway.ProviderParams,eips)
+			err = deleteNatGatewayEips(natGateway.ProviderParams, eips)
 			break
 		}
 		if *taskResp.Data.Status == 1 {

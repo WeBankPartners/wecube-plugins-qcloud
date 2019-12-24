@@ -3,23 +3,23 @@ package plugins
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
 	MYSQL_VM_STATUS_RUNNING  = 1
 	MYSQL_VM_STATUS_ISOLATED = 5
 
-	MYSQL_INSTANCE_ROLE_MASTER = "master"
-	MYSQL_INSTANCE_ROLE_READONLY = "ro"
-	MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY="dr"
+	MYSQL_INSTANCE_ROLE_MASTER            = "master"
+	MYSQL_INSTANCE_ROLE_READONLY          = "ro"
+	MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY = "dr"
 )
 
 var MysqlVmActions = make(map[string]Action)
@@ -52,24 +52,24 @@ type MysqlVmInputs struct {
 
 type MysqlVmInput struct {
 	CallBackParameter
-	Guid           string `json:"guid,omitempty"`
-	Seed           string `json:"seed,omitempty"`
-	ProviderParams string `json:"provider_params,omitempty"`
-	InstanceRole   string `json:"instance_role,omitempty"`
+	Guid             string `json:"guid,omitempty"`
+	Seed             string `json:"seed,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	InstanceRole     string `json:"instance_role,omitempty"`
 	MasterInstanceId string `json:"master_instance_id,omitempty"`
-	MasterRegion   string `json:"master_region,omitempty"`
-	EngineVersion  string `json:"engine_version,omitempty"`
-	MemorySize     string `json:"memory_size,omitempty"`
-	VolumeSize     string `json:"volume_size,omitempty"`
-	VpcId          string `json:"vpc_id,omitempty"`
-	SubnetId       string `json:"subnet_id,omitempty"`
-	Name           string `json:"name,omitempty"`
-	Id             string `json:"id,omitempty"`
-	Count          int64  `json:"count,omitempty"`
-	ChargeType     string `json:"charge_type,omitempty"`
-	ChargePeriod   string `json:"charge_period,omitempty"`
-	Password       string `json:"password,omitempty"`
-	UserName       string `json:"user_name,omitempty"`
+	MasterRegion     string `json:"master_region,omitempty"`
+	EngineVersion    string `json:"engine_version,omitempty"`
+	MemorySize       string `json:"memory_size,omitempty"`
+	VolumeSize       string `json:"volume_size,omitempty"`
+	VpcId            string `json:"vpc_id,omitempty"`
+	SubnetId         string `json:"subnet_id,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Id               string `json:"id,omitempty"`
+	Count            int64  `json:"count,omitempty"`
+	ChargeType       string `json:"charge_type,omitempty"`
+	ChargePeriod     string `json:"charge_period,omitempty"`
+	Password         string `json:"password,omitempty"`
+	UserName         string `json:"user_name,omitempty"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -118,19 +118,19 @@ func (action *MysqlVmCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-func isValidMysqlMasterRole(r string)(error){
-	validRoles:=[]string{
+func isValidMysqlMasterRole(r string) error {
+	validRoles := []string{
 		MYSQL_INSTANCE_ROLE_MASTER,
 		MYSQL_INSTANCE_ROLE_READONLY,
 		MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY,
 	}
 
-	for _,role :=range validRoles{
+	for _, role := range validRoles {
 		if role == r {
-			return nil 
+			return nil
 		}
 	}
-	return fmt.Errorf("role(%v) is invalid",r)
+	return fmt.Errorf("role(%v) is invalid", r)
 }
 
 func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) error {
@@ -171,8 +171,8 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 		return fmt.Errorf("lower_case_table_names is empty")
 	}
 
-	if err :=isValidMysqlMasterRole(input.InstanceRole);err != nil {
-		return err 
+	if err := isValidMysqlMasterRole(input.InstanceRole); err != nil {
+		return err
 	}
 	if input.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
 		if input.MasterInstanceId == "" {
@@ -185,7 +185,7 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 			return fmt.Errorf("create mysql dr instance,masterRegion is empty")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -209,12 +209,12 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	request.InstanceName = &mysqlVmInput.Name
 	request.InstanceRole = &mysqlVmInput.InstanceRole
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
-		roGroupMode :="alone"
-		roGroup :=cdb.RoGroup {
-			RoGroupMode:&roGroupMode,
+		roGroupMode := "alone"
+		roGroup := cdb.RoGroup{
+			RoGroupMode: &roGroupMode,
 		}
-		request.MasterInstanceId =&mysqlVmInput.MasterInstanceId
-		request.RoGroup =&roGroup
+		request.MasterInstanceId = &mysqlVmInput.MasterInstanceId
+		request.RoGroup = &roGroup
 	}
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY {
 		request.MasterRegion = &mysqlVmInput.MasterRegion
@@ -285,12 +285,12 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	request.GoodsNum = &mysqlVmInput.Count
 
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
-		roGroupMode :="alone"
-		roGroup :=cdb.RoGroup {
-			RoGroupMode:&roGroupMode,
+		roGroupMode := "alone"
+		roGroup := cdb.RoGroup{
+			RoGroupMode: &roGroupMode,
 		}
-		request.MasterInstanceId =&mysqlVmInput.MasterInstanceId
-		request.RoGroup =&roGroup
+		request.MasterInstanceId = &mysqlVmInput.MasterInstanceId
+		request.RoGroup = &roGroup
 	}
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY {
 		request.MasterRegion = &mysqlVmInput.MasterRegion
@@ -940,8 +940,7 @@ func BindMySqlInstanceSecurityGroups(providerParams string, instanceId string, s
 }
 
 //-------------add security group to instance-----------//
-type MysqlBindSecurityGroupAction  struct {
-
+type MysqlBindSecurityGroupAction struct {
 }
 type MysqlBindSecurityGroupInputs struct {
 	Inputs []MysqlBindSecurityGroupInput `json:"inputs,omitempty"`
@@ -949,9 +948,9 @@ type MysqlBindSecurityGroupInputs struct {
 
 type MysqlBindSecurityGroupInput struct {
 	CallBackParameter
-	Guid           string `json:"guid,omitempty"`
-	ProviderParams string `json:"provider_params,omitempty"`
-	MySqlId        string `json:"mysql_id,omitempty"`
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	MySqlId          string `json:"mysql_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 }
 
@@ -962,7 +961,7 @@ type MysqlBindSecurityGroupOutputs struct {
 type MysqlBindSecurityGroupOutput struct {
 	CallBackParameter
 	Result
-	Guid  string `json:"guid,omitempty"`
+	Guid string `json:"guid,omitempty"`
 }
 
 func (action *MysqlBindSecurityGroupAction) ReadParam(param interface{}) (interface{}, error) {
@@ -985,10 +984,10 @@ func (action *MysqlBindSecurityGroupAction) Do(input interface{}) (interface{}, 
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		
-		securityGroups:=GetArrayFromString(input.SecurityGroupIds,ARRAY_SIZE_REAL,0)
-		if err :=BindMySqlInstanceSecurityGroups(input.ProviderParams,input.MySqlId,securityGroups) ;err != nil {
-			output.Result.Message=err.Error()
+
+		securityGroups, _ := GetArrayFromString(input.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
+		if err := BindMySqlInstanceSecurityGroups(input.ProviderParams, input.MySqlId, securityGroups); err != nil {
+			output.Result.Message = err.Error()
 			output.Result.Code = RESULT_CODE_ERROR
 			finalErr = err
 		}
@@ -1014,7 +1013,7 @@ type MysqlCreateBackupInput struct {
 	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
-	MySqlId        string `json:"mysql_id,omitempty"`
+	MysqlId        string `json:"mysql_id,omitempty"`
 	BackUpMethod   string `json:"backup_method,omitempty"`
 	BackUpDatabase string `json:"backup_database,omitempty"`
 	BackUpTable    string `json:"backup_table,omitempty"`
@@ -1027,7 +1026,7 @@ type MysqlCreateBackupOutputs struct {
 type MysqlCreateBackupOutput struct {
 	CallBackParameter
 	Result
-	Guid  string `json:"guid,omitempty"`
+	Guid     string `json:"guid,omitempty"`
 	BackupId string `json:"backup_id,omitempty"`
 }
 
@@ -1040,57 +1039,57 @@ func (action *MysqlCreateBackupAction) ReadParam(param interface{}) (interface{}
 	return inputs, nil
 }
 
-func createMysqlBackup(input *MysqlCreateBackupInput)(string,error){
+func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	if input.MysqlId == "" {
-		return "",fmt.Errorf("mysqlId is empty")
+		return "", fmt.Errorf("mysqlId is empty")
 	}
 
-	backupMethod:=strings.ToLower(input.BackUpMethod)
+	backupMethod := strings.ToLower(input.BackUpMethod)
 	if backupMethod != BACKUP_METHOD_LOGICAL && backupMethod != BACKUP_METHOD_PHYSICAL {
-		return "",fmt.Errorf("backupMethod(%s) is invalid",backupMethod)
+		return "", fmt.Errorf("backupMethod(%s) is invalid", backupMethod)
 	}
 
-	if input.BackUpDatabase == ""{
-		return "",fmt.Errorf("backupDatabase is empty")
+	if input.BackUpDatabase == "" {
+		return "", fmt.Errorf("backupDatabase is empty")
 	}
 
-	tables:=GetArrayFromString(input.BackUpTable,ARRAY_SIZE_REAL,0)
+	tables, _ := GetArrayFromString(input.BackUpTable, ARRAY_SIZE_REAL, 0)
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
-	backupList:=[]*cdb.BackupItem{}
+	backupList := []*cdb.BackupItem{}
 	if len(tables) == 0 {
-		backUpItem:=cdb.BackupItem{
-			Db:&input.BackUpDatabase,
+		backUpItem := cdb.BackupItem{
+			Db: &input.BackUpDatabase,
 		}
-		backupList =append(backupList,&backUpItem)
-	}else {
-		for _,table:=range tables{
-			tableName:=table
-			backUpItem:=cdb.BackupItem{
-				Db:&input.BackUpDatabase,
-				Table:&tableName,
+		backupList = append(backupList, &backUpItem)
+	} else {
+		for _, table := range tables {
+			tableName := table
+			backUpItem := cdb.BackupItem{
+				Db:    &input.BackUpDatabase,
+				Table: &tableName,
 			}
-			backupList =append(backupList,&backUpItem)
+			backupList = append(backupList, &backUpItem)
 		}
 	}
-	
+
 	request := cdb.NewCreateBackupRequest()
-	request.InstanceId = &input.MysqlId 
-	request.BackupMethod =&backupMethod
+	request.InstanceId = &input.MysqlId
+	request.BackupMethod = &backupMethod
 	request.BackupDBTableList = backupList
 
-	rsp, err = client.CreateBackup(request)
+	rsp, err := client.CreateBackup(request)
 	if err != nil {
 		logrus.Errorf("cdb CreateBackup meet err=%v", err)
-		return "",err
+		return "", err
 	}
 
-	backupId:=fmt.Sprintf("%v",*rsp.Response.BackupId)
-	return backupId,nil
+	backupId := fmt.Sprintf("%v", *rsp.Response.BackupId)
+	return backupId, nil
 }
 
 func (action *MysqlCreateBackupAction) Do(input interface{}) (interface{}, error) {
@@ -1104,8 +1103,8 @@ func (action *MysqlCreateBackupAction) Do(input interface{}) (interface{}, error
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		
-		backUpId,err:=createMysqlBackup(&input)
+
+		backUpId, err := createMysqlBackup(&input)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
@@ -1114,7 +1113,7 @@ func (action *MysqlCreateBackupAction) Do(input interface{}) (interface{}, error
 		output.BackupId = backUpId
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs,finalErr
+	return outputs, finalErr
 }
 
 //----------delete backup action-------------//
@@ -1134,13 +1133,13 @@ type MysqlDeleteBackupInput struct {
 }
 
 type MysqlDeleteBackupOutputs struct {
-	Outputs []MysqlCreateBackupOutput `json:"outputs,omitempty"`
+	Outputs []MysqlDeleteBackupOutput `json:"outputs,omitempty"`
 }
 
 type MysqlDeleteBackupOutput struct {
 	CallBackParameter
 	Result
-	Guid  string `json:"guid,omitempty"`
+	Guid string `json:"guid,omitempty"`
 }
 
 func (action *MysqlDeleteBackupAction) ReadParam(param interface{}) (interface{}, error) {
@@ -1152,11 +1151,11 @@ func (action *MysqlDeleteBackupAction) ReadParam(param interface{}) (interface{}
 	return inputs, nil
 }
 
-func deleteMysqlBackup(input *MysqlDeleteBackupInput)error{
-	if input.MySqlId==""{
+func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
+	if input.MySqlId == "" {
 		return fmt.Errorf("MySqlId is empty")
 	}
-	if input.BackupId ==""{
+	if input.BackupId == "" {
 		return fmt.Errorf("BackupId is empty")
 	}
 
@@ -1168,10 +1167,15 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput)error{
 
 	request := cdb.NewDeleteBackupRequest()
 	request.InstanceId = &input.MySqlId
-	request.BackupId = &input.BackupId
+	backupIdInt64, err := strconv.ParseInt(input.BackupId, 10, 64)
+	if err != nil {
+		return err
+	}
 
-	_,err = client.DeleteBackup(request)
-	return err 
+	request.BackupId = &backupIdInt64
+
+	_, err = client.DeleteBackup(request)
+	return err
 }
 
 func (action *MysqlDeleteBackupAction) Do(input interface{}) (interface{}, error) {
@@ -1185,14 +1189,13 @@ func (action *MysqlDeleteBackupAction) Do(input interface{}) (interface{}, error
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		
-		if err:=deleteMysqlBackup(input);err!= nil {
+
+		if err := deleteMysqlBackup(&input); err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
-	return outputs,finalErr 
+	return outputs, finalErr
 }
-

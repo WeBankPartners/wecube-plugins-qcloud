@@ -56,7 +56,7 @@ type BackTargetOutput struct {
 	CallBackParameter
 	Result
 	ListenerId string `json:"listener_id,omitempty"`
-	Guid string `json:"guid,omitempty"`
+	Guid       string `json:"guid,omitempty"`
 }
 
 func (action *AddBackTargetAction) ReadParam(param interface{}) (interface{}, error) {
