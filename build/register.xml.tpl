@@ -641,6 +641,7 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
+                    <parameter datatype="string" mappingType='context'>listener_id</parameter>
 		            <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>
