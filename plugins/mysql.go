@@ -119,24 +119,24 @@ func (action *MysqlVmCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
-func isVaildCharset(charset string)error {
-	validCharsets:=[]string{
-		"utf8","latin1","gbk","utf8mb4",	
+func isVaildCharset(charset string) error {
+	validCharsets := []string{
+		"utf8", "latin1", "gbk", "utf8mb4",
 	}
-	for _,valid:=range validCharsets {
-		lowerCharset:=strings.ToLower(charset)
+	for _, valid := range validCharsets {
+		lowerCharset := strings.ToLower(charset)
 		if lowerCharset == valid {
-			return nil 
+			return nil
 		}
 	}
-    return fmt.Errorf("charset(%v) is invalid", charset)
+	return fmt.Errorf("charset(%v) is invalid", charset)
 }
 
-func isValidLowerCaseTableNames(value string)error{
-	if value != "1" && value != "0"{
+func isValidLowerCaseTableNames(value string) error {
+	if value != "1" && value != "0" {
 		return fmt.Errorf("lowerCaseTableNames(%v) is invalid", value)
 	}
-	return nil 
+	return nil
 }
 
 func isValidMysqlMasterRole(r string) error {
@@ -193,10 +193,10 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 			return fmt.Errorf("user_name is empty")
 		}
 
-		if err:=isVaildCharset(input.CharacterSet);err != nil{
+		if err := isVaildCharset(input.CharacterSet); err != nil {
 			return err
 		}
-		if err :=isValidLowerCaseTableNames(input.LowerCaseTableNames);err!=nil{
+		if err := isValidLowerCaseTableNames(input.LowerCaseTableNames); err != nil {
 			return err
 		}
 	}
@@ -209,6 +209,9 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 	if input.InstanceRole == MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY {
 		if input.MasterRegion == "" {
 			return fmt.Errorf("create mysql dr instance,masterRegion is empty")
+		}
+		if input.MasterInstanceId == "" {
+			return fmt.Errorf("create mysql readonly instance,master instanceId is empty")
 		}
 	}
 
@@ -244,6 +247,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	}
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY {
 		request.MasterRegion = &mysqlVmInput.MasterRegion
+		request.MasterInstanceId = &mysqlVmInput.MasterInstanceId
 	}
 
 	period, err := strconv.ParseInt(mysqlVmInput.ChargePeriod, 10, 64)
@@ -309,7 +313,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	request.InstanceName = &mysqlVmInput.Name
 	mysqlVmInput.Count = 1
 	request.GoodsNum = &mysqlVmInput.Count
-
+	request.InstanceRole = &mysqlVmInput.InstanceRole
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
 		roGroupMode := "alone"
 		roGroup := cdb.RoGroup{
@@ -320,6 +324,7 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 	}
 	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_DISASTER_RECOVERY {
 		request.MasterRegion = &mysqlVmInput.MasterRegion
+		request.MasterInstanceId = &mysqlVmInput.MasterInstanceId
 	}
 
 	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
@@ -442,8 +447,8 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	output.Id = instanceId
 	output.RequestId = requestId
 
-	if mysqlVmInput.InstanceRole != MYSQL_INSTANCE_ROLE_MASTER {
-		return output,nil 
+	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY  {
+		return output, nil
 	}
 
 	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames, mysqlVmInput.Password)
