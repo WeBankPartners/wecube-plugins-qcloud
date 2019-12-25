@@ -3,14 +3,15 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	cdb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -433,18 +434,21 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	output.RequestId = requestId
 	output.Port = port
 	output.UserName = "root"
+	logrus.Infof("mysql[%v] initial done", instanceId)
 
 	// create user and add user privileges
 	AsyncRequestId := ""
 	if mysqlVmInput.UserName != "root" {
 		// create user
-		AsyncRequestId, password, err = action.createMysqlVmAccount(client, instanceId, mysqlVmInput.UserName, password)
+		logrus.Infof("mysql[%v] create account[%v]", instanceId, mysqlVmInput.UserName)
+		AsyncRequestId, password, err = action.createMysqlVmAccount(client, instanceId, mysqlVmInput.UserName, password, "%")
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			return output, err
 		}
 		// if err == nil the task is successd
+		logrus.Infof("waiting mysql[%v] to create account[%v]", instanceId, mysqlVmInput.UserName)
 		err = action.describeMysqlVmAsyncRequestInfo(client, AsyncRequestId)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
@@ -453,19 +457,22 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		}
 
 		// add privileges to user
-		AsyncRequestId, err = action.addMysqlVmAccountPrivileges(client, instanceId, mysqlVmInput.UserName)
+		logrus.Infof("mysql[%v] add privileges to account[%v]", instanceId, mysqlVmInput.UserName)
+		AsyncRequestId, err = action.addMysqlVmAccountPrivileges(client, instanceId, mysqlVmInput.UserName, "%")
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			return output, err
 		}
 		// if err == nil the task is successd
+		logrus.Infof("waiting mysql[%v] to add privileges to account[%v]", instanceId, mysqlVmInput.UserName)
 		err = action.describeMysqlVmAsyncRequestInfo(client, AsyncRequestId)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			return output, err
 		}
+		logrus.Infof("mysql[%v] create account[%v] done", instanceId, mysqlVmInput.UserName)
 	}
 
 	md5sum := utils.Md5Encode(mysqlVmInput.Guid + mysqlVmInput.Seed)
@@ -479,7 +486,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	return output, err
 }
 
-func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, instanceId string, userName string, password string) (AsyncRequestId string, Password string, err error) {
+func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, instanceId string, userName string, password string, accountHost string) (AsyncRequestId string, Password string, err error) {
 	request := cdb.NewCreateAccountsRequest()
 	request.InstanceId = &instanceId
 	if password == "" {
@@ -487,7 +494,6 @@ func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, inst
 	}
 	request.Password = &password
 	Password = password
-	accountHost := "%"
 	account := []*cdb.Account{
 		&cdb.Account{
 			User: &userName,
@@ -495,6 +501,7 @@ func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, inst
 		},
 	}
 	request.Accounts = account
+	logrus.Infof("mysql[%v] create account[%v] request:%v", instanceId, userName, request)
 	response, err := client.CreateAccounts(request)
 	if err != nil {
 		return AsyncRequestId, Password, err
@@ -503,10 +510,9 @@ func (action *MysqlVmCreateAction) createMysqlVmAccount(client *cdb.Client, inst
 	return AsyncRequestId, Password, err
 }
 
-func (acton *MysqlVmCreateAction) addMysqlVmAccountPrivileges(client *cdb.Client, instanceId string, userName string) (AsyncRequestId string, err error) {
+func (acton *MysqlVmCreateAction) addMysqlVmAccountPrivileges(client *cdb.Client, instanceId string, userName string, accountHost string) (AsyncRequestId string, err error) {
 	request := cdb.NewModifyAccountPrivilegesRequest()
 	request.InstanceId = &instanceId
-	accountHost := "%"
 	account := []*cdb.Account{
 		&cdb.Account{
 			User: &userName,
