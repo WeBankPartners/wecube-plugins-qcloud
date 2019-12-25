@@ -46,7 +46,7 @@ type CreateAndMountCbsDiskInput struct {
 	Guid             string `json:"guid,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	DiskType         string `json:"disk_type,omitempty"`
-	DiskSize         uint64 `json:"disk_size,omitempty"`
+	DiskSize         string `json:"disk_size,omitempty"`
 	DiskName         string `json:"disk_name,omitempty"`
 	Id               string `json:"id,omitempty"`
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
@@ -86,7 +86,7 @@ func checkParam(input CreateAndMountCbsDiskInput) error {
 	if input.ProviderParams == "" {
 		return errors.New("providerParams is empty")
 	}
-	if input.DiskSize == 0 {
+	if input.DiskSize == "" || input.DiskSize == "0" {
 		return errors.New("diskSize is empty")
 	}
 

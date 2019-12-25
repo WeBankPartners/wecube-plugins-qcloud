@@ -22,7 +22,7 @@ type ClbTargetPlugin struct {
 }
 
 func (plugin *ClbTargetPlugin) GetActionByName(actionName string) (Action, error) {
-	action, found := clbActions[actionName]
+	action, found := clbTargetActions[actionName]
 	if !found {
 		return nil, fmt.Errorf("clbTarget plugin,action = %s not found", actionName)
 	}
@@ -44,8 +44,8 @@ type BackTargetInput struct {
 	LbId           string `json:"lb_id"`
 	Port           string `json:"lb_port"`
 	Protocol       string `json:"protocol"`
-	HostId         string `json:"host_id"`
-	HostPort       string `json:"host_port"`
+	HostIds        string `json:"host_ids"`
+	HostPorts      string `json:"host_ports"`
 }
 
 type BackTargetOutputs struct {
@@ -55,7 +55,8 @@ type BackTargetOutputs struct {
 type BackTargetOutput struct {
 	CallBackParameter
 	Result
-	Guid string `json:"guid,omitempty"`
+	ListenerId string `json:"listener_id,omitempty"`
+	Guid       string `json:"guid,omitempty"`
 }
 
 func (action *AddBackTargetAction) ReadParam(param interface{}) (interface{}, error) {
@@ -94,15 +95,15 @@ func clbTargetCheckParam(input BackTargetInput) error {
 	if input.LbId == "" {
 		return errors.New("empty lb id")
 	}
-	if input.HostId == "" {
+
+	if input.HostIds == "" {
 		return errors.New("empty host id")
 	}
+
 	if err := isValidPort(input.Port); err != nil {
 		return fmt.Errorf("port(%v) is invalid", input.Port)
 	}
-	if err := isValidPort(input.HostPort); err != nil {
-		return fmt.Errorf("hostPort(%v) is invalid", input.HostPort)
-	}
+
 	if err := isValidProtocol(input.Protocol); err != nil {
 		return fmt.Errorf("protocol(%v) is invalid", input.Protocol)
 	}
@@ -224,13 +225,44 @@ func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-		hostPort, _ := strconv.ParseInt(input.HostPort, 10, 64)
-		if err = ensureAddListenerBackHost(client, input.LbId, listenerId, input.HostId, hostPort); err != nil {
-			finalErr = err
+		output.ListenerId = listenerId
+		hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
+		if err != nil {
+			finalErr = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
+			output.Result.Message = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err).Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
+		}
+
+		hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
+		if err != nil {
+			finalErr = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err).Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
+		for _, port := range hostPorts {
+			if err := isValidPort(port); err != nil {
+				finalErr = fmt.Errorf("hostPorts(%v) is invalid", port)
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid", port).Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				break
+			}
+		}
+
+		for index, hostId := range hostIds {
+			hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
+			if err = ensureAddListenerBackHost(client, input.LbId, listenerId, hostId, hostPort); err != nil {
+				finalErr = err
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				break
+			}
 		}
 
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
@@ -318,13 +350,43 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-		hostPort, _ := strconv.ParseInt(input.HostPort, 10, 64)
-		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, input.HostId); err != nil {
-			finalErr = err
+		hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
+		if err != nil {
+			finalErr = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
 			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
+			output.Result.Message = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err).Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
+		}
+
+		hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
+		if err != nil {
+			finalErr = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err).Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
+		for _, port := range hostPorts {
+			if err := isValidPort(port); err != nil {
+				finalErr = fmt.Errorf("hostPorts(%v) is invalid", port)
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid", port).Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				break
+			}
+		}
+
+		for index, hostId := range hostIds {
+			hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
+			if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
+				finalErr = err
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				break
+			}
 		}
 
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter

@@ -47,9 +47,10 @@ type VpcOutputs struct {
 type VpcOutput struct {
 	CallBackParameter
 	Result
-	RequestId string `json:"request_id,omitempty"`
-	Guid      string `json:"guid,omitempty"`
-	Id        string `json:"id,omitempty"`
+	RequestId    string `json:"request_id,omitempty"`
+	Guid         string `json:"guid,omitempty"`
+	RouteTableId string `json:"route_table_id,omitempty"`
+	Id           string `json:"id,omitempty"`
 }
 
 type VpcPlugin struct {
@@ -134,9 +135,65 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (output VpcOutput, 
 	output.RequestId = *response.Response.RequestId
 	output.Id = *response.Response.Vpc.VpcId
 
+	// query defalut route_table
+	err = action.waitVpcCreatedone(client, *response.Response.Vpc.VpcId, 30)
+	if err != nil {
+		return output, err
+	}
+
+	routeTableId, err := action.describeRouteTablesByVpc(client, *response.Response.Vpc.VpcId)
+	if err != nil {
+		return output, err
+	}
+	output.RouteTableId = routeTableId
+
 	return output, nil
 }
 
+func (action *VpcCreateAction) waitVpcCreatedone(client *vpc.Client, vpcId string, timeout int) error {
+	request := vpc.NewDescribeVpcsRequest()
+	request.VpcIds = common.StringPtrs([]string{vpcId})
+	count := 1
+
+	for {
+		response, err := client.DescribeVpcs(request)
+		if err != nil {
+			return fmt.Errorf("waiting vpc to create, %v", err)
+		}
+		if *response.Response.TotalCount == 1 {
+			return nil
+		}
+
+		if count*2 >= timeout {
+			break
+		}
+		count++
+	}
+
+	return fmt.Errorf("waiting vpc to create is timeout")
+}
+
+func (action *VpcCreateAction) describeRouteTablesByVpc(client *vpc.Client, vpcId string) (routeTableId string, err error) {
+	request := vpc.NewDescribeRouteTablesRequest()
+	request.Filters = []*vpc.Filter{
+		&vpc.Filter{
+			Name:   common.StringPtr("vpc-id"),
+			Values: common.StringPtrs([]string{vpcId}),
+		},
+	}
+	response, err := client.DescribeRouteTables(request)
+	if err != nil {
+		return routeTableId, err
+	}
+	if len(response.Response.RouteTableSet) != 1 {
+		err = fmt.Errorf("route tables nimber of new vpc is not only one")
+		return routeTableId, err
+	} else {
+		routeTableId = *response.Response.RouteTableSet[0].RouteTableId
+	}
+
+	return routeTableId, err
+}
 func (action *VpcCreateAction) Do(input interface{}) (interface{}, error) {
 	vpcs, _ := input.(VpcInputs)
 	outputs := VpcOutputs{}

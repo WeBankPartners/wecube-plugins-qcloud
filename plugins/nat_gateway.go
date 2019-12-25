@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -42,8 +43,8 @@ type NatGatewayInput struct {
 	ProviderParams  string `json:"provider_params,omitempty"`
 	Name            string `json:"name,omitempty"`
 	VpcId           string `json:"vpc_id,omitempty"`
-	MaxConcurrent   int    `json:"max_concurrent,omitempty"`
-	BandWidth       int    `json:"bandwidth,omitempty"`
+	MaxConcurrent   string `json:"max_concurrent,omitempty"`
+	BandWidth       string `json:"bandwidth,omitempty"`
 	AssignedEipSet  string `json:"assigned_eip_set,omitempty"`
 	AutoAllocEipNum int    `json:"auto_alloc_eip_num,omitempty"`
 	Id              string `json:"id,omitempty"`
@@ -123,8 +124,18 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	createReq := unversioned.NewCreateNatGatewayRequest()
 	createReq.VpcId = &natGateway.VpcId
 	createReq.NatName = &natGateway.Name
-	createReq.MaxConcurrent = &natGateway.MaxConcurrent
-	createReq.Bandwidth = &natGateway.BandWidth
+	maxConcurrent, er := strconv.Atoi(natGateway.MaxConcurrent)
+	if er != nil && maxConcurrent <= 0 {
+		err = fmt.Errorf("wrong MaxConcurrent string. %v", er)
+		return output, err
+	}
+	createReq.MaxConcurrent = &maxConcurrent
+	bandWidth, er := strconv.Atoi(natGateway.BandWidth)
+	if er != nil && bandWidth <= 0 {
+		err = fmt.Errorf("wrong BandWidth string. %v", er)
+		return output, err
+	}
+	createReq.Bandwidth = &bandWidth
 	createReq.AutoAllocEipNum = &natGateway.AutoAllocEipNum
 
 	if natGateway.AssignedEipSet != "" {
@@ -216,7 +227,45 @@ func natGatewayTerminateCheckParam(natGateway *NatGatewayInput) error {
 	return nil
 }
 
+func getNatGatewayEips(providerParams string, natGatewayId string) ([]*string, error) {
+	eips := []*string{}
+	if natGatewayId == "" {
+		return eips, fmt.Errorf("natGatewayId is empty")
+	}
+
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpc.NewDescribeNatGatewaysRequest()
+	request.NatGatewayIds = []*string{&natGatewayId}
+
+	rsp, err := client.DescribeNatGateways(request)
+	if err != nil {
+		return eips, err
+	}
+
+	if *rsp.Response.TotalCount != 1 {
+		return eips, fmt.Errorf("query natgateway(%s) get %v result not one", natGatewayId, *rsp.Response.TotalCount)
+	}
+
+	for _, publicIpAddress := range rsp.Response.NatGatewaySet[0].PublicIpAddressSet {
+		eips = append(eips, publicIpAddress.AddressId)
+	}
+	return eips, nil
+}
+
+func deleteNatGatewayEips(providerParams string, eips []*string) error {
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	request := vpc.NewReleaseAddressesRequest()
+	request.AddressIds = eips
+
+	_, err = client.ReleaseAddresses(request)
+	return err
+}
+
 func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGatewayInput) (output NatGatewayOutput, err error) {
+	var eips []*string
 	output.Guid = natGateway.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
@@ -232,6 +281,10 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	}()
 
 	if err = natGatewayTerminateCheckParam(natGateway); err != nil {
+		return output, err
+	}
+
+	if eips, err = getNatGatewayEips(natGateway.ProviderParams, natGateway.Id); err != nil {
 		return output, err
 	}
 
@@ -255,6 +308,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 
 		if *taskResp.Data.Status == 0 {
+			err = deleteNatGatewayEips(natGateway.ProviderParams, eips)
 			break
 		}
 		if *taskResp.Data.Status == 1 {

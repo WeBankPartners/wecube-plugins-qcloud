@@ -18,6 +18,11 @@ const (
 	REDIS_STATUS_ISOLATED = 5
 )
 
+var BillingModeMap = map[string]int64{
+	CHARGE_TYPE_BY_HOUR: 0,
+	CHARGE_TYPE_PREPAID: 1,
+}
+
 var RedisActions = make(map[string]Action)
 
 func init() {
@@ -39,17 +44,18 @@ type RedisInputs struct {
 
 type RedisInput struct {
 	CallBackParameter
-	Guid           string `json:"guid,omitempty"`
-	ProviderParams string `json:"provider_params,omitempty"`
-	TypeID         uint64 `json:"type_id,omitempty"`
-	MemSize        uint64 `json:"mem_size,omitempty"`
-	GoodsNum       uint64 `json:"goods_num,omitempty"`
-	Period         uint64 `json:"period,omitempty"`
-	Password       string `json:"password,omitempty"`
-	BillingMode    int64  `json:"billing_mode,omitempty"`
-	VpcID          string `json:"vpc_id,omitempty"`
-	SubnetID       string `json:"subnet_id,omitempty"`
-	ID             string `json:"id,omitempty"`
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	TypeID           string `json:"type_id,omitempty"`
+	MemSize          string `json:"mem_size,omitempty"`
+	GoodsNum         uint64 `json:"goods_num,omitempty"`
+	Period           string `json:"period,omitempty"`
+	Password         string `json:"password,omitempty"`
+	BillingMode      string `json:"billing_mode,omitempty"`
+	VpcID            string `json:"vpc_id,omitempty"`
+	SubnetID         string `json:"subnet_id,omitempty"`
+	SecurityGroupIds string `json:"security_group_ids,omitempty"`
+	ID               string `json:"id,omitempty"`
 }
 
 type RedisOutputs struct {
@@ -93,14 +99,32 @@ func (action *RedisCreateAction) ReadParam(param interface{}) (interface{}, erro
 }
 
 func redisCreateCheckParam(redis *RedisInput) error {
-	if redis.GoodsNum == 0 {
-		return errors.New("RedisCreateAction input goodsnum is invalid")
-	}
+	// if redis.GoodsNum == 0 {
+	// 	return errors.New("RedisCreateAction input goodsnum is invalid")
+	// }
 	if redis.Password == "" {
 		return errors.New("RedisCreateAction input password is empty")
 	}
-	if redis.BillingMode != 0 && redis.BillingMode != 1 {
-		return errors.New("RedisCreateAction input password is invalid")
+	if redis.BillingMode != CHARGE_TYPE_BY_HOUR && redis.BillingMode != CHARGE_TYPE_PREPAID {
+		return errors.New("RedisCreateAction input billing_mode is invalid")
+	}
+	if redis.Guid == "" {
+		return errors.New("RedisCreateAction input guid is empty")
+	}
+	if redis.ProviderParams == "" {
+		return errors.New("RedisCreateAction input provider_params is empty")
+	}
+	if redis.TypeID == "" {
+		return errors.New("RedisCreateAction input type_id is empty")
+	}
+	if redis.MemSize == "" || redis.MemSize == "0" {
+		return errors.New("RedisCreateAction input mem_size is invalid")
+	}
+	if redis.VpcID == "" {
+		return errors.New("RedisCreateAction input vpc_id is empty")
+	}
+	if redis.SubnetID == "" {
+		return errors.New("RedisCreateAction input subnet_id is empty")
 	}
 
 	return nil
@@ -120,6 +144,8 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 			output.Result.Message = err.Error()
 		}
 	}()
+
+	securityGroupIds, _ := GetArrayFromString(redisInput.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
 
 	//check resource exist
 	var flag bool
@@ -148,13 +174,40 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 
 	zoneid := uint64(zonemap[paramsMap["AvailableZone"]])
 	request.ZoneId = &zoneid
-	request.TypeId = &redisInput.TypeID
-	request.MemSize = &redisInput.MemSize
+	typeId, er := strconv.ParseInt(redisInput.TypeID, 10, 64)
+	if er != nil {
+		err = fmt.Errorf("wrong TypeID string. %v", er)
+		return output, err
+	}
+	uTypeId := uint64(typeId)
+	request.TypeId = &uTypeId
+	memory, err := strconv.ParseInt(redisInput.MemSize, 10, 64)
+	if err != nil && memory <= 0 {
+		err = fmt.Errorf("wrong MemSize string. %v", err)
+		return output, err
+	}
+	umemory := uint64(memory)
+	request.MemSize = &umemory
 	redisInput.GoodsNum = 1
 	request.GoodsNum = &redisInput.GoodsNum
-	request.Period = &redisInput.Period
+
+	if len(securityGroupIds) > 0 {
+		request.SecurityGroupIdList = common.StringPtrs(securityGroupIds)
+	}
+
+	if redisInput.BillingMode == CHARGE_TYPE_PREPAID {
+		period, er := strconv.ParseInt(redisInput.Period, 10, 64)
+		if er != nil && period <= 0 {
+			err = fmt.Errorf("wrong Period string. %v", er)
+			return output, err
+		}
+		uPeriod := uint64(period)
+		request.Period = &uPeriod
+	}
+
 	request.Password = &redisInput.Password
-	request.BillingMode = &redisInput.BillingMode
+	billmode := BillingModeMap[redisInput.BillingMode]
+	request.BillingMode = &billmode
 
 	if (*redisInput).VpcID != "" {
 		request.VpcId = &redisInput.VpcID
