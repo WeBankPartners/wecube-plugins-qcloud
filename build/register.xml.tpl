@@ -460,6 +460,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_system" required="Y">engine_version</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.memory" required="Y">memory_size</parameter>
                     <parameter datatype="string" mappingType="entity" required="Y">instance_role</parameter>
+                    <parameter datatype="string" mappingType="entity" required="N">master_region</parameter>
+                    <parameter datatype="string" mappingType="entity" required="N">master_instance_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.storage" required="Y">volume_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.asset_code" required="Y">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.subnet_asset_code" required="Y">subnet_id</parameter>
