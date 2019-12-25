@@ -459,6 +459,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.data_center>wecmdb:data_center.auth_parameter" required="Y">provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_system" required="Y">engine_version</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.memory" required="Y">memory_size</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">instance_role</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.storage" required="Y">volume_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.asset_code" required="Y">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.subnet_asset_code" required="Y">subnet_id</parameter>
@@ -502,6 +503,48 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="bind-security-group" path="/qcloud/v1/mysql/bind-security-group">
+                <inputParameters>
+                    <parameter datatype="string" mappingType="entity" required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">mysql_id</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">security_group_ids</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType="entity" >guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                </outputParameters>
+            </interface>
+            <interface action="create-backup" path="/qcloud/v1/mysql/create-backup">
+                <inputParameters>
+                    <parameter datatype="string" mappingType="entity" required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">mysql_id</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">backup_method</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">backup_database</parameter>
+                    <parameter datatype="string" mappingType="entity" required="N">backup_table</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType="entity" >guid</parameter>
+                    <parameter datatype="string" mappingType='context'>code</parameter>
+                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'>backup_id</parameter>
+                </outputParameters>
+            </interface>
+             <interface action="delete-backup" path="/qcloud/v1/mysql/delete-backup">
+                <inputParameters>
+                    <parameter datatype="string" mappingType="entity" required="Y">guid</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">provider_params</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">mysql_id</parameter>
+                    <parameter datatype="string" mappingType="entity" required="Y">backup_id</parameter>
+                </inputParameters>
+                <outputParameters>
+                    <parameter datatype="string" mappingType="entity" >guid</parameter>
                     <parameter datatype="string" mappingType='context'>code</parameter>
                     <parameter datatype="string" mappingType='context'>msg</parameter>
                 </outputParameters>

@@ -162,7 +162,6 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 	if input.Guid == "" {
 		return fmt.Errorf("guid is empty")
 	}
-	
 	if input.ProviderParams == "" {
 		return fmt.Errorf("provider_params is empty")
 	}
@@ -441,6 +440,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	}
 	output.PrivateIp = privateIp
 	output.Id = instanceId
+	output.RequestId = requestId
 
 	if mysqlVmInput.InstanceRole != MYSQL_INSTANCE_ROLE_MASTER {
 		return output,nil 
