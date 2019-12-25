@@ -134,6 +134,10 @@ func ExtractJsonFromStruct(s interface{}) map[string]string {
 }
 
 func GetArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
+	if rawData == "" {
+		return []string{},nil
+	}
+
 	data := rawData
 	startChar := rawData[0:1]
 	endChar := rawData[len(rawData)-1 : len(rawData)]

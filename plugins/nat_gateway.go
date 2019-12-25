@@ -227,7 +227,45 @@ func natGatewayTerminateCheckParam(natGateway *NatGatewayInput) error {
 	return nil
 }
 
+func getNatGatewayEips(providerParams string, natGatewayId string) ([]*string, error) {
+	eips := []*string{}
+	if natGatewayId == "" {
+		return eips, fmt.Errorf("natGatewayId is empty")
+	}
+
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	request := vpc.NewDescribeNatGatewaysRequest()
+	request.NatGatewayIds = []*string{&natGatewayId}
+
+	rsp, err := client.DescribeNatGateways(request)
+	if err != nil {
+		return eips, err
+	}
+
+	if *rsp.Response.TotalCount != 1 {
+		return eips, fmt.Errorf("query natgateway(%s) get %v result not one", natGatewayId, *rsp.Response.TotalCount)
+	}
+
+	for _, publicIpAddress := range rsp.Response.NatGatewaySet[0].PublicIpAddressSet {
+		eips = append(eips, publicIpAddress.AddressId)
+	}
+	return eips, nil
+}
+
+func deleteNatGatewayEips(providerParams string, eips []*string) error {
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	request := vpc.NewReleaseAddressesRequest()
+	request.AddressIds = eips
+
+	_, err = client.ReleaseAddresses(request)
+	return err
+}
+
 func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGatewayInput) (output NatGatewayOutput, err error) {
+	var eips []*string
 	output.Guid = natGateway.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
@@ -243,6 +281,10 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	}()
 
 	if err = natGatewayTerminateCheckParam(natGateway); err != nil {
+		return output, err
+	}
+
+	if eips, err = getNatGatewayEips(natGateway.ProviderParams, natGateway.Id); err != nil {
 		return output, err
 	}
 
@@ -266,6 +308,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		}
 
 		if *taskResp.Data.Status == 0 {
+			err = deleteNatGatewayEips(natGateway.ProviderParams, eips)
 			break
 		}
 		if *taskResp.Data.Status == 1 {

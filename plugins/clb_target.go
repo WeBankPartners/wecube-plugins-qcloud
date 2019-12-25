@@ -22,7 +22,7 @@ type ClbTargetPlugin struct {
 }
 
 func (plugin *ClbTargetPlugin) GetActionByName(actionName string) (Action, error) {
-	action, found := clbActions[actionName]
+	action, found := clbTargetActions[actionName]
 	if !found {
 		return nil, fmt.Errorf("clbTarget plugin,action = %s not found", actionName)
 	}
@@ -56,7 +56,7 @@ type BackTargetOutput struct {
 	CallBackParameter
 	Result
 	ListenerId string `json:"listener_id,omitempty"`
-	Guid string `json:"guid,omitempty"`
+	Guid       string `json:"guid,omitempty"`
 }
 
 func (action *AddBackTargetAction) ReadParam(param interface{}) (interface{}, error) {
