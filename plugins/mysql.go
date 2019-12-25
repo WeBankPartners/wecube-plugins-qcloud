@@ -119,6 +119,26 @@ func (action *MysqlVmCreateAction) ReadParam(param interface{}) (interface{}, er
 	return inputs, nil
 }
 
+func isVaildCharset(charset string)error {
+	validCharsets:=[]string{
+		"utf8","latin1","gbk","utf8mb4",	
+	}
+	for _,valid:=range validCharsets {
+		lowerCharset:=strings.ToLower(charset)
+		if lowerCharset == valid {
+			return nil 
+		}
+	}
+    return fmt.Errorf("charset(%v) is invalid", charset)
+}
+
+func isValidLowerCaseTableNames(value string)error{
+	if value != "1" && value != "0"{
+		return fmt.Errorf("lowerCaseTableNames(%v) is invalid", value)
+	}
+	return nil 
+}
+
 func isValidMysqlMasterRole(r string) error {
 	validRoles := []string{
 		MYSQL_INSTANCE_ROLE_MASTER,
@@ -135,12 +155,14 @@ func isValidMysqlMasterRole(r string) error {
 }
 
 func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) error {
+	if err := isValidMysqlMasterRole(input.InstanceRole); err != nil {
+		return err
+	}
+
 	if input.Guid == "" {
 		return fmt.Errorf("guid is empty")
 	}
-	if input.Seed == "" {
-		return fmt.Errorf("seed is empty")
-	}
+	
 	if input.ProviderParams == "" {
 		return fmt.Errorf("provider_params is empty")
 	}
@@ -159,21 +181,25 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 	if input.SubnetId == "" {
 		return fmt.Errorf("subnet_id is empty")
 	}
-	if input.UserName == "" {
-		return fmt.Errorf("user_name is empty")
-	}
+
 	if input.ChargeType != CHARGE_TYPE_PREPAID && input.ChargeType != CHARGE_TYPE_BY_HOUR {
 		return fmt.Errorf("charge_type is wrong")
 	}
-	if input.CharacterSet == "" {
-		return fmt.Errorf("character_set is empty")
-	}
-	if input.LowerCaseTableNames == "" {
-		return fmt.Errorf("lower_case_table_names is empty")
-	}
 
-	if err := isValidMysqlMasterRole(input.InstanceRole); err != nil {
-		return err
+	if input.InstanceRole == MYSQL_INSTANCE_ROLE_MASTER {
+		if input.Seed == "" {
+			return fmt.Errorf("seed is empty")
+		}
+		if input.UserName == "" {
+			return fmt.Errorf("user_name is empty")
+		}
+
+		if err:=isVaildCharset(input.CharacterSet);err != nil{
+			return err
+		}
+		if err :=isValidLowerCaseTableNames(input.LowerCaseTableNames);err!=nil{
+			return err
+		}
 	}
 	if input.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
 		if input.MasterInstanceId == "" {
@@ -413,13 +439,11 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 			return output, err
 		}
 	}
+	output.PrivateIp = privateIp
+	output.Id = instanceId
 
-	//init database
-	if mysqlVmInput.CharacterSet == "" {
-		mysqlVmInput.CharacterSet = DEFAULT_MARIADB_CHARACTER_SET
-	}
-	if mysqlVmInput.LowerCaseTableNames == "" {
-		mysqlVmInput.LowerCaseTableNames = DEFAULT_MARIADB_LOWER_CASE_TABLE_NAMES
+	if mysqlVmInput.InstanceRole != MYSQL_INSTANCE_ROLE_MASTER {
+		return output,nil 
 	}
 
 	password, port, err := ensureMysqlInit(client, instanceId, mysqlVmInput.CharacterSet, mysqlVmInput.LowerCaseTableNames, mysqlVmInput.Password)
@@ -428,12 +452,9 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		output.Result.Message = err.Error()
 		return output, err
 	}
-
-	output.PrivateIp = privateIp
-	output.Id = instanceId
-	output.RequestId = requestId
 	output.Port = port
 	output.UserName = "root"
+
 	logrus.Infof("mysql[%v] initial done", instanceId)
 
 	// create user and add user privileges
