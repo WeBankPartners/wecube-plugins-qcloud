@@ -24,8 +24,8 @@ type CallBackParameter struct {
 }
 
 type Result struct {
-	Code    string `json:"code"`
-	Message string `json:"msg"`
+	Code    string `json:"errorCode"`
+	Message string `json:"errorMessage"`
 }
 
 type Filter struct {
@@ -135,7 +135,7 @@ func ExtractJsonFromStruct(s interface{}) map[string]string {
 
 func GetArrayFromString(rawData string, arraySizeType string, expectedLen int) ([]string, error) {
 	if rawData == "" {
-		return []string{},nil
+		return []string{}, nil
 	}
 
 	data := rawData
