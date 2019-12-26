@@ -40,8 +40,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.asset_code">id</parameter>
                     <parameter datatype="string" mappingType='context'>route_table_id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vpc/terminate">
@@ -52,8 +52,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -73,8 +73,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.asset_code">id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/peering-connection/terminate">
@@ -86,8 +86,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -103,8 +103,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.security_group_asset_code">id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/security-group/terminate">
@@ -115,8 +115,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -135,8 +135,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:invoke.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="delete-policies" path="/qcloud/v1/security-policy/delete-policies">
@@ -152,8 +152,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:invoke.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -169,8 +169,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.routing_table_asset_code">id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/route-table/terminate">
@@ -181,8 +181,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="associate-subnet" path="/qcloud/v1/route-table/associate-subnet">
@@ -194,8 +194,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -212,8 +212,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.subnet_asset_code">id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="create-with-routetable" path="/qcloud/v1/subnet/create-with-routetable">
@@ -229,8 +229,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.subnet_asset_code">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.routing_table_asset_code">route_table_id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/subnet/terminate">
@@ -241,8 +241,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate-with-routetable" path="/qcloud/v1/subnet/terminate-with-routetable">
@@ -254,8 +254,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_set.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -287,8 +287,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password">password</parameter>
                     <parameter datatype="string" mappingType="context">instance_state</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.intranet_ip>wecmdb:ip_address.code">instance_private_ip</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vm/terminate">
@@ -299,8 +299,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="start" path="/qcloud/v1/vm/start">
@@ -311,8 +311,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="stop" path="/qcloud/v1/vm/stop">
@@ -323,8 +323,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="bind-security-group-to-vm" path="/qcloud/v1/vm/bind-security-groups">
@@ -336,8 +336,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -357,8 +357,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
                     <parameter datatype="string" mappingType='context'>id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/storage/terminate">
@@ -369,8 +369,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType='context'>guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>           
 	    <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
@@ -394,8 +394,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.name">volume_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.asset_code">disk_id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 		        </outputParameters>
             </interface>
             <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate">
@@ -412,8 +412,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -433,8 +433,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.asset_code">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.internet_ip>wecmdb:ip_address.code">eip</parameter>
                     <parameter datatype="string" mappingType="context">eip_id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/nat-gateway/terminate">
@@ -446,8 +446,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone_link.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -481,8 +481,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.login_port">private_port</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_name">user_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password">password</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 		     </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/mysql/terminate">
@@ -493,8 +493,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="restart" path="/qcloud/v1/mysql/restart">
@@ -505,8 +505,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="bind-security-group" path="/qcloud/v1/mysql/bind-security-group">
@@ -518,8 +518,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" >guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="create-backup" path="/qcloud/v1/mysql/create-backup">
@@ -533,8 +533,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" >guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                     <parameter datatype="string" mappingType='context'>backup_id</parameter>
                 </outputParameters>
             </interface>
@@ -547,8 +547,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" >guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -579,8 +579,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.intranet_ip>wecmdb:ip_address.code">private_ip</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_name">user_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password">password</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 		</outputParameters>
             </interface>
         </plugin>
@@ -599,8 +599,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:routing_rule.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:routing_rule.asset_code">id</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/route-policy/terminate">
@@ -612,8 +612,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:routing_rule.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -637,8 +637,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.asset_code">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.intranet_ip>wecmdb:ip_address.code">vip</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.login_port">port</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 		</outputParameters>
             </interface>
         </plugin>
@@ -657,8 +657,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.asset_code">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.service_ip>wecmdb:ip_address.code">vip</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
 		     </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/clb/terminate">
@@ -669,8 +669,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
-		            <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+		            <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
@@ -688,8 +688,8 @@
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
                     <parameter datatype="string" mappingType='context'>listener_id</parameter>
-		            <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+		            <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
             <interface action="del-backtarget" path="/qcloud/v1/clb-target/del-backtarget">
@@ -704,8 +704,8 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:service.id">guid</parameter>
-                    <parameter datatype="string" mappingType='context'>code</parameter>
-                    <parameter datatype="string" mappingType='context'>msg</parameter>
+                    <parameter datatype="string" mappingType='context'> errorCode </parameter>
+                    <parameter datatype="string" mappingType='context'> errorMessage </parameter>
                 </outputParameters>
             </interface>
         </plugin>
