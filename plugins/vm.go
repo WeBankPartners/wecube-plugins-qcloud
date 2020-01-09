@@ -474,42 +474,6 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			}
 
 			if len(describeInstancesResponse.Response.InstanceSet) > 1 {
-				err = VM_NOT_FOUND_ERROR
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-
-			if len(describeInstancesResponse.Response.InstanceSet) == 1 {
-				output.RequestId = *describeInstancesResponse.Response.RequestId
-				output.Id = vm.Id
-				output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
-				output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
-				output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
-				output.InstancePrivateIp = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
-			}
-		}
-
-		//check resources exsit
-		if vm.Id != "" {
-			describeInstancesParams := cvm.DescribeInstancesRequest{
-				InstanceIds: []*string{&vm.Id},
-			}
-
-			describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
-			if err != nil {
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-
-			if len(describeInstancesResponse.Response.InstanceSet) > 1 {
 				logrus.Errorf("check vm exsit found vm[%s] have %d instance", vm.Id, len(describeInstancesResponse.Response.InstanceSet))
 				err = VM_NOT_FOUND_ERROR
 				output.Result.Code = RESULT_CODE_ERROR
