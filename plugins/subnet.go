@@ -128,6 +128,7 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 
 		if err == nil && flag == true {
 			output.Id = querysubnetresponse.Id
+			output.RouteTableId = querysubnetresponse.RouteTableId
 			return output, err
 		}
 	}
@@ -245,6 +246,7 @@ func querySubnetsInfo(client *vpc.Client, input *SubnetInput) (*SubnetOutput, bo
 	output.Guid = input.Guid
 	output.Id = input.Id
 	output.RequestId = *response.Response.RequestId
+	output.RouteTableId = *response.Response.SubnetSet[0].RouteTableId
 
 	return &output, true, nil
 }

@@ -418,7 +418,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 
 		if err == nil && flag == true {
 			output.Id = mysqlVmInput.Id
-			output.PrivateIp = queryMysqlVmInstanceInfoResponse.Guid
+			output.PrivateIp = queryMysqlVmInstanceInfoResponse.PrivateIp
 			return output, nil
 		}
 	}
@@ -447,7 +447,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 	output.Id = instanceId
 	output.RequestId = requestId
 
-	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY  {
+	if mysqlVmInput.InstanceRole == MYSQL_INSTANCE_ROLE_READONLY {
 		return output, nil
 	}
 

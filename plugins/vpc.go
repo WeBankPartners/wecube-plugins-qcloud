@@ -118,6 +118,12 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (output VpcOutput, 
 
 		if err == nil && flag == true {
 			output.Id = queryVpcsResponse.Id
+			routeTableId, er := action.describeRouteTablesByVpc(client, vpcInput.Id)
+			if er != nil {
+				err = er
+				return output, err
+			}
+			output.RouteTableId = routeTableId
 			return output, err
 		}
 	}

@@ -148,15 +148,17 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	securityGroupIds, _ := GetArrayFromString(redisInput.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
 
 	//check resource exist
-	var flag bool
 	if redisInput.ID != "" {
-		_, flag, err = queryRedisInstancesInfo(client, redisInput)
-		if err != nil && flag == false {
+		response, flag, er := queryRedisInstancesInfo(client, redisInput)
+		if er != nil && flag == false {
+			err = err
 			return output, err
 		}
 
-		if err == nil && flag == true {
+		if er == nil && flag == true {
 			output.ID = redisInput.ID
+			output.Vip = response.Vip
+			output.Port = response.Port
 			return output, nil
 		}
 	}
@@ -370,6 +372,8 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 
 	output.Guid = input.Guid
 	output.ID = input.ID
+	output.Vip = *queryRedisInfoResponse.Response.InstanceSet[0].WanIp
+	output.Port = strconv.Itoa(int(*queryRedisInfoResponse.Response.InstanceSet[0].Port))
 
 	return &output, true, nil
 }
