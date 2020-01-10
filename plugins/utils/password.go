@@ -48,7 +48,7 @@ func AesEnPassword(guid, seed, password, cipher string) (string, error) {
 func AesDePassword(guid, seed, password string) (string, error) {
 	var cipher string
 	for _, _cipher := range CIPHER_MAP {
-		if strings.HasSuffix(password, _cipher) {
+		if strings.HasPrefix(password, _cipher) {
 			cipher = _cipher
 			break
 		}
