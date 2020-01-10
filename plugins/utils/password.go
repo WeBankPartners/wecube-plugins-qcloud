@@ -56,7 +56,7 @@ func AesDePassword(guid, seed, password string) (string, error) {
 	if cipher == "" {
 		return password, nil
 	}
-	password = password[len(cipher)-1:]
+	password = password[len(cipher):]
 
 	md5sum := Md5Encode(guid + seed)
 	dePassword, err := AesDecode(md5sum[0:16], password)
