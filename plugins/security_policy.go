@@ -98,7 +98,7 @@ func createSecurityPolices(input SecurityGroupPolicyInput) ([]*vpc.SecurityGroup
 	for i, ip := range policyIps {
 		policy := &vpc.SecurityGroupPolicy{
 			Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
-			Port:              common.StringPtr(ports[i]),
+			Port:              common.StringPtr(strings.ToUpper(ports[i])),
 			CidrBlock:         common.StringPtr(ip),
 			Action:            common.StringPtr(action),
 			PolicyDescription: common.StringPtr(input.PolicyDescription),
@@ -147,7 +147,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-		//check if securityGroup exist
+		// check if securityGroup exist
 		if err := getSecurityGroupById(input.ProviderParams, input.Id); err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
@@ -156,7 +156,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			continue
 		}
 
-		//create policies
+		// create policies
 		policies, err := createSecurityPolices(input)
 		if err != nil {
 			finalErr = err
@@ -169,7 +169,7 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 			policy.PolicyIndex = common.Int64Ptr(0)
 		}
 
-		//add policies to securityGroups
+		// add policies to securityGroups
 		req := vpc.NewCreateSecurityGroupPoliciesRequest()
 		req.SecurityGroupId = common.StringPtr(input.Id)
 		req.SecurityGroupPolicySet = newSecurityPolicySet(input.PolicyType, policies)
@@ -221,7 +221,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 			continue
 		}
 
-		//create policies
+		// create policies
 		policies, err := createSecurityPolices(input)
 		if err != nil {
 			finalErr = err
@@ -230,7 +230,7 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
-		//add policies to securityGroups
+		// delete policies to securityGroups
 		req := vpc.NewDeleteSecurityGroupPoliciesRequest()
 		req.SecurityGroupId = common.StringPtr(input.Id)
 		req.SecurityGroupPolicySet = newSecurityPolicySet(input.PolicyType, policies)

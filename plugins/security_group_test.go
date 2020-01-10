@@ -9,6 +9,11 @@ import (
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
+const (
+	ENV_SECRET_ID  = "SECRET_ID"
+	ENV_SECRET_KEY = "SECRET_KEY"
+)
+
 func TestCreateSecurityGroupPolicies(t *testing.T) {
 	secretId := os.Getenv(ENV_SECRET_ID)
 	secretKey := os.Getenv(ENV_SECRET_KEY)
