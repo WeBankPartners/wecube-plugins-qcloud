@@ -35,14 +35,14 @@ func CreateRandomPassword() string {
 
 func AesEnPassword(guid, seed, password, cipher string) (string, error) {
 	if cipher == "" {
-		cipher = CIPHER_MAP[DEFALT_CIPHER]
+		cipher = DEFALT_CIPHER
 	}
 	md5sum := Md5Encode(guid + seed)
 	enPassword, err := AesEncode(md5sum[0:16], password)
 	if err != nil {
 		return "", err
 	}
-	return cipher + enPassword, nil
+	return CIPHER_MAP[cipher] + enPassword, nil
 }
 
 func AesDePassword(guid, seed, password string) (string, error) {
