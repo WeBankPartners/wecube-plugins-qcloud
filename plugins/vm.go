@@ -538,9 +538,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 			continue
 		}
 
-		md5sum := utils.Md5Encode(vm.Guid + vm.Seed)
-		if output.Password, err = utils.AesEncode(md5sum[0:16], vm.Password); err != nil {
-			logrus.Errorf("AesEncode meet error(%v)", err)
+		output.Password, err = utils.AesEnPassword(vm.Guid, vm.Seed, vm.Password, utils.DEFALT_CIPHER)
+		if err != nil {
+			logrus.Errorf("AesEnPassword meet error(%v)", err)
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)

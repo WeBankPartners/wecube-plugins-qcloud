@@ -496,9 +496,9 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 		return output, err
 	}
 
-	md5sum := utils.Md5Encode(input.Guid + input.Seed)
-	if output.Password, err = utils.AesEncode(md5sum[0:16], input.Password); err != nil {
-		logrus.Errorf("AesEncode meet error(%v)", err)
+	output.Password, err = utils.AesEnPassword(input.Guid, input.Seed, input.Password, utils.DEFALT_CIPHER)
+	if err != nil {
+		logrus.Errorf("AesEnPassword meet error(%v)", err)
 		return output, err
 	}
 
