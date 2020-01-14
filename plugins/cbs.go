@@ -322,9 +322,9 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 		return output, err
 	}
 
-	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
-	password, err := utils.AesDecode(md5sum[0:16], input.InstancePassword)
+	password, err := utils.AesDePassword(input.InstanceGuid, input.InstanceSeed, input.InstancePassword)
 	if err != nil {
+		logrus.Errorf("AesDePassword meet error(%v)", err)
 		return output, err
 	}
 
@@ -466,9 +466,9 @@ func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
 		return err
 	}
 
-	md5sum := utils.Md5Encode(input.InstanceGuid + input.InstanceSeed)
-	password, err := utils.AesDecode(md5sum[0:16], input.InstancePassword)
+	password, err := utils.AesDePassword(input.InstanceGuid, input.InstanceSeed, input.InstancePassword)
 	if err != nil {
+		logrus.Errorf("AesDePassword meet error(%v)", err)
 		return err
 	}
 

@@ -501,9 +501,9 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		logrus.Infof("mysql[%v] create account[%v] done", instanceId, mysqlVmInput.UserName)
 	}
 
-	md5sum := utils.Md5Encode(mysqlVmInput.Guid + mysqlVmInput.Seed)
-	if output.Password, err = utils.AesEncode(md5sum[0:16], password); err != nil {
-		logrus.Errorf("AesEncode meet error(%v)", err)
+	output.Password, err = utils.AesEnPassword(mysqlVmInput.Guid, mysqlVmInput.Seed, password, utils.DEFALT_CIPHER)
+	if err != nil {
+		logrus.Errorf("AesEnPassword meet error(%v)", err)
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
 		return output, err
