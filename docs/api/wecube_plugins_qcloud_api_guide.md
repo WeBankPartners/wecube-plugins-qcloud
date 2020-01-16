@@ -640,7 +640,7 @@ curl -X POST http://127.0.0.1:8081/v1/qcloud/nat-gateway/create \
                 "request_id": "legacy qcloud API doesn't support returnning request id",
                 "guid": "0005_0000000055",
                 "id": "nat-9rbwryi9",
-                "eip": "106.54.82.35",
+                "eip": "127.0.0.1",
                 "eip_id": "eip-al1jxzid"
             }
         ]
