@@ -14,7 +14,7 @@ import (
 const (
 	SECRET_ID       = "Your Qcloud Secret Id"
 	SECRET_KEY      = "Your Qcloud Secret Key"
-	PLUGIN_HOST_URL = "http://10.107.117.154:8081"
+	PLUGIN_HOST_URL = "Your Plugin Host IP"
 )
 
 var resourceIds = make(map[string]string)
