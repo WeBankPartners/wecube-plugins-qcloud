@@ -21,7 +21,7 @@ func TestDeleteSecurityGroupPolicies(t *testing.T) {
 			&vpc.SecurityGroupPolicy{
 				Protocol:          common.StringPtr("TCP"),
 				Port:              common.StringPtr("ALL"),
-				CidrBlock:         common.StringPtr("10.128.202.0/24"),
+				CidrBlock:         common.StringPtr("127.0.0.1/24"),
 				Action:            common.StringPtr("ACCEPT"),
 				PolicyDescription: common.StringPtr("123"),
 			},
