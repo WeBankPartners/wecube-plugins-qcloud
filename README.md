@@ -111,7 +111,7 @@ The above api descirbe the input and output as following curl command:
 
 ```
 curl -X POST \
-  http://10.107.117.154:8081/v1/qcloud/vpc/create \
+  http://127.0.0.1:8080/v1/qcloud/vpc/create \ // example
   -H 'content-type: application/json' \
   -d '{
 	"inputs":[
