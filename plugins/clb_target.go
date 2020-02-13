@@ -187,10 +187,23 @@ func ensureAddListenerBackHost(client *clb.Client, lbId string, listenerId strin
 	request.ListenerId = &listenerId
 	request.Targets = []*clb.Target{target}
 
-	_, err := client.RegisterTargets(request)
-	if err != nil {
-		logrus.Errorf("registerLbTarget meet err=%v\n", err)
+	var err error
+	count := 1
+
+	for {
+		_, err = client.RegisterTargets(request)
+		if err == nil {
+			break
+		}
+		if count <= 30 {
+			time.Sleep(5 * time.Second)
+		} else {
+			logrus.Infof("after %v seconds, failed to add listener back host, error=%v", count*5, err)
+			return err
+		}
+		count++
 	}
+
 	return err
 }
 
