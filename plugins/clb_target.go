@@ -191,7 +191,7 @@ func ensureAddListenerBackHost(client *clb.Client, lbId string, listenerId strin
 	count := 1
 
 	for {
-		_, err := client.RegisterTargets(request)
+		_, err = client.RegisterTargets(request)
 		if err == nil {
 			break
 		}
