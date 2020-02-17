@@ -1072,6 +1072,7 @@ func (action *MysqlCreateBackupAction) ReadParam(param interface{}) (interface{}
 }
 
 func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
+	var err error
 	if input.MysqlId == "" {
 		return "", fmt.Errorf("mysqlId is empty")
 	}
@@ -1114,13 +1115,25 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	request.BackupMethod = &backupMethod
 	request.BackupDBTableList = backupList
 
-	rsp, err := client.CreateBackup(request)
-	if err != nil {
-		logrus.Errorf("cdb CreateBackup meet err=%v", err)
-		return "", err
+	var backupId string
+	var rsp *cdb.CreateBackupResponse
+	count := 1
+
+	for {
+		rsp, err = client.CreateBackup(request)
+		if err == nil {
+			backupId = fmt.Sprintf("%v", *rsp.Response.BackupId)
+			break
+		}
+		if count <= 3 {
+			time.Sleep(30 * time.Second)
+		} else {
+			logrus.Infof("after %v seconds, failed to create mysql backup back host, error=%v", count*30, err)
+			return "", err
+		}
+		count++
 	}
 
-	backupId := fmt.Sprintf("%v", *rsp.Response.BackupId)
 	return backupId, nil
 }
 
@@ -1184,6 +1197,7 @@ func (action *MysqlDeleteBackupAction) ReadParam(param interface{}) (interface{}
 }
 
 func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
+	var err error
 	if input.MySqlId == "" {
 		return fmt.Errorf("MySqlId is empty")
 	}
@@ -1206,7 +1220,22 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 
 	request.BackupId = &backupIdInt64
 
-	_, err = client.DeleteBackup(request)
+	count := 1
+
+	for {
+		_, err = client.DeleteBackup(request)
+		if err == nil {
+			break
+		}
+		if count <= 3 {
+			time.Sleep(30 * time.Second)
+		} else {
+			logrus.Infof("after %v seconds, failed to delete mysql backup back host, error=%v", count*30, err)
+			return err
+		}
+		count++
+	}
+
 	return err
 }
 

@@ -318,10 +318,23 @@ func ensureDelListenerBackHost(client *clb.Client, lbId string, listenerId strin
 	request.ListenerId = &listenerId
 	request.Targets = []*clb.Target{target}
 
-	_, err := client.DeregisterTargets(request)
-	if err != nil {
-		logrus.Errorf("deRegisterLbTarget meet err=%v\n", err)
+	var err error
+	count := 1
+
+	for {
+		_, err = client.DeregisterTargets(request)
+		if err == nil {
+			break
+		}
+		if count <= 30 {
+			time.Sleep(5 * time.Second)
+		} else {
+			logrus.Infof("after %v seconds, failed to delete listener back host, error=%v", count*5, err)
+			return err
+		}
+		count++
 	}
+
 	return err
 }
 
