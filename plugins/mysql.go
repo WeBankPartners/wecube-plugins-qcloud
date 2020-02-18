@@ -409,7 +409,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 
 	//check resource exist
 	if mysqlVmInput.Id != "" {
-		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
+		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput.Id)
 		if err != nil && flag == false {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
@@ -418,7 +418,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 
 		if err == nil && flag == true {
 			output.Id = mysqlVmInput.Id
-			output.PrivateIp = queryMysqlVmInstanceInfoResponse.PrivateIp
+			output.PrivateIp = *queryMysqlVmInstanceInfoResponse.Response.Items[0].Vip
 			return output, nil
 		}
 	}
@@ -860,11 +860,10 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	return outputs, finalErr
 }
 
-func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlVmOutput, bool, error) {
-	output := MysqlVmOutput{}
+func queryMysqlVMInstancesInfo(client *cdb.Client, mysqlId string) (*cdb.DescribeDBInstancesResponse, bool, error) {
 
 	request := cdb.NewDescribeDBInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &input.Id)
+	request.InstanceIds = append(request.InstanceIds, &mysqlId)
 	response, err := client.DescribeDBInstances(request)
 	if err != nil {
 		return nil, false, err
@@ -875,16 +874,15 @@ func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlV
 	}
 
 	if len(response.Response.Items) > 1 {
-		logrus.Errorf("query mysql instance id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query mysql instance id=%s info find more than 1", input.Id)
+		logrus.Errorf("query mysql instance id=%s info find more than 1", mysqlId)
+		return nil, false, fmt.Errorf("query mysql instance id=%s info find more than 1", mysqlId)
 	}
 
-	output.Guid = input.Guid
-	output.Id = input.Id
-	output.PrivateIp = *response.Response.Items[0].Vip
-	output.RequestId = *response.Response.RequestId
+	// output.Id = mysqlId
+	// output.PrivateIp = *response.Response.Items[0].Vip
+	// output.RequestId = *response.Response.RequestId
 
-	return &output, true, nil
+	return response, true, nil
 }
 
 //--------------query mysql instance ------------------//
@@ -1093,6 +1091,20 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 		return "", err
 	}
 
+	// check resource exist
+
+	_, flag, err := queryMysqlVMInstancesInfo(client, input.MysqlId)
+	if err != nil && flag == false {
+		logrus.Errorf("queryMysqlVMInstancesInfo meet error=%v, mysqlId=[%v]", err, input.MysqlId)
+		return "", err
+	}
+
+	if err == nil && flag == false {
+		logrus.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
+		err = fmt.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
+		return "", err
+	}
+
 	backupList := []*cdb.BackupItem{}
 	if len(tables) == 0 {
 		backUpItem := cdb.BackupItem{
@@ -1209,6 +1221,39 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return err
+	}
+
+	// check resource exist
+	_, flag, err := queryMysqlVMInstancesInfo(client, input.MySqlId)
+	if err != nil && flag == false {
+		logrus.Errorf("queryMysqlVMInstancesInfo meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+		return err
+	}
+
+	if err == nil && flag == false {
+		logrus.Errorf("mysql[mysqlId=%v] is not existed", input.MySqlId)
+		err = fmt.Errorf("mysql[mysqlId=%v] is not existed", input.MySqlId)
+		return err
+	}
+
+	backupRequest := cdb.NewDescribeBackupsRequest()
+	backupRequest.InstanceId = &input.MySqlId
+	backupResponse, err := client.DescribeBackups(backupRequest)
+	if err != nil {
+		logrus.Errorf("DescribeBackups meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+		return err
+	}
+	backupFlag := false
+	backups := backupResponse.Response.Items
+	for _, backup := range backups {
+		if strconv.Itoa(int(*backup.BackupId)) == input.BackupId {
+			backupFlag = true
+			break
+		}
+	}
+	if backupFlag == false {
+		logrus.Errorf("backup[backupId=%v] is not existed", input.BackupId)
+		return fmt.Errorf("backup[backupId=%v] is not existed", input.BackupId)
 	}
 
 	request := cdb.NewDeleteBackupRequest()
