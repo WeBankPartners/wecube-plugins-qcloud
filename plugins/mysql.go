@@ -1092,7 +1092,6 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	}
 
 	// check resource exist
-
 	_, flag, err := queryMysqlVMInstancesInfo(client, input.MysqlId)
 	if err != nil && flag == false {
 		logrus.Errorf("queryMysqlVMInstancesInfo meet error=%v, mysqlId=[%v]", err, input.MysqlId)
@@ -1102,6 +1101,28 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	if err == nil && flag == false {
 		logrus.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
 		err = fmt.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
+		return "", err
+	}
+
+	responseBackups, err := describeBackups(client, input.MysqlId)
+	if err != nil {
+		logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MysqlId)
+		return "", err
+	}
+
+	backupFailed := []string{}
+	backupRunning := []string{}
+	for _, backup := range responseBackups {
+		if *backup.Status == "FAILED" {
+			backupFailed = append(backupFailed, strconv.Itoa(int(*backup.BackupId)))
+		}
+		if *backup.Status == "RUNNING" {
+			backupRunning = append(backupRunning, strconv.Itoa(int(*backup.BackupId)))
+		}
+	}
+	if len(backupFailed) > 0 || len(backupRunning) > 0 {
+		logrus.Errorf("can not create mysql backup: the mysql[%v] has fail backup=%v, running backup=%v now", input.MysqlId, backupFailed, backupRunning)
+		err = fmt.Errorf("can not create mysql backup: the mysql[%v] has fail backup=%v, running backup=%v now", input.MysqlId, backupFailed, backupRunning)
 		return "", err
 	}
 
@@ -1127,26 +1148,65 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	request.BackupMethod = &backupMethod
 	request.BackupDBTableList = backupList
 
-	var backupId string
-	var rsp *cdb.CreateBackupResponse
+	response, err := client.CreateBackup(request)
+	if err != nil {
+		logrus.Errorf("failed to create mysql[instanceId=%v] backup, error=%v", input.MysqlId, err)
+		return "", err
+	}
+	backupId := strconv.Itoa(int(*response.Response.BackupId))
+
+	var allBackups []*cdb.BackupInfo
 	count := 1
 
 	for {
-		rsp, err = client.CreateBackup(request)
-		if err == nil {
-			backupId = fmt.Sprintf("%v", *rsp.Response.BackupId)
-			break
-		}
-		if count <= 3 {
-			time.Sleep(30 * time.Second)
-		} else {
-			logrus.Infof("after %v seconds, failed to create mysql backup back host, error=%v", count*30, err)
+		allBackups, err = describeBackups(client, input.MysqlId)
+		if err != nil {
+			logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MysqlId)
 			return "", err
 		}
-		count++
+		var flag bool
+		for _, backup := range allBackups {
+			if strconv.Itoa(int(*backup.BackupId)) == backupId {
+				flag = true
+				if *backup.Status == "SUCCESS" {
+					return backupId, nil
+				}
+				if *backup.Status == "FAILED" {
+					logrus.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] status is failded", input.MysqlId, backupId)
+					err = fmt.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] status is failded", input.MysqlId, backupId)
+					return backupId, err
+				}
+			}
+		}
+		if flag == false {
+			logrus.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] is not found", input.MysqlId, backupId)
+			err = fmt.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] is not found", input.MysqlId, backupId)
+			return backupId, err
+		}
+
+		if count <= 20 {
+			time.Sleep(5 * time.Second)
+			count++
+		} else {
+			break
+		}
 	}
 
-	return backupId, nil
+	logrus.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MysqlId, backupId)
+	err = fmt.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MysqlId, backupId)
+	return backupId, err
+}
+
+func describeBackups(client *cdb.Client, mysqlId string) ([]*cdb.BackupInfo, error) {
+	backupRequest := cdb.NewDescribeBackupsRequest()
+	backupRequest.InstanceId = &mysqlId
+	backupResponse, err := client.DescribeBackups(backupRequest)
+	if err != nil {
+		logrus.Errorf("DescribeBackups meet error=%v, mysqlId=[%v]", err, mysqlId)
+		return nil, err
+	}
+
+	return backupResponse.Response.Items, nil
 }
 
 func (action *MysqlCreateBackupAction) Do(input interface{}) (interface{}, error) {
@@ -1236,16 +1296,13 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 		return err
 	}
 
-	backupRequest := cdb.NewDescribeBackupsRequest()
-	backupRequest.InstanceId = &input.MySqlId
-	backupResponse, err := client.DescribeBackups(backupRequest)
+	responseBackups, err := describeBackups(client, input.MySqlId)
 	if err != nil {
 		logrus.Errorf("DescribeBackups meet error=%v, mysqlId=[%v]", err, input.MySqlId)
 		return err
 	}
 	backupFlag := false
-	backups := backupResponse.Response.Items
-	for _, backup := range backups {
+	for _, backup := range responseBackups {
 		if strconv.Itoa(int(*backup.BackupId)) == input.BackupId {
 			backupFlag = true
 			break
@@ -1264,23 +1321,40 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 	}
 
 	request.BackupId = &backupIdInt64
-
-	count := 1
-
-	for {
-		_, err = client.DeleteBackup(request)
-		if err == nil {
-			break
-		}
-		if count <= 3 {
-			time.Sleep(30 * time.Second)
-		} else {
-			logrus.Infof("after %v seconds, failed to delete mysql backup back host, error=%v", count*30, err)
-			return err
-		}
-		count++
+	_, err = client.DeleteBackup(request)
+	if err != nil {
+		logrus.Errorf("failed to delete mysql[instanceId=%v] backup[backupId=%v], error=%v", input.MySqlId, input.BackupId, err)
+		return err
 	}
 
+	count := 1
+	for {
+		allBackups, err := describeBackups(client, input.MySqlId)
+		if err != nil {
+			logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+			return err
+		}
+		var flag bool
+		for _, backup := range allBackups {
+			if strconv.Itoa(int(*backup.BackupId)) == input.BackupId {
+				flag = true
+				break
+			}
+		}
+		if flag == false {
+			logrus.Infof("success to delete mysql[instanceId=%v] backup[backupId=%v]", input.MySqlId, input.BackupId)
+			return nil
+		}
+		if count <= 20 {
+			time.Sleep(5 * time.Second)
+			count++
+		} else {
+			break
+		}
+	}
+
+	logrus.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] still be exist", count*5, input.MySqlId, input.BackupId)
+	err = fmt.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MySqlId, input.BackupId)
 	return err
 }
 

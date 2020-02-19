@@ -82,6 +82,15 @@ func natGatewayCreateCheckParam(natGateway *NatGatewayInput) error {
 	if natGateway.Name == "" {
 		return errors.New("natGatewayCreateAction input name is empty")
 	}
+	if natGateway.Guid == "" {
+		return errors.New("natGatewayCreateAction input guid is empty")
+	}
+	if natGateway.MaxConcurrent == "" {
+		return errors.New("natGatewayCreateAction input maxConcurrent is empty")
+	}
+	if natGateway.BandWidth == "" {
+		return errors.New("natGatewayCreateAction input bandWidth is empty")
+	}
 
 	return nil
 }
@@ -104,7 +113,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err = natGatewayCreateCheckParam(natGateway); err != nil {
 		return output, err
 	}
-	//check resource exist
+	// check resource exist
 	var queryNatGatewayResponse *NatGatewayOutput
 	var flag bool
 	if natGateway.Id != "" {
@@ -126,13 +135,13 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	createReq.NatName = &natGateway.Name
 	maxConcurrent, er := strconv.Atoi(natGateway.MaxConcurrent)
 	if er != nil && maxConcurrent <= 0 {
-		err = fmt.Errorf("wrong MaxConcurrent string. %v", er)
+		err = fmt.Errorf("wrong MaxConcurrent string. error=%v", er)
 		return output, err
 	}
 	createReq.MaxConcurrent = &maxConcurrent
 	bandWidth, er := strconv.Atoi(natGateway.BandWidth)
 	if er != nil && bandWidth <= 0 {
-		err = fmt.Errorf("wrong BandWidth string. %v", er)
+		err = fmt.Errorf("wrong BandWidth string. error=%v", er)
 		return output, err
 	}
 	createReq.Bandwidth = &bandWidth
@@ -150,7 +159,7 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	output.RequestId = "legacy qcloud API doesn't support returnning request id"
 	output.Id = *createResp.NatGatewayId
 
-	//query eip infp
+	// query eip info
 	req := vpc.NewDescribeAddressesRequest()
 	Client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -160,12 +169,17 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	count := 0
 	var queryEIPResponse *vpc.DescribeAddressesResponse
 	for {
+		if count > 20 {
+			return output, fmt.Errorf("after %vs, query nat eip info timeout", count*10)
+		}
 		queryEIPResponse, err = Client.DescribeAddresses(req)
 		if err != nil {
 			err = fmt.Errorf("query eip info meet error : %s", err)
 			return output, err
 		}
 		if len(queryEIPResponse.Response.AddressSet) == 0 {
+			time.Sleep(10 * time.Second)
+			count++
 			continue
 		}
 		flag := false
@@ -180,11 +194,6 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 		if flag {
 			break
 		}
-		if count > 20 {
-			return output, fmt.Errorf("query nat eip info timeout")
-		}
-		time.Sleep(10 * time.Second)
-		count++
 	}
 
 	return output, err
@@ -222,6 +231,12 @@ func (action *NatGatewayTerminateAction) ReadParam(param interface{}) (interface
 func natGatewayTerminateCheckParam(natGateway *NatGatewayInput) error {
 	if natGateway.Id == "" {
 		return errors.New("natGatewayTerminateAction input natGateway is empty")
+	}
+	if natGateway.Guid == "" {
+		return errors.New("natGatewayTerminateAction input guid is empty")
+	}
+	if natGateway.VpcId == "" {
+		return errors.New("natGatewayTerminateAction input vpcId is empty")
 	}
 
 	return nil
@@ -319,7 +334,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		time.Sleep(10 * time.Second)
 		count++
 		if count >= 20 {
-			err = fmt.Errorf("terminateNatGateway query result timeout")
+			err = fmt.Errorf("after %vs terminateNatGateway query result timeout", count*10)
 			return output, err
 		}
 	}
