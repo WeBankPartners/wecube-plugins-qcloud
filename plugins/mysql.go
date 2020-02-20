@@ -1110,19 +1110,19 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 		return "", err
 	}
 
-	backupFailed := []string{}
+	// backupFailed := []string{}
 	backupRunning := []string{}
 	for _, backup := range responseBackups {
-		if *backup.Status == "FAILED" {
-			backupFailed = append(backupFailed, strconv.Itoa(int(*backup.BackupId)))
-		}
+		// if *backup.Status == "FAILED" {
+		// 	backupFailed = append(backupFailed, strconv.Itoa(int(*backup.BackupId)))
+		// }
 		if *backup.Status == "RUNNING" {
 			backupRunning = append(backupRunning, strconv.Itoa(int(*backup.BackupId)))
 		}
 	}
-	if len(backupFailed) > 0 || len(backupRunning) > 0 {
-		logrus.Errorf("can not create mysql backup: the mysql[%v] has fail backup=%v, running backup=%v now", input.MysqlId, backupFailed, backupRunning)
-		err = fmt.Errorf("can not create mysql backup: the mysql[%v] has fail backup=%v, running backup=%v now", input.MysqlId, backupFailed, backupRunning)
+	if len(backupRunning) > 0 {
+		logrus.Errorf("can not create mysql backup: the mysql[%v] has running backup=%v now", input.MysqlId, backupRunning)
+		err = fmt.Errorf("can not create mysql backup: the mysql[%v] has running backup=%v now", input.MysqlId, backupRunning)
 		return "", err
 	}
 
