@@ -409,7 +409,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 
 	//check resource exist
 	if mysqlVmInput.Id != "" {
-		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput)
+		queryMysqlVmInstanceInfoResponse, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput.Id)
 		if err != nil && flag == false {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
@@ -418,7 +418,7 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 
 		if err == nil && flag == true {
 			output.Id = mysqlVmInput.Id
-			output.PrivateIp = queryMysqlVmInstanceInfoResponse.PrivateIp
+			output.PrivateIp = *queryMysqlVmInstanceInfoResponse.Response.Items[0].Vip
 			return output, nil
 		}
 	}
@@ -860,11 +860,10 @@ func (action *MysqlVmRestartAction) Do(input interface{}) (interface{}, error) {
 	return outputs, finalErr
 }
 
-func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlVmOutput, bool, error) {
-	output := MysqlVmOutput{}
+func queryMysqlVMInstancesInfo(client *cdb.Client, mysqlId string) (*cdb.DescribeDBInstancesResponse, bool, error) {
 
 	request := cdb.NewDescribeDBInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &input.Id)
+	request.InstanceIds = append(request.InstanceIds, &mysqlId)
 	response, err := client.DescribeDBInstances(request)
 	if err != nil {
 		return nil, false, err
@@ -875,16 +874,15 @@ func queryMysqlVMInstancesInfo(client *cdb.Client, input *MysqlVmInput) (*MysqlV
 	}
 
 	if len(response.Response.Items) > 1 {
-		logrus.Errorf("query mysql instance id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query mysql instance id=%s info find more than 1", input.Id)
+		logrus.Errorf("query mysql instance id=%s info find more than 1", mysqlId)
+		return nil, false, fmt.Errorf("query mysql instance id=%s info find more than 1", mysqlId)
 	}
 
-	output.Guid = input.Guid
-	output.Id = input.Id
-	output.PrivateIp = *response.Response.Items[0].Vip
-	output.RequestId = *response.Response.RequestId
+	// output.Id = mysqlId
+	// output.PrivateIp = *response.Response.Items[0].Vip
+	// output.RequestId = *response.Response.RequestId
 
-	return &output, true, nil
+	return response, true, nil
 }
 
 //--------------query mysql instance ------------------//
@@ -1072,6 +1070,7 @@ func (action *MysqlCreateBackupAction) ReadParam(param interface{}) (interface{}
 }
 
 func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
+	var err error
 	if input.MysqlId == "" {
 		return "", fmt.Errorf("mysqlId is empty")
 	}
@@ -1089,6 +1088,41 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		return "", err
+	}
+
+	// check resource exist
+	_, flag, err := queryMysqlVMInstancesInfo(client, input.MysqlId)
+	if err != nil && flag == false {
+		logrus.Errorf("queryMysqlVMInstancesInfo meet error=%v, mysqlId=[%v]", err, input.MysqlId)
+		return "", err
+	}
+
+	if err == nil && flag == false {
+		logrus.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
+		err = fmt.Errorf("mysql[mysqlId=%v] is not existed", input.MysqlId)
+		return "", err
+	}
+
+	responseBackups, err := describeBackups(client, input.MysqlId)
+	if err != nil {
+		logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MysqlId)
+		return "", err
+	}
+
+	// backupFailed := []string{}
+	backupRunning := []string{}
+	for _, backup := range responseBackups {
+		// if *backup.Status == "FAILED" {
+		// 	backupFailed = append(backupFailed, strconv.Itoa(int(*backup.BackupId)))
+		// }
+		if *backup.Status == "RUNNING" {
+			backupRunning = append(backupRunning, strconv.Itoa(int(*backup.BackupId)))
+		}
+	}
+	if len(backupRunning) > 0 {
+		logrus.Errorf("can not create mysql backup: the mysql[%v] has running backup=%v now", input.MysqlId, backupRunning)
+		err = fmt.Errorf("can not create mysql backup: the mysql[%v] has running backup=%v now", input.MysqlId, backupRunning)
 		return "", err
 	}
 
@@ -1114,14 +1148,65 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	request.BackupMethod = &backupMethod
 	request.BackupDBTableList = backupList
 
-	rsp, err := client.CreateBackup(request)
+	response, err := client.CreateBackup(request)
 	if err != nil {
-		logrus.Errorf("cdb CreateBackup meet err=%v", err)
+		logrus.Errorf("failed to create mysql[instanceId=%v] backup, error=%v", input.MysqlId, err)
 		return "", err
 	}
+	backupId := strconv.Itoa(int(*response.Response.BackupId))
 
-	backupId := fmt.Sprintf("%v", *rsp.Response.BackupId)
-	return backupId, nil
+	var allBackups []*cdb.BackupInfo
+	count := 1
+
+	for {
+		allBackups, err = describeBackups(client, input.MysqlId)
+		if err != nil {
+			logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MysqlId)
+			return "", err
+		}
+		var flag bool
+		for _, backup := range allBackups {
+			if strconv.Itoa(int(*backup.BackupId)) == backupId {
+				flag = true
+				if *backup.Status == "SUCCESS" {
+					return backupId, nil
+				}
+				if *backup.Status == "FAILED" {
+					logrus.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] status is failded", input.MysqlId, backupId)
+					err = fmt.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] status is failded", input.MysqlId, backupId)
+					return backupId, err
+				}
+			}
+		}
+		if flag == false {
+			logrus.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] is not found", input.MysqlId, backupId)
+			err = fmt.Errorf("Falied to create mysql[instacneId=%v] backup: backup[backupId=%v] is not found", input.MysqlId, backupId)
+			return backupId, err
+		}
+
+		if count <= 20 {
+			time.Sleep(5 * time.Second)
+			count++
+		} else {
+			break
+		}
+	}
+
+	logrus.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MysqlId, backupId)
+	err = fmt.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MysqlId, backupId)
+	return backupId, err
+}
+
+func describeBackups(client *cdb.Client, mysqlId string) ([]*cdb.BackupInfo, error) {
+	backupRequest := cdb.NewDescribeBackupsRequest()
+	backupRequest.InstanceId = &mysqlId
+	backupResponse, err := client.DescribeBackups(backupRequest)
+	if err != nil {
+		logrus.Errorf("DescribeBackups meet error=%v, mysqlId=[%v]", err, mysqlId)
+		return nil, err
+	}
+
+	return backupResponse.Response.Items, nil
 }
 
 func (action *MysqlCreateBackupAction) Do(input interface{}) (interface{}, error) {
@@ -1184,6 +1269,7 @@ func (action *MysqlDeleteBackupAction) ReadParam(param interface{}) (interface{}
 }
 
 func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
+	var err error
 	if input.MySqlId == "" {
 		return fmt.Errorf("MySqlId is empty")
 	}
@@ -1197,6 +1283,36 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 		return err
 	}
 
+	// check resource exist
+	_, flag, err := queryMysqlVMInstancesInfo(client, input.MySqlId)
+	if err != nil && flag == false {
+		logrus.Errorf("queryMysqlVMInstancesInfo meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+		return err
+	}
+
+	if err == nil && flag == false {
+		logrus.Errorf("mysql[mysqlId=%v] is not existed", input.MySqlId)
+		err = fmt.Errorf("mysql[mysqlId=%v] is not existed", input.MySqlId)
+		return err
+	}
+
+	responseBackups, err := describeBackups(client, input.MySqlId)
+	if err != nil {
+		logrus.Errorf("DescribeBackups meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+		return err
+	}
+	backupFlag := false
+	for _, backup := range responseBackups {
+		if strconv.Itoa(int(*backup.BackupId)) == input.BackupId {
+			backupFlag = true
+			break
+		}
+	}
+	if backupFlag == false {
+		logrus.Errorf("backup[backupId=%v] is not existed", input.BackupId)
+		return fmt.Errorf("backup[backupId=%v] is not existed", input.BackupId)
+	}
+
 	request := cdb.NewDeleteBackupRequest()
 	request.InstanceId = &input.MySqlId
 	backupIdInt64, err := strconv.ParseInt(input.BackupId, 10, 64)
@@ -1205,8 +1321,40 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 	}
 
 	request.BackupId = &backupIdInt64
-
 	_, err = client.DeleteBackup(request)
+	if err != nil {
+		logrus.Errorf("failed to delete mysql[instanceId=%v] backup[backupId=%v], error=%v", input.MySqlId, input.BackupId, err)
+		return err
+	}
+
+	count := 1
+	for {
+		allBackups, err := describeBackups(client, input.MySqlId)
+		if err != nil {
+			logrus.Errorf("describeBackups meet error=%v, mysqlId=[%v]", err, input.MySqlId)
+			return err
+		}
+		var flag bool
+		for _, backup := range allBackups {
+			if strconv.Itoa(int(*backup.BackupId)) == input.BackupId {
+				flag = true
+				break
+			}
+		}
+		if flag == false {
+			logrus.Infof("success to delete mysql[instanceId=%v] backup[backupId=%v]", input.MySqlId, input.BackupId)
+			return nil
+		}
+		if count <= 20 {
+			time.Sleep(5 * time.Second)
+			count++
+		} else {
+			break
+		}
+	}
+
+	logrus.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] still be exist", count*5, input.MySqlId, input.BackupId)
+	err = fmt.Errorf("after %v seconds, mysql[instacneId=%v] backup[backupId=%v] status is running", count*5, input.MySqlId, input.BackupId)
 	return err
 }
 

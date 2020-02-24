@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -170,9 +171,10 @@ func (action *VpcCreateAction) waitVpcCreatedone(client *vpc.Client, vpcId strin
 			return nil
 		}
 
-		if count*2 >= timeout {
+		if count >= timeout {
 			break
 		}
+		time.Sleep(5 * time.Second)
 		count++
 	}
 

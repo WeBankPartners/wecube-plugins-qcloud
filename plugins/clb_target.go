@@ -9,6 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	clb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 )
 
 var clbTargetActions = make(map[string]Action)
@@ -207,80 +208,91 @@ func ensureAddListenerBackHost(client *clb.Client, lbId string, listenerId strin
 	return err
 }
 
+func (action *AddBackTargetAction) addBackTarget(input *BackTargetInput) (output BackTargetOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = clbTargetCheckParam(*input); err != nil {
+		logrus.Errorf("clbTargetCheckParam meet error=%v", err)
+		return
+	}
+
+	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	listenerId, err := ensureListenerExist(client, input.LbId, input.Protocol, portInt64)
+	if err != nil {
+		logrus.Errorf("ensureListenerExist meet error=%v", err)
+		return
+	}
+	output.ListenerId = listenerId
+	hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
+	if err != nil {
+		logrus.Errorf("GetArrayFromString meet error=%v, rawData=%v", err, input.HostIds)
+		return
+	}
+
+	hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
+	if err != nil {
+		logrus.Errorf("GetArrayFromString meet error=%v, rawData=%v", err, input.HostPorts)
+		return
+	}
+
+	for _, port := range hostPorts {
+		if err = isValidPort(port); err != nil {
+			logrus.Errorf("isValidPort meet error=%v, port=%v", err, port)
+			return
+		}
+	}
+
+	for index, hostId := range hostIds {
+		hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
+		describeInstancesParams := cvm.DescribeInstancesRequest{
+			InstanceIds: []*string{&hostId},
+		}
+		clientCvm, _ := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		var describeInstancesResponse *cvm.DescribeInstancesResponse
+		describeInstancesResponse, err = describeInstancesFromCvm(clientCvm, describeInstancesParams)
+		if err != nil {
+			logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
+			return
+		}
+		if len(describeInstancesResponse.Response.InstanceSet) == 0 {
+			logrus.Errorf("hostId=[%v] is not existed", hostId)
+			err = fmt.Errorf("hostId=[%v] is not existed", hostId)
+			return
+		}
+		if err = ensureAddListenerBackHost(client, input.LbId, listenerId, hostId, hostPort); err != nil {
+			logrus.Errorf("ensureAddListenerBackHost meet error=%v", err)
+			return
+		}
+	}
+
+	return
+}
+
 func (action *AddBackTargetAction) Do(input interface{}) (interface{}, error) {
 	inputs, _ := input.(BackTargetInputs)
 	outputs := BackTargetOutputs{}
 	var finalErr error
 
 	for _, input := range inputs.Inputs {
-		output := BackTargetOutput{
-			Guid: input.Guid,
-		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		if err := clbTargetCheckParam(input); err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
-		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
-		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		listenerId, err := ensureListenerExist(client, input.LbId, input.Protocol, portInt64)
+		output, err := action.addBackTarget(&input)
 		if err != nil {
 			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
 		}
-		output.ListenerId = listenerId
-		hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
-		if err != nil {
-			finalErr = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err).Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
-		if err != nil {
-			finalErr = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err).Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		for _, port := range hostPorts {
-			if err := isValidPort(port); err != nil {
-				finalErr = fmt.Errorf("hostPorts(%v) is invalid", port)
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid", port).Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				break
-			}
-		}
-
-		for index, hostId := range hostIds {
-			hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
-			if err = ensureAddListenerBackHost(client, input.LbId, listenerId, hostId, hostPort); err != nil {
-				finalErr = err
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				break
-			}
-		}
-
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
+
+	logrus.Infof("all clb-target = %v are added", inputs)
 	return &outputs, finalErr
 }
 
@@ -318,11 +330,98 @@ func ensureDelListenerBackHost(client *clb.Client, lbId string, listenerId strin
 	request.ListenerId = &listenerId
 	request.Targets = []*clb.Target{target}
 
-	_, err := client.DeregisterTargets(request)
-	if err != nil {
-		logrus.Errorf("deRegisterLbTarget meet err=%v\n", err)
+	var err error
+	count := 1
+
+	for {
+		_, err = client.DeregisterTargets(request)
+		if err == nil {
+			break
+		}
+		if count <= 30 {
+			time.Sleep(5 * time.Second)
+		} else {
+			logrus.Infof("after %v seconds, failed to delete listener back host, error=%v", count*5, err)
+			return err
+		}
+		count++
 	}
+
 	return err
+}
+
+func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output BackTargetOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = clbTargetCheckParam(*input); err != nil {
+		logrus.Errorf("clbTargetCheckParam meet error=%v", err)
+		return
+	}
+
+	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	listenerId, err := queryClbListener(client, input.LbId, input.Protocol, portInt64)
+	if err != nil {
+		return
+	}
+	if listenerId == "" {
+		err = fmt.Errorf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
+		return
+	}
+	hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
+	if err != nil {
+		err = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
+		return
+	}
+
+	hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
+	if err != nil {
+		err = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err)
+		return
+	}
+
+	for _, port := range hostPorts {
+		if err = isValidPort(port); err != nil {
+			err = fmt.Errorf("isValidPort meet error=%v, port=%v", err, port)
+			return
+		}
+	}
+
+	for index, hostId := range hostIds {
+		hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
+
+		describeInstancesParams := cvm.DescribeInstancesRequest{
+			InstanceIds: []*string{&hostId},
+		}
+		clientCvm, _ := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		var describeInstancesResponse *cvm.DescribeInstancesResponse
+		describeInstancesResponse, err = describeInstancesFromCvm(clientCvm, describeInstancesParams)
+		if err != nil {
+			logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
+			return
+		}
+		if len(describeInstancesResponse.Response.InstanceSet) == 0 {
+			logrus.Errorf("hostId=[%v] is not existed", hostId)
+			err = fmt.Errorf("hostId=[%v] is not existed", hostId)
+			return
+		}
+
+		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
+			logrus.Errorf("ensureDelListenerBackHost meet error=%v", err)
+			return
+		}
+	}
+	return
 }
 
 func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
@@ -331,80 +430,13 @@ func (action *DelBackTargetAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 
 	for _, input := range inputs.Inputs {
-		output := BackTargetOutput{
-			Guid: input.Guid,
-		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		if err := clbTargetCheckParam(input); err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
-		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
-		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		listenerId, err := queryClbListener(client, input.LbId, input.Protocol, portInt64)
+		output, err := action.delBackTarget(&input)
 		if err != nil {
 			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
 		}
-		if listenerId == "" {
-			finalErr = fmt.Errorf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = fmt.Sprintf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-		hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
-		if err != nil {
-			finalErr = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = fmt.Errorf("hostIds(%v) is invalid, %v", input.HostIds, err).Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		hostPorts, err := GetArrayFromString(input.HostPorts, ARRAY_SIZE_AS_EXPECTED, len(hostIds))
-		if err != nil {
-			finalErr = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid, %v", input.HostPorts, err).Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		for _, port := range hostPorts {
-			if err := isValidPort(port); err != nil {
-				finalErr = fmt.Errorf("hostPorts(%v) is invalid", port)
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = fmt.Errorf("hostPorts(%v) is invalid", port).Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				break
-			}
-		}
-
-		for index, hostId := range hostIds {
-			hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
-			if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
-				finalErr = err
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				break
-			}
-		}
-
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
+	logrus.Infof("all clb-target = %v are deleted", inputs)
 	return outputs, finalErr
 }
