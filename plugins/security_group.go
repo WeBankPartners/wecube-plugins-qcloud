@@ -18,8 +18,8 @@ type SecurityGroupPlugin struct{}
 var SecurityGroupActions = make(map[string]Action)
 
 func init() {
-	SecurityGroupActions["create"] = new(SecurityGroupCreation)
-	SecurityGroupActions["terminate"] = new(SecurityGroupTermination)
+	SecurityGroupActions["create"] = new(SecurityGroupCreateAction)
+	SecurityGroupActions["terminate"] = new(SecurityGroupTerminateAction)
 }
 
 func (plugin *SecurityGroupPlugin) GetActionByName(actionName string) (Action, error) {
@@ -43,11 +43,11 @@ func createVpcClient(region, secretId, secretKey string) (client *vpc.Client, er
 	return
 }
 
-type SecurityGroupInputs struct {
-	Inputs []SecurityGroupInput `json:"inputs,omitempty"`
+type SecurityGroupCreateInputs struct {
+	Inputs []SecurityGroupCreateInput `json:"inputs,omitempty"`
 }
 
-type SecurityGroupInput struct {
+type SecurityGroupCreateInput struct {
 	CallBackParameter
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
@@ -56,32 +56,22 @@ type SecurityGroupInput struct {
 	Description    string `json:"description,omitempty"`
 }
 
-type SecurityGroupOutputs struct {
-	Outputs []SecurityGroupOutput `json:"outputs,omitempty"`
+type SecurityGroupCreateOutputs struct {
+	Outputs []SecurityGroupCreateOutput `json:"outputs,omitempty"`
 }
 
-type SecurityGroupOutput struct {
+type SecurityGroupCreateOutput struct {
 	CallBackParameter
 	Result
-	RequestId string `json:"request_id,omitempty"`
-	Guid      string `json:"guid,omitempty"`
-	Id        string `json:"id,omitempty"`
+	// RequestId string `json:"request_id,omitempty"`
+	Guid string `json:"guid,omitempty"`
+	Id   string `json:"id,omitempty"`
 }
 
-type SecurityGroupParam struct {
-	CallBackParameter
-	Guid                   string
-	ProviderParams         string
-	GroupName              string
-	GroupDescription       string
-	SecurityGroupId        string
-	SecurityGroupPolicySet *vpc.SecurityGroupPolicySet `json:"SecurityGroupPolicySet"`
-}
+type SecurityGroupCreateAction struct{}
 
-type SecurityGroupCreation struct{}
-
-func (action *SecurityGroupCreation) ReadParam(param interface{}) (interface{}, error) {
-	var inputs SecurityGroupInputs
+func (action *SecurityGroupCreateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SecurityGroupCreateInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
@@ -89,202 +79,219 @@ func (action *SecurityGroupCreation) ReadParam(param interface{}) (interface{}, 
 	return inputs, nil
 }
 
-func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) {
-	securityGroups, _ := input.(SecurityGroupInputs)
-	outputs := SecurityGroupOutputs{}
-	var finalErr error
+func (action *SecurityGroupCreateAction) checkCreateSecurityGroupParams(input SecurityGroupCreateInput) error {
+	if input.Name == "" {
+		return fmt.Errorf("Name is empty")
+	}
+	if input.ProviderParams == "" {
+		return fmt.Errorf("ProviderParams is empty")
+	}
+	if input.Guid == "" {
+		return fmt.Errorf("Guid is empty")
+	}
+	if input.Description == "" {
+		return fmt.Errorf("Description is empty")
+	}
+	return nil
+}
 
-	SecurityGroups, _ := checkSecurityGroup(securityGroups.Inputs)
-
-	for _, securityGroup := range SecurityGroups {
-		output := SecurityGroupOutput{
-			Guid: securityGroup.Guid,
-		}
-		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
-		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		if err != nil {
+func (action *SecurityGroupCreateAction) createSecurityGroup(input *SecurityGroupCreateInput) (output SecurityGroupCreateOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
 		}
+	}()
 
-		//check resource exsit
-		if securityGroup.SecurityGroupId != "" {
-			ok, err := querySecurityGroupsInfo(client, securityGroup.SecurityGroupId)
-			if err != nil {
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				finalErr = err
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
-			}
-
-			if ok {
-				output.RequestId = "legacy qcloud API doesn't support returnning request id"
-				output.Id = securityGroup.SecurityGroupId
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
-			}
-		}
-
-		createSecurityGroup := vpc.NewCreateSecurityGroupRequest()
-		createSecurityGroup.GroupName = common.StringPtr(securityGroup.GroupName)
-		createSecurityGroup.GroupDescription = common.StringPtr(securityGroup.GroupDescription)
-
-		createSecurityGroupresp, err := client.CreateSecurityGroup(createSecurityGroup)
-		if err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		output.Id = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
-		output.RequestId = *createSecurityGroupresp.Response.RequestId
-
-		securityGroup.SecurityGroupId = *createSecurityGroupresp.Response.SecurityGroup.SecurityGroupId
-		logrus.Infof("create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", securityGroup.SecurityGroupId, *createSecurityGroupresp.Response.RequestId)
-		outputs.Outputs = append(outputs.Outputs, output)
+	if err = action.checkCreateSecurityGroupParams(*input); err != nil {
+		logrus.Errorf("checkCreateSecurityGroupParams meet error=%v", err)
+		return
 	}
 
-	return outputs, finalErr
-}
-
-func checkSecurityGroup(actionParams []SecurityGroupInput) ([]SecurityGroupParam, error) {
-	securityGroups := []SecurityGroupParam{}
-	for i := 0; i < len(actionParams); i++ {
-		_, index := checkSecurityGroupByName(securityGroups, actionParams[i].Name)
-		if index == -1 {
-			SecurityGroup, err := buildNewSecurityGroup(actionParams[i])
-			if err != nil {
-				return securityGroups, err
-			}
-			securityGroups = append(securityGroups, SecurityGroup)
-		}
-	}
-	return securityGroups, nil
-}
-
-func buildNewSecurityGroup(actionParam SecurityGroupInput) (SecurityGroupParam, error) {
-	SecurityGroup := SecurityGroupParam{
-		Guid:             actionParam.Guid,
-		ProviderParams:   actionParam.ProviderParams,
-		GroupName:        actionParam.Name,
-		SecurityGroupId:  actionParam.Id,
-		GroupDescription: actionParam.Description,
-		SecurityGroupPolicySet: &vpc.SecurityGroupPolicySet{
-			Egress:  []*vpc.SecurityGroupPolicy{},
-			Ingress: []*vpc.SecurityGroupPolicy{},
-		},
-	}
-	SecurityGroup.CallBackParameter.Parameter = actionParam.CallBackParameter.Parameter
-
-	return SecurityGroup, nil
-}
-
-func checkSecurityGroupByName(SecurityGroups []SecurityGroupParam, name string) (SecurityGroupParam, int) {
-	for i := 0; i < len(SecurityGroups); i++ {
-		if SecurityGroups[i].GroupName == name {
-			return SecurityGroups[i], i
-		}
-	}
-	return SecurityGroupParam{}, -1
-}
-
-type SecurityGroupTermination struct{}
-
-func (action *SecurityGroupTermination) ReadParam(param interface{}) (interface{}, error) {
-	var inputs SecurityGroupInputs
-	err := UnmarshalJson(param, &inputs)
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return nil, err
+		return
 	}
-	return inputs, nil
+
+	//check resource exsit
+	if input.Id != "" {
+		var ok bool
+		ok, err = querySecurityGroupsInfo(client, input.Id)
+		if err != nil {
+			logrus.Errorf("querySecurityGroupsInfo meet error=%v", err)
+			return
+		}
+
+		if ok {
+			logrus.Infof("querySecurityGroupsInfo the securityGroup[%v] is exist", input.Id)
+			output.Id = input.Id
+			return
+		}
+	}
+
+	request := vpc.NewCreateSecurityGroupRequest()
+	request.GroupName = common.StringPtr(input.Name)
+	request.GroupDescription = common.StringPtr(input.Description)
+
+	response, err := client.CreateSecurityGroup(request)
+	if err != nil {
+		logrus.Errorf("CreateSecurityGroup meet error=%v", err)
+		return
+	}
+	output.Id = *response.Response.SecurityGroup.SecurityGroupId
+	logrus.Infof("create SecurityGroup's request has been submitted, SecurityGroupId is [%v], RequestID is [%v]", output.Id, *response.Response.RequestId)
+
+	return
 }
 
-func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, error) {
-	securityGroups, _ := input.(SecurityGroupInputs)
-	outputs := SecurityGroupOutputs{}
-	var deletedSecurityGroups []string
-	var finalErr error
+func querySecurityGroupsInfo(client *vpc.Client, securityGroupId string) (bool, error) {
+	request := vpc.NewDescribeSecurityGroupsRequest()
+	request.SecurityGroupIds = append(request.SecurityGroupIds, &securityGroupId)
+	response, err := client.DescribeSecurityGroups(request)
+	if err != nil {
+		return false, err
+	}
 
+	if len(response.Response.SecurityGroupSet) == 0 {
+		return false, nil
+	}
+
+	if len(response.Response.SecurityGroupSet) > 1 {
+		logrus.Errorf("query security group id=%s info find more than 1", securityGroupId)
+		return false, fmt.Errorf("query security group id=%s info find more than 1", securityGroupId)
+	}
+
+	return true, nil
+}
+
+func (action *SecurityGroupCreateAction) Do(input interface{}) (interface{}, error) {
+	securityGroups, _ := input.(SecurityGroupCreateInputs)
+	outputs := SecurityGroupCreateOutputs{}
+	var finalErr error
 	for _, securityGroup := range securityGroups.Inputs {
-		output := SecurityGroupOutput{
-			Guid: securityGroup.Guid,
-		}
-		output.Result.Code = RESULT_CODE_SUCCESS
-		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
-
-		continueFlag := false
-		for _, deletedSecurityGroupId := range deletedSecurityGroups {
-			if deletedSecurityGroupId == securityGroup.Id {
-				continueFlag = true
-			}
-		}
-		if continueFlag {
-			continue
-		}
-
-		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
+		output, err := action.createSecurityGroup(&securityGroup)
 		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
 			finalErr = err
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
 		}
-
-		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			finalErr = err
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		ok, err := querySecurityGroupsInfo(client, securityGroup.Id)
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			finalErr = err
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		if !ok {
-			output.RequestId = "legacy qcloud API doesn't support returnning request id"
-			output.Id = securityGroup.Id
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		deleteSecurityGroupRequest := vpc.NewDeleteSecurityGroupRequest()
-		deleteSecurityGroupRequest.SecurityGroupId = common.StringPtr(securityGroup.Id)
-
-		resp, err := client.DeleteSecurityGroup(deleteSecurityGroupRequest)
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			finalErr = err
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-		logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", securityGroup.Id, *resp.Response.RequestId)
-		logrus.Infof("Terminated SecurityGroup[%v] has been done", securityGroup.Id)
-		deletedSecurityGroups = append(deletedSecurityGroups, securityGroup.Id)
-
-		output.RequestId = *resp.Response.RequestId
-		output.Id = securityGroup.Id
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
+	logrus.Infof("all securityGroups = %v are created", securityGroups)
+	return &outputs, finalErr
+}
+
+type SecurityGroupTerminateInputs struct {
+	Inputs []SecurityGroupTerminateInput `json:"inputs,omitempty"`
+}
+
+type SecurityGroupTerminateInput struct {
+	CallBackParameter
+	Guid           string `json:"guid,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	Id             string `json:"id,omitempty"`
+}
+
+type SecurityGroupTerminateOutputs struct {
+	Outputs []SecurityGroupTerminateOutput `json:"outputs,omitempty"`
+}
+
+type SecurityGroupTerminateOutput struct {
+	CallBackParameter
+	Result
+	// RequestId string `json:"request_id,omitempty"`
+	Guid string `json:"guid,omitempty"`
+}
+
+type SecurityGroupTerminateAction struct{}
+
+func (action *SecurityGroupTerminateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs SecurityGroupTerminateInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *SecurityGroupTerminateAction) checkTerminateSecurityGroupParams(input SecurityGroupTerminateInput) error {
+	if input.Guid == "" {
+		return fmt.Errorf("Guid is empty")
+	}
+	if input.Id == "" {
+		return fmt.Errorf("Id is empty")
+	}
+	if input.ProviderParams == "" {
+		return fmt.Errorf("ProviderParams is empty")
+	}
+
+	return nil
+}
+
+func (action *SecurityGroupTerminateAction) terminateSecurityGroup(input *SecurityGroupTerminateInput) (output SecurityGroupTerminateOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = action.checkTerminateSecurityGroupParams(*input); err != nil {
+		logrus.Errorf("checkTerminateSecurityGroupParams meet error=%v", err)
+		return
+	}
+
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return
+	}
+
+	// check wether securityGroup is exist.
+	ok, err := querySecurityGroupsInfo(client, input.Id)
+	if err != nil {
+		logrus.Errorf("querySecurityGroupsInfo meet error=%v", err)
+		return
+	}
+
+	if !ok {
+		logrus.Infof("querySecurityGroupsInfo the securityGroup[%v] is not exist", input.Id)
+		return
+	}
+	request := vpc.NewDeleteSecurityGroupRequest()
+	request.SecurityGroupId = common.StringPtr(input.Id)
+
+	response, err := client.DeleteSecurityGroup(request)
+	if err != nil {
+		logrus.Errorf("DeleteSecurityGroup meet error=%v", err)
+		return
+	}
+
+	logrus.Infof("Terminate SecurityGroup[%v] has been submitted in Qcloud, RequestID is [%v]", input.Id, *response.Response.RequestId)
+	return
+}
+
+func (action *SecurityGroupTerminateAction) Do(input interface{}) (interface{}, error) {
+	securityGroups, _ := input.(SecurityGroupTerminateInputs)
+	outputs := SecurityGroupTerminateOutputs{}
+	var finalErr error
+	for _, securityGroup := range securityGroups.Inputs {
+		output, err := action.terminateSecurityGroup(&securityGroup)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all securityGroups = %v are deleted", securityGroups)
 	return &outputs, finalErr
 }
 
@@ -304,44 +311,4 @@ func QuerySecurityGroups(providerParam string, securityGroupIds []string) ([]*vp
 	}
 
 	return resp.Response.SecurityGroupSet, nil
-}
-
-func CreateSecurityGroup(providerParam string, name string, description string) (string, error) {
-	paramsMap, err := GetMapFromProviderParams(providerParam)
-	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	if err != nil {
-		return "", err
-	}
-
-	req := vpc.NewCreateSecurityGroupRequest()
-	req.GroupName = common.StringPtr(name)
-	if len(description) != 0 {
-		req.GroupDescription = common.StringPtr(description)
-	}
-
-	resp, err := client.CreateSecurityGroup(req)
-	if err != nil {
-		return "", err
-	}
-
-	return *resp.Response.SecurityGroup.SecurityGroupId, nil
-}
-func querySecurityGroupsInfo(client *vpc.Client, securityGroupId string) (bool, error) {
-	request := vpc.NewDescribeSecurityGroupsRequest()
-	request.SecurityGroupIds = append(request.SecurityGroupIds, &securityGroupId)
-	response, err := client.DescribeSecurityGroups(request)
-	if err != nil {
-		return false, err
-	}
-
-	if len(response.Response.SecurityGroupSet) == 0 {
-		return false, nil
-	}
-
-	if len(response.Response.SecurityGroupSet) > 1 {
-		logrus.Errorf("query security group id=%s info find more than 1", securityGroupId)
-		return false, fmt.Errorf("query security group id=%s info find more than 1", securityGroupId)
-	}
-
-	return true, nil
 }
