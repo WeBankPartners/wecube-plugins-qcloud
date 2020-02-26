@@ -48,6 +48,8 @@ type MariadbInput struct {
 	Seed           string `json:"seed,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	UserName       string `json:"user_name,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 
 	Id           string `json:"id,omitempty"`
 	Zones        string `json:"zones,omitempty"` //split by ,
@@ -113,7 +115,12 @@ func mariadbCreateCheckParam(input *MariadbInput) error {
 		return errors.New("seed is empty")
 	}
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.MemorySize == "0" || input.MemorySize == "" {
 		return errors.New("memory size is empty")
@@ -445,6 +452,9 @@ func (action *MariadbCreateAction) createAndInitMariadb(input *MariadbInput) (ou
 		input.Password = utils.CreateRandomPassword()
 	}
 
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMariadbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {

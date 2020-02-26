@@ -54,6 +54,8 @@ type SecurityGroupInput struct {
 	Name           string `json:"name,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Description    string `json:"description,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type SecurityGroupOutputs struct {
@@ -75,6 +77,8 @@ type SecurityGroupParam struct {
 	GroupName              string
 	GroupDescription       string
 	SecurityGroupId        string
+	Location               string
+	APISecret              string
 	SecurityGroupPolicySet *vpc.SecurityGroupPolicySet `json:"SecurityGroupPolicySet"`
 }
 
@@ -103,6 +107,9 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 		output.CallBackParameter.Parameter = securityGroup.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
+		if securityGroup.Location != "" && securityGroup.APISecret != "" {
+			securityGroup.ProviderParams = fmt.Sprintf("%s;%s", securityGroup.Location, securityGroup.APISecret)
+		}
 		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
@@ -177,6 +184,8 @@ func buildNewSecurityGroup(actionParam SecurityGroupInput) (SecurityGroupParam, 
 		GroupName:        actionParam.Name,
 		SecurityGroupId:  actionParam.Id,
 		GroupDescription: actionParam.Description,
+		Location:         actionParam.Location,
+		APISecret:        actionParam.APISecret,
 		SecurityGroupPolicySet: &vpc.SecurityGroupPolicySet{
 			Egress:  []*vpc.SecurityGroupPolicy{},
 			Ingress: []*vpc.SecurityGroupPolicy{},
@@ -230,6 +239,9 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 			continue
 		}
 
+		if securityGroup.Location != "" && securityGroup.APISecret != "" {
+			securityGroup.ProviderParams = fmt.Sprintf("%s;%s", securityGroup.Location, securityGroup.APISecret)
+		}
 		paramsMap, err := GetMapFromProviderParams(securityGroup.ProviderParams)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR

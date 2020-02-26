@@ -50,6 +50,8 @@ type NatGatewayInput struct {
 	Id              string `json:"id,omitempty"`
 	Eip             string `json:"eip,omitempty"`
 	EipId           string `json:"eip_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type NatGatewayOutputs struct {
@@ -100,6 +102,9 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
+	if natGateway.Location != "" && natGateway.APISecret != "" {
+		natGateway.ProviderParams = fmt.Sprintf("%s;%s", natGateway.Location, natGateway.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -285,6 +290,9 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 
+	if natGateway.Location != "" && natGateway.APISecret != "" {
+		natGateway.ProviderParams = fmt.Sprintf("%s;%s", natGateway.Location, natGateway.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
 	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

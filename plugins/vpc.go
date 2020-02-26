@@ -39,6 +39,8 @@ type VpcInput struct {
 	Id             string `json:"id,omitempty"`
 	Name           string `json:"name,omitempty"`
 	CidrBlock      string `json:"cidr_block,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type VpcOutputs struct {
@@ -94,6 +96,9 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (output VpcOutput, 
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vpcInput.CallBackParameter.Parameter
 
+	if vpcInput.Location != "" && vpcInput.APISecret != "" {
+		vpcInput.ProviderParams = fmt.Sprintf("%s;%s", vpcInput.Location, vpcInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -236,6 +241,9 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (output VpcOu
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vpcInput.CallBackParameter.Parameter
 
+	if vpcInput.Location != "" && vpcInput.APISecret != "" {
+		vpcInput.ProviderParams = fmt.Sprintf("%s;%s", vpcInput.Location, vpcInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

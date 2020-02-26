@@ -44,6 +44,8 @@ type ElasticNicInput struct {
 	SubnetId           string   `json:"subnet_id,omitempty"`
 	InstanceId         string   `json:"instance_id,omitempty"`
 	Id                 string   `json:"id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type ElasticNicOutputs struct {
@@ -111,6 +113,9 @@ func (action *ElasticNicCreateAction) createElasticNic(ElasticNicInput *ElasticN
 		return output, err
 	}
 
+	if ElasticNicInput.Location != "" && ElasticNicInput.APISecret != "" {
+		ElasticNicInput.ProviderParams = fmt.Sprintf("%s;%s", ElasticNicInput.Location, ElasticNicInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -210,6 +215,9 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
 		return output, err
+	}
+	if ElasticNicInput.Location != "" && ElasticNicInput.APISecret != "" {
+		ElasticNicInput.ProviderParams = fmt.Sprintf("%s;%s", ElasticNicInput.Location, ElasticNicInput.APISecret)
 	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -323,6 +331,9 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 		return output, err
 	}
 
+	if ElasticNicInput.Location != "" && ElasticNicInput.APISecret != "" {
+		ElasticNicInput.ProviderParams = fmt.Sprintf("%s;%s", ElasticNicInput.Location, ElasticNicInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -396,6 +407,9 @@ func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticN
 		return output, err
 	}
 
+	if ElasticNicInput.Location != "" && ElasticNicInput.APISecret != "" {
+		ElasticNicInput.ProviderParams = fmt.Sprintf("%s;%s", ElasticNicInput.Location, ElasticNicInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

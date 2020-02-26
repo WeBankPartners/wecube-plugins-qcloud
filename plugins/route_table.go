@@ -50,6 +50,8 @@ type RouteTableInput struct {
 	Id             string `json:"id,omitempty"`
 	Name           string `json:"name,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type RouteTableOutputs struct {
@@ -104,6 +106,9 @@ func (action *RouteTableCreateAction) createRouteTable(input *RouteTableInput) (
 		return output, err
 	}
 
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -179,6 +184,9 @@ func routeTableTerminateCheckParam(routeTable *RouteTableInput) error {
 }
 
 func makeSureRouteTableHasNoPolicy(input RouteTableInput) error {
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -216,6 +224,9 @@ func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTa
 		return output, err
 	}
 
+	if routeTable.Location != "" && routeTable.APISecret != "" {
+		routeTable.ProviderParams = fmt.Sprintf("%s;%s", routeTable.Location, routeTable.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -283,6 +294,8 @@ type AssociateRouteTableInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	SubnetId       string `json:"subnet_id,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type AssociateRouteTableOutputs struct {
@@ -310,7 +323,13 @@ func (action *RouteTableAssociateSubnetAction) ReadParam(param interface{}) (int
 
 func routeTableAssociateSubnetCheckParam(input AssociateRouteTableInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("RouteTableAssociatSubnetAction input ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("RouteTableAssociatSubnetAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("RouteTableAssociatSubnetAction input APISecret is empty")
+		}
+		//return errors.New("RouteTableAssociatSubnetAction input ProviderParams is empty")
 	}
 	if input.SubnetId == "" {
 		return errors.New("RouteTableAssociatSubnetAction input SubnetId is empty")
@@ -357,6 +376,9 @@ func (action *RouteTableAssociateSubnetAction) Do(input interface{}) (interface{
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		err := associateSubnetWithRouteTable(input.ProviderParams, input.SubnetId, input.RouteTableId)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
