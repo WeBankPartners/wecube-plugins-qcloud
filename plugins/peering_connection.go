@@ -283,6 +283,18 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	// check resource exist.
+	PeeringConnectionId, err := queryPeeringConnectionsInfo(client, peeringConnection)
+	if err != nil {
+		logrus.Errorf("queryPeeringConnectionsInfo meet error=%v", err)
+		return err
+	}
+
+	if PeeringConnectionId == "" {
+		logrus.Infof("the PeeringConnection[%v] is not exist.", peeringConnection.Id)
+		return nil
+	}
+
 	if paramsMap["Region"] == peerParamsMap["Region"] {
 		return action.deletePeeringConnectionAtSameRegion(client, peeringConnection)
 	} else {

@@ -175,6 +175,7 @@ func describeInstancesFromCvm(client *cvm.Client, describeInstancesParams cvm.De
 	if err != nil {
 		logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
 	}
+
 	return response, err
 }
 
@@ -591,6 +592,21 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
+		// check wether vm is exist.
+		_, ok, err := queryInstanceById(client, vm.Id)
+		if err != nil {
+			finalErr = err
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+		if !ok {
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
 		terminateInstancesRequest := cvm.NewTerminateInstancesRequest()
 		byteTerminateInstancesRequestData, _ := json.Marshal(terminateInstancesRequestData)
 		terminateInstancesRequest.FromJsonString(string(byteTerminateInstancesRequestData))
@@ -620,6 +636,23 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 	}
 
 	return &outputs, finalErr
+}
+
+func queryInstanceById(client *cvm.Client, instanceId string) (*cvm.Instance, bool, error) {
+	request := cvm.NewDescribeInstancesRequest()
+	request.InstanceIds = []*string{&instanceId}
+	response, err := client.DescribeInstances(request)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(response.Response.InstanceSet) == 0 {
+		return nil, false, nil
+	}
+	if len(response.Response.InstanceSet) > 1 {
+		return nil, false, fmt.Errorf("describe instance by instanceId[%v], return more than one instances", instanceId)
+	}
+
+	return response.Response.InstanceSet[0], true, nil
 }
 
 type VMStartAction struct {

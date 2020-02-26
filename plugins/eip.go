@@ -113,6 +113,25 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 		return output, err
 	}
 
+	// check whther the eip is existed
+	if eip.Id != "" {
+		address, ok, err := queryEipById(client, eip.Id)
+		if err != nil {
+			logrus.Errorf("queryEipById meet error=%v", err)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+		if ok {
+			logrus.Infof("the eip[%v] already is exist.", eip.Id)
+			var eipInfo EIPInfo
+			eipInfo.Id = *address.AddressId
+			eipInfo.EIP = *address.AddressIp
+			output.EIPS = append(output.EIPS, eipInfo)
+			return output, nil
+		}
+	}
+
 	var count int64
 	request := vpc.NewAllocateAddressesRequest()
 	if eip.AddressCount == "" {
@@ -139,6 +158,7 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 	for i := 0; i < len(response.Response.AddressSet); i++ {
 		req.AddressIds = append(req.AddressIds, response.Response.AddressSet[i])
 	}
+
 	//query eips info get eip ip
 	for {
 		queryEIPResponse, err := client.DescribeAddresses(req)
@@ -172,6 +192,22 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 	}
 
 	return output, err
+}
+
+func queryEipById(client *vpc.Client, id string) (*vpc.Address, bool, error) {
+	request := vpc.NewDescribeAddressesRequest()
+	request.AddressIds = []*string{&id}
+	response, err := client.DescribeAddresses(request)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(response.Response.AddressSet) == 0 {
+		return nil, false, nil
+	}
+	if len(response.Response.AddressSet) > 1 {
+		return nil, false, fmt.Errorf("describe eip[%v] return more than one address", id)
+	}
+	return response.Response.AddressSet[0], true, nil
 }
 
 func (action *EIPCreateAction) Do(input interface{}) (interface{}, error) {
@@ -213,6 +249,21 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error)
 
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	// check whther the eip is existed.
+	if eip.Id != "" {
+		_, ok, err := queryEipById(client, eip.Id)
+		if err != nil {
+			logrus.Errorf("queryEipById meet error=%v", err)
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			return output, err
+		}
+		if !ok {
+			logrus.Infof("the eip[%v] already is not exist.", eip.Id)
+			return output, nil
+		}
+	}
 
 	request := vpc.NewReleaseAddressesRequest()
 	request.AddressIds = append(request.AddressIds, &eip.Id)

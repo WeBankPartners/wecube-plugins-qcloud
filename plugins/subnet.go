@@ -192,6 +192,26 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (Subne
 	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	if subnet.Id == "" {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = "subnet id is empty"
+		return output, fmt.Errorf("subnet id is empty")
+	}
+
+	// check whether subnet is exist.
+	_, ok, err := querySubnetsInfo(client, subnet)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
+	}
+
+	if !ok {
+		output.Id = subnet.Id
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, nil
+	}
+
 	request := vpc.NewDeleteSubnetRequest()
 	request.SubnetId = &subnet.Id
 

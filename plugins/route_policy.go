@@ -175,6 +175,25 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 			continue
 		}
 
+		// check wether the route policy is exist.
+		if input.Id != "" {
+			route, ok, err := queryRoutePolicyById(client, input.Id, input.RouteTableId)
+			if err != nil {
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
+			if ok {
+				logrus.Infof("the route[id=%v] is exist.", input.Id)
+				output.RequestId = "legacy qcloud API doesn't support returnning request id"
+				output.Id = strconv.Itoa(int(*route.RouteId))
+				outputs.Outputs = append(outputs.Outputs, output)
+				continue
+			}
+		}
+
 		request := vpc.NewCreateRoutesRequest()
 		request.RouteTableId = &input.RouteTableId
 		gatewayType := strings.ToUpper(input.GatewayType)
@@ -213,6 +232,29 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 	}
 
 	return &outputs, finalErr
+}
+
+func queryRoutePolicyById(client *vpc.Client, id, routeId string) (*vpc.Route, bool, error) {
+	request := vpc.NewDescribeRouteTablesRequest()
+	request.RouteTableIds = []*string{&routeId}
+	response, err := client.DescribeRouteTables(request)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(response.Response.RouteTableSet) == 0 {
+		return nil, false, fmt.Errorf("the route table[%v] is not exist", routeId)
+	}
+	if len(response.Response.RouteTableSet) > 1 {
+		return nil, false, fmt.Errorf("describe the route table[%v], return more than one routetables", routeId)
+	}
+
+	for _, route := range response.Response.RouteTableSet[0].RouteSet {
+		if strconv.Itoa(int(*route.RouteId)) == routeId {
+			return route, true, nil
+		}
+	}
+
+	return nil, false, nil
 }
 
 //----------------------terminate route policy----------------------
@@ -293,6 +335,22 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
+			continue
+		}
+
+		// check wether the route policy is exist.
+		_, ok, err := queryRoutePolicyById(client, input.Id, input.RouteTableId)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+		if !ok {
+			logrus.Infof("the route[id=%v] is not exist.", input.Id)
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
 

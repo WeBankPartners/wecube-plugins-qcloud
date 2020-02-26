@@ -172,32 +172,29 @@ func routeTableTerminateCheckParam(routeTable *RouteTableInput) error {
 	if routeTable.Id == "" {
 		return errors.New("routeTableTerminateAtion param routeTableId is empty")
 	}
-	if err := makeSureRouteTableHasNoPolicy(*routeTable); err != nil {
-		return err
-	}
 	return nil
 }
 
-func makeSureRouteTableHasNoPolicy(input RouteTableInput) error {
+func makeSureRouteTableHasNoPolicy(input RouteTableInput) (bool, error) {
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	request := vpc.NewDescribeRouteTablesRequest()
 	request.RouteTableIds = []*string{&input.Id}
 	response, err := client.DescribeRouteTables(request)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if *response.Response.TotalCount == 0 {
-		return fmt.Errorf("routeTable(%v) not exist", input.Id)
+		return false, nil
 	}
 	if len(response.Response.RouteTableSet[0].AssociationSet) > 0 {
-		return fmt.Errorf("routetable still associated with %d subnet", len(response.Response.RouteTableSet[0].AssociationSet))
+		return false, fmt.Errorf("routetable still associated with %d subnet", len(response.Response.RouteTableSet[0].AssociationSet))
 	}
-	return nil
+	return true, nil
 }
 
 func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTableInput) (output RouteTableOutput, err error) {
@@ -219,6 +216,17 @@ func (action *RouteTableTerminateAction) terminateRouteTable(routeTable *RouteTa
 	paramsMap, _ := GetMapFromProviderParams(routeTable.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
+		return output, err
+	}
+
+	ok, err := makeSureRouteTableHasNoPolicy(*routeTable)
+	if err != nil {
+		return output, err
+	}
+	if !ok {
+		logrus.Infof("the route table[id=%v] is not exist.", routeTable.Id)
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		output.Id = routeTable.Id
 		return output, err
 	}
 

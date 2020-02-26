@@ -702,6 +702,19 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	// check whther the mysql is exist.
+	_, flag, err := queryMysqlVMInstancesInfo(client, mysqlVmInput.Id)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
+	}
+
+	if flag == false {
+		output.Id = mysqlVmInput.Id
+		return output, nil
+	}
+
 	request := cdb.NewIsolateDBInstanceRequest()
 	request.InstanceId = &mysqlVmInput.Id
 

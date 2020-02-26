@@ -239,6 +239,20 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (output VpcOu
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
+	// check wether vpc is exist.
+	_, ok, err := queryVpcsInfo(client, vpcInput)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, err
+	}
+
+	if !ok {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, err
+	}
+
 	request := vpc.NewDeleteVpcRequest()
 	request.VpcId = &vpcInput.Id
 

@@ -293,15 +293,24 @@ func terminateClbCheckParam(input TerminateClbInput) error {
 }
 
 func terminateClb(client *clb.Client, input TerminateClbInput) error {
+	if err := terminateClbCheckParam(input); err != nil {
+		return err
+	}
+	// check whether the clb is existed.
+	detail, err := queryClbDetailById(client, input.Id)
+	if err != nil {
+		return err
+	}
+	if detail == nil {
+		logrus.Infof("lb[%v] is not existed.", input.Id)
+		return nil
+	}
+
 	loadBalancerIds := []*string{&input.Id}
 	request := clb.NewDeleteLoadBalancerRequest()
 	request.LoadBalancerIds = loadBalancerIds
 
-	if err := terminateClbCheckParam(input); err != nil {
-		return err
-	}
-
-	_, err := client.DeleteLoadBalancer(request)
+	_, err = client.DeleteLoadBalancer(request)
 	if err != nil {
 		logrus.Errorf("deleteLoadBalancer failed err=%v", err)
 	}

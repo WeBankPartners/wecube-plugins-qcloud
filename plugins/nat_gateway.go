@@ -113,16 +113,17 @@ func (action *NatGatewayCreateAction) createNatGateway(natGateway *NatGatewayInp
 	if err = natGatewayCreateCheckParam(natGateway); err != nil {
 		return output, err
 	}
+
 	// check resource exist
 	var queryNatGatewayResponse *NatGatewayOutput
 	var flag bool
 	if natGateway.Id != "" {
 		queryNatGatewayResponse, flag, err = queryNatGatewayInfo(client, natGateway)
-		if err != nil && flag == false {
+		if err != nil {
 			return output, err
 		}
 
-		if err == nil && flag == true {
+		if flag == true {
 			output.Id = queryNatGatewayResponse.Id
 			output.Eip = queryNatGatewayResponse.Eip
 			output.EipId = queryNatGatewayResponse.EipId
@@ -286,7 +287,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	output.CallBackParameter.Parameter = natGateway.CallBackParameter.Parameter
 
 	paramsMap, _ := GetMapFromProviderParams(natGateway.ProviderParams)
-	c, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	defer func() {
 		if err != nil {
@@ -299,6 +300,18 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 		return output, err
 	}
 
+	// check whether the nat-gateway is exist.
+	_, flag, err := queryNatGatewayInfo(client, natGateway)
+	if err != nil {
+		return output, err
+	}
+
+	if flag == false {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		output.Id = natGateway.Id
+		return output, nil
+	}
+
 	if eips, err = getNatGatewayEips(natGateway.ProviderParams, natGateway.Id); err != nil {
 		return output, err
 	}
@@ -306,7 +319,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	deleteReq := unversioned.NewDeleteNatGatewayRequest()
 	deleteReq.VpcId = &natGateway.VpcId
 	deleteReq.NatId = &natGateway.Id
-	deleteResp, err := c.DeleteNatGateway(deleteReq)
+	deleteResp, err := client.DeleteNatGateway(deleteReq)
 	if err != nil {
 		return output, err
 	}
@@ -317,7 +330,7 @@ func (action *NatGatewayTerminateAction) terminateNatGateway(natGateway *NatGate
 	var taskResp *unversioned.DescribeVpcTaskResultResponse
 
 	for {
-		taskResp, err = c.DescribeVpcTaskResult(taskReq)
+		taskResp, err = client.DescribeVpcTaskResult(taskReq)
 		if err != nil {
 			return output, err
 		}

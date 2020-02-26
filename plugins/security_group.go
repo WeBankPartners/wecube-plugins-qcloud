@@ -115,8 +115,8 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 
 		//check resource exsit
 		if securityGroup.SecurityGroupId != "" {
-			querySecurityGroupResponse, flag, err := querySecurityGroupsInfo(client, &securityGroup)
-			if err != nil && flag == false {
+			ok, err := querySecurityGroupsInfo(client, securityGroup.SecurityGroupId)
+			if err != nil {
 				output.Result.Code = RESULT_CODE_ERROR
 				output.Result.Message = err.Error()
 				finalErr = err
@@ -124,8 +124,9 @@ func (action *SecurityGroupCreation) Do(input interface{}) (interface{}, error) 
 				continue
 			}
 
-			if err == nil && flag == true {
-				output.Id = querySecurityGroupResponse.Id
+			if ok {
+				output.RequestId = "legacy qcloud API doesn't support returnning request id"
+				output.Id = securityGroup.SecurityGroupId
 				outputs.Outputs = append(outputs.Outputs, output)
 				continue
 			}
@@ -248,6 +249,22 @@ func (action *SecurityGroupTermination) Do(input interface{}) (interface{}, erro
 			continue
 		}
 
+		ok, err := querySecurityGroupsInfo(client, securityGroup.Id)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			finalErr = err
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
+		if !ok {
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			output.Id = securityGroup.Id
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+
 		deleteSecurityGroupRequest := vpc.NewDeleteSecurityGroupRequest()
 		deleteSecurityGroupRequest.SecurityGroupId = common.StringPtr(securityGroup.Id)
 
@@ -309,29 +326,22 @@ func CreateSecurityGroup(providerParam string, name string, description string) 
 
 	return *resp.Response.SecurityGroup.SecurityGroupId, nil
 }
-func querySecurityGroupsInfo(client *vpc.Client, input *SecurityGroupParam) (SecurityGroupOutput, bool, error) {
-	output := SecurityGroupOutput{}
-
+func querySecurityGroupsInfo(client *vpc.Client, securityGroupId string) (bool, error) {
 	request := vpc.NewDescribeSecurityGroupsRequest()
-	request.SecurityGroupIds = append(request.SecurityGroupIds, &input.SecurityGroupId)
+	request.SecurityGroupIds = append(request.SecurityGroupIds, &securityGroupId)
 	response, err := client.DescribeSecurityGroups(request)
 	if err != nil {
-		return SecurityGroupOutput{}, false, err
+		return false, err
 	}
 
 	if len(response.Response.SecurityGroupSet) == 0 {
-		return SecurityGroupOutput{}, false, nil
+		return false, nil
 	}
 
 	if len(response.Response.SecurityGroupSet) > 1 {
-		logrus.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
-		return SecurityGroupOutput{}, false, fmt.Errorf("query security group id=%s info find more than 1", input.SecurityGroupId)
+		logrus.Errorf("query security group id=%s info find more than 1", securityGroupId)
+		return false, fmt.Errorf("query security group id=%s info find more than 1", securityGroupId)
 	}
 
-	output.Guid = input.Guid
-	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-	output.Id = input.SecurityGroupId
-	output.RequestId = *response.Response.RequestId
-
-	return output, true, nil
+	return true, nil
 }
