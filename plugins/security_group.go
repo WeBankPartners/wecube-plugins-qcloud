@@ -312,3 +312,24 @@ func QuerySecurityGroups(providerParam string, securityGroupIds []string) ([]*vp
 
 	return resp.Response.SecurityGroupSet, nil
 }
+
+func CreateSecurityGroup(providerParam string, name string, description string) (string, error) {
+	paramsMap, err := GetMapFromProviderParams(providerParam)
+	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return "", err
+	}
+
+	req := vpc.NewCreateSecurityGroupRequest()
+	req.GroupName = common.StringPtr(name)
+	if len(description) != 0 {
+		req.GroupDescription = common.StringPtr(description)
+	}
+
+	resp, err := client.CreateSecurityGroup(req)
+	if err != nil {
+		return "", err
+	}
+
+	return *resp.Response.SecurityGroup.SecurityGroupId, nil
+}
