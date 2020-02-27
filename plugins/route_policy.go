@@ -44,7 +44,7 @@ type CreateRoutePolicyInput struct {
 	GatewayId       string `json:"gateway_id,omitempty"`
 	Description     string `json:"desc,omitempty"`
 	Location        string `json:"location"`
-	APISecret       string `json:"API_secret"`
+	APISecret       string `json:"api_secret"`
 }
 
 type CreateRoutePolicyOutputs struct {
@@ -281,7 +281,7 @@ type DeleteRoutePolicyInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type DeleteRoutePolicyOutputs struct {

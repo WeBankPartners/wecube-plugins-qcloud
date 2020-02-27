@@ -56,7 +56,7 @@ type EIPInput struct {
 	Eip            string `json:"eip,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type EIPOutputs struct {

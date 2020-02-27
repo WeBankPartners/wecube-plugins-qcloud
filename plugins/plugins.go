@@ -7,6 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	PROVIDER_NAME = "qcloud"
+	VERSION       = "v1"
+)
+
 var (
 	pluginsMutex sync.Mutex
 	plugins      = make(map[string]Plugin)
@@ -95,6 +100,16 @@ func Process(pluginRequest *PluginRequest) (*PluginResponse, error) {
 	}()
 
 	logrus.Infof("plguin[%v]-action[%v] start...", pluginRequest.Name, pluginRequest.Action)
+
+	if pluginRequest.ProviderName != PROVIDER_NAME {
+		err = fmt.Errorf("ProviderName[%v] is wrong", pluginRequest.ProviderName)
+		return nil, err
+	}
+
+	if pluginRequest.Version != VERSION {
+		err = fmt.Errorf("Version[%v] is wrong", pluginRequest.Version)
+		return nil, err
+	}
 
 	plugin, err := getPluginByName(pluginRequest.Name)
 	if err != nil {

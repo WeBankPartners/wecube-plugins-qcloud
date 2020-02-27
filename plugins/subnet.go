@@ -43,7 +43,7 @@ type SubnetInput struct {
 	VpcId          string `json:"vpc_id,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type SubnetOutputs struct {

@@ -49,7 +49,7 @@ type MariadbInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	UserName       string `json:"user_name,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 
 	Id           string `json:"id,omitempty"`
 	Zones        string `json:"zones,omitempty"` //split by ,

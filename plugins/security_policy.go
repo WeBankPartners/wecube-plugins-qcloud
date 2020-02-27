@@ -43,7 +43,7 @@ type SecurityGroupPolicyInput struct {
 	PolicyAction      string `json:"policy_action,omitempty"`
 	PolicyDescription string `json:"policy_description,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type SecurityGroupPolicyOutputs struct {

@@ -62,7 +62,7 @@ type CreateClbInput struct {
 	SubnetId       string `json:"subnet_id"`
 	Id             string `json:"id"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type CreateClbOutputs struct {
@@ -274,7 +274,7 @@ type TerminateClbInput struct {
 	ProviderParams string `json:"provider_params"`
 	Id             string `json:"id"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type TerminateClbOutputs struct {

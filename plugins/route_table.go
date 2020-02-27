@@ -51,7 +51,7 @@ type RouteTableInput struct {
 	Name           string `json:"name,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type RouteTableOutputs struct {
@@ -316,7 +316,7 @@ type AssociateRouteTableInput struct {
 	SubnetId       string `json:"subnet_id,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type AssociateRouteTableOutputs struct {

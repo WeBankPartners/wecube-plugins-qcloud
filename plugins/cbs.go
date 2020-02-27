@@ -51,8 +51,8 @@ type CreateAndMountCbsDiskInput struct {
 	Id               string `json:"id,omitempty"`
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
 
 	//use to attch and format
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -396,7 +396,7 @@ type UmountCbsDiskInput struct {
 	VolumeName     string `json:"volume_name,omitempty"`
 	MountDir       string `json:"mount_dir,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 
 	//use to attch and format
 	InstanceId       string `json:"instance_id,omitempty"`

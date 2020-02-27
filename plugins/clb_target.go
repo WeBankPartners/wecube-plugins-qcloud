@@ -48,7 +48,7 @@ type BackTargetInput struct {
 	HostIds        string `json:"host_ids"`
 	HostPorts      string `json:"host_ports"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type BackTargetOutputs struct {

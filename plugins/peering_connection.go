@@ -43,7 +43,7 @@ type PeeringConnectionInput struct {
 	Bandwidth          string `json:"bandwidth,omitempty"`
 	Id                 string `json:"id,omitempty"`
 	Location           string `json:"location"`
-	APISecret          string `json:"API_secret"`
+	APISecret          string `json:"api_secret"`
 	PeerLocation       string `json:"peer_location"`
 	PeerAPISecret      string `json:"peer_API_secret"`
 }

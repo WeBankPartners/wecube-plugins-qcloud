@@ -57,7 +57,7 @@ type RedisInput struct {
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 	ID               string `json:"id,omitempty"`
 	Location         string `json:"location"`
-	APISecret        string `json:"API_secret"`
+	APISecret        string `json:"api_secret"`
 }
 
 type RedisOutputs struct {

@@ -48,7 +48,7 @@ type StorageInput struct {
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type StorageOutputs struct {

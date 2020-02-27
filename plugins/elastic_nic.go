@@ -45,7 +45,7 @@ type ElasticNicInput struct {
 	InstanceId         string   `json:"instance_id,omitempty"`
 	Id                 string   `json:"id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type ElasticNicOutputs struct {

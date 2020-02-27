@@ -81,8 +81,8 @@ func parsePluginRequest(r *http.Request) *plugins.PluginRequest {
 	pathStrings := strings.Split(r.URL.Path, "/")
 	logrus.Infof("path strings = %v", pathStrings)
 	if len(pathStrings) >= 5 {
-		pluginInput.Version = pathStrings[1]
-		pluginInput.ProviderName = pathStrings[2]
+		pluginInput.Version = pathStrings[2]
+		pluginInput.ProviderName = pathStrings[1]
 		pluginInput.Name = pathStrings[len(pathStrings)-2]
 		pluginInput.Action = pathStrings[len(pathStrings)-1]
 	}

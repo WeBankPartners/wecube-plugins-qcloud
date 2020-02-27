@@ -72,7 +72,7 @@ type MysqlVmInput struct {
 	Password         string `json:"password,omitempty"`
 	UserName         string `json:"user_name,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -1018,7 +1018,7 @@ type MysqlBindSecurityGroupInput struct {
 	MySqlId          string `json:"mysql_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type MysqlBindSecurityGroupOutputs struct {
@@ -1088,7 +1088,7 @@ type MysqlCreateBackupInput struct {
 	BackUpDatabase string `json:"backup_database,omitempty"`
 	BackUpTable    string `json:"backup_table,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type MysqlCreateBackupOutputs struct {
@@ -1294,7 +1294,7 @@ type MysqlDeleteBackupInput struct {
 	MySqlId        string `json:"mysql_id,omitempty"`
 	BackupId       string `json:"backup_id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type MysqlDeleteBackupOutputs struct {

@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -11,7 +12,8 @@ import (
 )
 
 const (
-	QCLOUD_ENDPOINT_VPC = "vpc.tencentcloudapi.com"
+	QCLOUD_ENDPOINT_VPC                = "vpc.tencentcloudapi.com"
+	QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND = "ResourceNotFound"
 )
 
 type SecurityGroupPlugin struct{}
@@ -56,7 +58,7 @@ type SecurityGroupCreateInput struct {
 	Id             string `json:"id,omitempty"`
 	Description    string `json:"description,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type SecurityGroupCreateOutputs struct {
@@ -166,6 +168,9 @@ func querySecurityGroupsInfo(client *vpc.Client, securityGroupId string) (bool, 
 	request.SecurityGroupIds = append(request.SecurityGroupIds, &securityGroupId)
 	response, err := client.DescribeSecurityGroups(request)
 	if err != nil {
+		if strings.Contains(err.Error(), QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND) {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -207,7 +212,7 @@ type SecurityGroupTerminateInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type SecurityGroupTerminateOutputs struct {

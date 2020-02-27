@@ -40,7 +40,7 @@ type VpcInput struct {
 	Name           string `json:"name,omitempty"`
 	CidrBlock      string `json:"cidr_block,omitempty"`
 	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	APISecret      string `json:"api_secret"`
 }
 
 type VpcOutputs struct {
