@@ -43,6 +43,8 @@ type CreateRoutePolicyInput struct {
 	GatewayType     string `json:"gateway_type,omitempty"`
 	GatewayId       string `json:"gateway_id,omitempty"`
 	Description     string `json:"desc,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type CreateRoutePolicyOutputs struct {
@@ -86,6 +88,9 @@ func isValidGatewayType(gatewayType string) error {
 }
 
 func isRouteConflicts(input CreateRoutePolicyInput) error {
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -119,7 +124,13 @@ func isRouteConflicts(input CreateRoutePolicyInput) error {
 
 func createRoutePolicyCheckParam(input CreateRoutePolicyInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("CreateRoutePolicyAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("CreateRoutePolicyAction input APISecret is empty")
+		}
+		//return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
 	}
 	if input.GatewayType == "" {
 		return errors.New("CreateRoutePolicyAction input GatewayType is empty")
@@ -165,6 +176,9 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
@@ -267,6 +281,8 @@ type DeleteRoutePolicyInput struct {
 	Id             string `json:"id,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type DeleteRoutePolicyOutputs struct {
@@ -298,7 +314,13 @@ func deleteRoutePolicyCheckParam(input DeleteRoutePolicyInput) error {
 	}
 
 	if input.ProviderParams == "" {
-		return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("DeleteRoutePolicyAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("DeleteRoutePolicyAction input APISecret is empty")
+		}
+		//return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
 	}
 
 	if input.RouteTableId == "" {
@@ -328,6 +350,9 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {

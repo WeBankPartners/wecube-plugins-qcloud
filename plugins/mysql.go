@@ -71,6 +71,8 @@ type MysqlVmInput struct {
 	ChargePeriod     string `json:"charge_period,omitempty"`
 	Password         string `json:"password,omitempty"`
 	UserName         string `json:"user_name,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -163,7 +165,12 @@ func (action *MysqlVmCreateAction) MysqlVmCreateCheckParam(input MysqlVmInput) e
 		return fmt.Errorf("guid is empty")
 	}
 	if input.ProviderParams == "" {
-		return fmt.Errorf("provider_params is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.EngineVersion == "" {
 		return fmt.Errorf("engine_version is empty")
@@ -258,6 +265,9 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPrepaid(client *cdb.Client, 
 	mysqlVmInput.Count = 1
 	request.GoodsNum = &mysqlVmInput.Count
 
+	if mysqlVmInput.Location != "" && mysqlVmInput.APISecret != "" {
+		mysqlVmInput.ProviderParams = fmt.Sprintf("%s;%s", mysqlVmInput.Location, mysqlVmInput.APISecret)
+	}
 	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
 	if err != nil {
 		return "", "", err
@@ -327,6 +337,9 @@ func (action *MysqlVmCreateAction) createMysqlVmWithPostByHour(client *cdb.Clien
 		request.MasterInstanceId = &mysqlVmInput.MasterInstanceId
 	}
 
+	if mysqlVmInput.Location != "" && mysqlVmInput.APISecret != "" {
+		mysqlVmInput.ProviderParams = fmt.Sprintf("%s;%s", mysqlVmInput.Location, mysqlVmInput.APISecret)
+	}
 	zone, err := getZoneFromProviderParams(mysqlVmInput.ProviderParams)
 	if err != nil {
 		return "", "", err
@@ -404,6 +417,9 @@ func (action *MysqlVmCreateAction) createMysqlVm(mysqlVmInput *MysqlVmInput) (ou
 		return output, err
 	}
 
+	if mysqlVmInput.Location != "" && mysqlVmInput.APISecret != "" {
+		mysqlVmInput.ProviderParams = fmt.Sprintf("%s;%s", mysqlVmInput.Location, mysqlVmInput.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -699,6 +715,9 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 		return output, err
 	}
 
+	if mysqlVmInput.Location != "" && mysqlVmInput.APISecret != "" {
+		mysqlVmInput.ProviderParams = fmt.Sprintf("%s;%s", mysqlVmInput.Location, mysqlVmInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -799,6 +818,9 @@ func mysqlVmRestartCheckParam(mysqlVm *MysqlVmInput) error {
 }
 
 func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) error {
+	if mysqlVmInput.Location != "" && mysqlVmInput.APISecret != "" {
+		mysqlVmInput.ProviderParams = fmt.Sprintf("%s;%s", mysqlVmInput.Location, mysqlVmInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(mysqlVmInput.ProviderParams)
 	client, _ := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -995,6 +1017,8 @@ type MysqlBindSecurityGroupInput struct {
 	ProviderParams   string `json:"provider_params,omitempty"`
 	MySqlId          string `json:"mysql_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type MysqlBindSecurityGroupOutputs struct {
@@ -1029,6 +1053,9 @@ func (action *MysqlBindSecurityGroupAction) Do(input interface{}) (interface{}, 
 		output.Result.Code = RESULT_CODE_SUCCESS
 
 		securityGroups, _ := GetArrayFromString(input.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		if err := BindMySqlInstanceSecurityGroups(input.ProviderParams, input.MySqlId, securityGroups); err != nil {
 			output.Result.Message = err.Error()
 			output.Result.Code = RESULT_CODE_ERROR
@@ -1060,6 +1087,8 @@ type MysqlCreateBackupInput struct {
 	BackUpMethod   string `json:"backup_method,omitempty"`
 	BackUpDatabase string `json:"backup_database,omitempty"`
 	BackUpTable    string `json:"backup_table,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type MysqlCreateBackupOutputs struct {
@@ -1098,6 +1127,10 @@ func createMysqlBackup(input *MysqlCreateBackupInput) (string, error) {
 	}
 
 	tables, _ := GetArrayFromString(input.BackUpTable, ARRAY_SIZE_REAL, 0)
+
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -1260,6 +1293,8 @@ type MysqlDeleteBackupInput struct {
 	ProviderParams string `json:"provider_params,omitempty"`
 	MySqlId        string `json:"mysql_id,omitempty"`
 	BackupId       string `json:"backup_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type MysqlDeleteBackupOutputs struct {
@@ -1290,6 +1325,9 @@ func deleteMysqlBackup(input *MysqlDeleteBackupInput) error {
 		return fmt.Errorf("BackupId is empty")
 	}
 
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateMysqlVmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {

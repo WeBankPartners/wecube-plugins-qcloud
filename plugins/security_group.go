@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -54,6 +55,8 @@ type SecurityGroupCreateInput struct {
 	Name           string `json:"name,omitempty"`
 	Id             string `json:"id,omitempty"`
 	Description    string `json:"description,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type SecurityGroupCreateOutputs struct {
@@ -84,7 +87,13 @@ func (action *SecurityGroupCreateAction) checkCreateSecurityGroupParams(input Se
 		return fmt.Errorf("Name is empty")
 	}
 	if input.ProviderParams == "" {
-		return fmt.Errorf("ProviderParams is empty")
+		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.Guid == "" {
 		return fmt.Errorf("Guid is empty")
@@ -92,6 +101,7 @@ func (action *SecurityGroupCreateAction) checkCreateSecurityGroupParams(input Se
 	if input.Description == "" {
 		return fmt.Errorf("Description is empty")
 	}
+
 	return nil
 }
 
@@ -112,6 +122,9 @@ func (action *SecurityGroupCreateAction) createSecurityGroup(input *SecurityGrou
 		return
 	}
 
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -194,6 +207,8 @@ type SecurityGroupTerminateInput struct {
 	Guid           string `json:"guid,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	Id             string `json:"id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type SecurityGroupTerminateOutputs struct {
@@ -226,7 +241,13 @@ func (action *SecurityGroupTerminateAction) checkTerminateSecurityGroupParams(in
 		return fmt.Errorf("Id is empty")
 	}
 	if input.ProviderParams == "" {
-		return fmt.Errorf("ProviderParams is empty")
+		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 
 	return nil
@@ -249,6 +270,9 @@ func (action *SecurityGroupTerminateAction) terminateSecurityGroup(input *Securi
 		return
 	}
 
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
 	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {

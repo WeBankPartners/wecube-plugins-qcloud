@@ -42,6 +42,8 @@ type SubnetInput struct {
 	CidrBlock      string `json:"cidr_block,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type SubnetOutputs struct {
@@ -111,6 +113,9 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 		return output, err
 	}
 
+	if subnet.Location != "" && subnet.APISecret != "" {
+		subnet.ProviderParams = fmt.Sprintf("%s;%s", subnet.Location, subnet.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
 	client, err := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -189,6 +194,9 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (Subne
 	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
+	if subnet.Location != "" && subnet.APISecret != "" {
+		subnet.ProviderParams = fmt.Sprintf("%s;%s", subnet.Location, subnet.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -310,6 +318,9 @@ func createSubnetWithRouteTable(input *SubnetInput) (output SubnetOutput, err er
 	output.Guid = input.Guid
 	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 
 	defer func() {
 		if err != nil {
@@ -407,6 +418,9 @@ func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interf
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		if err := destroySubnetWithRouteTable(input.ProviderParams, input.Id, input.RouteTableId); err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR

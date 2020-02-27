@@ -55,6 +55,8 @@ type EIPInput struct {
 	NatId          string `json:"nat_id,omitempty"`
 	Eip            string `json:"eip,omitempty"`
 	Id             string `json:"id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type EIPOutputs struct {
@@ -105,6 +107,9 @@ func (action *EIPCreateAction) createEIP(eip *EIPInput) (EIPOutput, error) {
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(eip.ProviderParams)
 	client, err := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -247,6 +252,9 @@ func (action *EIPTerminateAction) terminateEIP(eip *EIPInput) (EIPOutput, error)
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = eip.CallBackParameter.Parameter
 
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -359,6 +367,9 @@ func (action *EIPAttachAction) attachEIP(eip *EIPInput) (EIPOutput, error) {
 		return output, err
 	}
 
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -427,6 +438,9 @@ func (action *EIPDetachAction) detachEIP(eip *EIPInput) (EIPOutput, error) {
 		return output, err
 	}
 
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := CreateEIPClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -497,6 +511,9 @@ func (action *EIPBindNatAction) bindNatGateway(eip *EIPInput) (EIPOutput, error)
 		output.Result.Code = RESULT_CODE_ERROR
 		output.Result.Message = err.Error()
 		return output, err
+	}
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
 	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -599,6 +616,9 @@ func (action *EIPUnBindNatAction) unbindNatGateway(eip *EIPInput) (EIPOutput, er
 		return output, err
 	}
 
+	if eip.Location != "" && eip.APISecret != "" {
+		eip.ProviderParams = fmt.Sprintf("%s;%s", eip.Location, eip.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(eip.ProviderParams)
 	client, _ := newVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

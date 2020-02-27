@@ -53,6 +53,8 @@ type VmInput struct {
 	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
 	Password             string `json:"password,omitempty"`
 	ProjectId            string `json:"project_id,omitempty"`
+	Location             string `json:"location"`
+	APISecret            string `json:"API_secret"`
 }
 
 type VmOutputs struct {
@@ -348,6 +350,9 @@ func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
 		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
+		if vm.Location != "" && vm.APISecret != "" {
+			vm.ProviderParams = fmt.Sprintf("%s;%s", vm.Location, vm.APISecret)
+		}
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		logrus.Debugf("actionParam:%v", vm)
 		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -579,6 +584,9 @@ func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
 		output.Result.Code = RESULT_CODE_SUCCESS
 		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 
+		if vm.Location != "" && vm.APISecret != "" {
+			vm.ProviderParams = fmt.Sprintf("%s;%s", vm.Location, vm.APISecret)
+		}
 		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
 		terminateInstancesRequestData := cvm.TerminateInstancesRequest{
 			InstanceIds: []*string{&vm.Id},
@@ -686,6 +694,9 @@ func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
 }
 
 func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
+	if vm.Location != "" && vm.APISecret != "" {
+		vm.ProviderParams = fmt.Sprintf("%s;%s", vm.Location, vm.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
 
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -730,6 +741,9 @@ func (action *VMStopAction) stopInstance(vm *VmInput) (VmOutput, error) {
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
 
+	if vm.Location != "" && vm.APISecret != "" {
+		vm.ProviderParams = fmt.Sprintf("%s;%s", vm.Location, vm.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -828,6 +842,8 @@ type VmBindSecurityGroupInput struct {
 	ProviderParams   string `json:"provider_params,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type VmBindSecurityGroupOutputs struct {
@@ -851,7 +867,13 @@ func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interfac
 
 func vmBindSecurityGroupsCheckParam(input VmBindSecurityGroupInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("APISecret is empty")
+		}
+		//return errors.New("providerParams is empty")
 	}
 
 	if input.InstanceId == "" {
@@ -886,6 +908,9 @@ func (action *VMBindSecurityGroupsAction) Do(input interface{}) (interface{}, er
 		}
 
 		securityGroups := strings.Split(input.SecurityGroupIds, ",")
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		err := BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, securityGroups)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR

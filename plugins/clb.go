@@ -61,6 +61,8 @@ type CreateClbInput struct {
 	VpcId          string `json:"vpc_id"`
 	SubnetId       string `json:"subnet_id"`
 	Id             string `json:"id"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type CreateClbOutputs struct {
@@ -86,7 +88,12 @@ func (action *CreateClbAction) ReadParam(param interface{}) (interface{}, error)
 
 func createClbCheckParam(input CreateClbInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.Type == "" {
 		return errors.New("Type is empty")
@@ -239,6 +246,9 @@ func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 
 	for _, input := range inputs.Inputs {
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output, err := createClb(client, input)
@@ -263,6 +273,8 @@ type TerminateClbInput struct {
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	Id             string `json:"id"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type TerminateClbOutputs struct {
@@ -329,7 +341,9 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err := terminateClb(client, input); err != nil {

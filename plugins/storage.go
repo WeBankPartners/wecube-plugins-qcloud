@@ -47,6 +47,8 @@ type StorageInput struct {
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type StorageOutputs struct {
@@ -122,6 +124,9 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 }
 
 func (action *StorageCreateAction) attachStorage(storage *StorageInput) error {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -183,6 +188,9 @@ func (action *StorageCreateAction) attachStorage(storage *StorageInput) error {
 }
 
 func (action *StorageCreateAction) createStorage(storage *StorageInput) (*StorageOutput, error) {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -354,6 +362,9 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 }
 
 func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -398,6 +409,9 @@ func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error
 }
 
 func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*StorageOutput, error) {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])

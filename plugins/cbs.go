@@ -51,6 +51,8 @@ type CreateAndMountCbsDiskInput struct {
 	Id               string `json:"id,omitempty"`
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 
 	//use to attch and format
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -84,7 +86,12 @@ func (action *CreateAndMountCbsDiskAction) ReadParam(param interface{}) (interfa
 
 func checkParam(input CreateAndMountCbsDiskInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.DiskSize == "" || input.DiskSize == "0" {
 		return errors.New("diskSize is empty")
@@ -124,6 +131,8 @@ func buyCbsAndAttachToVm(input CreateAndMountCbsDiskInput) (string, error) {
 		DiskChargeType:   input.DiskChargeType,
 		DiskChargePeriod: input.DiskChargePeriod,
 		InstanceId:       input.InstanceId,
+		Location:         input.Location,
+		APISecret:        input.APISecret,
 	}
 	if input.Id != "" {
 		storageInput.Id = input.Id
@@ -316,7 +325,9 @@ func createAndMountCbsDisk(input CreateAndMountCbsDiskInput) (output CreateAndMo
 	if err = checkParam(input); err != nil {
 		return output, err
 	}
-
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {
 		return output, err
@@ -384,6 +395,8 @@ type UmountCbsDiskInput struct {
 	Id             string `json:"id,omitempty"`
 	VolumeName     string `json:"volume_name,omitempty"`
 	MountDir       string `json:"mount_dir,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 
 	//use to attch and format
 	InstanceId       string `json:"instance_id,omitempty"`
@@ -413,7 +426,12 @@ func (action *UmountAndTerminateDiskAction) ReadParam(param interface{}) (interf
 
 func checkUmountDiskParam(input UmountCbsDiskInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 
 	if input.Id == "" {
@@ -460,6 +478,9 @@ func terminateDisk(providerParams, id string) error {
 func umountAndTerminateCbsDisk(input UmountCbsDiskInput) error {
 	if err := checkUmountDiskParam(input); err != nil {
 		return err
+	}
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
 	}
 	privateIp, err := getInstancePrivateIp(input.ProviderParams, input.InstanceId)
 	if err != nil {

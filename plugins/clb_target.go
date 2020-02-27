@@ -47,6 +47,8 @@ type BackTargetInput struct {
 	Protocol       string `json:"protocol"`
 	HostIds        string `json:"host_ids"`
 	HostPorts      string `json:"host_ports"`
+	Location       string `json:"location"`
+	APISecret      string `json:"API_secret"`
 }
 
 type BackTargetOutputs struct {
@@ -107,6 +109,16 @@ func clbTargetCheckParam(input BackTargetInput) error {
 
 	if err := isValidProtocol(input.Protocol); err != nil {
 		return fmt.Errorf("protocol(%v) is invalid", input.Protocol)
+	}
+
+	if input.ProviderParams == "" {
+		return errors.New("providerParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 
 	return nil
@@ -216,6 +228,9 @@ func (action *AddBackTargetAction) addBackTarget(input *BackTargetInput) (output
 	}
 
 	//check if lb exist
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	detail, err := queryClbDetailById(client, input.LbId)
@@ -368,6 +383,9 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 	}
 
 	//check if lb exist
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	detail, err := queryClbDetailById(client, input.LbId)
