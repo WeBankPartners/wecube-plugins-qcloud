@@ -87,7 +87,6 @@ func routeTableCreateCheckParam(routeTable *RouteTableInput) error {
 		return errors.New("routeTableCreateAtion input name is empty")
 	}
 	if routeTable.ProviderParams == "" {
-		return errors.New("providerParams is empty")
 		if routeTable.Location == "" {
 			return errors.New("Location is empty")
 		}
@@ -187,7 +186,6 @@ func routeTableTerminateCheckParam(routeTable *RouteTableInput) error {
 		return errors.New("routeTableTerminateAtion param routeTableId is empty")
 	}
 	if routeTable.ProviderParams == "" {
-		return errors.New("providerParams is empty")
 		if routeTable.Location == "" {
 			return errors.New("Location is empty")
 		}

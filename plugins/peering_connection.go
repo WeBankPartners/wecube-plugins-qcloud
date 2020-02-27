@@ -42,8 +42,8 @@ type PeeringConnectionInput struct {
 	PeerUin            string `json:"peer_uin,omitempty"`
 	Bandwidth          string `json:"bandwidth,omitempty"`
 	Id                 string `json:"id,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	Location           string `json:"location"`
+	APISecret          string `json:"API_secret"`
 	PeerLocation       string `json:"peer_location"`
 	PeerAPISecret      string `json:"peer_API_secret"`
 }
@@ -238,7 +238,6 @@ func peeringConnectionTerminateCheckParam(peeringConnection *PeeringConnectionIn
 		if peeringConnection.PeerAPISecret == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerAPISecret is empty")
 		}
-		//return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerProviderParams is empty")
 	}
 	if peeringConnection.ProviderParams == "" {
 		if peeringConnection.Location == "" {
@@ -247,7 +246,6 @@ func peeringConnectionTerminateCheckParam(peeringConnection *PeeringConnectionIn
 		if peeringConnection.APISecret == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection.APISecret is empty")
 		}
-		//return errors.New("peeringConnectionTerminateAction input peeringConnection.ProviderParams is empty")
 	}
 
 	return nil

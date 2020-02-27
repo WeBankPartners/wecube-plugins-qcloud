@@ -842,8 +842,8 @@ type VmBindSecurityGroupInput struct {
 	ProviderParams   string `json:"provider_params,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	Location         string `json:"location"`
+	APISecret        string `json:"API_secret"`
 }
 
 type VmBindSecurityGroupOutputs struct {
@@ -873,7 +873,6 @@ func vmBindSecurityGroupsCheckParam(input VmBindSecurityGroupInput) error {
 		if input.APISecret == "" {
 			return errors.New("APISecret is empty")
 		}
-		//return errors.New("providerParams is empty")
 	}
 
 	if input.InstanceId == "" {

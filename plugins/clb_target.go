@@ -112,7 +112,6 @@ func clbTargetCheckParam(input BackTargetInput) error {
 	}
 
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
 		if input.Location == "" {
 			return errors.New("Location is empty")
 		}

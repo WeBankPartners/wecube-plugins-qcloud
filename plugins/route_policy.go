@@ -43,8 +43,8 @@ type CreateRoutePolicyInput struct {
 	GatewayType     string `json:"gateway_type,omitempty"`
 	GatewayId       string `json:"gateway_id,omitempty"`
 	Description     string `json:"desc,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	Location        string `json:"location"`
+	APISecret       string `json:"API_secret"`
 }
 
 type CreateRoutePolicyOutputs struct {
@@ -130,7 +130,6 @@ func createRoutePolicyCheckParam(input CreateRoutePolicyInput) error {
 		if input.APISecret == "" {
 			return errors.New("CreateRoutePolicyAction input APISecret is empty")
 		}
-		//return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
 	}
 	if input.GatewayType == "" {
 		return errors.New("CreateRoutePolicyAction input GatewayType is empty")
@@ -320,7 +319,6 @@ func deleteRoutePolicyCheckParam(input DeleteRoutePolicyInput) error {
 		if input.APISecret == "" {
 			return errors.New("DeleteRoutePolicyAction input APISecret is empty")
 		}
-		//return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
 	}
 
 	if input.RouteTableId == "" {

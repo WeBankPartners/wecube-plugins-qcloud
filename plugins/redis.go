@@ -56,8 +56,8 @@ type RedisInput struct {
 	SubnetID         string `json:"subnet_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 	ID               string `json:"id,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"API_secret"`
+	Location         string `json:"location"`
+	APISecret        string `json:"API_secret"`
 }
 
 type RedisOutputs struct {
@@ -120,7 +120,6 @@ func redisCreateCheckParam(redis *RedisInput) error {
 		if redis.APISecret == "" {
 			return errors.New("RedisCreateAction input APISecret is empty")
 		}
-		//return errors.New("RedisCreateAction input provider_params is empty")
 	}
 	if redis.TypeID == "" {
 		return errors.New("RedisCreateAction input type_id is empty")

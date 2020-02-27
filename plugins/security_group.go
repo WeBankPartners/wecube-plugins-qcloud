@@ -87,7 +87,6 @@ func (action *SecurityGroupCreateAction) checkCreateSecurityGroupParams(input Se
 		return fmt.Errorf("Name is empty")
 	}
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
 		if input.Location == "" {
 			return errors.New("Location is empty")
 		}
@@ -241,7 +240,6 @@ func (action *SecurityGroupTerminateAction) checkTerminateSecurityGroupParams(in
 		return fmt.Errorf("Id is empty")
 	}
 	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
 		if input.Location == "" {
 			return errors.New("Location is empty")
 		}
