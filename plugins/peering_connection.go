@@ -45,7 +45,7 @@ type PeeringConnectionInput struct {
 	Location           string `json:"location"`
 	APISecret          string `json:"api_secret"`
 	PeerLocation       string `json:"peer_location"`
-	PeerAPISecret      string `json:"peer_API_secret"`
+	PeerAPISecret      string `json:"peer_api_secret"`
 }
 
 type PeeringConnectionOutputs struct {
@@ -87,6 +87,14 @@ func peeringConnectionCreateCheckParam(peeringConnection PeeringConnectionInput)
 	}
 	if peeringConnection.Name == "" {
 		return errors.New("peeringConnectionCreateAction input name is empty")
+	}
+	if peeringConnection.ProviderParams == "" {
+		if peeringConnection.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if peeringConnection.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
 	}
 
 	return nil

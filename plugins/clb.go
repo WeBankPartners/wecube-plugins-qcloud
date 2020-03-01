@@ -216,7 +216,9 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 	request := clb.NewCreateLoadBalancerRequest()
 	request.LoadBalancerType = &loadBalanceType
 	request.Forward = &lbForward
-	request.LoadBalancerName = &input.Name
+	if input.Name != "" {
+		request.LoadBalancerName = &input.Name
+	}
 	request.VpcId = &input.VpcId
 	if input.Type == LB_TYPE_INTERNAL {
 		request.SubnetId = &input.SubnetId
@@ -299,6 +301,14 @@ func (action *TerminateClbAction) ReadParam(param interface{}) (interface{}, err
 func terminateClbCheckParam(input TerminateClbInput) error {
 	if input.Id == "" {
 		return errors.New("empty input id")
+	}
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 
 	return nil
