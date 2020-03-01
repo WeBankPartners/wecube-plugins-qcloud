@@ -3,6 +3,7 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -289,6 +290,10 @@ func queryRouteTablesInfo(client *vpc.Client, id string) (bool, error) {
 	request.RouteTableIds = append(request.RouteTableIds, &id)
 	response, err := client.DescribeRouteTables(request)
 	if err != nil {
+		if strings.Contains(err.Error(), QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND) {
+			logrus.Infof("resource not found: error=%v", err)
+			return false, nil
+		}
 		return false, err
 	}
 

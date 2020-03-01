@@ -90,7 +90,7 @@ func checkParam(input CreateAndMountCbsDiskInput) error {
 			return errors.New("Location is empty")
 		}
 		if input.APISecret == "" {
-			return errors.New("API_secret is empty")
+			return errors.New("APIsecret is empty")
 		}
 	}
 	if input.DiskSize == "" || input.DiskSize == "0" {

@@ -50,8 +50,8 @@ type NatGatewayInput struct {
 	Id              string `json:"id,omitempty"`
 	Eip             string `json:"eip,omitempty"`
 	EipId           string `json:"eip_id,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"api_secret"`
+	Location        string `json:"location"`
+	APISecret       string `json:"api_secret"`
 }
 
 type NatGatewayOutputs struct {

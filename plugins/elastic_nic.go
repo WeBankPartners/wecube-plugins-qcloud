@@ -3,11 +3,17 @@ package plugins
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+)
+
+const (
+	ELASTIC_NIC_STATE_AVAILABLE = "AVAILABLE"
 )
 
 var ElasticNicActions = make(map[string]Action)
@@ -44,8 +50,8 @@ type ElasticNicInput struct {
 	SubnetId           string   `json:"subnet_id,omitempty"`
 	InstanceId         string   `json:"instance_id,omitempty"`
 	Id                 string   `json:"id,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"api_secret"`
+	Location           string   `json:"location"`
+	APISecret          string   `json:"api_secret"`
 }
 
 type ElasticNicOutputs struct {
@@ -95,6 +101,14 @@ func elasticNicCreateCheckParam(elasticNic *ElasticNicInput) error {
 	}
 	if elasticNic.Name == "" {
 		return errors.New("ElasticNicCreateAction input Name is empty")
+	}
+	if elasticNic.ProviderParams == "" {
+		if elasticNic.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if elasticNic.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
 	}
 
 	return nil
@@ -200,6 +214,14 @@ func elasticNicTerminateCheckParam(elasticNic *ElasticNicInput) error {
 	if elasticNic.Id == "" {
 		return errors.New("ElasticNicTerminateAction input Id is empty")
 	}
+	if elasticNic.ProviderParams == "" {
+		if elasticNic.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if elasticNic.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
+	}
 
 	return nil
 }
@@ -221,6 +243,18 @@ func (action *ElasticNicTerminateAction) terminateElasticNic(ElasticNicInput *El
 	}
 	paramsMap, err := GetMapFromProviderParams(ElasticNicInput.ProviderParams)
 	client, _ := CreateElasticNicClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	// check whether elastic nic is exist.
+	_, flag, err := queryElasticNicInfo(client, ElasticNicInput)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
+	}
+	if !flag {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, err
+	}
 	//check elastic nic status can detach
 	err = ensureElasticNicDetach(client, ElasticNicInput)
 	if err != nil {
@@ -266,6 +300,10 @@ func queryElasticNicInfo(client *vpc.Client, input *ElasticNicInput) (*ElasticNi
 	request.NetworkInterfaceIds = append(request.NetworkInterfaceIds, &input.Id)
 	response, err := client.DescribeNetworkInterfaces(request)
 	if err != nil {
+		if strings.Contains(err.Error(), QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND) {
+			logrus.Infof("resource not found: error=%v", err)
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 
@@ -314,6 +352,14 @@ func elasticNicAttachCheckParam(elasticNic *ElasticNicInput) error {
 	if elasticNic.InstanceId == "" {
 		return errors.New("ElasticNicAttachAction input InstanceId is empty")
 	}
+	if elasticNic.ProviderParams == "" {
+		if elasticNic.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if elasticNic.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
+	}
 
 	return nil
 }
@@ -342,6 +388,7 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 	request.NetworkInterfaceId = &ElasticNicInput.Id
 	request.InstanceId = &ElasticNicInput.InstanceId
 
+	logrus.Infof("request:%v", ElasticNicInput)
 	response, err := client.AttachNetworkInterface(request)
 	if err != nil {
 		logrus.Errorf("failed to attach elastic nic, error=%s", err)
@@ -351,8 +398,13 @@ func (action *ElasticNicAttachAction) attachElasticNic(ElasticNicInput *ElasticN
 	}
 
 	output.RequestId = *response.Response.RequestId
+	err = checkElasticNicState(client, ElasticNicInput.Id, true, ELASTIC_NIC_STATE_AVAILABLE)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+	}
 
-	return output, nil
+	return output, err
 }
 
 func (action *ElasticNicAttachAction) Do(input interface{}) (interface{}, error) {
@@ -390,6 +442,14 @@ func elasticNicDetachCheckParam(elasticNic *ElasticNicInput) error {
 	if elasticNic.InstanceId == "" {
 		return errors.New("ElasticNicDetachAction input InstanceId is empty")
 	}
+	if elasticNic.ProviderParams == "" {
+		if elasticNic.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if elasticNic.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
+	}
 
 	return nil
 }
@@ -426,8 +486,13 @@ func (action *ElasticNicDetachAction) detachElasticNic(ElasticNicInput *ElasticN
 		return output, err
 	}
 	output.RequestId = *response.Response.RequestId
+	err = checkElasticNicState(client, ElasticNicInput.Id, true, ELASTIC_NIC_STATE_AVAILABLE)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+	}
 
-	return output, nil
+	return output, err
 }
 
 func (action *ElasticNicDetachAction) Do(input interface{}) (interface{}, error) {
@@ -468,4 +533,50 @@ func ensureElasticNicDetach(client *vpc.Client, input *ElasticNicInput) error {
 	}
 
 	return nil
+}
+
+func queryElasticNicById(client *vpc.Client, id string) (*vpc.NetworkInterface, bool, error) {
+	request := vpc.NewDescribeNetworkInterfacesRequest()
+	request.NetworkInterfaceIds = []*string{&id}
+	response, err := client.DescribeNetworkInterfaces(request)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(response.Response.NetworkInterfaceSet) == 0 {
+		return nil, false, nil
+	}
+	if len(response.Response.NetworkInterfaceSet) > 1 {
+		return nil, false, fmt.Errorf("more than one nic has been returned")
+	}
+	return response.Response.NetworkInterfaceSet[0], true, nil
+}
+
+// isExist:  the disk is exist or not expected; state: the disk state expected.
+// 1. if state is not "", the isExist must be true; 2. if state is "", the isExist can be false or true.
+func checkElasticNicState(client *vpc.Client, id string, isExist bool, state string) error {
+	count := 1
+	for {
+		nic, ok, err := queryElasticNicById(client, id)
+		if err != nil {
+			return err
+		}
+
+		// check whether the disk is existed.
+		if state == "" {
+			if isExist == ok {
+				return nil
+			}
+		} else {
+			// if the state is expected, return no error; the isExist is true default.
+			if ok && *nic.State == state {
+				return nil
+			}
+		}
+
+		if count > 20 {
+			logrus.Errorf("after %vs, the nic[%v] state=%v", 5*count, id, *nic.State)
+			return fmt.Errorf("after %vs, the nic[%v] state=%v", 5*count, id, *nic.State)
+		}
+		time.Sleep(5 * time.Second)
+	}
 }

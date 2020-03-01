@@ -169,6 +169,7 @@ func querySecurityGroupsInfo(client *vpc.Client, securityGroupId string) (bool, 
 	response, err := client.DescribeSecurityGroups(request)
 	if err != nil {
 		if strings.Contains(err.Error(), QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND) {
+			logrus.Infof("resource not found: error=%v", err)
 			return false, nil
 		}
 		return false, err
@@ -224,6 +225,7 @@ type SecurityGroupTerminateOutput struct {
 	Result
 	// RequestId string `json:"request_id,omitempty"`
 	Guid string `json:"guid,omitempty"`
+	Id   string `json:"id,omitempty"`
 }
 
 type SecurityGroupTerminateAction struct{}
@@ -259,6 +261,7 @@ func (action *SecurityGroupTerminateAction) checkTerminateSecurityGroupParams(in
 func (action *SecurityGroupTerminateAction) terminateSecurityGroup(input *SecurityGroupTerminateInput) (output SecurityGroupTerminateOutput, err error) {
 	defer func() {
 		output.Guid = input.Guid
+		output.Id = input.Id
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		if err == nil {
 			output.Result.Code = RESULT_CODE_SUCCESS

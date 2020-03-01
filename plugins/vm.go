@@ -188,7 +188,7 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 		return
 	}
 
-	// check wether vm is exist.
+	// check whether vm is exist.
 	if input.Id != "" {
 		vmInfo, ok, er := queryInstanceById(client, input.Id)
 		if er != nil {
@@ -203,6 +203,7 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 			output.Cpu = strconv.Itoa(int(*vmInfo.CPU))
 			output.InstanceState = *vmInfo.InstanceState
 			output.InstancePrivateIp = *vmInfo.PrivateIpAddresses[0]
+			output.Password = input.Password
 			return
 		}
 	}
@@ -308,10 +309,18 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 		output.Cpu = strconv.Itoa(int(*vmInfo.CPU))
 		output.InstanceState = *vmInfo.InstanceState
 		output.InstancePrivateIp = *vmInfo.PrivateIpAddresses[0]
-
+		password, er := utils.AesEnPassword(input.Guid, input.Seed, input.Password, utils.DEFALT_CIPHER)
+		if er != nil {
+			err = er
+			logrus.Errorf("AesEnPassword meet error=%v", err)
+			return
+		}
+		output.Password = password
 		return
 	}
 
+	err = fmt.Errorf("vm[%v] could not be found", input.Id)
+	logrus.Errorf("vm[%v] could not be found", input.Id)
 	return
 }
 func getInstanceType(client *cvm.Client, zone string, chargeType string, hostType string) string {
@@ -536,7 +545,7 @@ func (action *VmTerminateAction) terminateVm(input *VmTerminateInput) (output Vm
 		return
 	}
 
-	// check wether vm is exist.
+	// check whether vm is exist.
 	_, ok, err := queryInstanceById(client, input.Id)
 	if err != nil {
 		return

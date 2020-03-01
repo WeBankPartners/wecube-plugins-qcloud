@@ -117,6 +117,12 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 		subnet.ProviderParams = fmt.Sprintf("%s;%s", subnet.Location, subnet.APISecret)
 	}
 	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
+	if zone, ok := paramsMap["AvailableZone"]; ok {
+		if zone == "" {
+			err = fmt.Errorf("wrong AvailableZone value")
+			return
+		}
+	}
 	client, err := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return output, err

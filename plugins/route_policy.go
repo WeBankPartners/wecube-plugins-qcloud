@@ -247,22 +247,22 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 	return &outputs, finalErr
 }
 
-func queryRoutePolicyById(client *vpc.Client, id, routeId string) (*vpc.Route, bool, error) {
+func queryRoutePolicyById(client *vpc.Client, id, routeTableId string) (*vpc.Route, bool, error) {
 	request := vpc.NewDescribeRouteTablesRequest()
-	request.RouteTableIds = []*string{&routeId}
+	request.RouteTableIds = []*string{&routeTableId}
 	response, err := client.DescribeRouteTables(request)
 	if err != nil {
 		return nil, false, err
 	}
 	if len(response.Response.RouteTableSet) == 0 {
-		return nil, false, fmt.Errorf("the route table[%v] is not exist", routeId)
+		return nil, false, fmt.Errorf("the route table[%v] is not exist", routeTableId)
 	}
 	if len(response.Response.RouteTableSet) > 1 {
-		return nil, false, fmt.Errorf("describe the route table[%v], return more than one routetables", routeId)
+		return nil, false, fmt.Errorf("describe the route table[%v], return more than one routetables", routeTableId)
 	}
 
 	for _, route := range response.Response.RouteTableSet[0].RouteSet {
-		if strconv.Itoa(int(*route.RouteId)) == routeId {
+		if strconv.Itoa(int(*route.RouteId)) == id {
 			return route, true, nil
 		}
 	}

@@ -302,6 +302,7 @@ func queryVpcsInfo(client *vpc.Client, input *VpcInput) (*VpcOutput, bool, error
 	}
 
 	if len(response.Response.VpcSet) == 0 {
+		logrus.Infof("vpc[%v] not found", input.Id)
 		return nil, false, nil
 	}
 

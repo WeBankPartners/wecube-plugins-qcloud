@@ -42,8 +42,8 @@ type SecurityGroupPolicyInput struct {
 	PolicyPort        string `json:"policy_port,omitempty"`
 	PolicyAction      string `json:"policy_action,omitempty"`
 	PolicyDescription string `json:"policy_description,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"api_secret"`
+	Location          string `json:"location"`
+	APISecret         string `json:"api_secret"`
 }
 
 type SecurityGroupPolicyOutputs struct {
