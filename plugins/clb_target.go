@@ -88,7 +88,7 @@ func isValidProtocol(protocol string) error {
 		return errors.New("protocol is empty")
 	}
 
-	if !strings.EqualFold(protocol, "TCP") && !strings.EqualFold(protocol, "UDP") {
+	if !strings.EqualFold(strings.ToUpper(protocol), "TCP") && !strings.EqualFold(strings.ToUpper(protocol), "UDP") {
 		return fmt.Errorf("protocol(%s) is invalid", protocol)
 	}
 	return nil
