@@ -11,6 +11,11 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 )
 
+const (
+	DISK_STATE_ATTACHED   = "ATTACHED"
+	DISK_STATE_UNATTACHED = "UNATTACHED"
+)
+
 var StorageActions = make(map[string]Action)
 
 func init() {
@@ -42,6 +47,8 @@ type StorageInput struct {
 	DiskChargeType   string `json:"disk_charge_type,omitempty"`
 	DiskChargePeriod string `json:"disk_charge_period,omitempty"`
 	InstanceId       string `json:"instance_id,omitempty"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
 }
 
 type StorageOutputs struct {
@@ -92,6 +99,15 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
+		err := action.checkCreateStorageParams(storage)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+
 		result, err := action.createStorage(&storage)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
@@ -102,6 +118,7 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 		}
 		output.Id = result.Id
 		storage.Id = result.Id
+
 		err = action.attachStorage(&storage)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
@@ -117,53 +134,108 @@ func (action *StorageCreateAction) Do(input interface{}) (interface{}, error) {
 }
 
 func (action *StorageCreateAction) attachStorage(storage *StorageInput) error {
+	logrus.Infof("storage input: %v", storage)
+
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-	tryTimes := 10
-	for i := 1; i <= tryTimes; i++ {
-		time.Sleep(time.Duration(5) * time.Second)
-
-		request := cbs.NewAttachDisksRequest()
-		request.DiskIds = []*string{&storage.Id}
-		request.InstanceId = &storage.InstanceId
-		deleteWithInstance := true
-		request.DeleteWithInstance = &deleteWithInstance
-		response, err := client.AttachDisks(request)
+	disk, ok, err := queryStorageInfo(client, storage.Id)
+	if err != nil || !ok {
 		if err != nil {
-			if i == tryTimes {
-				logrus.Errorf("attach storage (id = %v,instanceId = %v) in cloud meet err = %v, try times = %v",
-					storage.Id, storage.InstanceId, err, i)
-			} else {
-				logrus.Infof("waiting for storage(id = %v) to be attached, try times = %v", storage.Id, i)
-			}
-			continue
+			logrus.Errorf("queryStorageInfo meet error=%v", err)
+		} else {
+			err = fmt.Errorf("queryStorageInfo meet error=disk not found")
+			logrus.Errorf("queryStorageInfo meet error=disk not found")
 		}
-		logrus.Infof("attach storage request id = %v", response.Response.RequestId)
-		break
+		return err
+	}
+	if *disk.DiskState == DISK_STATE_ATTACHED {
+		if *disk.InstanceId == storage.InstanceId {
+			return nil
+		} else {
+			return fmt.Errorf("disk[%v] has been bound with instacne[%v]", storage.Id, *disk.InstanceId)
+		}
+	}
+	request := cbs.NewAttachDisksRequest()
+	request.DiskIds = []*string{&storage.Id}
+	request.InstanceId = &storage.InstanceId
+	deleteWithInstance := true
+	request.DeleteWithInstance = &deleteWithInstance
+	_, err = client.AttachDisks(request)
+	if err != nil {
+		logrus.Errorf("attach storage[%v] meet error=%v", storage.Id, err)
+		return err
 	}
 
+	err = checkDiksState(client, storage.Id, true, DISK_STATE_ATTACHED)
+	if err != nil {
+		logrus.Errorf("checkDiksState meet error=%v", err)
+		return err
+	}
+	return nil
+}
+
+func (action *StorageCreateAction) checkCreateStorageParams(input StorageInput) error {
+	if input.Guid == "" {
+		return fmt.Errorf("Guid is empty")
+	}
+	if input.ProviderParams == "" {
+		if input.APISecret == "" {
+			return fmt.Errorf("APISecret is empty")
+		}
+		if input.Location == "" {
+			return fmt.Errorf("Location is empty")
+		}
+	}
+	if input.DiskType == "" {
+		return fmt.Errorf("DiskType is empty")
+	}
+	if input.DiskSize == "" {
+		return fmt.Errorf("DiskSize is empty")
+	}
+	if input.DiskChargeType == "" {
+		return fmt.Errorf("DiskChargeType is empty")
+	}
+	if input.InstanceId == "" {
+		return fmt.Errorf("InstanceId is empty")
+	}
 	return nil
 }
 
 func (action *StorageCreateAction) createStorage(storage *StorageInput) (*StorageOutput, error) {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
-	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-
-	//check resource exist
-	if storage.Id != "" {
-		queryStorageResponse, flag, err := queryStorageInfo(client, storage)
-		if err != nil && flag == false {
+	if zone, ok := paramsMap["AvailableZone"]; ok {
+		if zone == "" {
+			err = fmt.Errorf("wrong AvailableZone value")
 			return nil, err
 		}
+	}
+	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
-		if err == nil && flag == true {
-			return queryStorageResponse, nil
+	output := StorageOutput{}
+	//check resource exist
+	if storage.Id != "" {
+		_, ok, err := queryStorageInfo(client, storage.Id)
+		if err != nil {
+			logrus.Errorf("queryStorageInfo meet error=%v", err)
+			return nil, err
+		}
+		if ok {
+			output.Id = storage.Id
+			return &output, nil
 		}
 	}
 
 	request := cbs.NewCreateDisksRequest()
-	request.DiskName = &storage.DiskName
+	if storage.DiskName != "" {
+		request.DiskName = &storage.DiskName
+	}
 	request.DiskType = &storage.DiskType
 	diskSize, err := strconv.ParseInt(storage.DiskSize, 10, 64)
 	if err != nil && diskSize <= 0 {
@@ -200,11 +272,15 @@ func (action *StorageCreateAction) createStorage(storage *StorageInput) (*Storag
 		return nil, fmt.Errorf("no storage is created")
 	}
 
-	output := StorageOutput{}
-	output.Guid = storage.Guid
 	output.RequestId = *response.Response.RequestId
 	output.Id = *response.Response.DiskIdSet[0]
+	logrus.Infof("create disk response: diskId=%v", output.Id)
 
+	err = checkDiksState(client, output.Id, true, DISK_STATE_UNATTACHED)
+	if err != nil {
+		logrus.Errorf("checkDiksState meet error=%v", err)
+		return &output, err
+	}
 	return &output, nil
 }
 
@@ -220,11 +296,21 @@ func (action *StorageTerminateAction) ReadParam(param interface{}) (interface{},
 	return inputs, nil
 }
 
-func storageTerminateACheckParam(storage StorageInput) error {
-	if storage.Id == "" {
-		return fmt.Errorf("storageTerminateAction storage_id is empty")
+func (action *StorageTerminateAction) checkTerminateStorageParams(input StorageInput) error {
+	if input.Guid == "" {
+		return fmt.Errorf("Guid is empty")
 	}
-
+	if input.ProviderParams == "" {
+		if input.APISecret == "" {
+			return fmt.Errorf("APISecret is empty")
+		}
+		if input.Location == "" {
+			return fmt.Errorf("Location is empty")
+		}
+	}
+	if input.Id == "" {
+		return fmt.Errorf("Id is empty")
+	}
 	return nil
 }
 
@@ -241,7 +327,7 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 		output.CallBackParameter.Parameter = storage.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
 
-		if err := storageTerminateACheckParam(storage); err != nil {
+		if err := action.checkTerminateStorageParams(storage); err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
@@ -249,15 +335,36 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 			continue
 		}
 
-		err := action.detachStorage(&storage)
+		// check whether the storage is existed(and attached).
+		if storage.Location != "" && storage.APISecret != "" {
+			storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+		}
+		paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
+		client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		disk, ok, err := queryStorageInfo(client, storage.Id)
 		if err != nil {
+			logrus.Errorf("queryStorageInfo meet error=%v", err)
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
 			continue
 		}
-
+		if !ok {
+			logrus.Infof("queryStorageInfo disk[%v] is not existed", storage.Id)
+			outputs.Outputs = append(outputs.Outputs, output)
+			continue
+		}
+		if *disk.DiskState == DISK_STATE_ATTACHED {
+			err = action.detachStorage(&storage)
+			if err != nil {
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
+		}
 		_, err = action.terminateStorage(&storage)
 		if err != nil {
 			output.Result.Code = RESULT_CODE_ERROR
@@ -272,6 +379,9 @@ func (action *StorageTerminateAction) Do(input interface{}) (interface{}, error)
 }
 
 func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(storage.ProviderParams)
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -281,68 +391,89 @@ func (action *StorageTerminateAction) detachStorage(storage *StorageInput) error
 	if err != nil {
 		return fmt.Errorf("detach storage(id = %v) in cloud meet error = %v", storage.Id, err)
 	}
+
+	err = checkDiksState(client, storage.Id, true, DISK_STATE_UNATTACHED)
+	if err != nil {
+		logrus.Errorf("checkDiksState meet error=%v", err)
+		return err
+	}
+
 	logrus.Infof("detach storage request id = %v", response.Response.RequestId)
 	return nil
 }
 
 func (action *StorageTerminateAction) terminateStorage(storage *StorageInput) (*StorageOutput, error) {
+	if storage.Location != "" && storage.APISecret != "" {
+		storage.ProviderParams = fmt.Sprintf("%s;%s", storage.Location, storage.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(storage.ProviderParams)
 
 	client, _ := CreateCbsClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
 	request := cbs.NewTerminateDisksRequest()
 	request.DiskIds = []*string{&storage.Id}
-
-	tryTimes := 20
-	requestId := ""
-	for i := 1; i <= tryTimes; i++ {
-		time.Sleep(time.Duration(15) * time.Second)
-
-		response, err := client.TerminateDisks(request)
-		if err != nil {
-			if i == tryTimes {
-				logrus.Errorf("terminate storage(id = %v) meet error = %v, try times = %v",
-					storage.Id, err, i)
-			} else {
-				logrus.Infof("waiting for storage(id = %v) to be detached, try times = %v", storage.Id, i)
-			}
-			continue
-		}
-		requestId = *response.Response.RequestId
-		logrus.Infof("terminate storage request id = %v", response.Response.RequestId)
-		break
+	response, err := client.TerminateDisks(request)
+	if err != nil {
+		logrus.Errorf("teminate disks meet error=%v", err)
+		return nil, err
 	}
-
 	output := StorageOutput{}
-	output.Guid = storage.Guid
-	output.RequestId = requestId
+	output.RequestId = *response.Response.RequestId
 	output.Id = storage.Id
 
+	err = checkDiksState(client, storage.Id, false, "")
+	if err != nil {
+		logrus.Errorf("checkDiksState meet error=%v", err)
+		return &output, err
+	}
 	return &output, nil
 }
 
-func queryStorageInfo(client *cbs.Client, input *StorageInput) (*StorageOutput, bool, error) {
-	output := StorageOutput{}
+// isExist:  the disk is exist or not expected; state: the disk state expected.
+// 1. if state is not "", the isExist must be true; 2. if state is "", the isExist can be false or true.
+func checkDiksState(client *cbs.Client, storageId string, isExist bool, state string) error {
+	count := 1
+	for {
+		disk, ok, err := queryStorageInfo(client, storageId)
+		if err != nil {
+			return err
+		}
 
+		// check whether the disk is existed.
+		if state == "" {
+			if isExist == ok {
+				return nil
+			}
+		} else {
+			// if the state is expected, return no error; the isExist is true default.
+			if ok && *disk.DiskState == state {
+				return nil
+			}
+		}
+
+		if count > 20 {
+			logrus.Errorf("after %vs, the disk[%v] state=%v", 5*count, storageId, *disk.DiskState)
+			return fmt.Errorf("after %vs, the disk[%v] state=%v", 5*count, storageId, *disk.DiskState)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func queryStorageInfo(client *cbs.Client, storageId string) (*cbs.Disk, bool, error) {
 	request := cbs.NewDescribeDisksRequest()
-	request.DiskIds = append(request.DiskIds, &input.Id)
+	request.DiskIds = []*string{&storageId}
 	response, err := client.DescribeDisks(request)
 	if err != nil {
 		return nil, false, err
 	}
 
+	if len(response.Response.DiskSet) > 1 {
+		err := fmt.Errorf("describe disk[diskId=%v], the response disks more than 1", storageId)
+		return nil, false, err
+	}
 	if len(response.Response.DiskSet) == 0 {
 		return nil, false, nil
 	}
 
-	if len(response.Response.DiskSet) > 1 {
-		logrus.Errorf("query storage disk id=%s info find more than 1", input.Id)
-		return nil, false, fmt.Errorf("query storage disk id=%s info find more than 1", input.Id)
-	}
-
-	output.Guid = input.Guid
-	output.Id = input.Id
-	output.RequestId = *response.Response.RequestId
-
-	return &output, true, nil
+	return response.Response.DiskSet[0], true, nil
 }

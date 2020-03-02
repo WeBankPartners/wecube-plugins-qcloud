@@ -61,6 +61,8 @@ type CreateClbInput struct {
 	VpcId          string `json:"vpc_id"`
 	SubnetId       string `json:"subnet_id"`
 	Id             string `json:"id"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type CreateClbOutputs struct {
@@ -86,7 +88,12 @@ func (action *CreateClbAction) ReadParam(param interface{}) (interface{}, error)
 
 func createClbCheckParam(input CreateClbInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 	if input.Type == "" {
 		return errors.New("Type is empty")
@@ -209,7 +216,9 @@ func createClb(client *clb.Client, input CreateClbInput) (output CreateClbOutput
 	request := clb.NewCreateLoadBalancerRequest()
 	request.LoadBalancerType = &loadBalanceType
 	request.Forward = &lbForward
-	request.LoadBalancerName = &input.Name
+	if input.Name != "" {
+		request.LoadBalancerName = &input.Name
+	}
 	request.VpcId = &input.VpcId
 	if input.Type == LB_TYPE_INTERNAL {
 		request.SubnetId = &input.SubnetId
@@ -239,6 +248,9 @@ func (action *CreateClbAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 
 	for _, input := range inputs.Inputs {
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output, err := createClb(client, input)
@@ -263,6 +275,8 @@ type TerminateClbInput struct {
 	Guid           string `json:"guid"`
 	ProviderParams string `json:"provider_params"`
 	Id             string `json:"id"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type TerminateClbOutputs struct {
@@ -288,20 +302,37 @@ func terminateClbCheckParam(input TerminateClbInput) error {
 	if input.Id == "" {
 		return errors.New("empty input id")
 	}
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
+	}
 
 	return nil
 }
 
 func terminateClb(client *clb.Client, input TerminateClbInput) error {
+	if err := terminateClbCheckParam(input); err != nil {
+		return err
+	}
+	// check whether the clb is existed.
+	detail, err := queryClbDetailById(client, input.Id)
+	if err != nil {
+		return err
+	}
+	if detail == nil {
+		logrus.Infof("lb[%v] is not existed.", input.Id)
+		return nil
+	}
+
 	loadBalancerIds := []*string{&input.Id}
 	request := clb.NewDeleteLoadBalancerRequest()
 	request.LoadBalancerIds = loadBalancerIds
 
-	if err := terminateClbCheckParam(input); err != nil {
-		return err
-	}
-
-	_, err := client.DeleteLoadBalancer(request)
+	_, err = client.DeleteLoadBalancer(request)
 	if err != nil {
 		logrus.Errorf("deleteLoadBalancer failed err=%v", err)
 	}
@@ -320,7 +351,9 @@ func (action *TerminateClbAction) Do(input interface{}) (interface{}, error) {
 		}
 		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 		output.Result.Code = RESULT_CODE_SUCCESS
-
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err := terminateClb(client, input); err != nil {

@@ -42,6 +42,8 @@ type SubnetInput struct {
 	CidrBlock      string `json:"cidr_block,omitempty"`
 	VpcId          string `json:"vpc_id,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type SubnetOutputs struct {
@@ -111,7 +113,16 @@ func (action *SubnetCreateAction) createSubnet(subnet *SubnetInput) (output Subn
 		return output, err
 	}
 
+	if subnet.Location != "" && subnet.APISecret != "" {
+		subnet.ProviderParams = fmt.Sprintf("%s;%s", subnet.Location, subnet.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(subnet.ProviderParams)
+	if zone, ok := paramsMap["AvailableZone"]; ok {
+		if zone == "" {
+			err = fmt.Errorf("wrong AvailableZone value")
+			return
+		}
+	}
 	client, err := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
 		return output, err
@@ -189,8 +200,31 @@ func (action *SubnetTerminateAction) terminateSubnet(subnet *SubnetInput) (Subne
 	output.CallBackParameter.Parameter = subnet.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
 
+	if subnet.Location != "" && subnet.APISecret != "" {
+		subnet.ProviderParams = fmt.Sprintf("%s;%s", subnet.Location, subnet.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(subnet.ProviderParams)
 	client, _ := CreateSubnetClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	if subnet.Id == "" {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = "subnet id is empty"
+		return output, fmt.Errorf("subnet id is empty")
+	}
+
+	// check whether subnet is exist.
+	_, ok, err := querySubnetsInfo(client, subnet)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		return output, err
+	}
+
+	if !ok {
+		output.Id = subnet.Id
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, nil
+	}
 
 	request := vpc.NewDeleteSubnetRequest()
 	request.SubnetId = &subnet.Id
@@ -290,6 +324,9 @@ func createSubnetWithRouteTable(input *SubnetInput) (output SubnetOutput, err er
 	output.Guid = input.Guid
 	output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
 	output.Result.Code = RESULT_CODE_SUCCESS
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 
 	defer func() {
 		if err != nil {
@@ -387,6 +424,9 @@ func (action *TerminateSubnetWithRouteTableAction) Do(input interface{}) (interf
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		if err := destroySubnetWithRouteTable(input.ProviderParams, input.Id, input.RouteTableId); err != nil {
 			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR

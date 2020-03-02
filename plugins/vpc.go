@@ -39,6 +39,8 @@ type VpcInput struct {
 	Id             string `json:"id,omitempty"`
 	Name           string `json:"name,omitempty"`
 	CidrBlock      string `json:"cidr_block,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type VpcOutputs struct {
@@ -94,6 +96,9 @@ func (action *VpcCreateAction) createVpc(vpcInput *VpcInput) (output VpcOutput, 
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vpcInput.CallBackParameter.Parameter
 
+	if vpcInput.Location != "" && vpcInput.APISecret != "" {
+		vpcInput.ProviderParams = fmt.Sprintf("%s;%s", vpcInput.Location, vpcInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -236,8 +241,25 @@ func (action *VpcTerminateAction) terminateVpc(vpcInput *VpcInput) (output VpcOu
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = vpcInput.CallBackParameter.Parameter
 
+	if vpcInput.Location != "" && vpcInput.APISecret != "" {
+		vpcInput.ProviderParams = fmt.Sprintf("%s;%s", vpcInput.Location, vpcInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(vpcInput.ProviderParams)
 	client, _ := CreateVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	// check wether vpc is exist.
+	_, ok, err := queryVpcsInfo(client, vpcInput)
+	if err != nil {
+		output.Result.Code = RESULT_CODE_ERROR
+		output.Result.Message = err.Error()
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, err
+	}
+
+	if !ok {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return output, err
+	}
 
 	request := vpc.NewDeleteVpcRequest()
 	request.VpcId = &vpcInput.Id
@@ -280,6 +302,7 @@ func queryVpcsInfo(client *vpc.Client, input *VpcInput) (*VpcOutput, bool, error
 	}
 
 	if len(response.Response.VpcSet) == 0 {
+		logrus.Infof("vpc[%v] not found", input.Id)
 		return nil, false, nil
 	}
 

@@ -47,6 +47,8 @@ type BackTargetInput struct {
 	Protocol       string `json:"protocol"`
 	HostIds        string `json:"host_ids"`
 	HostPorts      string `json:"host_ports"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type BackTargetOutputs struct {
@@ -86,7 +88,7 @@ func isValidProtocol(protocol string) error {
 		return errors.New("protocol is empty")
 	}
 
-	if !strings.EqualFold(protocol, "TCP") && !strings.EqualFold(protocol, "UDP") {
+	if !strings.EqualFold(strings.ToUpper(protocol), "TCP") && !strings.EqualFold(strings.ToUpper(protocol), "UDP") {
 		return fmt.Errorf("protocol(%s) is invalid", protocol)
 	}
 	return nil
@@ -108,15 +110,14 @@ func clbTargetCheckParam(input BackTargetInput) error {
 	if err := isValidProtocol(input.Protocol); err != nil {
 		return fmt.Errorf("protocol(%v) is invalid", input.Protocol)
 	}
-	//check if lb exist
-	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
-	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	detail, err := queryClbDetailById(client, input.LbId)
-	if err != nil {
-		return err
-	}
-	if detail == nil {
-		return fmt.Errorf("loadbalancer(%v) can't be found", input.LbId)
+
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
 
 	return nil
@@ -225,9 +226,22 @@ func (action *AddBackTargetAction) addBackTarget(input *BackTargetInput) (output
 		return
 	}
 
-	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
+	//check if lb exist
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	detail, err := queryClbDetailById(client, input.LbId)
+	if err != nil {
+		return
+	}
+	if detail == nil {
+		err = fmt.Errorf("loadbalancer(%v) can't be found", input.LbId)
+		return
+	}
+
+	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
 	listenerId, err := ensureListenerExist(client, input.LbId, input.Protocol, portInt64)
 	if err != nil {
 		logrus.Errorf("ensureListenerExist meet error=%v", err)
@@ -367,9 +381,22 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 		return
 	}
 
-	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
+	//check if lb exist
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, _ := createClbClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	detail, err := queryClbDetailById(client, input.LbId)
+	if err != nil {
+		return
+	}
+	if detail == nil {
+		logrus.Infof("lb[%v] is not existed.", input.LbId)
+		return
+	}
+
+	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
 	listenerId, err := queryClbListener(client, input.LbId, input.Protocol, portInt64)
 	if err != nil {
 		return

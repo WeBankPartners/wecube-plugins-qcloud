@@ -42,6 +42,8 @@ type SecurityGroupPolicyInput struct {
 	PolicyPort        string `json:"policy_port,omitempty"`
 	PolicyAction      string `json:"policy_action,omitempty"`
 	PolicyDescription string `json:"policy_description,omitempty"`
+	Location          string `json:"location"`
+	APISecret         string `json:"api_secret"`
 }
 
 type SecurityGroupPolicyOutputs struct {
@@ -140,6 +142,9 @@ func (action *SecurityGroupCreatePolicies) Do(input interface{}) (interface{}, e
 	var finalErr error
 
 	for _, input := range securityGroupPolicies.Inputs {
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output := SecurityGroupPolicyOutput{
@@ -205,6 +210,9 @@ func (action *SecurityGroupDeletePolicies) Do(input interface{}) (interface{}, e
 	var finalErr error
 
 	for _, input := range securityGroupPolicies.Inputs {
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		output := SecurityGroupPolicyOutput{

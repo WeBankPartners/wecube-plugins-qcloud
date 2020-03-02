@@ -56,6 +56,8 @@ type RedisInput struct {
 	SubnetID         string `json:"subnet_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
 	ID               string `json:"id,omitempty"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
 }
 
 type RedisOutputs struct {
@@ -112,7 +114,12 @@ func redisCreateCheckParam(redis *RedisInput) error {
 		return errors.New("RedisCreateAction input guid is empty")
 	}
 	if redis.ProviderParams == "" {
-		return errors.New("RedisCreateAction input provider_params is empty")
+		if redis.Location == "" {
+			return errors.New("RedisCreateAction input Location is empty")
+		}
+		if redis.APISecret == "" {
+			return errors.New("RedisCreateAction input APISecret is empty")
+		}
 	}
 	if redis.TypeID == "" {
 		return errors.New("RedisCreateAction input type_id is empty")
@@ -135,6 +142,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = redisInput.CallBackParameter.Parameter
 
+	if redisInput.Location != "" && redisInput.APISecret != "" {
+		redisInput.ProviderParams = fmt.Sprintf("%s;%s", redisInput.Location, redisInput.APISecret)
+	}
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 

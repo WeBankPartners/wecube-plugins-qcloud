@@ -1,10 +1,9 @@
 package plugins
 
 import (
-	"fmt"
-
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -31,123 +30,24 @@ var (
 	VM_NOT_FOUND_ERROR          = errors.New("qcloud vm not found")
 )
 
-type VmInputs struct {
-	Inputs []VmInput `json:"inputs,omitempty"`
-}
-
-type VmInput struct {
-	CallBackParameter
-	Guid                 string `json:"guid,omitempty"`
-	Seed                 string `json:"seed,omitempty"`
-	ProviderParams       string `json:"provider_params,omitempty"`
-	VpcId                string `json:"vpc_id,omitempty"`
-	SubnetId             string `json:"subnet_id,omitempty"`
-	InstanceName         string `json:"instance_name,omitempty"`
-	Id                   string `json:"id,omitempty"`
-	HostType             string `json:"host_type,omitempty"`
-	InstanceType         string `json:"instance_type,omitempty"`
-	ImageId              string `json:"image_id,omitempty"`
-	SystemDiskSize       string `json:"system_disk_size,omitempty"`
-	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
-	InstanceChargePeriod string `json:"instance_charge_period,omitempty"`
-	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
-	Password             string `json:"password,omitempty"`
-	ProjectId            string `json:"project_id,omitempty"`
-}
-
-type VmOutputs struct {
-	Outputs []VmOutput `json:"outputs,omitempty"`
-}
-
-type VmOutput struct {
-	CallBackParameter
-	Result
-	Guid              string `json:"guid,omitempty"`
-	RequestId         string `json:"request_id,omitempty"`
-	Id                string `json:"id,omitempty"`
-	Cpu               string `json:"cpu,omitempty"`
-	Memory            string `json:"memory,omitempty"`
-	Password          string `json:"password,omitempty"`
-	InstanceState     string `json:"instance_state,omitempty"`
-	InstancePrivateIp string `json:"instance_private_ip,omitempty"`
-}
-
 type VmPlugin struct{}
 
-var VMActions = make(map[string]Action)
+var VmActions = make(map[string]Action)
 
 func init() {
-	VMActions["create"] = new(VMCreateAction)
-	VMActions["terminate"] = new(VMTerminateAction)
-	VMActions["start"] = new(VMStartAction)
-	VMActions["stop"] = new(VMStopAction)
-	VMActions["bind-security-groups"] = new(VMBindSecurityGroupsAction)
+	VmActions["create"] = new(VmCreateAction)
+	VmActions["terminate"] = new(VmTerminateAction)
+	VmActions["start"] = new(VmStartAction)
+	VmActions["stop"] = new(VmStopAction)
+	VmActions["bind-security-groups"] = new(VmBindSecurityGroupsAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
-	action, found := VMActions[actionName]
+	action, found := VmActions[actionName]
 	if !found {
 		return nil, fmt.Errorf("vmplugin,action[%s] not found", actionName)
 	}
 	return action, nil
-}
-
-type VMAction struct {
-}
-
-func (action *VMAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-type QcloudRunInstanceStruct struct {
-	Placement             PlacementStruct
-	ImageId               string
-	InstanceChargeType    string
-	InstanceChargePrepaid *InstanceChargePrepaidStruct `json:"InstanceChargePrepaid,omitempty"`
-	InstanceType          string
-	SystemDisk            SystemDiskStruct          `json:"SystemDisk,omitempty"`
-	DataDisks             []DataDisksStruct         `json:"DataDisks,omitempty"`
-	VirtualPrivateCloud   VirtualPrivateCloudStruct `json:"VirtualPrivateCloud,omitempty"`
-	LoginSettings         LoginSettingsStruct       `json:"LoginSettings,omitempty"`
-	SecurityGroupIds      []string
-	InternetAccessible    InternetAccessible
-}
-
-type InternetAccessible struct {
-	PublicIpAssigned        bool `json:"PublicIpAssigned"`
-	InternetMaxBandwidthOut int  `json:"InternetMaxBandwidthOut"`
-}
-
-type PlacementStruct struct {
-	Zone      string
-	ProjectId int64 `json:"ProjectId,omitempty"`
-}
-
-type InstanceChargePrepaidStruct struct {
-	Period    int64  `json:"Period,omitempty"`
-	RenewFlag string `json:"RenewFlag,omitempty"`
-}
-type SystemDiskStruct struct {
-	DiskType string
-	DiskSize int64
-}
-type DataDisksStruct struct {
-	DiskSize           int64
-	DiskType           string
-	DeleteWithInstance bool
-}
-type VirtualPrivateCloudStruct struct {
-	VpcId              string
-	SubnetId           string
-	PrivateIpAddresses []string `json:"PrivateIpAddresses,omitempty"`
-}
-type LoginSettingsStruct struct {
-	Password string
 }
 
 func createCvmClient(region, secretId, secretKey string) (client *cvm.Client, err error) {
@@ -163,125 +63,266 @@ func createCvmClient(region, secretId, secretKey string) (client *cvm.Client, er
 	return
 }
 
-func describeInstancesFromCvm(client *cvm.Client, describeInstancesParams cvm.DescribeInstancesRequest) (response *cvm.DescribeInstancesResponse, err error) {
-	request := cvm.NewDescribeInstancesRequest()
-	describeInstancesParamsByteArray, _ := json.Marshal(describeInstancesParams)
-	request.FromJsonString(string(describeInstancesParamsByteArray))
-
-	logrus.Debugf("Submit DescribeInstances request: %#v", string(describeInstancesParamsByteArray))
-	response, err = client.DescribeInstances(request)
-	logrus.Debugf("Submit DescribeInstances return: %v", response)
-
-	if err != nil {
-		logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
-	}
-	return response, err
+type VmCreateInputs struct {
+	Inputs []VmCreateInput `json:"inputs,omitempty"`
 }
 
-func getInstanceByInstanceId(client *cvm.Client, instanceId string) (*cvm.Instance, error) {
-	describeInstancesParams := cvm.DescribeInstancesRequest{
-		InstanceIds: []*string{&instanceId},
-	}
-	describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
+type VmCreateInput struct {
+	CallBackParameter
+	Guid                 string `json:"guid,omitempty"`
+	Seed                 string `json:"seed,omitempty"`
+	ProviderParams       string `json:"provider_params,omitempty"`
+	Location             string `json:"location"`
+	APISecret            string `json:"api_secret"`
+	VpcId                string `json:"vpc_id,omitempty"`
+	SubnetId             string `json:"subnet_id,omitempty"`
+	InstanceName         string `json:"instance_name,omitempty"`
+	Id                   string `json:"id,omitempty"`
+	HostType             string `json:"host_type,omitempty"`
+	InstanceType         string `json:"instance_type,omitempty"`
+	ImageId              string `json:"image_id,omitempty"`
+	SystemDiskSize       string `json:"system_disk_size,omitempty"`
+	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
+	InstanceChargePeriod string `json:"instance_charge_period,omitempty"`
+	InstancePrivateIp    string `json:"instance_private_ip,omitempty"`
+	Password             string `json:"password,omitempty"`
+	ProjectId            string `json:"project_id,omitempty"`
+}
+
+type VmCreateOutputs struct {
+	Outputs []VmCreateOutput `json:"outputs,omitempty"`
+}
+
+type VmCreateOutput struct {
+	CallBackParameter
+	Result
+	Guid              string `json:"guid,omitempty"`
+	RequestId         string `json:"request_id,omitempty"`
+	Id                string `json:"id,omitempty"`
+	Cpu               string `json:"cpu,omitempty"`
+	Memory            string `json:"memory,omitempty"`
+	Password          string `json:"password,omitempty"`
+	InstanceState     string `json:"instance_state,omitempty"`
+	InstancePrivateIp string `json:"instance_private_ip,omitempty"`
+}
+
+type VmCreateAction struct {
+}
+
+func (action *VmCreateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmCreateInputs
+	err := UnmarshalJson(param, &inputs)
 	if err != nil {
 		return nil, err
 	}
-
-	if len(describeInstancesResponse.Response.InstanceSet) != 1 {
-		logrus.Errorf("found vm[%s] have %d instance", instanceId, len(describeInstancesResponse.Response.InstanceSet))
-		return nil, VM_NOT_FOUND_ERROR
-	}
-
-	return describeInstancesResponse.Response.InstanceSet[0], nil
+	return inputs, nil
 }
 
-func isInstanceInDesireState(client *cvm.Client, instanceId string, desireState string) error {
-	instance, err := getInstanceByInstanceId(client, instanceId)
-	if err != nil {
-		return err
+func (action *VmCreateAction) checkCreateVmParams(input VmCreateInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
 	}
-
-	if *instance.InstanceState != desireState {
-		return fmt.Errorf("qcloud instance not in desire state[%s],real state=%v", desireState, *instance.InstanceState)
+	if input.SystemDiskSize == "" {
+		return errors.New("SystemDiskSize is empty")
+	}
+	if input.InstanceChargeType != CHARGE_TYPE_PREPAID && input.InstanceChargeType != CHARGE_TYPE_BY_HOUR {
+		return errors.New("wrong InstanceChargeType string")
+	}
+	if input.Guid == "" {
+		return errors.New("Guid is empty")
+	}
+	if input.Seed == "" {
+		return errors.New("Seed is empty")
+	}
+	if input.HostType == "" && input.InstanceType == "" {
+		return errors.New("HostType and InstanceType are both empty")
+	}
+	if input.SubnetId == "" {
+		return errors.New("SubnetId is empty")
+	}
+	if input.VpcId == "" {
+		return errors.New("VpcId is empty")
+	}
+	if input.ImageId == "" {
+		return errors.New("ImageId is empty")
 	}
 
 	return nil
 }
 
-func waitVmInDesireState(client *cvm.Client, instanceId string, desireState string, timeout int) error {
-	count := 0
-
-	for {
-		time.Sleep(5 * time.Second)
-		instance, err := getInstanceByInstanceId(client, instanceId)
-		if err != nil {
-			return err
+func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
 		}
+	}()
 
-		if *instance.InstanceState == desireState {
-			break
-		}
+	if err = action.checkCreateVmParams(*input); err != nil {
+		return
+	}
 
-		count++
-		if count*5 > timeout {
-			return VM_WAIT_STATE_TIMEOUT_ERROR
+	if input.ProviderParams == "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	if zone, ok := paramsMap["AvailableZone"]; ok {
+		if zone == "" {
+			err = fmt.Errorf("wrong AvailableZone value")
+			return
 		}
 	}
-	return nil
-}
 
-func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) error {
-	count := 0
-	describeInstancesParams := cvm.DescribeInstancesRequest{
-		InstanceIds: []*string{&instanceId},
-	}
-	for {
-		time.Sleep(5 * time.Second)
-		describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
-		if err != nil {
-			return err
-		}
-		if len(describeInstancesResponse.Response.InstanceSet) == 0 {
-			break
-		}
-
-		count++
-		if count*5 > timeout {
-			return VM_WAIT_STATE_TIMEOUT_ERROR
-		}
-	}
-	return nil
-}
-
-type VMCreateAction struct {
-	VMAction
-}
-
-func getCpuAndMemoryFromHostType(hostType string) (int64, int64, error) {
-	//1C2G, 2C4G, 2C8G
-	upperCase := strings.ToUpper(hostType)
-	index := strings.Index(upperCase, "C")
-	if index <= 0 {
-		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
-	}
-	cpu, err := strconv.ParseInt(upperCase[0:index], 10, 64)
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+		return
 	}
 
-	memStr := upperCase[index+1:]
-	index2 := strings.Index(memStr, "G")
-	if index2 <= 0 {
-		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	// check whether vm is exist.
+	if input.Id != "" {
+		vmInfo, ok, er := queryInstanceById(client, input.Id)
+		if er != nil {
+			err = er
+			logrus.Errorf("queryInstanceById meet error=%v", err)
+			return
+		}
+		if ok {
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			output.Id = input.Id
+			output.Memory = strconv.Itoa(int(*vmInfo.Memory))
+			output.Cpu = strconv.Itoa(int(*vmInfo.CPU))
+			output.InstanceState = *vmInfo.InstanceState
+			output.InstancePrivateIp = *vmInfo.PrivateIpAddresses[0]
+			output.Password = input.Password
+			return
+		}
 	}
 
-	mem, err := strconv.ParseInt(memStr[0:index2], 10, 64)
+	request := cvm.NewRunInstancesRequest()
+	if input.InstanceName != "" {
+		request.InstanceName = &input.InstanceName
+	}
+
+	zone := paramsMap["AvailableZone"]
+	request.Placement = &cvm.Placement{
+		Zone: &zone,
+	}
+
+	request.ImageId = &input.ImageId
+	request.InstanceChargeType = &input.InstanceChargeType
+	if input.InstanceChargeType == CHARGE_TYPE_PREPAID {
+		if input.InstanceChargePeriod == "0" || input.InstanceChargePeriod == "" {
+			err = fmt.Errorf("InstanceChargePeriod is empty")
+			return
+		}
+		period, er := strconv.ParseInt(input.InstanceChargePeriod, 10, 64)
+		if er != nil && period <= 0 {
+			err = fmt.Errorf("wrong InstanceChargePeriod string. %v", er)
+			return
+		}
+		renewflag := RENEW_FLAG_NOTIFY_AND_AUTO_RENEW
+		request.InstanceChargePrepaid = &cvm.InstanceChargePrepaid{
+			Period:    &period,
+			RenewFlag: &renewflag,
+		}
+	}
+
+	diskSize, err := strconv.ParseInt(input.SystemDiskSize, 10, 64)
+	if err != nil && diskSize <= 0 {
+		err = fmt.Errorf("wrong SystemDiskSize string. %v", err)
+	}
+	diskType := "CLOUD_PREMIUM"
+	request.SystemDisk = &cvm.SystemDisk{
+		DiskType: &diskType,
+		DiskSize: &diskSize,
+	}
+
+	request.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
+		VpcId:    &input.VpcId,
+		SubnetId: &input.SubnetId,
+	}
+
+	if input.Password == "" {
+		input.Password = utils.CreateRandomPassword()
+	}
+	request.LoginSettings = &cvm.LoginSettings{
+		Password: &input.Password,
+	}
+
+	assignPublicIp := false
+	maxBandwidth := int64(10)
+	request.InternetAccessible = &cvm.InternetAccessible{
+		PublicIpAssigned:        &assignPublicIp,
+		InternetMaxBandwidthOut: &maxBandwidth,
+	}
+
+	if input.InstanceType == "" && input.HostType != "" {
+		input.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], input.InstanceChargeType, input.HostType)
+		if input.InstanceType == "" {
+			err = fmt.Errorf("can't found instanceType(%v)", input.HostType)
+			return
+		}
+	}
+	request.InstanceType = &input.InstanceType
+
+	if input.ProjectId != "" {
+		projectId, er := strconv.ParseInt(input.ProjectId, 10, 64)
+		if er != nil {
+			err = er
+			return
+		}
+		request.Placement.ProjectId = &projectId
+	}
+
+	response, err := client.RunInstances(request)
 	if err != nil {
-		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+		logrus.Errorf("RunInstances meet error=%v", err)
+		return
 	}
-	return cpu, mem, nil
-}
+	input.Id = *response.Response.InstanceIdSet[0]
 
+	if err = waitVmInDesireState(client, input.Id, INSTANCE_STATE_RUNNING, 120); err != nil {
+		logrus.Errorf("waitVmInDesireState meet error=%v", err)
+		return
+	}
+	logrus.Infof("Created VM's state is [%v] now", INSTANCE_STATE_RUNNING)
+
+	vmInfo, ok, err := queryInstanceById(client, input.Id)
+	if err != nil {
+		logrus.Errorf("queryInstanceById meet error=%v", err)
+		return
+	}
+	if ok {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		output.Id = input.Id
+		output.Memory = strconv.Itoa(int(*vmInfo.Memory))
+		output.Cpu = strconv.Itoa(int(*vmInfo.CPU))
+		output.InstanceState = *vmInfo.InstanceState
+		output.InstancePrivateIp = *vmInfo.PrivateIpAddresses[0]
+		password, er := utils.AesEnPassword(input.Guid, input.Seed, input.Password, utils.DEFALT_CIPHER)
+		if er != nil {
+			err = er
+			logrus.Errorf("AesEnPassword meet error=%v", err)
+			return
+		}
+		output.Password = password
+		return
+	}
+
+	err = fmt.Errorf("vm[%v] could not be found", input.Id)
+	logrus.Errorf("vm[%v] could not be found", input.Id)
+	return
+}
 func getInstanceType(client *cvm.Client, zone string, chargeType string, hostType string) string {
 	cpu, memory, err := getCpuAndMemoryFromHostType(hostType)
 	if err != nil {
@@ -336,388 +377,551 @@ func getInstanceType(client *cvm.Client, zone string, chargeType string, hostTyp
 	return instanceType
 }
 
-func (action *VMCreateAction) Do(input interface{}) (interface{}, error) {
-	vms, _ := input.(VmInputs)
-	outputs := VmOutputs{}
+func getCpuAndMemoryFromHostType(hostType string) (int64, int64, error) {
+	//1C2G, 2C4G, 2C8G
+	upperCase := strings.ToUpper(hostType)
+	index := strings.Index(upperCase, "C")
+	if index <= 0 {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+	cpu, err := strconv.ParseInt(upperCase[0:index], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+
+	memStr := upperCase[index+1:]
+	index2 := strings.Index(memStr, "G")
+	if index2 <= 0 {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+
+	mem, err := strconv.ParseInt(memStr[0:index2], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("hostType(%v) invalid", hostType)
+	}
+	return cpu, mem, nil
+}
+
+func (action *VmCreateAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmCreateInputs)
+	outputs := VmCreateOutputs{}
 	var finalErr error
 	for _, vm := range vms.Inputs {
-		output := VmOutput{
-			Guid: vm.Guid,
-		}
-		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
-		logrus.Debugf("actionParam:%v", vm)
-		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+		output, err := action.createVm(&vm)
 		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
-			continue
 		}
-		if vm.Password == "" {
-			vm.Password = utils.CreateRandomPassword()
-		}
-
-		diskSize, err := strconv.ParseInt(vm.SystemDiskSize, 10, 64)
-		if err != nil && diskSize <= 0 {
-			err = fmt.Errorf("wrong SystemDiskSize string. %v", err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		if vm.InstanceChargeType != CHARGE_TYPE_PREPAID && vm.InstanceChargeType != CHARGE_TYPE_BY_HOUR {
-			err = fmt.Errorf("wrong SystemDiskSize string")
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		runInstanceRequest := QcloudRunInstanceStruct{
-			Placement: PlacementStruct{
-				Zone: paramsMap["AvailableZone"],
-			},
-			ImageId:            vm.ImageId,
-			InstanceChargeType: vm.InstanceChargeType,
-			SystemDisk: SystemDiskStruct{
-				DiskType: "CLOUD_PREMIUM",
-				DiskSize: diskSize,
-			},
-			VirtualPrivateCloud: VirtualPrivateCloudStruct{
-				VpcId:    vm.VpcId,
-				SubnetId: vm.SubnetId,
-			},
-			LoginSettings: LoginSettingsStruct{
-				Password: vm.Password,
-			},
-			InternetAccessible: InternetAccessible{
-				PublicIpAssigned:        false,
-				InternetMaxBandwidthOut: 10,
-			},
-		}
-
-		runInstanceRequest.InstanceType = vm.InstanceType
-
-		if vm.InstanceType == "" && vm.HostType != "" {
-			runInstanceRequest.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], vm.InstanceChargeType, vm.HostType)
-			if runInstanceRequest.InstanceType == "" {
-				err = fmt.Errorf("can't found instanceType(%v)", vm.HostType)
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-		}
-
-		if vm.ProjectId != "" {
-			projectId, er := strconv.ParseInt(vm.ProjectId, 10, 64)
-			if er != nil {
-				err = fmt.Errorf("wrong ProjectId string. %v", err)
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-			runInstanceRequest.Placement.ProjectId = projectId
-		}
-
-		if vm.InstancePrivateIp != "" {
-			runInstanceRequest.VirtualPrivateCloud.PrivateIpAddresses = []string{vm.InstancePrivateIp}
-		}
-
-		if vm.InstanceChargeType == CHARGE_TYPE_PREPAID {
-			if vm.InstanceChargePeriod == "0" || vm.InstanceChargePeriod == "" {
-				err = fmt.Errorf("InstanceChargePeriod is empty")
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-			period, er := strconv.ParseInt(vm.InstanceChargePeriod, 10, 64)
-			if er != nil && period <= 0 {
-				err = fmt.Errorf("wrong InstanceChargePeriod string. %v", er)
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-			runInstanceRequest.InstanceChargePrepaid = &InstanceChargePrepaidStruct{
-				Period:    period,
-				RenewFlag: RENEW_FLAG_NOTIFY_AND_AUTO_RENEW,
-			}
-		}
-
-		//check resources exsit
-		if vm.Id != "" {
-			describeInstancesParams := cvm.DescribeInstancesRequest{
-				InstanceIds: []*string{&vm.Id},
-			}
-
-			describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
-			if err != nil {
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-
-			if len(describeInstancesResponse.Response.InstanceSet) > 1 {
-				logrus.Errorf("check vm exsit found vm[%s] have %d instance", vm.Id, len(describeInstancesResponse.Response.InstanceSet))
-				err = VM_NOT_FOUND_ERROR
-				output.Result.Code = RESULT_CODE_ERROR
-				output.Result.Message = err.Error()
-				outputs.Outputs = append(outputs.Outputs, output)
-				finalErr = err
-				continue
-			}
-
-			if len(describeInstancesResponse.Response.InstanceSet) == 1 {
-				output.RequestId = *describeInstancesResponse.Response.RequestId
-				output.Guid = vm.Guid
-				output.Id = vm.Id
-				output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
-				output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
-				output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
-				output.InstancePrivateIp = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
-				outputs.Outputs = append(outputs.Outputs, output)
-				continue
-			}
-		}
-
-		request := cvm.NewRunInstancesRequest()
-		byteRunInstancesRequestData, _ := json.Marshal(runInstanceRequest)
-		logrus.Debugf("byteRunInstancesRequestData=%v", string(byteRunInstancesRequestData))
-		request.FromJsonString(string(byteRunInstancesRequestData))
-		if vm.InstanceName != "" {
-			request.InstanceName = &vm.InstanceName
-		}
-
-		resp, err := client.RunInstances(request)
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		vm.Id = *resp.Response.InstanceIdSet[0]
-		logrus.Infof("Create VM's request has been submitted, InstanceId is [%v], RequestID is [%v]", vm.Id, *resp.Response.RequestId)
-
-		if err = waitVmInDesireState(client, vm.Id, INSTANCE_STATE_RUNNING, 120); err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-		logrus.Infof("Created VM's state is [%v] now", INSTANCE_STATE_RUNNING)
-
-		describeInstancesParams := cvm.DescribeInstancesRequest{
-			InstanceIds: []*string{&vm.Id},
-		}
-
-		describeInstancesResponse, err := describeInstancesFromCvm(client, describeInstancesParams)
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		output.Password, err = utils.AesEnPassword(vm.Guid, vm.Seed, vm.Password, utils.DEFALT_CIPHER)
-		if err != nil {
-			logrus.Errorf("AesEnPassword meet error(%v)", err)
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		output.RequestId = *describeInstancesResponse.Response.RequestId
-		output.Guid = vm.Guid
-		output.Id = vm.Id
-		output.Memory = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].Memory))
-		output.Cpu = strconv.Itoa(int(*describeInstancesResponse.Response.InstanceSet[0].CPU))
-		output.InstanceState = *describeInstancesResponse.Response.InstanceSet[0].InstanceState
-		output.InstancePrivateIp = *describeInstancesResponse.Response.InstanceSet[0].PrivateIpAddresses[0]
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
+	logrus.Infof("all vms = %v are created", vms)
 	return &outputs, finalErr
 }
 
-type VMTerminateAction struct {
-	VMAction
-}
-
-func (action *VMTerminateAction) Do(input interface{}) (interface{}, error) {
-	vms, _ := input.(VmInputs)
-	outputs := VmOutputs{}
-	var finalErr error
-
-	for _, vm := range vms.Inputs {
-		output := VmOutput{
-			Guid: vm.Guid,
-			Id:   vm.Id,
+func queryInstanceById(client *cvm.Client, instanceId string) (*cvm.Instance, bool, error) {
+	request := cvm.NewDescribeInstancesRequest()
+	request.InstanceIds = []*string{&instanceId}
+	response, err := client.DescribeInstances(request)
+	if err != nil {
+		if strings.Contains(err.Error(), QCLOUD_ERR_CODE_RESOURCE_NOT_FOUND) {
+			return nil, false, nil
 		}
-		output.Result.Code = RESULT_CODE_SUCCESS
-		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
-
-		paramsMap, err := GetMapFromProviderParams(vm.ProviderParams)
-		terminateInstancesRequestData := cvm.TerminateInstancesRequest{
-			InstanceIds: []*string{&vm.Id},
-		}
-
-		client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		if err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-		terminateInstancesRequest := cvm.NewTerminateInstancesRequest()
-		byteTerminateInstancesRequestData, _ := json.Marshal(terminateInstancesRequestData)
-		terminateInstancesRequest.FromJsonString(string(byteTerminateInstancesRequestData))
-
-		response, err := client.TerminateInstances(terminateInstancesRequest)
-		if err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-		logrus.Infof("Terminate VM[%v] has been submitted in Qcloud, RequestID is [%v]", vm.Id, *response.Response.RequestId)
-
-		if err = waitVmTerminateDone(client, vm.Id, 600); err != nil {
-			finalErr = err
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			continue
-		}
-
-		output.RequestId = *response.Response.RequestId
-		outputs.Outputs = append(outputs.Outputs, output)
-
-		logrus.Infof("Terminated VM[%v] has been done", vm.Id)
+		return nil, false, err
+	}
+	if len(response.Response.InstanceSet) == 0 {
+		return nil, false, nil
+	}
+	if len(response.Response.InstanceSet) > 1 {
+		return nil, false, fmt.Errorf("describe instance by instanceId[%v], return more than one instances", instanceId)
 	}
 
-	return &outputs, finalErr
+	return response.Response.InstanceSet[0], true, nil
 }
 
-type VMStartAction struct {
-	VMAction
-}
+func waitVmInDesireState(client *cvm.Client, instanceId string, desireState string, timeout int) error {
+	count := 0
 
-func (action *VMStartAction) Do(input interface{}) (interface{}, error) {
-	vms, _ := input.(VmInputs)
-	outputs := VmOutputs{}
-	var finalErr error
-	for _, vm := range vms.Inputs {
-		output := VmOutput{
-			Guid: vm.Guid,
-			Id:   vm.Id,
-		}
-		output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		requestId, err := action.startInstance(vm)
+	for {
+		time.Sleep(5 * time.Second)
+		instance, _, err := queryInstanceById(client, instanceId)
 		if err != nil {
-			finalErr = err
+			return err
+		}
+
+		if instance != nil && *instance.InstanceState == desireState {
+			break
+		}
+
+		count++
+		if count*5 > timeout {
+			return VM_WAIT_STATE_TIMEOUT_ERROR
+		}
+	}
+	return nil
+}
+
+type VmTerminateInputs struct {
+	Inputs []VmTerminateInput `json:"inputs,omitempty"`
+}
+
+type VmTerminateInput struct {
+	CallBackParameter
+	Guid           string `json:"guid,omitempty"`
+	Id             string `json:"id,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
+}
+
+type VmTerminateOutputs struct {
+	Outputs []VmTerminateOutput `json:outputs,omitempty`
+}
+type VmTerminateOutput struct {
+	CallBackParameter
+	Result
+	Guid      string `json:"guid,omitempty"`
+	Id        string `json:"id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+}
+
+type VmTerminateAction struct {
+}
+
+func (action *VmTerminateAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmTerminateInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VmTerminateAction) checkTerminateVmParams(input VmTerminateInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
+	}
+	if input.Guid == "" {
+		return errors.New("Guid is empty")
+	}
+	if input.Id == "" {
+		return errors.New("Id is empty")
+	}
+
+	return nil
+}
+
+func (action *VmTerminateAction) terminateVm(input *VmTerminateInput) (output VmTerminateOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.Id = input.Id
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 		}
+	}()
 
-		output.RequestId = requestId
-		outputs.Outputs = append(outputs.Outputs, output)
+	if err = action.checkTerminateVmParams(*input); err != nil {
+		return
 	}
 
-	return &outputs, finalErr
-}
+	if input.ProviderParams == "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 
-func (action *VMStartAction) startInstance(vm VmInput) (string, error) {
-	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
-
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	if err != nil {
+		return
+	}
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		return "", err
+		return
+	}
+
+	// check whether vm is exist.
+	_, ok, err := queryInstanceById(client, input.Id)
+	if err != nil {
+		return
+	}
+	if !ok {
+		output.RequestId = "legacy qcloud API doesn't support returnning request id"
+		return
+	}
+
+	request := cvm.NewTerminateInstancesRequest()
+	request.InstanceIds = []*string{&input.Id}
+	response, err := client.TerminateInstances(request)
+	if err != nil {
+		return
+	}
+	output.RequestId = *response.Response.RequestId
+
+	if err = waitVmTerminateDone(client, input.Id, 600); err != nil {
+		return
+	}
+
+	return
+}
+
+func waitVmTerminateDone(client *cvm.Client, instanceId string, timeout int) error {
+	count := 0
+	for {
+		time.Sleep(5 * time.Second)
+		_, ok, err := queryInstanceById(client, instanceId)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			break
+		}
+
+		count++
+		if count*5 > timeout {
+			return VM_WAIT_STATE_TIMEOUT_ERROR
+		}
+	}
+	return nil
+}
+
+func (action *VmTerminateAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmTerminateInputs)
+	outputs := VmTerminateOutputs{}
+	var finalErr error
+	for _, vm := range vms.Inputs {
+		output, err := action.terminateVm(&vm)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all vms = %v are created", vms)
+	return &outputs, finalErr
+}
+
+type VmStartInput VmTerminateInput
+type VmStartInputs struct {
+	Inputs []VmStartInput `json:"inputs,omitempty"`
+}
+
+type VmStartOutput VmTerminateOutput
+type VmStartOutputs struct {
+	Outputs []VmStartOutput `json:"outputs,omitempty"`
+}
+
+type VmStartAction struct {
+}
+
+func (action *VmStartAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmStartInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VmStartAction) checkStartVmParams(input VmStartInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
+	}
+	if input.Guid == "" {
+		return errors.New("Guid is empty")
+	}
+	if input.Id == "" {
+		return errors.New("Id is empty")
+	}
+
+	return nil
+}
+
+func (action *VmStartAction) startVm(input *VmStartInput) (output VmStartOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.Id = input.Id
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = action.checkStartVmParams(*input); err != nil {
+		return
+	}
+
+	if input.ProviderParams == "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	if err != nil {
+		return
+	}
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return
 	}
 
 	request := cvm.NewStartInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &vm.Id)
-
+	request.InstanceIds = []*string{&input.Id}
 	response, err := client.StartInstances(request)
 	if err != nil {
-		return "", err
+		return
 	}
-	return *response.Response.RequestId, nil
+	output.RequestId = *response.Response.RequestId
+
+	return
 }
 
-type VMStopAction struct {
-	VMAction
-}
-
-func (action *VMStopAction) Do(input interface{}) (interface{}, error) {
-	vms, _ := input.(VmInputs)
-	outputs := VmOutputs{}
+func (action *VmStartAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmStartInputs)
+	outputs := VmStartOutputs{}
 	var finalErr error
 	for _, vm := range vms.Inputs {
-		output, err := action.stopInstance(&vm)
+		output, err := action.startVm(&vm)
 		if err != nil {
 			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
+	logrus.Infof("all vms = %v are created", vms)
 	return &outputs, finalErr
 }
 
-func (action *VMStopAction) stopInstance(vm *VmInput) (VmOutput, error) {
-	output := VmOutput{
-		Guid: vm.Guid,
-		Id:   vm.Id,
-	}
-	output.Result.Code = RESULT_CODE_SUCCESS
-	output.CallBackParameter.Parameter = vm.CallBackParameter.Parameter
+type VmStopInput VmTerminateInput
+type VmStopInputs struct {
+	Inputs []VmStopInput `json:"inputs,omitempty"`
+}
 
-	paramsMap, _ := GetMapFromProviderParams(vm.ProviderParams)
+type VmStopOutput VmTerminateOutput
+type VmStopOutputs struct {
+	Outputs []VmStopOutput `json:"outputs,omitempty"`
+}
+
+type VmStopAction struct {
+}
+
+func (action *VmStopAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmStopInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VmStopAction) checkStopVmParams(input VmStopInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("API_secret is empty")
+		}
+	}
+	if input.Guid == "" {
+		return errors.New("Guid is empty")
+	}
+	if input.Id == "" {
+		return errors.New("Id is empty")
+	}
+
+	return nil
+}
+
+func (action *VmStopAction) stopVm(input *VmStopInput) (output VmStopOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.Id = input.Id
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = action.checkStopVmParams(*input); err != nil {
+		return
+	}
+
+	if input.ProviderParams == "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	paramsMap, err := GetMapFromProviderParams(input.ProviderParams)
+	if err != nil {
+		return
+	}
 	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
-		output.Result.Code = RESULT_CODE_ERROR
-		output.Result.Message = err.Error()
-		return output, err
+		return
 	}
 
 	request := cvm.NewStopInstancesRequest()
-	request.InstanceIds = append(request.InstanceIds, &vm.Id)
-
+	request.InstanceIds = []*string{&input.Id}
 	response, err := client.StopInstances(request)
 	if err != nil {
-		output.Result.Code = RESULT_CODE_ERROR
-		output.Result.Message = err.Error()
-		return output, err
+		return
 	}
-
 	output.RequestId = *response.Response.RequestId
 
-	return output, nil
+	return
+}
+
+func (action *VmStopAction) Do(input interface{}) (interface{}, error) {
+	vms, _ := input.(VmStopInputs)
+	outputs := VmStopOutputs{}
+	var finalErr error
+	for _, vm := range vms.Inputs {
+		output, err := action.stopVm(&vm)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all vms = %v are created", vms)
+	return &outputs, finalErr
+}
+
+type VmBindSecurityGroupsAction struct {
+}
+
+type VmBindSecurityGroupInputs struct {
+	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type VmBindSecurityGroupInput struct {
+	CallBackParameter
+	Guid             string `json:"guid,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	InstanceId       string `json:"instance_id,omitempty"`
+	SecurityGroupIds string `json:"security_group_ids,omitempty"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
+}
+
+type VmBindSecurityGroupOutputs struct {
+	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
+}
+
+type VmBindSecurityGroupOutput struct {
+	CallBackParameter
+	Result
+	Guid string `json:"guid,omitempty"`
+}
+
+func (action *VmBindSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmBindSecurityGroupInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VmBindSecurityGroupsAction) checkVmBindSecurityGroupParams(input VmBindSecurityGroupInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("APISecret is empty")
+		}
+	}
+
+	if input.InstanceId == "" {
+		return errors.New("instanceId is empty")
+	}
+
+	if input.SecurityGroupIds == "" {
+		return errors.New("securityGroupIds is empty")
+	}
+
+	return nil
+}
+
+func (action *VmBindSecurityGroupsAction) vmBindSecurityGroup(input *VmBindSecurityGroupInput) (output VmBindSecurityGroupOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = action.checkVmBindSecurityGroupParams(*input); err != nil {
+		return
+	}
+
+	if input.ProviderParams == "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	securityGroups := strings.Split(input.SecurityGroupIds, ",")
+	err = BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, securityGroups)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
+	paramsMap, err := GetMapFromProviderParams(providerParams)
+	if err != nil {
+		return err
+	}
+	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return err
+	}
+
+	request := cvm.NewModifyInstancesAttributeRequest()
+	request.InstanceIds = common.StringPtrs([]string{instanceId})
+	request.SecurityGroups = common.StringPtrs(securityGroups)
+	if _, err = client.ModifyInstancesAttribute(request); err != nil {
+		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
+	}
+
+	return err
+}
+
+func (action *VmBindSecurityGroupsAction) Do(input interface{}) (interface{}, error) {
+	inputs, _ := input.(VmBindSecurityGroupInputs)
+	outputs := VmBindSecurityGroupOutputs{}
+	var finalErr error
+	for _, input := range inputs.Inputs {
+		output, err := action.vmBindSecurityGroup(&input)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all vm  bind securityGroups = %v have been completed", inputs)
+	return &outputs, finalErr
 }
 
 func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, error) {
@@ -761,109 +965,18 @@ func QueryCvmInstance(providerParams string, filter Filter) ([]*cvm.Instance, er
 	return response.Response.InstanceSet, nil
 }
 
-func BindCvmInstanceSecurityGroups(providerParams string, instanceId string, securityGroups []string) error {
-	paramsMap, err := GetMapFromProviderParams(providerParams)
+func describeInstancesFromCvm(client *cvm.Client, describeInstancesParams cvm.DescribeInstancesRequest) (response *cvm.DescribeInstancesResponse, err error) {
+	request := cvm.NewDescribeInstancesRequest()
+	describeInstancesParamsByteArray, _ := json.Marshal(describeInstancesParams)
+	request.FromJsonString(string(describeInstancesParamsByteArray))
+
+	logrus.Debugf("Submit DescribeInstances request: %#v", string(describeInstancesParamsByteArray))
+	response, err = client.DescribeInstances(request)
+	logrus.Debugf("Submit DescribeInstances return: %v", response)
+
 	if err != nil {
-		return err
-	}
-	client, err := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-	if err != nil {
-		return err
+		logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
 	}
 
-	request := cvm.NewModifyInstancesAttributeRequest()
-	request.InstanceIds = common.StringPtrs([]string{instanceId})
-	request.SecurityGroups = common.StringPtrs(securityGroups)
-	if _, err = client.ModifyInstancesAttribute(request); err != nil {
-		logrus.Errorf("cvm AssociateSecurityGroups meet err=%v", err)
-	}
-
-	return err
-}
-
-//--------------bind security group to vm--------------------//
-type VMBindSecurityGroupsAction struct {
-}
-
-type VmBindSecurityGroupInputs struct {
-	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
-}
-
-type VmBindSecurityGroupInput struct {
-	CallBackParameter
-	Guid             string `json:"guid,omitempty"`
-	ProviderParams   string `json:"provider_params,omitempty"`
-	InstanceId       string `json:"instance_id,omitempty"`
-	SecurityGroupIds string `json:"security_group_ids,omitempty"`
-}
-
-type VmBindSecurityGroupOutputs struct {
-	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
-}
-
-type VmBindSecurityGroupOutput struct {
-	CallBackParameter
-	Result
-	Guid string `json:"guid,omitempty"`
-}
-
-func (action *VMBindSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
-	var inputs VmBindSecurityGroupInputs
-	err := UnmarshalJson(param, &inputs)
-	if err != nil {
-		return nil, err
-	}
-	return inputs, nil
-}
-
-func vmBindSecurityGroupsCheckParam(input VmBindSecurityGroupInput) error {
-	if input.ProviderParams == "" {
-		return errors.New("providerParams is empty")
-	}
-
-	if input.InstanceId == "" {
-		return errors.New("instanceId is empty")
-	}
-
-	if input.SecurityGroupIds == "" {
-		return errors.New("securityGroupIds is empty")
-	}
-
-	return nil
-}
-
-func (action *VMBindSecurityGroupsAction) Do(input interface{}) (interface{}, error) {
-	inputs, _ := input.(VmBindSecurityGroupInputs)
-	outputs := VmBindSecurityGroupOutputs{}
-	var finalErr error
-
-	for _, input := range inputs.Inputs {
-		output := VmBindSecurityGroupOutput{
-			Guid: input.Guid,
-		}
-		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
-		output.Result.Code = RESULT_CODE_SUCCESS
-
-		if err := vmBindSecurityGroupsCheckParam(input); err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		securityGroups := strings.Split(input.SecurityGroupIds, ",")
-		err := BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, securityGroups)
-		if err != nil {
-			output.Result.Code = RESULT_CODE_ERROR
-			output.Result.Message = err.Error()
-			outputs.Outputs = append(outputs.Outputs, output)
-			finalErr = err
-			continue
-		}
-
-		outputs.Outputs = append(outputs.Outputs, output)
-	}
-
-	return outputs, finalErr
+	return response, err
 }

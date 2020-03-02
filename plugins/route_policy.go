@@ -43,6 +43,8 @@ type CreateRoutePolicyInput struct {
 	GatewayType     string `json:"gateway_type,omitempty"`
 	GatewayId       string `json:"gateway_id,omitempty"`
 	Description     string `json:"desc,omitempty"`
+	Location        string `json:"location"`
+	APISecret       string `json:"api_secret"`
 }
 
 type CreateRoutePolicyOutputs struct {
@@ -86,6 +88,9 @@ func isValidGatewayType(gatewayType string) error {
 }
 
 func isRouteConflicts(input CreateRoutePolicyInput) error {
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 	client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 	if err != nil {
@@ -119,7 +124,12 @@ func isRouteConflicts(input CreateRoutePolicyInput) error {
 
 func createRoutePolicyCheckParam(input CreateRoutePolicyInput) error {
 	if input.ProviderParams == "" {
-		return errors.New("CreateRoutePolicyAction input ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("CreateRoutePolicyAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("CreateRoutePolicyAction input APISecret is empty")
+		}
 	}
 	if input.GatewayType == "" {
 		return errors.New("CreateRoutePolicyAction input GatewayType is empty")
@@ -165,6 +175,9 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
@@ -173,6 +186,25 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
 			continue
+		}
+
+		// check wether the route policy is exist.
+		if input.Id != "" {
+			route, ok, err := queryRoutePolicyById(client, input.Id, input.RouteTableId)
+			if err != nil {
+				output.Result.Code = RESULT_CODE_ERROR
+				output.Result.Message = err.Error()
+				outputs.Outputs = append(outputs.Outputs, output)
+				finalErr = err
+				continue
+			}
+			if ok {
+				logrus.Infof("the route[id=%v] is exist.", input.Id)
+				output.RequestId = "legacy qcloud API doesn't support returnning request id"
+				output.Id = strconv.Itoa(int(*route.RouteId))
+				outputs.Outputs = append(outputs.Outputs, output)
+				continue
+			}
 		}
 
 		request := vpc.NewCreateRoutesRequest()
@@ -215,6 +247,29 @@ func (action *CreateRoutePolicyAction) Do(input interface{}) (interface{}, error
 	return &outputs, finalErr
 }
 
+func queryRoutePolicyById(client *vpc.Client, id, routeTableId string) (*vpc.Route, bool, error) {
+	request := vpc.NewDescribeRouteTablesRequest()
+	request.RouteTableIds = []*string{&routeTableId}
+	response, err := client.DescribeRouteTables(request)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(response.Response.RouteTableSet) == 0 {
+		return nil, false, fmt.Errorf("the route table[%v] is not exist", routeTableId)
+	}
+	if len(response.Response.RouteTableSet) > 1 {
+		return nil, false, fmt.Errorf("describe the route table[%v], return more than one routetables", routeTableId)
+	}
+
+	for _, route := range response.Response.RouteTableSet[0].RouteSet {
+		if strconv.Itoa(int(*route.RouteId)) == id {
+			return route, true, nil
+		}
+	}
+
+	return nil, false, nil
+}
+
 //----------------------terminate route policy----------------------
 type DeleteRoutePolicyInputs struct {
 	Inputs []DeleteRoutePolicyInput `json:"inputs,omitempty"`
@@ -225,6 +280,8 @@ type DeleteRoutePolicyInput struct {
 	Id             string `json:"id,omitempty"`
 	ProviderParams string `json:"provider_params,omitempty"`
 	RouteTableId   string `json:"route_table_id,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type DeleteRoutePolicyOutputs struct {
@@ -256,7 +313,12 @@ func deleteRoutePolicyCheckParam(input DeleteRoutePolicyInput) error {
 	}
 
 	if input.ProviderParams == "" {
-		return errors.New("DeleteRoutePolicyAction input ProviderParams is empty")
+		if input.Location == "" {
+			return errors.New("DeleteRoutePolicyAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("DeleteRoutePolicyAction input APISecret is empty")
+		}
 	}
 
 	if input.RouteTableId == "" {
@@ -286,6 +348,9 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 			continue
 		}
 
+		if input.Location != "" && input.APISecret != "" {
+			input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+		}
 		paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
 		client, err := CreateRouteTableClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 		if err != nil {
@@ -293,6 +358,22 @@ func (action *DeleteRoutePolicyAction) Do(input interface{}) (interface{}, error
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
 			finalErr = err
+			continue
+		}
+
+		// check wether the route policy is exist.
+		_, ok, err := queryRoutePolicyById(client, input.Id, input.RouteTableId)
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+			outputs.Outputs = append(outputs.Outputs, output)
+			finalErr = err
+			continue
+		}
+		if !ok {
+			logrus.Infof("the route[id=%v] is not exist.", input.Id)
+			output.RequestId = "legacy qcloud API doesn't support returnning request id"
+			outputs.Outputs = append(outputs.Outputs, output)
 			continue
 		}
 

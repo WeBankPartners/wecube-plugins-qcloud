@@ -42,6 +42,10 @@ type PeeringConnectionInput struct {
 	PeerUin            string `json:"peer_uin,omitempty"`
 	Bandwidth          string `json:"bandwidth,omitempty"`
 	Id                 string `json:"id,omitempty"`
+	Location           string `json:"location"`
+	APISecret          string `json:"api_secret"`
+	PeerLocation       string `json:"peer_location"`
+	PeerAPISecret      string `json:"peer_api_secret"`
 }
 
 type PeeringConnectionOutputs struct {
@@ -83,6 +87,14 @@ func peeringConnectionCreateCheckParam(peeringConnection PeeringConnectionInput)
 	}
 	if peeringConnection.Name == "" {
 		return errors.New("peeringConnectionCreateAction input name is empty")
+	}
+	if peeringConnection.ProviderParams == "" {
+		if peeringConnection.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if peeringConnection.APISecret == "" {
+			return errors.New("APIsecret is empty")
+		}
 	}
 
 	return nil
@@ -144,7 +156,13 @@ func (action *PeeringConnectionCreateAction) createPeeringConnectionCrossRegion(
 }
 
 func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConnection PeeringConnectionInput) (string, error) {
+	if peeringConnection.Location != "" && peeringConnection.APISecret != "" {
+		peeringConnection.ProviderParams = fmt.Sprintf("%s;%s", peeringConnection.Location, peeringConnection.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
+	if peeringConnection.PeerLocation != "" && peeringConnection.PeerAPISecret != "" {
+		peeringConnection.PeerProviderParams = fmt.Sprintf("%s;%s", peeringConnection.PeerLocation, peeringConnection.PeerAPISecret)
+	}
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
 
@@ -222,10 +240,20 @@ func peeringConnectionTerminateCheckParam(peeringConnection *PeeringConnectionIn
 		return errors.New("peeringConnectionTerminateAction input peeringConnection is empty")
 	}
 	if peeringConnection.PeerProviderParams == "" {
-		return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerProviderParams is empty")
+		if peeringConnection.PeerLocation == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerLocation is empty")
+		}
+		if peeringConnection.PeerAPISecret == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerAPISecret is empty")
+		}
 	}
 	if peeringConnection.ProviderParams == "" {
-		return errors.New("peeringConnectionTerminateAction input peeringConnection.ProviderParams is empty")
+		if peeringConnection.Location == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.Location is empty")
+		}
+		if peeringConnection.APISecret == "" {
+			return errors.New("peeringConnectionTerminateAction input peeringConnection.APISecret is empty")
+		}
 	}
 
 	return nil
@@ -279,9 +307,27 @@ func (action *PeeringConnectionTerminateAction) deletePeeringConnectionCrossRegi
 }
 
 func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeringConnection PeeringConnectionInput) error {
+	if peeringConnection.Location != "" && peeringConnection.APISecret != "" {
+		peeringConnection.ProviderParams = fmt.Sprintf("%s;%s", peeringConnection.Location, peeringConnection.APISecret)
+	}
 	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
+	if peeringConnection.PeerLocation != "" && peeringConnection.PeerAPISecret != "" {
+		peeringConnection.PeerProviderParams = fmt.Sprintf("%s;%s", peeringConnection.PeerLocation, peeringConnection.PeerAPISecret)
+	}
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+
+	// check resource exist.
+	PeeringConnectionId, err := queryPeeringConnectionsInfo(client, peeringConnection)
+	if err != nil {
+		logrus.Errorf("queryPeeringConnectionsInfo meet error=%v", err)
+		return err
+	}
+
+	if PeeringConnectionId == "" {
+		logrus.Infof("the PeeringConnection[%v] is not exist.", peeringConnection.Id)
+		return nil
+	}
 
 	if paramsMap["Region"] == peerParamsMap["Region"] {
 		return action.deletePeeringConnectionAtSameRegion(client, peeringConnection)
