@@ -45,7 +45,7 @@ type PeeringConnectionInput struct {
 	Location           string `json:"location"`
 	APISecret          string `json:"api_secret"`
 	PeerLocation       string `json:"peer_location"`
-	PeerAPISecret      string `json:"peer_api_secret"`
+	// PeerAPISecret      string `json:"peer_api_secret"`
 }
 
 type PeeringConnectionOutputs struct {
@@ -160,8 +160,8 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 		peeringConnection.ProviderParams = fmt.Sprintf("%s;%s", peeringConnection.Location, peeringConnection.APISecret)
 	}
 	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
-	if peeringConnection.PeerLocation != "" && peeringConnection.PeerAPISecret != "" {
-		peeringConnection.PeerProviderParams = fmt.Sprintf("%s;%s", peeringConnection.PeerLocation, peeringConnection.PeerAPISecret)
+	if peeringConnection.PeerProviderParams != "" {
+		peeringConnection.PeerProviderParams = peeringConnection.PeerLocation
 	}
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -243,17 +243,14 @@ func peeringConnectionTerminateCheckParam(peeringConnection *PeeringConnectionIn
 		if peeringConnection.PeerLocation == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerLocation is empty")
 		}
-		if peeringConnection.PeerAPISecret == "" {
-			return errors.New("peeringConnectionTerminateAction input peeringConnection.PeerAPISecret is empty")
-		}
 	}
 	if peeringConnection.ProviderParams == "" {
 		if peeringConnection.Location == "" {
 			return errors.New("peeringConnectionTerminateAction input peeringConnection.Location is empty")
 		}
-		if peeringConnection.APISecret == "" {
-			return errors.New("peeringConnectionTerminateAction input peeringConnection.APISecret is empty")
-		}
+		// if peeringConnection.APISecret == "" {
+		// 	return errors.New("peeringConnectionTerminateAction input peeringConnection.APISecret is empty")
+		// }
 	}
 
 	return nil
@@ -311,8 +308,8 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 		peeringConnection.ProviderParams = fmt.Sprintf("%s;%s", peeringConnection.Location, peeringConnection.APISecret)
 	}
 	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
-	if peeringConnection.PeerLocation != "" && peeringConnection.PeerAPISecret != "" {
-		peeringConnection.PeerProviderParams = fmt.Sprintf("%s;%s", peeringConnection.PeerLocation, peeringConnection.PeerAPISecret)
+	if peeringConnection.PeerProviderParams != "" {
+		peeringConnection.PeerProviderParams = peeringConnection.PeerLocation
 	}
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
 	client, _ := newVpcPeeringConnectionClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
@@ -339,6 +336,7 @@ func (action *PeeringConnectionTerminateAction) terminatePeeringConnection(peeri
 func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface{}, error) {
 	peeringConnections, _ := input.(PeeringConnectionInputs)
 	outputs := PeeringConnectionOutputs{}
+	var finalErr error
 	for _, peeringConnection := range peeringConnections.Inputs {
 		output := PeeringConnectionOutput{
 			Guid: peeringConnection.Guid,
@@ -347,6 +345,7 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 		output.CallBackParameter.Parameter = peeringConnection.CallBackParameter.Parameter
 
 		if err := peeringConnectionTerminateCheckParam(&peeringConnection); err != nil {
+			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
@@ -355,6 +354,7 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 
 		err := action.terminatePeeringConnection(peeringConnection)
 		if err != nil {
+			finalErr = err
 			output.Result.Code = RESULT_CODE_ERROR
 			output.Result.Message = err.Error()
 			outputs.Outputs = append(outputs.Outputs, output)
@@ -366,7 +366,7 @@ func (action *PeeringConnectionTerminateAction) Do(input interface{}) (interface
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	return &outputs, nil
+	return &outputs, finalErr
 }
 
 func queryPeeringConnectionsInfo(client *vpcExtend.Client, input PeeringConnectionInput) (string, error) {
