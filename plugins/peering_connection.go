@@ -160,7 +160,7 @@ func (action *PeeringConnectionCreateAction) createPeeringConnection(peeringConn
 		peeringConnection.ProviderParams = fmt.Sprintf("%s;%s", peeringConnection.Location, peeringConnection.APISecret)
 	}
 	paramsMap, _ := GetMapFromProviderParams(peeringConnection.ProviderParams)
-	if peeringConnection.PeerProviderParams != "" {
+	if peeringConnection.PeerProviderParams == "" {
 		peeringConnection.PeerProviderParams = peeringConnection.PeerLocation
 	}
 	peerParamsMap, _ := GetMapFromProviderParams(peeringConnection.PeerProviderParams)
