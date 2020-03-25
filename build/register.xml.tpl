@@ -41,7 +41,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.data_center>wecmdb:data_center.NONE" required="N">provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.key_name" required="Y">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.network_segment>wecmdb:network_segment.code" required="Y">cidr_block</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.vpc_asset_code" required="Y">id</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.vpc_asset_code" required="N">id</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET" required="Y">api_secret</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_zone.data_center>wecmdb:data_center.location" required="Y">location</parameter>
                 </inputParameters>
@@ -179,7 +179,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.id" required="Y">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.data_center>wecmdb:data_center.NONE" required="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.security_group_asset_code" required="N">security_group_id</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.security_group_asset_code" required="Y">security_group_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.security_policy_type" required="Y">policy_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.network_segment>wecmdb:network_segment.code" required="Y">policy_cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.protocol" required="Y">policy_protocol</parameter>
@@ -199,7 +199,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.id" required="Y">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.data_center>wecmdb:data_center.NONE" required="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.security_group_asset_code" required="N">security_group_id</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.vpc_network_zone>wecmdb:network_zone.security_group_asset_code" required="Y">security_group_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.security_policy_type" required="Y">policy_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.network_segment>wecmdb:network_segment.code" required="Y">policy_cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.protocol" required="Y">policy_protocol</parameter>
@@ -422,14 +422,14 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.business_zone>wecmdb:business_zone.network_zone>wecmdb:network_zone.vpc_network_zone>wecmdb:network_zone.vpc_asset_code" required="Y">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_set>wecmdb:resource_set.subnet_asset_code" required="Y">subnet_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.code" required="N">instance_name</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.NONE" required="Y">instance_type</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.NONE" required="N">instance_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_system" required="Y">image_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.resource_instance_spec" required="Y">host_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.storage" required="Y">system_disk_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.charge_type" required="Y">instance_charge_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.billing_cycle" required="N">instance_charge_period</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.intranet_ip>wecmdb:ip_address.code" required="N">instance_private_ip</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password" required="Y">password</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.user_password" required="N">password</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.asset_code" required="N">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:resource_instance.NONE" required="N">project_id</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET" required="Y">api_secret</parameter>
