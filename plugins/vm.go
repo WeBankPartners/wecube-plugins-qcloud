@@ -247,10 +247,14 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 		DiskSize: &diskSize,
 	}
 
-	request.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
+	virtualPrivateCloud := &cvm.VirtualPrivateCloud{
 		VpcId:    &input.VpcId,
 		SubnetId: &input.SubnetId,
 	}
+	if input.InstancePrivateIp != "" {
+		virtualPrivateCloud.PrivateIpAddresses = append(virtualPrivateCloud.PrivateIpAddresses, &input.InstancePrivateIp)
+	}
+	request.VirtualPrivateCloud = virtualPrivateCloud
 
 	if input.Password == "" {
 		input.Password = utils.CreateRandomPassword()
