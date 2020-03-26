@@ -189,7 +189,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET" required="Y" sensitiveData="Y">api_secret</parameter>
@@ -237,7 +237,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">id</parameter>
@@ -255,7 +255,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="N" sensitiveData="N">id</parameter>
@@ -923,7 +923,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.NONE" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.name" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.name" required="Y" sensitiveData="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.code" required="Y" sensitiveData="N">cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.f_network_segment>wecmdb:network_segment.vpc_asset_id" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.subnet_asset_id" required="N" sensitiveData="N">id</parameter>
@@ -941,7 +941,7 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.NONE" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.name" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.name" required="Y" sensitiveData="N">name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.code" required="Y" sensitiveData="N">cidr_block</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.f_network_segment>wecmdb:network_segment.vpc_asset_id" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.subnet_asset_id" required="N" sensitiveData="N">id</parameter>
