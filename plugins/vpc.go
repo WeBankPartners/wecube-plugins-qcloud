@@ -198,11 +198,19 @@ func (action *VpcCreateAction) describeRouteTablesByVpc(client *vpc.Client, vpcI
 	if err != nil {
 		return routeTableId, err
 	}
-	if len(response.Response.RouteTableSet) != 1 {
-		err = fmt.Errorf("route tables nimber of new vpc is not only one")
+	if len(response.Response.RouteTableSet) == 0 {
+		err = fmt.Errorf("route tables nimber of new vpc is empty")
 		return routeTableId, err
 	} else {
-		routeTableId = *response.Response.RouteTableSet[0].RouteTableId
+		for _,v := range response.Response.RouteTableSet {
+			if *v.Main {
+				routeTableId = *v.RouteTableId
+				break
+			}
+		}
+		if routeTableId == "" {
+			routeTableId = *response.Response.RouteTableSet[0].RouteTableId
+		}
 	}
 
 	return routeTableId, err
