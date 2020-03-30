@@ -199,7 +199,7 @@ func (action *VpcCreateAction) describeRouteTablesByVpc(client *vpc.Client, vpcI
 		return routeTableId, err
 	}
 	if len(response.Response.RouteTableSet) == 0 {
-		err = fmt.Errorf("route tables nimber of new vpc is empty")
+		err = fmt.Errorf("route tables number of new vpc is empty")
 		return routeTableId, err
 	} else {
 		for _,v := range response.Response.RouteTableSet {
