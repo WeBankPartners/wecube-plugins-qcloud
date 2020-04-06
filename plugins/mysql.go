@@ -655,7 +655,7 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 20 {
+		if count >= 90 {
 			return "", errors.New("waitForMysqlVmCreationToFinish timeout")
 		}
 	}

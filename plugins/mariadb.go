@@ -344,7 +344,7 @@ func waitFlowSuccess(client *mariadb.Client, flowId *int64) error {
 
 		time.Sleep(10 * time.Second)
 		count++
-		if count >= 30 {
+		if count >= 90 {
 			return errors.New("waitMariadbRunning timeout")
 		}
 	}
