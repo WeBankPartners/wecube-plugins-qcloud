@@ -215,6 +215,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 		uPeriod := uint64(period)
 		request.Period = &uPeriod
+	}else{
+		defaultPostPayPeriod := uint64(1)
+		request.Period = &defaultPostPayPeriod
 	}
 
 	request.Password = &redisInput.Password
