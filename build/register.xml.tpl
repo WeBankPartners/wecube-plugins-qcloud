@@ -21,7 +21,7 @@
         <systemParameter name="MYSQL_BACKUP_TYPE_LOGICAL" scopeType="global" defaultValue="logical"/>
         <systemParameter name="MYSQL_CHARACTER_SET" scopeType="global" defaultValue="UTF8"/>
         <systemParameter name="MYSQL_LOWER_CASE_TABLE_NAMES" scopeType="global" defaultValue="0"/>
-	<systemParameter name="QCLOUD_API_SECRET" scopeType="global" defaultValue="SecretID=XXXX;SecretKey=XXXX"/>
+	    <systemParameter name="QCLOUD_API_SECRET" scopeType="global" defaultValue="SecretID=XXXX;SecretKey=XXXX"/>
         <systemParameter name="QCLOUD_UID" scopeType="global" defaultValue="XXXX"/>
     </systemParameters>
 
@@ -392,7 +392,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="storage">          
+        <plugin name="storage">
 	        <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="" required="Y" sensitiveData="N">guid</parameter>
@@ -919,7 +919,7 @@
             </interface>
         </plugin>
         <plugin name="subnet" targetPackage="wecmdb" targetEntity="network_segment" registerName="network_segment" targetEntityFilterRule="{network_segment_usage eq 'SUBNET'}">
-            <interface action="create" path="/qcloud/v1/subnet/create" filterRule="{state_code eq 'created'}{fixed_date eq ''}">
+            <interface action="create" path="/qcloud/v1/subnet/create" filterRule="{state_code eq 'created'}{fixed_date eq ''}{private_route_table eq 'N'}">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.NONE" required="N" sensitiveData="N">provider_params</parameter>
@@ -956,7 +956,7 @@
                     <parameter datatype="string" mappingType="context">errorMessage</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/subnet/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date eq ''}">
+            <interface action="terminate" path="/qcloud/v1/subnet/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date eq ''}{private_route_table eq 'N'}">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.NONE" required="N" sensitiveData="N">provider_params</parameter>
@@ -996,8 +996,8 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.subnet_asset_id" required="Y" sensitiveData="N">subnet_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.name" required="N" sensitiveData="N">instance_name</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.NONE" required="Y" sensitiveData="N">instance_type</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_resource_system.code" required="Y" sensitiveData="N">image_id</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_spec.code" required="Y" sensitiveData="N">host_type</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_system>wecmdb:resource_instance_system.code" required="Y" sensitiveData="N">image_id</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_spec>wecmdb:resource_instance_spec.code" required="Y" sensitiveData="N">host_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.storage" required="Y" sensitiveData="N">system_disk_size</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.charge_type" required="Y" sensitiveData="N">instance_charge_type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.billing_cycle" required="N" sensitiveData="N">instance_charge_period</parameter>
@@ -1078,7 +1078,7 @@
                 </outputParameters>
             </interface>
         </plugin>
-        <plugin name="storage" targetPackage="wecmdb" targetEntity="block_storage" registerName="block_storage" targetEntityFilterRule="">          
+        <plugin name="storage" targetPackage="wecmdb" targetEntity="block_storage" registerName="block_storage" targetEntityFilterRule="">
 	        <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="{state_code eq 'created'}{fixed_date eq ''}">
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.guid" required="Y" sensitiveData="N">guid</parameter>
@@ -1171,9 +1171,9 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="ENCRYPT_SEED" required="Y" sensitiveData="N">seed</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_system.code" required="Y" sensitiveData="N">engine_version</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_spec.code" required="Y" sensitiveData="N">memory_size</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.cluster_node_type" required="Y" sensitiveData="N">instance_role</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_type>wecmdb:resource_instance_type.code" required="Y" sensitiveData="N">engine_version</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_spec>wecmdb:resource_instance_spec.code" required="Y" sensitiveData="N">memory_size</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.cluster_node_type>wecmdb:cluster_node_type.code" required="Y" sensitiveData="N">instance_role</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE" required="N" sensitiveData="N">master_region</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE" required="N" sensitiveData="N">master_instance_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.storage" required="Y" sensitiveData="N">volume_size</parameter>
@@ -1250,7 +1250,7 @@
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE" required="N" sensitiveData="N">provider_params</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.asset_id" required="Y" sensitiveData="N">mysql_id</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="MYSQL_BACKUP_TYPE_LOGICAL" required="Y" sensitiveData="N">backup_method</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance~(rdb_resource_instance)wecmdb:rdb_instance.code" required="Y" sensitiveData="N">backup_database</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance~(rdb_resource_instance)wecmdb:rdb_instance.unit>wecmdb:unit.code" required="Y" sensitiveData="N">backup_database</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE" required="N" sensitiveData="N">backup_table</parameter>
                     <parameter datatype="string" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET" required="Y" sensitiveData="Y">api_secret</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.data_center>wecmdb:data_center.location"  required="Y" sensitiveData="N">location</parameter>
@@ -1320,8 +1320,8 @@
                 <inputParameters>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.guid" required="Y" sensitiveData="N">guid</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.NONE" required="N" sensitiveData="N">provider_params</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.key_name" required="N" sensitiveData="N">name</parameter>
-                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.resource_instance_type" required="Y" sensitiveData="N">type</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.name" required="N" sensitiveData="N">name</parameter>
+                    <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.resource_instance_type>wecmdb:resource_instance_type.code" required="Y" sensitiveData="N">type</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.f_network_segment>wecmdb:network_segment.vpc_asset_id" required="Y" sensitiveData="N">vpc_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.subnet_asset_id" required="Y" sensitiveData="N">subnet_id</parameter>
                     <parameter datatype="string" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.asset_id" required="N" sensitiveData="N">id</parameter>
@@ -1390,6 +1390,5 @@
                 </outputParameters>
             </interface>
         </plugin>
-
     </plugins>
 </package>
