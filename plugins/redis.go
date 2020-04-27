@@ -45,6 +45,7 @@ type RedisInputs struct {
 type RedisInput struct {
 	CallBackParameter
 	Guid             string `json:"guid,omitempty"`
+	InstanceName     string `json:"instance_name,omitempty"`
 	ProviderParams   string `json:"provider_params,omitempty"`
 	TypeID           string `json:"type_id,omitempty"`
 	MemSize          string `json:"mem_size,omitempty"`
@@ -69,6 +70,7 @@ type RedisOutput struct {
 	Result
 	RequestId string `json:"request_id,omitempty"`
 	Guid      string `json:"guid,omitempty"`
+	InstanceName  string  `json:"instance_name,omitempty"`
 	DealID    string `json:"deal_id,omitempty"`
 	TaskID    int64  `json:"task_id,omitempty"`
 	ID        string `json:"id,omitempty"`
@@ -141,6 +143,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	output.Guid = redisInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = redisInput.CallBackParameter.Parameter
+	output.InstanceName = redisInput.InstanceName
 
 	if redisInput.Location != "" && redisInput.APISecret != "" {
 		redisInput.ProviderParams = fmt.Sprintf("%s;%s", redisInput.Location, redisInput.APISecret)
@@ -169,6 +172,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 			output.ID = redisInput.ID
 			output.Vip = response.Vip
 			output.Port = response.Port
+			output.InstanceName = response.InstanceName
 			return output, nil
 		}
 	}
@@ -220,6 +224,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		request.Period = &defaultPostPayPeriod
 	}
 
+	request.InstanceName = &redisInput.InstanceName
 	request.Password = &redisInput.Password
 	billmode := BillingModeMap[redisInput.BillingMode]
 	request.BillingMode = &billmode
@@ -387,6 +392,7 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	output.ID = input.ID
 	output.Vip = *queryRedisInfoResponse.Response.InstanceSet[0].WanIp
 	output.Port = strconv.Itoa(int(*queryRedisInfoResponse.Response.InstanceSet[0].Port))
+	output.InstanceName = *queryRedisInfoResponse.Response.InstanceSet[0].InstanceName
 
 	return &output, true, nil
 }
