@@ -760,21 +760,26 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 }
 
 func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *cdb.Client, instanceId string) error {
+	time.Sleep(2 * time.Second)
 	request := cdb.NewDescribeDBInstancesRequest()
 	request.InstanceIds = append(request.InstanceIds, &instanceId)
 	count := 0
 	for {
 		response, err := client.DescribeDBInstances(request)
 		if err != nil {
-			return err
-		}
-
-		if len(response.Response.Items) == 0 {
-			return nil
-		}
-
-		if *response.Response.Items[0].Status == MYSQL_VM_STATUS_ISOLATED {
-			return nil
+			if count > 0 {
+				return err
+			}
+		}else {
+			if len(response.Response.Items) == 0 {
+				if count > 0 {
+					return nil
+				}
+			}else {
+				if *response.Response.Items[0].Status == MYSQL_VM_STATUS_ISOLATED {
+					return nil
+				}
+			}
 		}
 
 		time.Sleep(10 * time.Second)
@@ -844,6 +849,7 @@ func (action *MysqlVmRestartAction) restartMysqlVm(mysqlVmInput MysqlVmInput) er
 }
 
 func waitForAsyncTaskToFinish(client *cdb.Client, requestId string) error {
+	time.Sleep(2 * time.Second)
 	taskReq := cdb.NewDescribeAsyncRequestInfoRequest()
 	taskReq.AsyncRequestId = &requestId
 	count := 0
