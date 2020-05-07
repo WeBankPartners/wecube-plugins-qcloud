@@ -635,6 +635,7 @@ func queryMySqlInstanceInitFlag(client *cdb.Client, instanceId string) (int64, e
 }
 
 func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Client, instanceId string) (string, error) {
+	time.Sleep(2 * time.Second)
 	request := cdb.NewDescribeDBInstancesRequest()
 	request.InstanceIds = append(request.InstanceIds, &instanceId)
 	count := 0
@@ -642,15 +643,19 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 	for {
 		response, err := client.DescribeDBInstances(request)
 		if err != nil {
-			return "", err
-		}
-
-		if len(response.Response.Items) == 0 {
-			return "", fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
-		}
-
-		if *response.Response.Items[0].Status == MYSQL_VM_STATUS_RUNNING {
-			return *response.Response.Items[0].Vip, nil
+			if count > 0 {
+				return "", err
+			}
+		}else {
+			if len(response.Response.Items) == 0 {
+				if count > 0 {
+					return "", fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
+				}
+			}else {
+				if *response.Response.Items[0].Status == MYSQL_VM_STATUS_RUNNING {
+					return *response.Response.Items[0].Vip, nil
+				}
+			}
 		}
 
 		time.Sleep(10 * time.Second)
