@@ -305,7 +305,8 @@
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">vpc_id</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">subnet_id</parameter>
                         <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_name</parameter>
-                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_type</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_type</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_family</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">image_id</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">host_type</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">system_disk_size</parameter>
@@ -992,7 +993,8 @@
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.f_network_segment>wecmdb:network_segment.vpc_asset_id">vpc_id</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.subnet_asset_id">subnet_id</parameter>
                         <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.key_name">instance_name</parameter>
-                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_type>wecmdb:resource_instance_type.code">instance_type</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_type>wecmdb:resource_instance_type.code">instance_type</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_family</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_system>wecmdb:resource_instance_system.code">image_id</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.resource_instance_spec>wecmdb:resource_instance_spec.code">host_type</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.storage">system_disk_size</parameter>

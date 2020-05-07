@@ -80,6 +80,7 @@ type VmCreateInput struct {
 	Id                   string `json:"id,omitempty"`
 	HostType             string `json:"host_type,omitempty"`
 	InstanceType         string `json:"instance_type,omitempty"`
+	InstanceFamily       string `json:"instance_family,omitempty"`
 	ImageId              string `json:"image_id,omitempty"`
 	SystemDiskSize       string `json:"system_disk_size,omitempty"`
 	InstanceChargeType   string `json:"instance_charge_type,omitempty"`
@@ -271,7 +272,7 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 	}
 
 	if input.InstanceType == "" && input.HostType != "" {
-		input.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], input.InstanceChargeType, input.HostType)
+		input.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], input.InstanceChargeType, input.HostType, input.InstanceFamily)
 		if input.InstanceType == "" {
 			err = fmt.Errorf("can't found instanceType(%v)", input.HostType)
 			return
@@ -327,7 +328,7 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 	logrus.Errorf("vm[%v] could not be found", input.Id)
 	return
 }
-func getInstanceType(client *cvm.Client, zone string, chargeType string, hostType string) string {
+func getInstanceType(client *cvm.Client, zone string, chargeType string, hostType string, instanceFamily string) string {
 	cpu, memory, err := getCpuAndMemoryFromHostType(hostType)
 	if err != nil {
 		return ""
@@ -354,6 +355,11 @@ func getInstanceType(client *cvm.Client, zone string, chargeType string, hostTyp
 	for _, item := range resp.Response.InstanceTypeQuotaSet {
 		if !strings.EqualFold(*item.Status, "SELL") {
 			continue
+		}
+		if instanceFamily != "" {
+			if *item.InstanceFamily != instanceFamily {
+				continue
+			}
 		}
 		score := *item.Cpu - cpu
 		if score < 0 {
