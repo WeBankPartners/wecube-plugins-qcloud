@@ -292,6 +292,7 @@ func (action *RedisCreateAction) Do(input interface{}) (interface{}, error) {
 }
 
 func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *redis.Client, dealid string) (string, error) {
+	time.Sleep(2 * time.Second)
 	request := redis.NewDescribeInstanceDealDetailRequest()
 	request.DealIds = append(request.DealIds, &dealid)
 	var instanceids string
@@ -300,22 +301,26 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 	for {
 		response, err := client.DescribeInstanceDealDetail(request)
 		if err != nil {
-			return "", fmt.Errorf("call DescribeInstanceDealDetail with dealid = %v meet error = %v", dealid, err)
-		}
-
-		if len(response.Response.DealDetails) == 0 {
-			return "", fmt.Errorf("the redis (dealid = %v) not found", dealid)
-		}
-
-		if *response.Response.DealDetails[0].Status == REDIS_STATUS_RUNNING {
-			for _, instanceid := range response.Response.DealDetails[0].InstanceIds {
-				if instanceids == "" {
-					instanceids = *instanceid
-				} else {
-					instanceids = instanceids + "," + *instanceid
+			if count > 0 {
+				return "", fmt.Errorf("call DescribeInstanceDealDetail with dealid = %v meet error = %v", dealid, err)
+			}
+		}else {
+			if len(response.Response.DealDetails) == 0 {
+				if count > 0 {
+					return "", fmt.Errorf("the redis (dealid = %v) not found", dealid)
+				}
+			} else {
+				if *response.Response.DealDetails[0].Status == REDIS_STATUS_RUNNING {
+					for _, instanceid := range response.Response.DealDetails[0].InstanceIds {
+						if instanceids == "" {
+							instanceids = *instanceid
+						} else {
+							instanceids = instanceids + "," + *instanceid
+						}
+					}
+					return instanceids, nil
 				}
 			}
-			return instanceids, nil
 		}
 
 		time.Sleep(10 * time.Second)
