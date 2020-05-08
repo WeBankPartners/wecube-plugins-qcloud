@@ -244,14 +244,47 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 
 	logrus.Info("create redis instance response = ", *response.Response.RequestId)
 	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
+	logrus.Info("new redis instance instance ids = ", response.Response.InstanceIds)
 
-	instanceid, err := action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
-	if err != nil {
-		return output, err
+	var instanceId string
+	if len(response.Response.InstanceIds) > 0 {
+		instanceId = *response.Response.InstanceIds[0]
+		var tmpError error
+		tmpCount := 0
+		for {
+			tmpInstanceResponse, err := client.DescribeInstances(&redis.DescribeInstancesRequest{InstanceId:response.Response.InstanceIds[0]})
+			if err != nil {
+				tmpError = err
+				break
+			}
+			if len(tmpInstanceResponse.Response.InstanceSet) == 0 {
+				tmpError = fmt.Errorf("get redis instance %s fail,response have no instance item ", *response.Response.InstanceIds[0])
+				break
+			}
+			logrus.Infof("get redis instance %s,count: %d, status: %d ", *response.Response.InstanceIds[0], tmpCount, *tmpInstanceResponse.Response.InstanceSet[0].Status)
+			if *tmpInstanceResponse.Response.InstanceSet[0].Status == 2 {
+				break
+			}
+			time.Sleep(5 * time.Second)
+			tmpCount++
+			if tmpCount >= 20 {
+				tmpError = fmt.Errorf("get redis instance %s timeout ", *response.Response.InstanceIds[0])
+				break
+			}
+		}
+		if tmpError != nil {
+			logrus.Errorf("get redis instance info meet error: %s", tmpError)
+			return output,tmpError
+		}
+	}else {
+		instanceId, err = action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
+		if err != nil {
+			return output, err
+		}
 	}
 
 	instanceRequest := redis.DescribeInstancesRequest{
-		InstanceId: &instanceid,
+		InstanceId: &instanceId,
 	}
 
 	instanceResponse, err := client.DescribeInstances(&instanceRequest)
@@ -261,13 +294,13 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	}
 
 	if len(instanceResponse.Response.InstanceSet) == 0 {
-		err = fmt.Errorf("not query the new redis instance[%v]", instanceid)
+		err = fmt.Errorf("not query the new redis instance[%v]", instanceId)
 		return output, err
 	}
 
 	output.RequestId = *response.Response.RequestId
 	output.DealID = *response.Response.DealId
-	output.ID = instanceid
+	output.ID = instanceId
 	output.Vip = *instanceResponse.Response.InstanceSet[0].WanIp
 	output.Port = strconv.Itoa(int(*instanceResponse.Response.InstanceSet[0].Port))
 
