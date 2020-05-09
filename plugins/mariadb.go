@@ -214,8 +214,12 @@ func getInstanceIdByDealName(client *mariadb.Client, dealName string) (string, e
 			return "", err
 		}
 
-		if *resp.Response.TotalCount != 1 {
-			logrus.Errorf("getInstanceIdByDealName(%s) totalcount=%v", dealName, *resp.Response.TotalCount)
+		if len(resp.Response.TotalCount) == 0 {
+			logrus.Errorf("getInstanceIdByDealName(%s) totalcount length is 0=", dealName)
+			return "", errors.New("descirbeOrder totalcount length is 0 ")
+		}
+		if *resp.Response.TotalCount[0] != 1 {
+			logrus.Errorf("getInstanceIdByDealName(%s) totalcount=%v", dealName, *resp.Response.TotalCount[0])
 			return "", errors.New("descirbeOrder totalcount!=1")
 		}
 		if len(resp.Response.Deals[0].InstanceIds) == 1 {

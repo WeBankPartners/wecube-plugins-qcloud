@@ -571,6 +571,12 @@ type DescribeDiskOperationLogsRequest struct {
 	// 过滤条件。支持以下条件：
 	// <li>disk-id - Array of String - 是否必填：是 - 按云盘ID过滤，每个请求最多可指定10个云盘ID。
 	Filters []*Filter `json:"Filters,omitempty" name:"Filters" list`
+
+	// 要查询的操作日志的起始时间，例如：“2019-11-22 00:00:00"
+	BeginTime *string `json:"BeginTime,omitempty" name:"BeginTime"`
+
+	// 要查询的操作日志的截止时间，例如：“2019-11-22 23:59:59"
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
 }
 
 func (r *DescribeDiskOperationLogsRequest) ToJsonString() string {
@@ -704,6 +710,12 @@ type DescribeSnapshotOperationLogsRequest struct {
 	// 过滤条件。支持以下条件：
 	// <li>snapshot-id - Array of String - 是否必填：是 - 按快照ID过滤，每个请求最多可指定10个快照ID。
 	Filters []*Filter `json:"Filters,omitempty" name:"Filters" list`
+
+	// 要查询的操作日志的起始时间，例如：“2019-11-22 00:00:00"
+	BeginTime *string `json:"BeginTime,omitempty" name:"BeginTime"`
+
+	// 要查询的操作日志的截止时间，例如：“2019-11-22 23:59:59"
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
 }
 
 func (r *DescribeSnapshotOperationLogsRequest) ToJsonString() string {
@@ -733,6 +745,43 @@ func (r *DescribeSnapshotOperationLogsResponse) ToJsonString() string {
 }
 
 func (r *DescribeSnapshotOperationLogsResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeSnapshotSharePermissionRequest struct {
+	*tchttp.BaseRequest
+
+	// 要查询快照的ID。可通过[DescribeSnapshots](https://cloud.tencent.com/document/api/362/15647)查询获取。
+	SnapshotId *string `json:"SnapshotId,omitempty" name:"SnapshotId"`
+}
+
+func (r *DescribeSnapshotSharePermissionRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeSnapshotSharePermissionRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeSnapshotSharePermissionResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 快照的分享信息的集合
+		SharePermissionSet []*SharePermission `json:"SharePermissionSet,omitempty" name:"SharePermissionSet" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeSnapshotSharePermissionResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeSnapshotSharePermissionResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -931,13 +980,14 @@ type Disk struct {
 	// 对于非共享型云盘，该参数为空数组。对于共享型云盘，则表示该云盘当前被挂载到的CVM实例InstanceId
 	InstanceIdList []*string `json:"InstanceIdList,omitempty" name:"InstanceIdList" list`
 
-	// 云硬盘挂载目标设备的ID
-	// 注意：此字段可能返回 null，表示取不到有效值。
-	AttachDeviceId *string `json:"AttachDeviceId,omitempty" name:"AttachDeviceId"`
+	// 云盘拥有的快照总数。
+	SnapshotCount *int64 `json:"SnapshotCount,omitempty" name:"SnapshotCount"`
 
-	// 云硬盘挂载目标设备的类型，目前包括CVM和POD
-	// 注意：此字段可能返回 null，表示取不到有效值。
-	AttachDeviceType *string `json:"AttachDeviceType,omitempty" name:"AttachDeviceType"`
+	// 云盘拥有的快照总容量，单位为MB。
+	SnapshotSize *uint64 `json:"SnapshotSize,omitempty" name:"SnapshotSize"`
+
+	// 云盘因欠费销毁或者期销毁时， 是否使用快照备份数据的标识。True， 销毁时创建快照进行数据备份。False 表示直接销毁，不进行数据备份。
+	BackupDisk *bool `json:"BackupDisk,omitempty" name:"BackupDisk"`
 }
 
 type DiskChargePrepaid struct {
@@ -1024,6 +1074,49 @@ type Filter struct {
 
 	// 一个或者多个过滤值。
 	Values []*string `json:"Values,omitempty" name:"Values" list`
+}
+
+type GetSnapOverviewRequest struct {
+	*tchttp.BaseRequest
+}
+
+func (r *GetSnapOverviewRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *GetSnapOverviewRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type GetSnapOverviewResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 用户快照总大小
+		TotalSize *float64 `json:"TotalSize,omitempty" name:"TotalSize"`
+
+		// 用户快照总大小（用于计费）
+		RealTradeSize *float64 `json:"RealTradeSize,omitempty" name:"RealTradeSize"`
+
+		// 快照免费额度
+		FreeQuota *float64 `json:"FreeQuota,omitempty" name:"FreeQuota"`
+
+		// 快照总个数
+		TotalNums *int64 `json:"TotalNums,omitempty" name:"TotalNums"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *GetSnapOverviewResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *GetSnapOverviewResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type Image struct {
@@ -1274,6 +1367,43 @@ func (r *ModifyDiskAttributesResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type ModifyDisksChargeTypeRequest struct {
+	*tchttp.BaseRequest
+
+	// 一个或多个待操作的云硬盘ID。每次请求批量云盘上限为100。
+	DiskIds []*string `json:"DiskIds,omitempty" name:"DiskIds" list`
+
+	// 预付费模式，即包年包月相关参数设置。通过该参数可以指定包年包月实例的购买时长、是否设置自动续费等属性。
+	DiskChargePrepaid *DiskChargePrepaid `json:"DiskChargePrepaid,omitempty" name:"DiskChargePrepaid"`
+}
+
+func (r *ModifyDisksChargeTypeRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyDisksChargeTypeRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifyDisksChargeTypeResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ModifyDisksChargeTypeResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyDisksChargeTypeResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type ModifyDisksRenewFlagRequest struct {
 	*tchttp.BaseRequest
 
@@ -1348,6 +1478,46 @@ func (r *ModifySnapshotAttributeResponse) ToJsonString() string {
 }
 
 func (r *ModifySnapshotAttributeResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifySnapshotsSharePermissionRequest struct {
+	*tchttp.BaseRequest
+
+	// 接收分享快照的账号Id列表，array型参数的格式可以参考[API简介](https://cloud.tencent.com/document/api/213/568)。帐号ID不同于QQ号，查询用户帐号ID请查看[帐号信息](https://console.cloud.tencent.com/developer)中的帐号ID栏。
+	AccountIds []*string `json:"AccountIds,omitempty" name:"AccountIds" list`
+
+	// 操作，包括 SHARE，CANCEL。其中SHARE代表分享操作，CANCEL代表取消分享操作。
+	Permission *string `json:"Permission,omitempty" name:"Permission"`
+
+	// 快照ID, 可通过[DescribeSnapshots](https://cloud.tencent.com/document/api/362/15647)查询获取。
+	SnapshotIds []*string `json:"SnapshotIds,omitempty" name:"SnapshotIds" list`
+}
+
+func (r *ModifySnapshotsSharePermissionRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifySnapshotsSharePermissionRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifySnapshotsSharePermissionResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ModifySnapshotsSharePermissionResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifySnapshotsSharePermissionResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -1487,6 +1657,15 @@ func (r *ResizeDiskResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type SharePermission struct {
+
+	// 快照分享的时间
+	CreatedTime *string `json:"CreatedTime,omitempty" name:"CreatedTime"`
+
+	// 分享的账号Id
+	AccountId *string `json:"AccountId,omitempty" name:"AccountId"`
+}
+
 type Snapshot struct {
 
 	// 快照ID。
@@ -1539,6 +1718,9 @@ type Snapshot struct {
 
 	// 快照类型，目前该项取值可以为PRIVATE_SNAPSHOT或者SHARED_SNAPSHOT
 	SnapshotType *string `json:"SnapshotType,omitempty" name:"SnapshotType"`
+
+	// 快照当前被共享数
+	ShareReference *uint64 `json:"ShareReference,omitempty" name:"ShareReference"`
 }
 
 type SnapshotOperationLog struct {

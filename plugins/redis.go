@@ -181,6 +181,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	if err != nil {
 		return output, err
 	}
+	for k,_ := range zonemap {
+		logrus.Infof("zone : %s", k)
+	}
 
 	request := redis.NewCreateInstancesRequest()
 	if _, found := zonemap[paramsMap["AvailableZone"]]; !found {
@@ -250,14 +253,13 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	if len(response.Response.InstanceIds) > 0 {
 		instanceId = *response.Response.InstanceIds[0]
 		logrus.Info("new redis instance instance ids 1 = ", instanceId)
-		logrus.Info("new redis instance instance ids 1 ptr = ", &instanceId)
 		var tmpError error
 		tmpCount := 0
 		for {
-			tmpInstanceRequest := redis.DescribeInstancesRequest{
-				InstanceId: &instanceId,
-			}
-			tmpInstanceResponse, err := client.DescribeInstances(&tmpInstanceRequest)
+			newInstanceRequest := redis.NewDescribeInstancesRequest()
+			newInstanceRequest.InstanceId = &instanceId
+			tmpInstanceResponse, err := client.DescribeInstances(newInstanceRequest)
+
 			if err != nil {
 				logrus.Errorf("client DescribeInstances ", err)
 				tmpError = err
@@ -289,11 +291,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 	}
 
-	instanceRequest := redis.DescribeInstancesRequest{
-		InstanceId: &instanceId,
-	}
+	instanceRequest := redis.NewDescribeInstancesRequest()
+	instanceRequest.InstanceId = &instanceId
 
-	instanceResponse, err := client.DescribeInstances(&instanceRequest)
+	instanceResponse, err := client.DescribeInstances(instanceRequest)
 	if err != nil {
 		logrus.Errorf("query redis instance info meet error: %s", err)
 		return output, err

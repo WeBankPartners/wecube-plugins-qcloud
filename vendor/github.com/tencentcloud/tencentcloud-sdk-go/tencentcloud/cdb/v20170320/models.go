@@ -174,20 +174,29 @@ type BackupInfo struct {
 	// 外网下载地址
 	InternetUrl *string `json:"InternetUrl,omitempty" name:"InternetUrl"`
 
-	// 日志具体类型，可能的值有：logic - 逻辑冷备，physical - 物理冷备
+	// 日志具体类型。可能的值有 "logical": 逻辑冷备， "physical": 物理冷备。
 	Type *string `json:"Type,omitempty" name:"Type"`
 
 	// 备份子任务的ID，删除备份文件时使用
 	BackupId *int64 `json:"BackupId,omitempty" name:"BackupId"`
 
-	// 备份任务状态
+	// 备份任务状态。可能的值有 "SUCCESS": 备份成功， "FAILED": 备份失败， "RUNNING": 备份进行中。
 	Status *string `json:"Status,omitempty" name:"Status"`
 
 	// 备份任务的完成时间
 	FinishTime *string `json:"FinishTime,omitempty" name:"FinishTime"`
 
-	// 备份的创建者，可能的值：SYSTEM - 系统创建，Uin - 发起者Uin值
+	// （该值将废弃，不建议使用）备份的创建者，可能的值：SYSTEM - 系统创建，Uin - 发起者Uin值。
 	Creator *string `json:"Creator,omitempty" name:"Creator"`
+
+	// 备份任务的开始时间
+	StartTime *string `json:"StartTime,omitempty" name:"StartTime"`
+
+	// 备份方法。可能的值有 "full": 全量备份， "partial": 部分备份。
+	Method *string `json:"Method,omitempty" name:"Method"`
+
+	// 备份方式。可能的值有 "manual": 手动备份， "automatic": 自动备份。
+	Way *string `json:"Way,omitempty" name:"Way"`
 }
 
 type BackupItem struct {
@@ -199,15 +208,82 @@ type BackupItem struct {
 	Table *string `json:"Table,omitempty" name:"Table"`
 }
 
+type BackupSummaryItem struct {
+
+	// 实例ID。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 该实例自动数据备份的个数。
+	AutoBackupCount *int64 `json:"AutoBackupCount,omitempty" name:"AutoBackupCount"`
+
+	// 该实例自动数据备份的容量。
+	AutoBackupVolume *int64 `json:"AutoBackupVolume,omitempty" name:"AutoBackupVolume"`
+
+	// 该实例手动数据备份的个数。
+	ManualBackupCount *int64 `json:"ManualBackupCount,omitempty" name:"ManualBackupCount"`
+
+	// 该实例手动数据备份的容量。
+	ManualBackupVolume *int64 `json:"ManualBackupVolume,omitempty" name:"ManualBackupVolume"`
+
+	// 该实例总的数据备份（包含自动备份和手动备份）个数。
+	DataBackupCount *int64 `json:"DataBackupCount,omitempty" name:"DataBackupCount"`
+
+	// 该实例总的数据备份容量。
+	DataBackupVolume *int64 `json:"DataBackupVolume,omitempty" name:"DataBackupVolume"`
+
+	// 该实例日志备份的个数。
+	BinlogBackupCount *int64 `json:"BinlogBackupCount,omitempty" name:"BinlogBackupCount"`
+
+	// 该实例日志备份的容量。
+	BinlogBackupVolume *int64 `json:"BinlogBackupVolume,omitempty" name:"BinlogBackupVolume"`
+
+	// 该实例的总备份（包含数据备份和日志备份）占用容量。
+	BackupVolume *int64 `json:"BackupVolume,omitempty" name:"BackupVolume"`
+}
+
+type BalanceRoGroupLoadRequest struct {
+	*tchttp.BaseRequest
+
+	// RO 组的 ID，格式如：cdbrg-c1nl9rpv。
+	RoGroupId *string `json:"RoGroupId,omitempty" name:"RoGroupId"`
+}
+
+func (r *BalanceRoGroupLoadRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *BalanceRoGroupLoadRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type BalanceRoGroupLoadResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *BalanceRoGroupLoadResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *BalanceRoGroupLoadResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type BinlogInfo struct {
 
-	// 备份文件名
+	// binlog 日志备份文件名
 	Name *string `json:"Name,omitempty" name:"Name"`
 
 	// 备份文件大小，单位：Byte
 	Size *int64 `json:"Size,omitempty" name:"Size"`
 
-	// 备份快照时间，时间格式：2016-03-17 02:10:37
+	// 文件存储时间，时间格式：2016-03-17 02:10:37
 	Date *string `json:"Date,omitempty" name:"Date"`
 
 	// 内网下载地址
@@ -218,6 +294,12 @@ type BinlogInfo struct {
 
 	// 日志具体类型，可能的值有：binlog - 二进制日志
 	Type *string `json:"Type,omitempty" name:"Type"`
+
+	// binlog 文件起始时间
+	BinlogStartTime *string `json:"BinlogStartTime,omitempty" name:"BinlogStartTime"`
+
+	// binlog 文件截止时间
+	BinlogFinishTime *string `json:"BinlogFinishTime,omitempty" name:"BinlogFinishTime"`
 }
 
 type CloseWanServiceRequest struct {
@@ -270,6 +352,30 @@ type ColumnPrivilege struct {
 
 	// 权限信息
 	Privileges []*string `json:"Privileges,omitempty" name:"Privileges" list`
+}
+
+type CommonTimeWindow struct {
+
+	// 周一的时间窗，格式如： 02:00-06:00
+	Monday *string `json:"Monday,omitempty" name:"Monday"`
+
+	// 周二的时间窗，格式如： 02:00-06:00
+	Tuesday *string `json:"Tuesday,omitempty" name:"Tuesday"`
+
+	// 周三的时间窗，格式如： 02:00-06:00
+	Wednesday *string `json:"Wednesday,omitempty" name:"Wednesday"`
+
+	// 周四的时间窗，格式如： 02:00-06:00
+	Thursday *string `json:"Thursday,omitempty" name:"Thursday"`
+
+	// 周五的时间窗，格式如： 02:00-06:00
+	Friday *string `json:"Friday,omitempty" name:"Friday"`
+
+	// 周六的时间窗，格式如： 02:00-06:00
+	Saturday *string `json:"Saturday,omitempty" name:"Saturday"`
+
+	// 周日的时间窗，格式如： 02:00-06:00
+	Sunday *string `json:"Sunday,omitempty" name:"Sunday"`
 }
 
 type CreateAccountsRequest struct {
@@ -482,6 +588,15 @@ type CreateDBInstanceHourRequest struct {
 
 	// 实例标签信息。
 	ResourceTags []*TagInfo `json:"ResourceTags,omitempty" name:"ResourceTags" list`
+
+	// 置放群组 ID。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 用于保证请求幂等性的字符串。该字符串由客户生成，需保证不同请求之间在当天内唯一，最大值不超过64个ASCII字符。若不指定该参数，则无法保证请求的幂等性。
+	ClientToken *string `json:"ClientToken,omitempty" name:"ClientToken"`
+
+	// 实例类型。支持值包括： "HA" - 高可用版实例， "BASIC" - 基础版实例。 不指定则默认为高可用版。
+	DeviceType *string `json:"DeviceType,omitempty" name:"DeviceType"`
 }
 
 func (r *CreateDBInstanceHourRequest) ToJsonString() string {
@@ -591,6 +706,15 @@ type CreateDBInstanceRequest struct {
 
 	// 实例标签信息。
 	ResourceTags []*TagInfo `json:"ResourceTags,omitempty" name:"ResourceTags" list`
+
+	// 置放群组 ID。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 用于保证请求幂等性的字符串。该字符串由客户生成，需保证不同请求之间在当天内唯一，最大值不超过64个ASCII字符。若不指定该参数，则无法保证请求的幂等性。
+	ClientToken *string `json:"ClientToken,omitempty" name:"ClientToken"`
+
+	// 实例类型。支持值包括： "HA" - 高可用版实例， "BASIC" - 基础版实例。 不指定则默认为高可用版。
+	DeviceType *string `json:"DeviceType,omitempty" name:"DeviceType"`
 }
 
 func (r *CreateDBInstanceRequest) ToJsonString() string {
@@ -623,6 +747,55 @@ func (r *CreateDBInstanceResponse) ToJsonString() string {
 }
 
 func (r *CreateDBInstanceResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type CreateDeployGroupRequest struct {
+	*tchttp.BaseRequest
+
+	// 置放群组名称，最长不能超过60个字符。
+	DeployGroupName *string `json:"DeployGroupName,omitempty" name:"DeployGroupName"`
+
+	// 置放群组描述，最长不能超过200个字符。
+	Description *string `json:"Description,omitempty" name:"Description"`
+
+	// 置放群组的亲和性策略，目前仅支持取值为1，策略1表示同台物理机上限制实例的个数。
+	Affinity []*int64 `json:"Affinity,omitempty" name:"Affinity" list`
+
+	// 置放群组亲和性策略1中同台物理机上实例的限制个数。
+	LimitNum *int64 `json:"LimitNum,omitempty" name:"LimitNum"`
+
+	// 置放群组机型属性，可选参数：SH12+SH02、TS85。
+	DevClass []*string `json:"DevClass,omitempty" name:"DevClass" list`
+}
+
+func (r *CreateDeployGroupRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *CreateDeployGroupRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type CreateDeployGroupResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 置放群组ID。
+		DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *CreateDeployGroupResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *CreateDeployGroupResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -776,6 +949,40 @@ func (r *DeleteBackupResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DeleteDeployGroupsRequest struct {
+	*tchttp.BaseRequest
+
+	// 要删除的置放群组 ID 列表。
+	DeployGroupIds []*string `json:"DeployGroupIds,omitempty" name:"DeployGroupIds" list`
+}
+
+func (r *DeleteDeployGroupsRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DeleteDeployGroupsRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DeleteDeployGroupsResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DeleteDeployGroupsResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DeleteDeployGroupsResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DeleteParamTemplateRequest struct {
 	*tchttp.BaseRequest
 
@@ -844,6 +1051,36 @@ func (r *DeleteTimeWindowResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DeployGroupInfo struct {
+
+	// 置放群组 ID。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 置放群组名称。
+	DeployGroupName *string `json:"DeployGroupName,omitempty" name:"DeployGroupName"`
+
+	// 创建时间。
+	CreateTime *string `json:"CreateTime,omitempty" name:"CreateTime"`
+
+	// 置放群组实例配额，表示一个置放群组中可容纳的最大实例数目。
+	Quota *int64 `json:"Quota,omitempty" name:"Quota"`
+
+	// 置放群组亲和性策略，目前仅支持策略1，即在物理机纬度打散实例的分布。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Affinity *string `json:"Affinity,omitempty" name:"Affinity"`
+
+	// 置放群组亲和性策略1中，同台物理机上同个置放群组实例的限制个数。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	LimitNum *int64 `json:"LimitNum,omitempty" name:"LimitNum"`
+
+	// 置放群组详细信息。
+	Description *string `json:"Description,omitempty" name:"Description"`
+
+	// 置放群组物理机型属性。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	DevClass *string `json:"DevClass,omitempty" name:"DevClass"`
+}
+
 type DescribeAccountPrivilegesRequest struct {
 	*tchttp.BaseRequest
 
@@ -907,6 +1144,9 @@ type DescribeAccountsRequest struct {
 
 	// 单次请求返回的数量，默认值为20，最小值为1，最大值为100。
 	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+
+	// 匹配账号名的正则表达式，规则同 MySQL 官网。
+	AccountRegexp *string `json:"AccountRegexp,omitempty" name:"AccountRegexp"`
 }
 
 func (r *DescribeAccountsRequest) ToJsonString() string {
@@ -963,9 +1203,11 @@ type DescribeAsyncRequestInfoResponse struct {
 	Response *struct {
 
 		// 任务执行结果。可能的取值：INITIAL - 初始化，RUNNING - 运行中，SUCCESS - 执行成功，FAILED - 执行失败，KILLED - 已终止，REMOVED - 已删除，PAUSED - 终止中。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Status *string `json:"Status,omitempty" name:"Status"`
 
 		// 任务执行信息描述。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Info *string `json:"Info,omitempty" name:"Info"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -985,7 +1227,7 @@ func (r *DescribeAsyncRequestInfoResponse) FromJsonString(s string) error {
 type DescribeBackupConfigRequest struct {
 	*tchttp.BaseRequest
 
-	// 实例短实例 ID，格式如：cdb-c1nl9rpv。与云数据库控制台页面中显示的实例 ID 相同。
+	// 实例 ID，格式如：cdb-c1nl9rpv。与云数据库控制台页面中显示的实例 ID 相同。
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 }
 
@@ -1002,20 +1244,23 @@ type DescribeBackupConfigResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 备份开始的最早时间点，单位为时刻。例如，2 - 凌晨 2:00。
+		// 自动备份开始的最早时间点，单位为时刻。例如，2 - 凌晨 2:00。（该字段已废弃，建议使用 BackupTimeWindow 字段）
 		StartTimeMin *int64 `json:"StartTimeMin,omitempty" name:"StartTimeMin"`
 
-		// 备份开始的最晚时间点，单位为时刻。例如，6 - 凌晨 6:00。
+		// 自动备份开始的最晚时间点，单位为时刻。例如，6 - 凌晨 6:00。（该字段已废弃，建议使用 BackupTimeWindow 字段）
 		StartTimeMax *int64 `json:"StartTimeMax,omitempty" name:"StartTimeMax"`
 
-		// 备份过期时间，单位为天。
+		// 备份文件保留时间，单位为天。
 		BackupExpireDays *int64 `json:"BackupExpireDays,omitempty" name:"BackupExpireDays"`
 
 		// 备份方式，可能的值为：physical - 物理备份，logical - 逻辑备份。
 		BackupMethod *string `json:"BackupMethod,omitempty" name:"BackupMethod"`
 
-		// Binlog 过期时间，单位为天。
+		// Binlog 文件保留时间，单位为天。
 		BinlogExpireDays *int64 `json:"BinlogExpireDays,omitempty" name:"BinlogExpireDays"`
+
+		// 实例自动备份的时间窗。
+		BackupTimeWindow *CommonTimeWindow `json:"BackupTimeWindow,omitempty" name:"BackupTimeWindow"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
 		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
@@ -1080,6 +1325,104 @@ func (r *DescribeBackupDatabasesResponse) ToJsonString() string {
 }
 
 func (r *DescribeBackupDatabasesResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBackupOverviewRequest struct {
+	*tchttp.BaseRequest
+
+	// 需要查询的云数据库产品类型，目前仅支持 "mysql"。
+	Product *string `json:"Product,omitempty" name:"Product"`
+}
+
+func (r *DescribeBackupOverviewRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBackupOverviewRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBackupOverviewResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 用户在当前地域备份的总个数（包含数据备份和日志备份）。
+		BackupCount *int64 `json:"BackupCount,omitempty" name:"BackupCount"`
+
+		// 用户在当前地域备份的总容量
+		BackupVolume *int64 `json:"BackupVolume,omitempty" name:"BackupVolume"`
+
+		// 用户在当前地域备份的计费容量，即超出赠送容量的部分。
+		BillingVolume *int64 `json:"BillingVolume,omitempty" name:"BillingVolume"`
+
+		// 用户在当前地域获得的赠送备份容量。
+		FreeVolume *int64 `json:"FreeVolume,omitempty" name:"FreeVolume"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeBackupOverviewResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBackupOverviewResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBackupSummariesRequest struct {
+	*tchttp.BaseRequest
+
+	// 需要查询的云数据库产品类型，目前仅支持 "mysql"。
+	Product *string `json:"Product,omitempty" name:"Product"`
+
+	// 分页查询数据的偏移量。
+	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
+
+	// 分页查询数据的条目限制，默认值为20。
+	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+
+	// 指定按某一项排序，可选值包括： BackupVolume: 备份容量， DataBackupVolume: 数据备份容量， BinlogBackupVolume: 日志备份容量， AutoBackupVolume: 自动备份容量， ManualBackupVolume: 手动备份容量。
+	OrderBy *string `json:"OrderBy,omitempty" name:"OrderBy"`
+
+	// 指定排序方向，可选值包括： ASC: 正序， DESC: 逆序。
+	OrderDirection *string `json:"OrderDirection,omitempty" name:"OrderDirection"`
+}
+
+func (r *DescribeBackupSummariesRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBackupSummariesRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBackupSummariesResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 实例备份统计条目。
+		Items []*BackupSummaryItem `json:"Items,omitempty" name:"Items" list`
+
+		// 实例备份统计总条目数。
+		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeBackupSummariesResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBackupSummariesResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -1181,6 +1524,46 @@ func (r *DescribeBackupsResponse) ToJsonString() string {
 }
 
 func (r *DescribeBackupsResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBinlogBackupOverviewRequest struct {
+	*tchttp.BaseRequest
+
+	// 需要查询的云数据库产品类型，目前仅支持 "mysql"。
+	Product *string `json:"Product,omitempty" name:"Product"`
+}
+
+func (r *DescribeBinlogBackupOverviewRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBinlogBackupOverviewRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeBinlogBackupOverviewResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 总的日志备份容量（单位为字节）。
+		BinlogBackupVolume *int64 `json:"BinlogBackupVolume,omitempty" name:"BinlogBackupVolume"`
+
+		// 总的日志备份个数。
+		BinlogBackupCount *int64 `json:"BinlogBackupCount,omitempty" name:"BinlogBackupCount"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeBinlogBackupOverviewResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeBinlogBackupOverviewResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -1405,6 +1788,57 @@ func (r *DescribeDBInstanceGTIDResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DescribeDBInstanceInfoRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID 。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+func (r *DescribeDBInstanceInfoRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDBInstanceInfoRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeDBInstanceInfoResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 实例 ID 。
+		InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+		// 实例名称。
+		InstanceName *string `json:"InstanceName,omitempty" name:"InstanceName"`
+
+		// 是否开通加密，YES 已开通，NO 未开通。
+		Encryption *string `json:"Encryption,omitempty" name:"Encryption"`
+
+		// 加密使用的密钥 ID 。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		KeyId *string `json:"KeyId,omitempty" name:"KeyId"`
+
+		// 密钥所在地域。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		KeyRegion *string `json:"KeyRegion,omitempty" name:"KeyRegion"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeDBInstanceInfoResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDBInstanceInfoResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DescribeDBInstanceRebootTimeRequest struct {
 	*tchttp.BaseRequest
 
@@ -1514,14 +1948,17 @@ type DescribeDBInstancesRequest struct {
 	// 初始化标记，可取值：0 - 未初始化，1 - 初始化。
 	InitFlag *int64 `json:"InitFlag,omitempty" name:"InitFlag"`
 
-	// 是否包含灾备实例，可取值：0 - 不包含，1 - 包含。
+	// 是否包含灾备关系对应的实例，可取值：0 - 不包含，1 - 包含。默认取值为1。如果拉取主实例，则灾备关系的数据在DrInfo字段中， 如果拉取灾备实例， 则灾备关系的数据在MasterInfo字段中。灾备关系中只包含部分基本的数据，详细的数据需要自行调接口拉取。
 	WithDr *int64 `json:"WithDr,omitempty" name:"WithDr"`
 
-	// 是否包含只读实例，可取值：0 - 不包含，1 - 包含。
+	// 是否包含只读实例，可取值：0 - 不包含，1 - 包含。默认取值为1。
 	WithRo *int64 `json:"WithRo,omitempty" name:"WithRo"`
 
-	// 是否包含主实例，可取值：0 - 不包含，1 - 包含。
+	// 是否包含主实例，可取值：0 - 不包含，1 - 包含。默认取值为1。
 	WithMaster *int64 `json:"WithMaster,omitempty" name:"WithMaster"`
+
+	// 置放群组ID列表。
+	DeployGroupIds []*string `json:"DeployGroupIds,omitempty" name:"DeployGroupIds" list`
 }
 
 func (r *DescribeDBInstancesRequest) ToJsonString() string {
@@ -1738,6 +2175,58 @@ func (r *DescribeDBZoneConfigResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DescribeDataBackupOverviewRequest struct {
+	*tchttp.BaseRequest
+
+	// 需要查询的云数据库产品类型，目前仅支持 "mysql"。
+	Product *string `json:"Product,omitempty" name:"Product"`
+}
+
+func (r *DescribeDataBackupOverviewRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDataBackupOverviewRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeDataBackupOverviewResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 当前地域的数据备份总容量（包含自动备份和手动备份，单位为字节）。
+		DataBackupVolume *int64 `json:"DataBackupVolume,omitempty" name:"DataBackupVolume"`
+
+		// 当前地域的数据备份总个数。
+		DataBackupCount *int64 `json:"DataBackupCount,omitempty" name:"DataBackupCount"`
+
+		// 当前地域的自动备份总容量。
+		AutoBackupVolume *int64 `json:"AutoBackupVolume,omitempty" name:"AutoBackupVolume"`
+
+		// 当前地域的自动备份总个数。
+		AutoBackupCount *int64 `json:"AutoBackupCount,omitempty" name:"AutoBackupCount"`
+
+		// 当前地域的手动备份总容量。
+		ManualBackupVolume *int64 `json:"ManualBackupVolume,omitempty" name:"ManualBackupVolume"`
+
+		// 当前地域的手动备份总个数。
+		ManualBackupCount *int64 `json:"ManualBackupCount,omitempty" name:"ManualBackupCount"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeDataBackupOverviewResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDataBackupOverviewResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DescribeDatabasesRequest struct {
 	*tchttp.BaseRequest
 
@@ -1750,7 +2239,7 @@ type DescribeDatabasesRequest struct {
 	// 单次请求数量，默认值为20，最小值为1，最大值为100。
 	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
 
-	// 匹配数据库库名的正则表达式，规则同 MySQL 官网
+	// 匹配数据库库名的正则表达式。
 	DatabaseRegexp *string `json:"DatabaseRegexp,omitempty" name:"DatabaseRegexp"`
 }
 
@@ -1827,6 +2316,56 @@ func (r *DescribeDefaultParamsResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DescribeDeployGroupListRequest struct {
+	*tchttp.BaseRequest
+
+	// 置放群组 ID。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 置放群组名称。
+	DeployGroupName *string `json:"DeployGroupName,omitempty" name:"DeployGroupName"`
+
+	// 返回数量，默认为20，最大值为100。
+	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+
+	// 偏移量，默认为0。
+	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
+}
+
+func (r *DescribeDeployGroupListRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDeployGroupListRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeDeployGroupListResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 符合条件的记录总数。
+		Total *int64 `json:"Total,omitempty" name:"Total"`
+
+		// 返回列表。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		Items []*DeployGroupInfo `json:"Items,omitempty" name:"Items" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeDeployGroupListResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDeployGroupListResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DescribeDeviceMonitorInfoRequest struct {
 	*tchttp.BaseRequest
 
@@ -1873,6 +2412,62 @@ func (r *DescribeDeviceMonitorInfoResponse) ToJsonString() string {
 }
 
 func (r *DescribeDeviceMonitorInfoResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeErrorLogDataRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID 。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 开始时间戳。
+	StartTime *uint64 `json:"StartTime,omitempty" name:"StartTime"`
+
+	// 结束时间戳。
+	EndTime *uint64 `json:"EndTime,omitempty" name:"EndTime"`
+
+	// 要匹配的关键字列表，最多支持15个关键字。
+	KeyWords []*string `json:"KeyWords,omitempty" name:"KeyWords" list`
+
+	// 分页的返回数量，最大为400。
+	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+
+	// 偏移量，默认为0。
+	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
+}
+
+func (r *DescribeErrorLogDataRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeErrorLogDataRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeErrorLogDataResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 符合条件的记录总数。
+		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
+
+		// 返回的记录。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		Items []*ErrlogItem `json:"Items,omitempty" name:"Items" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeErrorLogDataResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeErrorLogDataResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -2085,10 +2680,47 @@ func (r *DescribeProjectSecurityGroupsResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type DescribeRoGroupsRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID，格式如：cdb-c1nl9rpv或者cdb-c1nl9rpv，与云数据库控制台页面中显示的实例ID相同。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+func (r *DescribeRoGroupsRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeRoGroupsRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeRoGroupsResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// RO组信息数组，一个实例可关联多个RO组。
+		RoGroups []*RoGroup `json:"RoGroups,omitempty" name:"RoGroups" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeRoGroupsResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeRoGroupsResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type DescribeRollbackRangeTimeRequest struct {
 	*tchttp.BaseRequest
 
-	// 实例 ID 列表，单个实例Id的格式如：cdb-c1nl9rpv。与云数据库控制台页面中显示的实例 ID 相同。
+	// 实例 ID 列表，单个实例 ID 的格式如：cdb-c1nl9rpv。与云数据库控制台页面中显示的实例 ID 相同。
 	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
 }
 
@@ -2122,6 +2754,124 @@ func (r *DescribeRollbackRangeTimeResponse) ToJsonString() string {
 }
 
 func (r *DescribeRollbackRangeTimeResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeRollbackTaskDetailRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID。与云数据库控制台页面中显示的实例 ID 相同，可使用 [查询实例列表](https://cloud.tencent.com/document/api/236/15872)。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 异步任务 ID。
+	AsyncRequestId *string `json:"AsyncRequestId,omitempty" name:"AsyncRequestId"`
+
+	// 分页参数，每次请求返回的记录数。默认值为 20，最大值为 100。
+	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+
+	// 分页偏移量。默认为 0。
+	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
+}
+
+func (r *DescribeRollbackTaskDetailRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeRollbackTaskDetailRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeRollbackTaskDetailResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 符合条件的记录总数。
+		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
+
+		// 回档任务详情。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		Items []*RollbackTask `json:"Items,omitempty" name:"Items" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeRollbackTaskDetailResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeRollbackTaskDetailResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeSlowLogDataRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 开始时间戳。
+	StartTime *uint64 `json:"StartTime,omitempty" name:"StartTime"`
+
+	// 结束时间戳。
+	EndTime *uint64 `json:"EndTime,omitempty" name:"EndTime"`
+
+	// 客户端 Host 列表。
+	UserHosts []*string `json:"UserHosts,omitempty" name:"UserHosts" list`
+
+	// 客户端 用户名 列表。
+	UserNames []*string `json:"UserNames,omitempty" name:"UserNames" list`
+
+	// 访问的 数据库 列表。
+	DataBases []*string `json:"DataBases,omitempty" name:"DataBases" list`
+
+	// 排序字段。当前支持：Timestamp,QueryTime,LockTime,RowsExamined,RowsSent 。
+	SortBy *string `json:"SortBy,omitempty" name:"SortBy"`
+
+	// 升序还是降序排列。当前支持：ASC,DESC 。
+	OrderBy *string `json:"OrderBy,omitempty" name:"OrderBy"`
+
+	// 偏移量，默认为0。
+	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
+
+	// 一次性返回的记录数量，最大为400。
+	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
+}
+
+func (r *DescribeSlowLogDataRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeSlowLogDataRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeSlowLogDataResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 符合条件的记录总数。
+		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
+
+		// 查询到的记录。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+		Items []*SlowLogItem `json:"Items,omitempty" name:"Items" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeSlowLogDataResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeSlowLogDataResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -2275,10 +3025,10 @@ type DescribeTagsOfInstanceIdsRequest struct {
 	// 实例列表。
 	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
 
-	// 偏移量。
+	// 分页偏移量。
 	Offset *int64 `json:"Offset,omitempty" name:"Offset"`
 
-	// 每页返回多少个标签。
+	// 分页大小。
 	Limit *int64 `json:"Limit,omitempty" name:"Limit"`
 }
 
@@ -2295,10 +3045,10 @@ type DescribeTagsOfInstanceIdsResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 偏移量。
+		// 分页偏移量。
 		Offset *int64 `json:"Offset,omitempty" name:"Offset"`
 
-		// 每页返回多少个标签。
+		// 分页大小。
 		Limit *int64 `json:"Limit,omitempty" name:"Limit"`
 
 		// 实例标签信息。
@@ -2324,13 +3074,33 @@ type DescribeTasksRequest struct {
 	// 实例 ID，格式如：cdb-c1nl9rpv，与云数据库控制台页面中显示的实例 ID 相同，可使用 [查询实例列表](https://cloud.tencent.com/document/api/236/15872) 接口获取，其值为输出参数中字段 InstanceId 的值。
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
-	// 异步任务请求 ID，执行 CDB 相关操作返回的 AsyncRequestId。
+	// 异步任务请求 ID，执行云数据库相关操作返回的 AsyncRequestId。
 	AsyncRequestId *string `json:"AsyncRequestId,omitempty" name:"AsyncRequestId"`
 
-	// 任务类型，不传值则查询所有任务类型，可能的值：1-数据库回档；2-SQL操作；3-数据导入；5-参数设置；6-初始化；7-重启；8-开启GTID；9-只读实例升级；10-数据库批量回档；11-主实例升级；12-删除库表；13-切换为主实例。
+	// 任务类型，不传值则查询所有任务类型，支持的值包括：
+	// 1 - 数据库回档；
+	// 2 - SQL操作；
+	// 3 - 数据导入；
+	// 5 - 参数设置；
+	// 6 - 初始化云数据库实例；
+	// 7 - 重启云数据库实例；
+	// 8 - 开启云数据库实例GTID；
+	// 9 - 只读实例升级；
+	// 10 - 数据库批量回档；
+	// 11 - 主实例升级；
+	// 12 - 删除云数据库库表；
+	// 13 - 灾备实例提升为主。
 	TaskTypes []*int64 `json:"TaskTypes,omitempty" name:"TaskTypes" list`
 
-	// 任务状态，不传值则查询所有任务状态，可能的值：-1-未定义；0-初始化; 1-运行中；2-执行成功；3-执行失败；4-已终止；5-已删除；6-已暂停。
+	// 任务状态，不传值则查询所有任务状态，支持的值包括：
+	// -1 - 未定义；
+	// 0 - 初始化；
+	// 1 - 运行中；
+	// 2 - 执行成功；
+	// 3 - 执行失败；
+	// 4 - 已终止；
+	// 5 - 已删除；
+	// 6 - 已暂停。
 	TaskStatus []*int64 `json:"TaskStatus,omitempty" name:"TaskStatus" list`
 
 	// 第一个任务的开始时间，用于范围查询，时间格式如：2017-12-31 10:40:01。
@@ -2363,7 +3133,7 @@ type DescribeTasksResponse struct {
 		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
 
 		// 返回的实例任务信息。
-		Items []*string `json:"Items,omitempty" name:"Items" list`
+		Items []*TaskDetail `json:"Items,omitempty" name:"Items" list`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
 		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
@@ -2527,16 +3297,16 @@ type DeviceNetInfo struct {
 	// tcp连接数
 	Conn []*int64 `json:"Conn,omitempty" name:"Conn" list`
 
-	// 网卡入包量
+	// 网卡入包量，单位：个/秒
 	PackageIn []*int64 `json:"PackageIn,omitempty" name:"PackageIn" list`
 
-	// 网卡出包量
+	// 网卡出包量，单位：个/秒
 	PackageOut []*int64 `json:"PackageOut,omitempty" name:"PackageOut" list`
 
-	// 入流量，单位：KB
+	// 入流量，单位：kbps
 	FlowIn []*int64 `json:"FlowIn,omitempty" name:"FlowIn" list`
 
-	// 出流量，单位：KB
+	// 出流量，单位：kbps
 	FlowOut []*int64 `json:"FlowOut,omitempty" name:"FlowOut" list`
 }
 
@@ -2591,7 +3361,12 @@ type DrInfo struct {
 	// 地域信息
 	Region *string `json:"Region,omitempty" name:"Region"`
 
-	// 实例同步状态
+	// 实例同步状态。可能的返回值为：
+	// 0 - 灾备未同步；
+	// 1 - 灾备同步中；
+	// 2 - 灾备同步成功；
+	// 3 - 灾备同步失败；
+	// 4 - 灾备同步修复中。
 	SyncStatus *int64 `json:"SyncStatus,omitempty" name:"SyncStatus"`
 
 	// 实例名称
@@ -2599,6 +3374,17 @@ type DrInfo struct {
 
 	// 实例类型
 	InstanceType *int64 `json:"InstanceType,omitempty" name:"InstanceType"`
+}
+
+type ErrlogItem struct {
+
+	// 错误发生时间。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Timestamp *uint64 `json:"Timestamp,omitempty" name:"Timestamp"`
+
+	// 错误详情
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Content *string `json:"Content,omitempty" name:"Content"`
 }
 
 type ImportRecord struct {
@@ -2771,42 +3557,45 @@ type InstanceInfo struct {
 	InitFlag *int64 `json:"InitFlag,omitempty" name:"InitFlag"`
 
 	// 只读vip信息。单独开通只读实例访问的只读实例才有该字段
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	RoVipInfo *RoVipInfo `json:"RoVipInfo,omitempty" name:"RoVipInfo"`
 
-	// 内存容量，单位为MB
+	// 内存容量，单位为 MB
 	Memory *int64 `json:"Memory,omitempty" name:"Memory"`
 
 	// 实例状态，可能的返回值：0-创建中；1-运行中；4-隔离中；5-已隔离
 	Status *int64 `json:"Status,omitempty" name:"Status"`
 
-	// 私有网络ID，例如：51102
+	// 私有网络 ID，例如：51102
 	VpcId *int64 `json:"VpcId,omitempty" name:"VpcId"`
 
 	// 备机信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	SlaveInfo *SlaveInfo `json:"SlaveInfo,omitempty" name:"SlaveInfo"`
 
-	// 实例ID
+	// 实例 ID
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
-	// 硬盘容量，单位为GB
+	// 硬盘容量，单位为 GB
 	Volume *int64 `json:"Volume,omitempty" name:"Volume"`
 
 	// 自动续费标志，可能的返回值：0-未开通自动续费；1-已开通自动续费；2-已关闭自动续费
 	AutoRenew *int64 `json:"AutoRenew,omitempty" name:"AutoRenew"`
 
-	// 数据复制方式
+	// 数据复制方式。0 - 异步复制；1 - 半同步复制；2 - 强同步复制
 	ProtectMode *int64 `json:"ProtectMode,omitempty" name:"ProtectMode"`
 
 	// 只读组详细信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	RoGroups []*RoGroup `json:"RoGroups,omitempty" name:"RoGroups" list`
 
-	// 子网ID，例如：2333
+	// 子网 ID，例如：2333
 	SubnetId *int64 `json:"SubnetId,omitempty" name:"SubnetId"`
 
 	// 实例类型，可能的返回值：1-主实例；2-灾备实例；3-只读实例
 	InstanceType *int64 `json:"InstanceType,omitempty" name:"InstanceType"`
 
-	// 项目ID
+	// 项目 ID
 	ProjectId *int64 `json:"ProjectId,omitempty" name:"ProjectId"`
 
 	// 地域信息
@@ -2815,16 +3604,17 @@ type InstanceInfo struct {
 	// 实例到期时间
 	DeadlineTime *string `json:"DeadlineTime,omitempty" name:"DeadlineTime"`
 
-	// 可用区部署方式
+	// 可用区部署方式。可能的值为：0 - 单可用区；1 - 多可用区
 	DeployMode *int64 `json:"DeployMode,omitempty" name:"DeployMode"`
 
-	// 实例任务状态
+	// 实例任务状态。0 - 没有任务 ,1 - 升级中,2 - 数据导入中,3 - 开放Slave中,4 - 外网访问开通中,5 - 批量操作执行中,6 - 回档中,7 - 外网访问关闭中,8 - 密码修改中,9 - 实例名修改中,10 - 重启中,12 - 自建迁移中,13 - 删除库表中,14 - 灾备实例创建同步中,15 - 升级待切换,16 - 升级切换中,17 - 升级切换完成
 	TaskStatus *int64 `json:"TaskStatus,omitempty" name:"TaskStatus"`
 
 	// 主实例详细信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	MasterInfo *MasterInfo `json:"MasterInfo,omitempty" name:"MasterInfo"`
 
-	// 实例类型，可能的返回值：“HA”-高可用版；“BASIC”-基础版
+	// 实例类型，可能的返回值：“HA”-高可用版；“FE”-金融版；“BASIC”-基础版
 	DeviceType *string `json:"DeviceType,omitempty" name:"DeviceType"`
 
 	// 内核版本
@@ -2834,6 +3624,7 @@ type InstanceInfo struct {
 	InstanceName *string `json:"InstanceName,omitempty" name:"InstanceName"`
 
 	// 灾备实例详细信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	DrInfo []*DrInfo `json:"DrInfo,omitempty" name:"DrInfo" list`
 
 	// 外网域名
@@ -2848,7 +3639,7 @@ type InstanceInfo struct {
 	// 实例创建时间
 	CreateTime *string `json:"CreateTime,omitempty" name:"CreateTime"`
 
-	// 实例IP
+	// 实例 IP
 	Vip *string `json:"Vip,omitempty" name:"Vip"`
 
 	// 端口号
@@ -2863,7 +3654,7 @@ type InstanceInfo struct {
 	// 子网描述符，例如：“subnet-1typ0s7d”
 	UniqSubnetId *string `json:"UniqSubnetId,omitempty" name:"UniqSubnetId"`
 
-	// 物理ID
+	// 物理 ID
 	PhysicalId *string `json:"PhysicalId,omitempty" name:"PhysicalId"`
 
 	// 核心数
@@ -2878,6 +3669,14 @@ type InstanceInfo struct {
 	// 物理机型
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	DeviceClass *string `json:"DeviceClass,omitempty" name:"DeviceClass"`
+
+	// 置放群组 ID
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 可用区 ID
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	ZoneId *int64 `json:"ZoneId,omitempty" name:"ZoneId"`
 }
 
 type InstanceRebootTime struct {
@@ -2924,7 +3723,8 @@ type IsolateDBInstanceResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 异步任务的请求 ID，可使用此 ID 查询异步任务的执行结果。
+		// 异步任务的请求 ID，可使用此 ID 查询异步任务的执行结果。(该返回字段目前已废弃，可以通过 DescribeDBInstances 接口查询实例的隔离状态)
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		AsyncRequestId *string `json:"AsyncRequestId,omitempty" name:"AsyncRequestId"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -3093,16 +3893,20 @@ type ModifyAccountPrivilegesRequest struct {
 	// 数据库的账号，包括用户名和域名。
 	Accounts []*Account `json:"Accounts,omitempty" name:"Accounts" list`
 
-	// 全局权限。其中，GlobalPrivileges 中权限的可选值为："SELECT","INSERT","UPDATE","DELETE","CREATE",	"DROP","REFERENCES","INDEX","ALTER","SHOW DATABASES","CREATE TEMPORARY TABLES","LOCK TABLES","EXECUTE","CREATE VIEW","SHOW VIEW","CREATE ROUTINE","ALTER ROUTINE","EVENT","TRIGGER"。
+	// 全局权限。其中，GlobalPrivileges 中权限的可选值为："SELECT","INSERT","UPDATE","DELETE","CREATE", "PROCESS", "DROP","REFERENCES","INDEX","ALTER","SHOW DATABASES","CREATE TEMPORARY TABLES","LOCK TABLES","EXECUTE","CREATE VIEW","SHOW VIEW","CREATE ROUTINE","ALTER ROUTINE","EVENT","TRIGGER"。
+	// 注意，不传该参数表示清除该权限。
 	GlobalPrivileges []*string `json:"GlobalPrivileges,omitempty" name:"GlobalPrivileges" list`
 
 	// 数据库的权限。Privileges 权限的可选值为："SELECT","INSERT","UPDATE","DELETE","CREATE",	"DROP","REFERENCES","INDEX","ALTER","CREATE TEMPORARY TABLES","LOCK TABLES","EXECUTE","CREATE VIEW","SHOW VIEW","CREATE ROUTINE","ALTER ROUTINE","EVENT","TRIGGER"。
+	// 注意，不传该参数表示清除该权限。
 	DatabasePrivileges []*DatabasePrivilege `json:"DatabasePrivileges,omitempty" name:"DatabasePrivileges" list`
 
 	// 数据库中表的权限。Privileges 权限的可选值为：权限的可选值为："SELECT","INSERT","UPDATE","DELETE","CREATE",	"DROP","REFERENCES","INDEX","ALTER","CREATE VIEW","SHOW VIEW", "TRIGGER"。
+	// 注意，不传该参数表示清除该权限。
 	TablePrivileges []*TablePrivilege `json:"TablePrivileges,omitempty" name:"TablePrivileges" list`
 
 	// 数据库表中列的权限。Privileges 权限的可选值为："SELECT","INSERT","UPDATE","REFERENCES"。
+	// 注意，不传该参数表示清除该权限。
 	ColumnPrivileges []*ColumnPrivilege `json:"ColumnPrivileges,omitempty" name:"ColumnPrivileges" list`
 }
 
@@ -3182,14 +3986,17 @@ type ModifyBackupConfigRequest struct {
 	// 备份文件的保留时间，单位为天。最小值为7天，最大值为732天。
 	ExpireDays *int64 `json:"ExpireDays,omitempty" name:"ExpireDays"`
 
-	// 备份时间范围，格式为：02:00-06:00，起点和终点时间目前限制为整点，目前可以选择的范围为： 02:00-06:00，06：00-10：00，10:00-14:00，14:00-18:00，18:00-22:00，22:00-02:00。
+	// (将废弃，建议使用 BackupTimeWindow 参数) 备份时间范围，格式为：02:00-06:00，起点和终点时间目前限制为整点，目前可以选择的范围为： 00:00-12:00，02:00-06:00，06：00-10：00，10:00-14:00，14:00-18:00，18:00-22:00，22:00-02:00。
 	StartTime *string `json:"StartTime,omitempty" name:"StartTime"`
 
-	// 目标备份方法，可选的值：logical - 逻辑冷备，physical - 物理冷备；默认备份方法为 逻辑冷备。
+	// 自动备份方式，仅支持：physical - 物理冷备
 	BackupMethod *string `json:"BackupMethod,omitempty" name:"BackupMethod"`
 
 	// binlog的保留时间，单位为天。最小值为7天，最大值为732天。该值的设置不能大于备份文件的保留时间。
 	BinlogExpireDays *int64 `json:"BinlogExpireDays,omitempty" name:"BinlogExpireDays"`
+
+	// 备份时间窗，比如要设置每周二和周日 10:00-14:00之间备份，该参数如下：{"Monday": "", "Tuesday": "10:00-14:00", "Wednesday": "", "Thursday": "", "Friday": "", "Saturday": "", "Sunday": "10:00-14:00"}    （注：可以设置一周的某几天备份，但是每天的备份时间需要设置为相同的时间段。 如果设置了该字段，将忽略StartTime字段的设置）
+	BackupTimeWindow *CommonTimeWindow `json:"BackupTimeWindow,omitempty" name:"BackupTimeWindow"`
 }
 
 func (r *ModifyBackupConfigRequest) ToJsonString() string {
@@ -3347,6 +4154,9 @@ type ModifyDBInstanceVipVportRequest struct {
 
 	// 子网统一 ID。
 	UniqSubnetId *string `json:"UniqSubnetId,omitempty" name:"UniqSubnetId"`
+
+	// 进行基础网络转 VPC 网络和 VPC 网络下的子网变更时，原网络中旧IP的回收时间，单位为小时，取值范围为0-168，默认值为24小时。
+	ReleaseDuration *int64 `json:"ReleaseDuration,omitempty" name:"ReleaseDuration"`
 }
 
 func (r *ModifyDBInstanceVipVportRequest) ToJsonString() string {
@@ -3362,7 +4172,8 @@ type ModifyDBInstanceVipVportResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 异步任务ID。
+		// 异步任务ID。(该返回字段目前已废弃)
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		AsyncRequestId *string `json:"AsyncRequestId,omitempty" name:"AsyncRequestId"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -3459,6 +4270,46 @@ func (r *ModifyInstanceTagResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
+type ModifyNameOrDescByDpIdRequest struct {
+	*tchttp.BaseRequest
+
+	// 置放群组 ID。
+	DeployGroupId *string `json:"DeployGroupId,omitempty" name:"DeployGroupId"`
+
+	// 置放群组名称，最长不能超过60个字符。置放群组名和置放群组描述不能都为空。
+	DeployGroupName *string `json:"DeployGroupName,omitempty" name:"DeployGroupName"`
+
+	// 置放群组描述，最长不能超过200个字符。置放群组名和置放群组描述不能都为空。
+	Description *string `json:"Description,omitempty" name:"Description"`
+}
+
+func (r *ModifyNameOrDescByDpIdRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyNameOrDescByDpIdRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifyNameOrDescByDpIdResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ModifyNameOrDescByDpIdResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyNameOrDescByDpIdResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
 type ModifyParamTemplateRequest struct {
 	*tchttp.BaseRequest
 
@@ -3499,6 +4350,49 @@ func (r *ModifyParamTemplateResponse) ToJsonString() string {
 }
 
 func (r *ModifyParamTemplateResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifyRoGroupInfoRequest struct {
+	*tchttp.BaseRequest
+
+	// RO 组的 ID。
+	RoGroupId *string `json:"RoGroupId,omitempty" name:"RoGroupId"`
+
+	// RO 组的详细信息。
+	RoGroupInfo *RoGroupAttr `json:"RoGroupInfo,omitempty" name:"RoGroupInfo"`
+
+	// RO 组内实例的权重。若修改 RO 组的权重模式为用户自定义模式（custom），则必须设置该参数，且需要设置每个 RO 实例的权重值。
+	RoWeightValues []*RoWeightValue `json:"RoWeightValues,omitempty" name:"RoWeightValues" list`
+
+	// 是否重新均衡 RO 组内的 RO 实例的负载。支持值包括：1 - 重新均衡负载；0 - 不重新均衡负载。默认值为 0。注意，设置为重新均衡负载是，RO 组内 RO 实例会有一次数据库连接瞬断，请确保应用程序能重连数据库。
+	IsBalanceRoLoad *int64 `json:"IsBalanceRoLoad,omitempty" name:"IsBalanceRoLoad"`
+}
+
+func (r *ModifyRoGroupInfoRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyRoGroupInfoRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ModifyRoGroupInfoResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ModifyRoGroupInfoResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ModifyRoGroupInfoResponse) FromJsonString(s string) error {
     return json.Unmarshal([]byte(s), &r)
 }
 
@@ -3770,6 +4664,55 @@ type RegionSellConf struct {
 	ZonesConf []*ZoneSellConf `json:"ZonesConf,omitempty" name:"ZonesConf" list`
 }
 
+type ReleaseIsolatedDBInstancesRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID 数组，单个实例 ID 格式如：cdb-c1nl9rpv，与云数据库控制台页面中显示的实例 ID 相同，可使用 [查询实例列表](https://cloud.tencent.com/document/api/236/15872) 接口获取，其值为输出参数中字段 InstanceId 的值。
+	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
+}
+
+func (r *ReleaseIsolatedDBInstancesRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ReleaseIsolatedDBInstancesRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ReleaseIsolatedDBInstancesResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 解隔离操作的结果集。
+		Items []*ReleaseResult `json:"Items,omitempty" name:"Items" list`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *ReleaseIsolatedDBInstancesResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *ReleaseIsolatedDBInstancesResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type ReleaseResult struct {
+
+	// 实例 ID。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 实例解隔离操作的结果值。返回值为0表示成功。
+	Code *int64 `json:"Code,omitempty" name:"Code"`
+
+	// 实例解隔离操作的错误信息。
+	Message *string `json:"Message,omitempty" name:"Message"`
+}
+
 type RenewDBInstanceRequest struct {
 	*tchttp.BaseRequest
 
@@ -3778,6 +4721,9 @@ type RenewDBInstanceRequest struct {
 
 	// 续费时长，单位：月，可选值包括 [1,2,3,4,5,6,7,8,9,10,11,12,24,36]。
 	TimeSpan *int64 `json:"TimeSpan,omitempty" name:"TimeSpan"`
+
+	// 如果需要将按量计费实例续费为包年包月的实例，该入参的值需要指定为 "PREPAID" 。
+	ModifyPayType *string `json:"ModifyPayType,omitempty" name:"ModifyPayType"`
 }
 
 func (r *RenewDBInstanceRequest) ToJsonString() string {
@@ -3849,38 +4795,72 @@ func (r *RestartDBInstancesResponse) FromJsonString(s string) error {
 
 type RoGroup struct {
 
-	// 只读组模式，可选值为：alone-系统自动分配只读组；allinone-新建只读组；join-使用现有只读组
+	// 只读组模式，可选值为：alone-系统自动分配只读组；allinone-新建只读组；join-使用现有只读组。
 	RoGroupMode *string `json:"RoGroupMode,omitempty" name:"RoGroupMode"`
 
-	// 只读组ID
+	// 只读组 ID。
 	RoGroupId *string `json:"RoGroupId,omitempty" name:"RoGroupId"`
 
-	// 只读组名称
+	// 只读组名称。
 	RoGroupName *string `json:"RoGroupName,omitempty" name:"RoGroupName"`
 
-	// 是否启用延迟超限剔除功能，启用该功能后，只读实例与主实例的延迟超过延迟阈值，只读实例将被隔离。可选值：1-启用；0-不启用
+	// 是否启用延迟超限剔除功能，启用该功能后，只读实例与主实例的延迟超过延迟阈值，只读实例将被隔离。可选值：1-启用；0-不启用。
 	RoOfflineDelay *int64 `json:"RoOfflineDelay,omitempty" name:"RoOfflineDelay"`
 
-	// 延迟阈值
+	// 延迟阈值。
 	RoMaxDelayTime *int64 `json:"RoMaxDelayTime,omitempty" name:"RoMaxDelayTime"`
 
-	// 最少实例保留个数，若购买只读实例数量小于设置数量将不做剔除
+	// 最少实例保留个数，若购买只读实例数量小于设置数量将不做剔除。
 	MinRoInGroup *int64 `json:"MinRoInGroup,omitempty" name:"MinRoInGroup"`
 
-	// 读写权重分配模式，可选值：system-系统自动分配；custom-自定义
+	// 读写权重分配模式，可选值：system-系统自动分配；custom-自定义。
 	WeightMode *string `json:"WeightMode,omitempty" name:"WeightMode"`
 
-	// 权重值
+	// 权重值。
 	Weight *int64 `json:"Weight,omitempty" name:"Weight"`
 
-	// 只读组中的只读实例详情
+	// 只读组中的只读实例详情。
 	RoInstances []*RoInstanceInfo `json:"RoInstances,omitempty" name:"RoInstances" list`
 
-	// 只读组的内网IP
+	// 只读组的内网 IP。
 	Vip *string `json:"Vip,omitempty" name:"Vip"`
 
-	// 只读组的内网端口号
+	// 只读组的内网端口号。
 	Vport *int64 `json:"Vport,omitempty" name:"Vport"`
+
+	// 私有网络 ID。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	UniqVpcId *string `json:"UniqVpcId,omitempty" name:"UniqVpcId"`
+
+	// 子网 ID。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	UniqSubnetId *string `json:"UniqSubnetId,omitempty" name:"UniqSubnetId"`
+
+	// 只读组所在的地域。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	RoGroupRegion *string `json:"RoGroupRegion,omitempty" name:"RoGroupRegion"`
+
+	// 只读组所在的可用区。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	RoGroupZone *string `json:"RoGroupZone,omitempty" name:"RoGroupZone"`
+}
+
+type RoGroupAttr struct {
+
+	// RO 组名称。
+	RoGroupName *string `json:"RoGroupName,omitempty" name:"RoGroupName"`
+
+	// RO 实例最大延迟阈值。单位为秒，最小值为 1。注意，RO 组必须设置了开启实例延迟剔除策略，该值才有效。
+	RoMaxDelayTime *int64 `json:"RoMaxDelayTime,omitempty" name:"RoMaxDelayTime"`
+
+	// 是否开启实例延迟剔除。支持的值包括：1 - 开启；0 - 不开启。注意，若设置开启实例延迟剔除，则必须设置延迟阈值（RoMaxDelayTime）参数。
+	RoOfflineDelay *int64 `json:"RoOfflineDelay,omitempty" name:"RoOfflineDelay"`
+
+	// 最少保留实例数。可设置为小于或等于该 RO 组下 RO 实例个数的任意值。注意，若设置值大于 RO 实例数量将不做剔除；若设置为 0，所有实例延迟超限都会被剔除。
+	MinRoInGroup *int64 `json:"MinRoInGroup,omitempty" name:"MinRoInGroup"`
+
+	// 权重模式。支持值包括："system" - 系统自动分配； "custom" - 用户自定义设置。注意，若设置 "custom" 模式，则必须设置 RO 实例权重配置（RoWeightValues）参数。
+	WeightMode *string `json:"WeightMode,omitempty" name:"WeightMode"`
 }
 
 type RoInstanceInfo struct {
@@ -3973,18 +4953,30 @@ type RoVipInfo struct {
 	RoVip *string `json:"RoVip,omitempty" name:"RoVip"`
 }
 
+type RoWeightValue struct {
+
+	// RO 实例 ID。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+	// 权重值。取值范围为 [0, 100]。
+	Weight *int64 `json:"Weight,omitempty" name:"Weight"`
+}
+
 type RollbackDBName struct {
 
 	// 回档前的原数据库名
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	DatabaseName *string `json:"DatabaseName,omitempty" name:"DatabaseName"`
 
 	// 回档后的新数据库名
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	NewDatabaseName *string `json:"NewDatabaseName,omitempty" name:"NewDatabaseName"`
 }
 
 type RollbackInstancesInfo struct {
 
 	// 云数据库实例ID
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 	// 回档策略。可选值为：table、db、full；默认值为full。table - 急速回档模式，仅导入所选中表级别的备份和binlog，如有跨表操作，且关联表未被同时选中，将会导致回档失败，该模式下参数Databases必须为空；db - 快速模式，仅导入所选中库级别的备份和binlog，如有跨库操作，且关联库未被同时选中，将会导致回档失败；full - 普通回档模式，将导入整个实例的备份和binlog，速度较慢。
@@ -3994,28 +4986,56 @@ type RollbackInstancesInfo struct {
 	RollbackTime *string `json:"RollbackTime,omitempty" name:"RollbackTime"`
 
 	// 待回档的数据库信息，表示整库回档
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	Databases []*RollbackDBName `json:"Databases,omitempty" name:"Databases" list`
 
 	// 待回档的数据库表信息，表示按表回档
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	Tables []*RollbackTables `json:"Tables,omitempty" name:"Tables" list`
 }
 
 type RollbackTableName struct {
 
 	// 回档前的原数据库表名
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	TableName *string `json:"TableName,omitempty" name:"TableName"`
 
 	// 回档后的新数据库表名
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	NewTableName *string `json:"NewTableName,omitempty" name:"NewTableName"`
 }
 
 type RollbackTables struct {
 
 	// 数据库名
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	Database *string `json:"Database,omitempty" name:"Database"`
 
 	// 数据库表详情
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	Table []*RollbackTableName `json:"Table,omitempty" name:"Table" list`
+}
+
+type RollbackTask struct {
+
+	// 任务执行信息描述。
+	Info *string `json:"Info,omitempty" name:"Info"`
+
+	// 任务执行结果。可能的取值：INITIAL - 初始化，RUNNING - 运行中，SUCCESS - 执行成功，FAILED - 执行失败，KILLED - 已终止，REMOVED - 已删除，PAUSED - 终止中。
+	Status *string `json:"Status,omitempty" name:"Status"`
+
+	// 任务执行进度。取值范围为[0, 100]。
+	Progress *int64 `json:"Progress,omitempty" name:"Progress"`
+
+	// 任务开始时间。
+	StartTime *string `json:"StartTime,omitempty" name:"StartTime"`
+
+	// 任务结束时间。
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
+
+	// 回档任务详情。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Detail []*RollbackInstancesInfo `json:"Detail,omitempty" name:"Detail" list`
 }
 
 type RollbackTimeRange struct {
@@ -4091,6 +5111,9 @@ type SellConfig struct {
 
 	// 状态值
 	Status *int64 `json:"Status,omitempty" name:"Status"`
+
+	// 标签值
+	Tag *int64 `json:"Tag,omitempty" name:"Tag"`
 }
 
 type SellType struct {
@@ -4120,6 +5143,7 @@ type SlaveInfo struct {
 	First *SlaveInstanceInfo `json:"First,omitempty" name:"First"`
 
 	// 第二备机信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
 	Second *SlaveInstanceInfo `json:"Second,omitempty" name:"Second"`
 }
 
@@ -4157,6 +5181,53 @@ type SlowLogInfo struct {
 
 	// 日志具体类型，可能的值：slowlog - 慢日志
 	Type *string `json:"Type,omitempty" name:"Type"`
+}
+
+type SlowLogItem struct {
+
+	// Sql的执行时间。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Timestamp *uint64 `json:"Timestamp,omitempty" name:"Timestamp"`
+
+	// Sql的执行时长。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	QueryTime *float64 `json:"QueryTime,omitempty" name:"QueryTime"`
+
+	// Sql语句。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	SqlText *string `json:"SqlText,omitempty" name:"SqlText"`
+
+	// 客户端地址。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	UserHost *string `json:"UserHost,omitempty" name:"UserHost"`
+
+	// 用户名。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	UserName *string `json:"UserName,omitempty" name:"UserName"`
+
+	// 数据库名。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Database *string `json:"Database,omitempty" name:"Database"`
+
+	// 锁时长。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	LockTime *float64 `json:"LockTime,omitempty" name:"LockTime"`
+
+	// 扫描行数。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	RowsExamined *int64 `json:"RowsExamined,omitempty" name:"RowsExamined"`
+
+	// 结果集行数。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	RowsSent *int64 `json:"RowsSent,omitempty" name:"RowsSent"`
+
+	// Sql模板。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	SqlTemplate *string `json:"SqlTemplate,omitempty" name:"SqlTemplate"`
+
+	// Sql语句的md5。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Md5 *string `json:"Md5,omitempty" name:"Md5"`
 }
 
 type SqlFileInfo struct {
@@ -4328,6 +5399,60 @@ type TagsInfoOfInstance struct {
 
 	// 标签信息
 	Tags []*TagInfoUnit `json:"Tags,omitempty" name:"Tags" list`
+}
+
+type TaskDetail struct {
+
+	// 错误码。
+	Code *int64 `json:"Code,omitempty" name:"Code"`
+
+	// 错误信息。
+	Message *string `json:"Message,omitempty" name:"Message"`
+
+	// 实例任务 ID。
+	JobId *int64 `json:"JobId,omitempty" name:"JobId"`
+
+	// 实例任务进度。
+	Progress *int64 `json:"Progress,omitempty" name:"Progress"`
+
+	// 实例任务状态，可能的值包括：
+	// "UNDEFINED" - 未定义；
+	// "INITIAL" - 初始化；
+	// "RUNNING" - 运行中；
+	// "SUCCEED" - 执行成功；
+	// "FAILED" - 执行失败；
+	// "KILLED" - 已终止；
+	// "REMOVED" - 已删除；
+	// "PAUSED" - 已暂停。
+	TaskStatus *string `json:"TaskStatus,omitempty" name:"TaskStatus"`
+
+	// 实例任务类型，可能的值包括：
+	// "ROLLBACK" - 数据库回档；
+	// "SQL OPERATION" - SQL操作；
+	// "IMPORT DATA" - 数据导入；
+	// "MODIFY PARAM" - 参数设置；
+	// "INITIAL" - 初始化云数据库实例；
+	// "REBOOT" - 重启云数据库实例；
+	// "OPEN GTID" - 开启云数据库实例GTID；
+	// "UPGRADE RO" - 只读实例升级；
+	// "BATCH ROLLBACK" - 数据库批量回档；
+	// "UPGRADE MASTER" - 主实例升级；
+	// "DROP TABLES" - 删除云数据库库表；
+	// "SWITCH DR TO MASTER" - 灾备实例提升为主。
+	TaskType *string `json:"TaskType,omitempty" name:"TaskType"`
+
+	// 实例任务开始时间。
+	StartTime *string `json:"StartTime,omitempty" name:"StartTime"`
+
+	// 实例任务结束时间。
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
+
+	// 任务关联的实例 ID。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
+
+	// 异步任务的请求 ID。
+	AsyncRequestId *string `json:"AsyncRequestId,omitempty" name:"AsyncRequestId"`
 }
 
 type UpgradeDBInstanceEngineVersionRequest struct {
@@ -4547,4 +5672,11 @@ type ZoneSellConf struct {
 
 	// 可支持的灾备可用区信息
 	DrZone []*string `json:"DrZone,omitempty" name:"DrZone" list`
+
+	// 是否支持跨可用区只读
+	IsSupportRemoteRo *bool `json:"IsSupportRemoteRo,omitempty" name:"IsSupportRemoteRo"`
+
+	// 可支持的跨可用区只读区信息
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	RemoteRoZone []*string `json:"RemoteRoZone,omitempty" name:"RemoteRoZone" list`
 }

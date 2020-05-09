@@ -15,9 +15,9 @@
 package v20170312
 
 import (
-	"encoding/json"
+    "encoding/json"
 
-	tchttp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
+    tchttp "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
 )
 
 type CloneAccountRequest struct {
@@ -43,12 +43,12 @@ type CloneAccountRequest struct {
 }
 
 func (r *CloneAccountRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CloneAccountRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CloneAccountResponse struct {
@@ -64,12 +64,12 @@ type CloneAccountResponse struct {
 }
 
 func (r *CloneAccountResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CloneAccountResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CloseDBExtranetAccessRequest struct {
@@ -80,19 +80,19 @@ type CloseDBExtranetAccessRequest struct {
 }
 
 func (r *CloseDBExtranetAccessRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CloseDBExtranetAccessRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CloseDBExtranetAccessResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 异步任务Id，可通过 DescribeFlow 查询任务状态。
+		// 异步任务ID，可通过 DescribeFlow 查询任务状态。
 		FlowId *int64 `json:"FlowId,omitempty" name:"FlowId"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -101,12 +101,12 @@ type CloseDBExtranetAccessResponse struct {
 }
 
 func (r *CloseDBExtranetAccessResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CloseDBExtranetAccessResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ConstraintRange struct {
@@ -144,12 +144,12 @@ type CopyAccountPrivilegesRequest struct {
 }
 
 func (r *CopyAccountPrivilegesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CopyAccountPrivilegesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CopyAccountPrivilegesResponse struct {
@@ -162,12 +162,12 @@ type CopyAccountPrivilegesResponse struct {
 }
 
 func (r *CopyAccountPrivilegesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CopyAccountPrivilegesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateAccountRequest struct {
@@ -176,7 +176,7 @@ type CreateAccountRequest struct {
 	// 实例 ID，形如：tdsql-ow728lmc，可以通过 DescribeDBInstances 查询实例详情获得。
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
-	// 登录用户名，由字幕、数字、下划线和连字符组成，长度为1~32位。
+	// 登录用户名，由字母、数字、下划线和连字符组成，长度为1~32位。
 	UserName *string `json:"UserName,omitempty" name:"UserName"`
 
 	// 可以登录的主机，与mysql 账号的 host 格式一致，可以支持通配符，例如 %，10.%，10.20.%。
@@ -196,19 +196,19 @@ type CreateAccountRequest struct {
 }
 
 func (r *CreateAccountRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CreateAccountRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateAccountResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 实例Id，透传入参。
+		// 实例ID，透传入参。
 		InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 		// 用户名，透传入参。
@@ -226,12 +226,12 @@ type CreateAccountResponse struct {
 }
 
 func (r *CreateAccountResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CreateAccountResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateDBInstanceRequest struct {
@@ -275,15 +275,24 @@ type CreateDBInstanceRequest struct {
 
 	// 数据库引擎版本，当前可选：10.0.10，10.1.9，5.7.17。如果不传的话，默认为 Mariadb 10.1.9。
 	DbVersionId *string `json:"DbVersionId,omitempty" name:"DbVersionId"`
+
+	// 实例名称， 可以通过该字段自主的设置实例的名字
+	InstanceName *string `json:"InstanceName,omitempty" name:"InstanceName"`
+
+	// 安全组ID列表
+	SecurityGroupIds []*string `json:"SecurityGroupIds,omitempty" name:"SecurityGroupIds" list`
+
+	// 自动续费标志，1:自动续费，2:不自动续费
+	AutoRenewFlag *int64 `json:"AutoRenewFlag,omitempty" name:"AutoRenewFlag"`
 }
 
 func (r *CreateDBInstanceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CreateDBInstanceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type CreateDBInstanceResponse struct {
@@ -291,11 +300,11 @@ type CreateDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 订单对应的实例 ID 列表，如果此处没有返回实例 ID，可以通过订单查询接口获取。还可通过实例查询接口查询实例是否创建完成。
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -304,12 +313,52 @@ type CreateDBInstanceResponse struct {
 }
 
 func (r *CreateDBInstanceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *CreateDBInstanceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type CreateTmpInstancesRequest struct {
+	*tchttp.BaseRequest
+
+	// 回档实例的ID列表，形如：tdsql-ow728lmc。
+	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
+
+	// 回档时间点
+	RollbackTime *string `json:"RollbackTime,omitempty" name:"RollbackTime"`
+}
+
+func (r *CreateTmpInstancesRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *CreateTmpInstancesRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type CreateTmpInstancesResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 异步任务流程ID。
+		FlowId *int64 `json:"FlowId,omitempty" name:"FlowId"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *CreateTmpInstancesResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *CreateTmpInstancesResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DBAccount struct {
@@ -339,7 +388,7 @@ type DBAccount struct {
 
 type DBBackupTimeConfig struct {
 
-	// 实例 Id
+	// 实例 ID
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 	// 每天备份执行的区间的开始时间，格式 mm:ss，形如 22:00
@@ -351,16 +400,16 @@ type DBBackupTimeConfig struct {
 
 type DBInstance struct {
 
-	// 实例 Id，唯一标识一个 TDSQL 实例
+	// 实例 ID，唯一标识一个 TDSQL 实例
 	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 	// 实例名称，用户可修改
 	InstanceName *string `json:"InstanceName,omitempty" name:"InstanceName"`
 
-	// 实例所属应用 Id
+	// 实例所属应用 ID
 	AppId *int64 `json:"AppId,omitempty" name:"AppId"`
 
-	// 实例所属项目 Id
+	// 实例所属项目 ID
 	ProjectId *int64 `json:"ProjectId,omitempty" name:"ProjectId"`
 
 	// 实例所在地域名称，如 ap-shanghai
@@ -369,10 +418,10 @@ type DBInstance struct {
 	// 实例所在可用区名称，如 ap-shanghai-1
 	Zone *string `json:"Zone,omitempty" name:"Zone"`
 
-	// 私有网络 Id，基础网络时为 0
+	// 私有网络 ID，基础网络时为 0
 	VpcId *int64 `json:"VpcId,omitempty" name:"VpcId"`
 
-	// 子网 Id，基础网络时为 0
+	// 子网 ID，基础网络时为 0
 	SubnetId *int64 `json:"SubnetId,omitempty" name:"SubnetId"`
 
 	// 实例状态：0 创建中，1 流程处理中， 2 运行中，3 实例未初始化，-1 实例已隔离，-2 实例已删除
@@ -417,10 +466,10 @@ type DBInstance struct {
 	// 实例存储大小，单位 GB
 	Storage *int64 `json:"Storage,omitempty" name:"Storage"`
 
-	// 字符串型的私有网络Id
+	// 字符串型的私有网络ID
 	UniqueVpcId *string `json:"UniqueVpcId,omitempty" name:"UniqueVpcId"`
 
-	// 字符串型的私有网络子网Id
+	// 字符串型的私有网络子网ID
 	UniqueSubnetId *string `json:"UniqueSubnetId,omitempty" name:"UniqueSubnetId"`
 
 	// 原始实例ID（过时字段，请勿依赖该值）
@@ -432,13 +481,13 @@ type DBInstance struct {
 	// 是否临时实例，0为否，非0为是
 	IsTmp *uint64 `json:"IsTmp,omitempty" name:"IsTmp"`
 
-	// 独享集群Id，为空表示为普通实例
+	// 独享集群ID，为空表示为普通实例
 	ExclusterId *string `json:"ExclusterId,omitempty" name:"ExclusterId"`
 
-	// 数字实例Id（过时字段，请勿依赖该值）
+	// 数字实例ID（过时字段，请勿依赖该值）
 	Id *uint64 `json:"Id,omitempty" name:"Id"`
 
-	// 产品类型 Id
+	// 产品类型 ID
 	Pid *int64 `json:"Pid,omitempty" name:"Pid"`
 
 	// 最大 Qps 值
@@ -467,6 +516,9 @@ type DBInstance struct {
 
 	// 是否支持数据加密。1-支持；0-不支持
 	IsEncryptSupported *int64 `json:"IsEncryptSupported,omitempty" name:"IsEncryptSupported"`
+
+	// 实例CPU核数
+	Cpu *int64 `json:"Cpu,omitempty" name:"Cpu"`
 }
 
 type DBParamValue struct {
@@ -476,6 +528,12 @@ type DBParamValue struct {
 
 	// 参数值
 	Value *string `json:"Value,omitempty" name:"Value"`
+}
+
+type Database struct {
+
+	// 数据库名称
+	DbName *string `json:"DbName,omitempty" name:"DbName"`
 }
 
 type Deal struct {
@@ -514,12 +572,12 @@ type DeleteAccountRequest struct {
 }
 
 func (r *DeleteAccountRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DeleteAccountRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DeleteAccountResponse struct {
@@ -532,12 +590,12 @@ type DeleteAccountResponse struct {
 }
 
 func (r *DeleteAccountResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DeleteAccountResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountPrivilegesRequest struct {
@@ -558,7 +616,7 @@ type DescribeAccountPrivilegesRequest struct {
 	// 类型,可以填入 table 、 view 、 proc 、 func 和 \*。当 DbName 为具体数据库名，Type为 \* 时，表示查询该数据库权限（即db.\*），此时忽略 Object 参数
 	Type *string `json:"Type,omitempty" name:"Type"`
 
-	// 具体的 Type 的名称，比如 Type 为 table 时就是具体的表名。DbName 和 Type 都为具体名称，则 Object 表示具体对象名，不能为 \* 或者为空
+	// 具体的 Type 的名称，例如 Type 为 table 时就是具体的表名。DbName 和 Type 都为具体名称，则 Object 表示具体对象名，不能为 \* 或者为空
 	Object *string `json:"Object,omitempty" name:"Object"`
 
 	// 当 Type=table 时，ColName 为 \* 表示查询表的权限，如果为具体字段名，表示查询对应字段的权限
@@ -566,19 +624,19 @@ type DescribeAccountPrivilegesRequest struct {
 }
 
 func (r *DescribeAccountPrivilegesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeAccountPrivilegesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountPrivilegesResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 实例Id
+		// 实例ID
 		InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 		// 权限列表。
@@ -596,12 +654,12 @@ type DescribeAccountPrivilegesResponse struct {
 }
 
 func (r *DescribeAccountPrivilegesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeAccountPrivilegesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountsRequest struct {
@@ -612,12 +670,12 @@ type DescribeAccountsRequest struct {
 }
 
 func (r *DescribeAccountsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeAccountsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeAccountsResponse struct {
@@ -636,12 +694,12 @@ type DescribeAccountsResponse struct {
 }
 
 func (r *DescribeAccountsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeAccountsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeBackupTimeRequest struct {
@@ -652,12 +710,12 @@ type DescribeBackupTimeRequest struct {
 }
 
 func (r *DescribeBackupTimeRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeBackupTimeRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeBackupTimeResponse struct {
@@ -668,7 +726,7 @@ type DescribeBackupTimeResponse struct {
 		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
 
 		// 实例备份时间配置信息
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Items []*DBBackupTimeConfig `json:"Items,omitempty" name:"Items" list`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -677,12 +735,12 @@ type DescribeBackupTimeResponse struct {
 }
 
 func (r *DescribeBackupTimeResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeBackupTimeResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstanceSpecsRequest struct {
@@ -690,12 +748,12 @@ type DescribeDBInstanceSpecsRequest struct {
 }
 
 func (r *DescribeDBInstanceSpecsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBInstanceSpecsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstanceSpecsResponse struct {
@@ -711,12 +769,12 @@ type DescribeDBInstanceSpecsResponse struct {
 }
 
 func (r *DescribeDBInstanceSpecsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBInstanceSpecsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstancesRequest struct {
@@ -764,17 +822,17 @@ type DescribeDBInstancesRequest struct {
 	// 实例所属独享集群类型。取值范围：1-非独享集群，2-独享集群， 0-全部
 	ExclusterType *int64 `json:"ExclusterType,omitempty" name:"ExclusterType"`
 
-	// 按独享集群Id过滤实例，独享集群Id形如dbdc-4ih6uct9
+	// 按独享集群ID过滤实例，独享集群ID形如dbdc-4ih6uct9
 	ExclusterIds []*string `json:"ExclusterIds,omitempty" name:"ExclusterIds" list`
 }
 
 func (r *DescribeDBInstancesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBInstancesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBInstancesResponse struct {
@@ -793,12 +851,12 @@ type DescribeDBInstancesResponse struct {
 }
 
 func (r *DescribeDBInstancesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBInstancesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBLogFilesRequest struct {
@@ -812,12 +870,12 @@ type DescribeDBLogFilesRequest struct {
 }
 
 func (r *DescribeDBLogFilesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBLogFilesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBLogFilesResponse struct {
@@ -848,12 +906,12 @@ type DescribeDBLogFilesResponse struct {
 }
 
 func (r *DescribeDBLogFilesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBLogFilesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBParametersRequest struct {
@@ -864,12 +922,12 @@ type DescribeDBParametersRequest struct {
 }
 
 func (r *DescribeDBParametersRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBParametersRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBParametersResponse struct {
@@ -888,12 +946,12 @@ type DescribeDBParametersResponse struct {
 }
 
 func (r *DescribeDBParametersResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBParametersResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceDetailsRequest struct {
@@ -913,12 +971,12 @@ type DescribeDBPerformanceDetailsRequest struct {
 }
 
 func (r *DescribeDBPerformanceDetailsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBPerformanceDetailsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceDetailsResponse struct {
@@ -929,11 +987,11 @@ type DescribeDBPerformanceDetailsResponse struct {
 		Master *PerformanceMonitorSet `json:"Master,omitempty" name:"Master"`
 
 		// 备机1性能监控数据
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave1 *PerformanceMonitorSet `json:"Slave1,omitempty" name:"Slave1"`
 
 		// 备机2性能监控数据，如果实例是一主一从，则没有该字段
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave2 *PerformanceMonitorSet `json:"Slave2,omitempty" name:"Slave2"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -942,12 +1000,12 @@ type DescribeDBPerformanceDetailsResponse struct {
 }
 
 func (r *DescribeDBPerformanceDetailsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBPerformanceDetailsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceRequest struct {
@@ -967,12 +1025,12 @@ type DescribeDBPerformanceRequest struct {
 }
 
 func (r *DescribeDBPerformanceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBPerformanceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBPerformanceResponse struct {
@@ -1015,12 +1073,12 @@ type DescribeDBPerformanceResponse struct {
 }
 
 func (r *DescribeDBPerformanceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBPerformanceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageDetailsRequest struct {
@@ -1040,12 +1098,12 @@ type DescribeDBResourceUsageDetailsRequest struct {
 }
 
 func (r *DescribeDBResourceUsageDetailsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBResourceUsageDetailsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageDetailsResponse struct {
@@ -1056,11 +1114,11 @@ type DescribeDBResourceUsageDetailsResponse struct {
 		Master *ResourceUsageMonitorSet `json:"Master,omitempty" name:"Master"`
 
 		// 备机1资源使用情况监控数据
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave1 *ResourceUsageMonitorSet `json:"Slave1,omitempty" name:"Slave1"`
 
 		// 备机2资源使用情况监控数据
-		// 注意：此字段可能返回 null，表示取不到有效值。
+	// 注意：此字段可能返回 null，表示取不到有效值。
 		Slave2 *ResourceUsageMonitorSet `json:"Slave2,omitempty" name:"Slave2"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -1069,12 +1127,12 @@ type DescribeDBResourceUsageDetailsResponse struct {
 }
 
 func (r *DescribeDBResourceUsageDetailsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBResourceUsageDetailsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageRequest struct {
@@ -1094,12 +1152,12 @@ type DescribeDBResourceUsageRequest struct {
 }
 
 func (r *DescribeDBResourceUsageRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBResourceUsageRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBResourceUsageResponse struct {
@@ -1124,12 +1182,12 @@ type DescribeDBResourceUsageResponse struct {
 }
 
 func (r *DescribeDBResourceUsageResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBResourceUsageResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBSlowLogsRequest struct {
@@ -1164,12 +1222,12 @@ type DescribeDBSlowLogsRequest struct {
 }
 
 func (r *DescribeDBSlowLogsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBSlowLogsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeDBSlowLogsResponse struct {
@@ -1197,12 +1255,52 @@ type DescribeDBSlowLogsResponse struct {
 }
 
 func (r *DescribeDBSlowLogsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeDBSlowLogsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeDatabasesRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例 ID，形如：dcdbt-ow7t8lmc。
+	InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+}
+
+func (r *DescribeDatabasesRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDatabasesRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type DescribeDatabasesResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 该实例上的数据库列表。
+		Databases []*Database `json:"Databases,omitempty" name:"Databases" list`
+
+		// 透传入参。
+		InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *DescribeDatabasesResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *DescribeDatabasesResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeFlowRequest struct {
@@ -1213,12 +1311,12 @@ type DescribeFlowRequest struct {
 }
 
 func (r *DescribeFlowRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeFlowRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeFlowResponse struct {
@@ -1234,12 +1332,12 @@ type DescribeFlowResponse struct {
 }
 
 func (r *DescribeFlowResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeFlowResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeLogFileRetentionPeriodRequest struct {
@@ -1250,12 +1348,12 @@ type DescribeLogFileRetentionPeriodRequest struct {
 }
 
 func (r *DescribeLogFileRetentionPeriodRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeLogFileRetentionPeriodRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeLogFileRetentionPeriodResponse struct {
@@ -1274,12 +1372,12 @@ type DescribeLogFileRetentionPeriodResponse struct {
 }
 
 func (r *DescribeLogFileRetentionPeriodResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeLogFileRetentionPeriodResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeOrdersRequest struct {
@@ -1290,12 +1388,12 @@ type DescribeOrdersRequest struct {
 }
 
 func (r *DescribeOrdersRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeOrdersRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeOrdersResponse struct {
@@ -1303,7 +1401,7 @@ type DescribeOrdersResponse struct {
 	Response *struct {
 
 		// 返回的订单数量。
-		TotalCount *int64 `json:"TotalCount,omitempty" name:"TotalCount"`
+		TotalCount []*int64 `json:"TotalCount,omitempty" name:"TotalCount" list`
 
 		// 订单信息列表。
 		Deals []*Deal `json:"Deals,omitempty" name:"Deals" list`
@@ -1314,12 +1412,12 @@ type DescribeOrdersResponse struct {
 }
 
 func (r *DescribeOrdersResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeOrdersResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribePriceRequest struct {
@@ -1345,15 +1443,18 @@ type DescribePriceRequest struct {
 
 	// 欲购买的数量，默认查询购买1个实例的价格。
 	Count *int64 `json:"Count,omitempty" name:"Count"`
+
+	// 付费类型。postpaid：按量付费   prepaid：预付费
+	Paymode *string `json:"Paymode,omitempty" name:"Paymode"`
 }
 
 func (r *DescribePriceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribePriceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribePriceResponse struct {
@@ -1372,12 +1473,12 @@ type DescribePriceResponse struct {
 }
 
 func (r *DescribePriceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribePriceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeRenewalPriceRequest struct {
@@ -1391,12 +1492,12 @@ type DescribeRenewalPriceRequest struct {
 }
 
 func (r *DescribeRenewalPriceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeRenewalPriceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeRenewalPriceResponse struct {
@@ -1415,12 +1516,12 @@ type DescribeRenewalPriceResponse struct {
 }
 
 func (r *DescribeRenewalPriceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeRenewalPriceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSaleInfoRequest struct {
@@ -1428,12 +1529,12 @@ type DescribeSaleInfoRequest struct {
 }
 
 func (r *DescribeSaleInfoRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeSaleInfoRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSaleInfoResponse struct {
@@ -1449,12 +1550,12 @@ type DescribeSaleInfoResponse struct {
 }
 
 func (r *DescribeSaleInfoResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeSaleInfoResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSqlLogsRequest struct {
@@ -1471,12 +1572,12 @@ type DescribeSqlLogsRequest struct {
 }
 
 func (r *DescribeSqlLogsRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeSqlLogsRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeSqlLogsResponse struct {
@@ -1507,12 +1608,12 @@ type DescribeSqlLogsResponse struct {
 }
 
 func (r *DescribeSqlLogsResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeSqlLogsResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeUpgradePriceRequest struct {
@@ -1531,12 +1632,12 @@ type DescribeUpgradePriceRequest struct {
 }
 
 func (r *DescribeUpgradePriceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeUpgradePriceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type DescribeUpgradePriceResponse struct {
@@ -1555,12 +1656,12 @@ type DescribeUpgradePriceResponse struct {
 }
 
 func (r *DescribeUpgradePriceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *DescribeUpgradePriceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type GrantAccountPrivilegesRequest struct {
@@ -1578,17 +1679,17 @@ type GrantAccountPrivilegesRequest struct {
 	// 数据库名。如果为 \*，表示设置全局权限（即 \*.\*），此时忽略 Type 和 Object 参数。当DbName不为\*时，需要传入参 Type。
 	DbName *string `json:"DbName,omitempty" name:"DbName"`
 
-	// 全局权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER，SHOW DATABASES
-	// 库权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER
-	// 表/视图权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE VIEW，SHOW VIEW，TRIGGER
-	// 存储过程/函数权限： ALTER ROUTINE，EXECUTE
+	// 全局权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER，SHOW DATABASES 
+	// 库权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE TEMPORARY TABLES，LOCK TABLES，EXECUTE，CREATE VIEW，SHOW VIEW，CREATE ROUTINE，ALTER ROUTINE，EVENT，TRIGGER 
+	// 表/视图权限： SELECT，INSERT，UPDATE，DELETE，CREATE，DROP，REFERENCES，INDEX，ALTER，CREATE VIEW，SHOW VIEW，TRIGGER 
+	// 存储过程/函数权限： ALTER ROUTINE，EXECUTE 
 	// 字段权限： INSERT，REFERENCES，SELECT，UPDATE
 	Privileges []*string `json:"Privileges,omitempty" name:"Privileges" list`
 
 	// 类型,可以填入 table 、 view 、 proc 、 func 和 \*。当 DbName 为具体数据库名，Type为 \* 时，表示设置该数据库权限（即db.\*），此时忽略 Object 参数
 	Type *string `json:"Type,omitempty" name:"Type"`
 
-	// 具体的 Type 的名称，比如 Type 为 table 时就是具体的表名。DbName 和 Type 都为具体名称，则 Object 表示具体对象名，不能为 \* 或者为空
+	// 具体的 Type 的名称，例如 Type 为 table 时就是具体的表名。DbName 和 Type 都为具体名称，则 Object 表示具体对象名，不能为 \* 或者为空
 	Object *string `json:"Object,omitempty" name:"Object"`
 
 	// 当 Type=table 时，ColName 为 \* 表示对表授权，如果为具体字段名，表示对字段授权
@@ -1596,12 +1697,12 @@ type GrantAccountPrivilegesRequest struct {
 }
 
 func (r *GrantAccountPrivilegesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *GrantAccountPrivilegesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type GrantAccountPrivilegesResponse struct {
@@ -1614,18 +1715,18 @@ type GrantAccountPrivilegesResponse struct {
 }
 
 func (r *GrantAccountPrivilegesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *GrantAccountPrivilegesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type InitDBInstancesRequest struct {
 	*tchttp.BaseRequest
 
-	// 待初始化的实例Id列表，形如：tdsql-ow728lmc，可以通过 DescribeDBInstances 查询实例详情获得。
+	// 待初始化的实例ID列表，形如：tdsql-ow728lmc，可以通过 DescribeDBInstances 查询实例详情获得。
 	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
 
 	// 参数列表。本接口的可选值为：character_set_server（字符集，必传），lower_case_table_names（表名大小写敏感，必传，0 - 敏感；1-不敏感），innodb_page_size（innodb数据页，默认16K），sync_mode（同步模式：0 - 异步； 1 - 强同步；2 - 强同步可退化。默认为强同步）。
@@ -1633,19 +1734,19 @@ type InitDBInstancesRequest struct {
 }
 
 func (r *InitDBInstancesRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *InitDBInstancesRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type InitDBInstancesResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 异步任务Id，可通过 DescribeFlow 查询任务状态。
+		// 异步任务ID，可通过 DescribeFlow 查询任务状态。
 		FlowId *int64 `json:"FlowId,omitempty" name:"FlowId"`
 
 		// 透传入参。
@@ -1657,12 +1758,12 @@ type InitDBInstancesResponse struct {
 }
 
 func (r *InitDBInstancesResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *InitDBInstancesResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type InstanceSpec struct {
@@ -1706,12 +1807,12 @@ type ModifyAccountDescriptionRequest struct {
 }
 
 func (r *ModifyAccountDescriptionRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyAccountDescriptionRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyAccountDescriptionResponse struct {
@@ -1724,12 +1825,12 @@ type ModifyAccountDescriptionResponse struct {
 }
 
 func (r *ModifyAccountDescriptionResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyAccountDescriptionResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyBackupTimeRequest struct {
@@ -1746,12 +1847,12 @@ type ModifyBackupTimeRequest struct {
 }
 
 func (r *ModifyBackupTimeRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyBackupTimeRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyBackupTimeResponse struct {
@@ -1767,12 +1868,12 @@ type ModifyBackupTimeResponse struct {
 }
 
 func (r *ModifyBackupTimeResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyBackupTimeResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstanceNameRequest struct {
@@ -1786,17 +1887,20 @@ type ModifyDBInstanceNameRequest struct {
 }
 
 func (r *ModifyDBInstanceNameRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBInstanceNameRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstanceNameResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
+
+		// 实例ID
+		InstanceId *string `json:"InstanceId,omitempty" name:"InstanceId"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
 		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
@@ -1804,12 +1908,12 @@ type ModifyDBInstanceNameResponse struct {
 }
 
 func (r *ModifyDBInstanceNameResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBInstanceNameResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstancesProjectRequest struct {
@@ -1823,12 +1927,12 @@ type ModifyDBInstancesProjectRequest struct {
 }
 
 func (r *ModifyDBInstancesProjectRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBInstancesProjectRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBInstancesProjectResponse struct {
@@ -1841,12 +1945,12 @@ type ModifyDBInstancesProjectResponse struct {
 }
 
 func (r *ModifyDBInstancesProjectResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBInstancesProjectResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBParametersRequest struct {
@@ -1860,12 +1964,12 @@ type ModifyDBParametersRequest struct {
 }
 
 func (r *ModifyDBParametersRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBParametersRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyDBParametersResponse struct {
@@ -1884,12 +1988,12 @@ type ModifyDBParametersResponse struct {
 }
 
 func (r *ModifyDBParametersResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyDBParametersResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyLogFileRetentionPeriodRequest struct {
@@ -1903,12 +2007,12 @@ type ModifyLogFileRetentionPeriodRequest struct {
 }
 
 func (r *ModifyLogFileRetentionPeriodRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyLogFileRetentionPeriodRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ModifyLogFileRetentionPeriodResponse struct {
@@ -1924,12 +2028,12 @@ type ModifyLogFileRetentionPeriodResponse struct {
 }
 
 func (r *ModifyLogFileRetentionPeriodResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ModifyLogFileRetentionPeriodResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type MonitorData struct {
@@ -1952,19 +2056,19 @@ type OpenDBExtranetAccessRequest struct {
 }
 
 func (r *OpenDBExtranetAccessRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *OpenDBExtranetAccessRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type OpenDBExtranetAccessResponse struct {
 	*tchttp.BaseResponse
 	Response *struct {
 
-		// 异步任务Id，可通过 DescribeFlow 查询任务状态。
+		// 异步任务ID，可通过 DescribeFlow 查询任务状态。
 		FlowId *int64 `json:"FlowId,omitempty" name:"FlowId"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -1973,12 +2077,12 @@ type OpenDBExtranetAccessResponse struct {
 }
 
 func (r *OpenDBExtranetAccessResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *OpenDBExtranetAccessResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ParamConstraint struct {
@@ -2096,12 +2200,12 @@ type RenewDBInstanceRequest struct {
 }
 
 func (r *RenewDBInstanceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *RenewDBInstanceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type RenewDBInstanceResponse struct {
@@ -2109,7 +2213,7 @@ type RenewDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -2118,12 +2222,12 @@ type RenewDBInstanceResponse struct {
 }
 
 func (r *RenewDBInstanceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *RenewDBInstanceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ResetAccountPasswordRequest struct {
@@ -2143,12 +2247,12 @@ type ResetAccountPasswordRequest struct {
 }
 
 func (r *ResetAccountPasswordRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ResetAccountPasswordRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ResetAccountPasswordResponse struct {
@@ -2161,12 +2265,12 @@ type ResetAccountPasswordResponse struct {
 }
 
 func (r *ResetAccountPasswordResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *ResetAccountPasswordResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ResourceUsageMonitorSet struct {
@@ -2182,6 +2286,43 @@ type ResourceUsageMonitorSet struct {
 
 	// 磁盘可用空间,单位GB
 	DataDiskAvailable *MonitorData `json:"DataDiskAvailable,omitempty" name:"DataDiskAvailable"`
+}
+
+type RestartDBInstancesRequest struct {
+	*tchttp.BaseRequest
+
+	// 实例ID的数组
+	InstanceIds []*string `json:"InstanceIds,omitempty" name:"InstanceIds" list`
+}
+
+func (r *RestartDBInstancesRequest) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *RestartDBInstancesRequest) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
+}
+
+type RestartDBInstancesResponse struct {
+	*tchttp.BaseResponse
+	Response *struct {
+
+		// 异步任务ID
+		FlowId *int64 `json:"FlowId,omitempty" name:"FlowId"`
+
+		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
+		RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+	} `json:"Response"`
+}
+
+func (r *RestartDBInstancesResponse) ToJsonString() string {
+    b, _ := json.Marshal(r)
+    return string(b)
+}
+
+func (r *RestartDBInstancesResponse) FromJsonString(s string) error {
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type SlowLogData struct {
@@ -2236,6 +2377,10 @@ type SlowLogData struct {
 
 	// 帐号
 	User *string `json:"User,omitempty" name:"User"`
+
+	// 样例Sql
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	ExampleSql *string `json:"ExampleSql,omitempty" name:"ExampleSql"`
 }
 
 type SpecConfigInfo struct {
@@ -2263,6 +2408,9 @@ type SpecConfigInfo struct {
 
 	// 节点个数，2 表示一主一从，3 表示一主二从
 	NodeCount *int64 `json:"NodeCount,omitempty" name:"NodeCount"`
+
+	// Cpu核数
+	Cpu *int64 `json:"Cpu,omitempty" name:"Cpu"`
 }
 
 type SqlLogItem struct {
@@ -2320,12 +2468,12 @@ type UpgradeDBInstanceRequest struct {
 }
 
 func (r *UpgradeDBInstanceRequest) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *UpgradeDBInstanceRequest) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type UpgradeDBInstanceResponse struct {
@@ -2333,7 +2481,7 @@ type UpgradeDBInstanceResponse struct {
 	Response *struct {
 
 		// 长订单号。可以据此调用 DescribeOrders
-		//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
+	//  查询订单详细信息，或在支付失败时调用用户账号相关接口进行支付。
 		DealName *string `json:"DealName,omitempty" name:"DealName"`
 
 		// 唯一请求 ID，每次请求都会返回。定位问题时需要提供该次请求的 RequestId。
@@ -2342,12 +2490,12 @@ type UpgradeDBInstanceResponse struct {
 }
 
 func (r *UpgradeDBInstanceResponse) ToJsonString() string {
-	b, _ := json.Marshal(r)
-	return string(b)
+    b, _ := json.Marshal(r)
+    return string(b)
 }
 
 func (r *UpgradeDBInstanceResponse) FromJsonString(s string) error {
-	return json.Unmarshal([]byte(s), &r)
+    return json.Unmarshal([]byte(s), &r)
 }
 
 type ZoneChooseInfo struct {
