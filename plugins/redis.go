@@ -244,16 +244,19 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 
 	logrus.Info("create redis instance response = ", *response.Response.RequestId)
 	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
-	logrus.Info("new redis instance instance ids = ", response.Response.InstanceIds)
+	logrus.Info("new redis instance instance ids length = ", len(response.Response.InstanceIds))
 
 	var instanceId string
 	if len(response.Response.InstanceIds) > 0 {
 		instanceId = *response.Response.InstanceIds[0]
+		logrus.Info("new redis instance instance ids 1 = ", instanceId)
+		logrus.Info("new redis instance instance ids 1 ptr = ", &instanceId)
 		var tmpError error
 		tmpCount := 0
 		for {
-			tmpInstanceResponse, err := client.DescribeInstances(&redis.DescribeInstancesRequest{InstanceId:response.Response.InstanceIds[0]})
+			tmpInstanceResponse, err := client.DescribeInstances(&redis.DescribeInstancesRequest{InstanceId:&instanceId})
 			if err != nil {
+				logrus.Errorf("client DescribeInstances ", err)
 				tmpError = err
 				break
 			}
@@ -297,7 +300,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		err = fmt.Errorf("not query the new redis instance[%v]", instanceId)
 		return output, err
 	}
-
+	logrus.Infoln("create redis done ")
 	output.RequestId = *response.Response.RequestId
 	output.DealID = *response.Response.DealId
 	output.ID = instanceId
