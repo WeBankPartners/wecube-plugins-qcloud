@@ -254,7 +254,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		var tmpError error
 		tmpCount := 0
 		for {
-			tmpInstanceResponse, err := client.DescribeInstances(&redis.DescribeInstancesRequest{InstanceId:&instanceId})
+			tmpInstanceRequest := redis.DescribeInstancesRequest{
+				InstanceId: &instanceId,
+			}
+			tmpInstanceResponse, err := client.DescribeInstances(&tmpInstanceRequest)
 			if err != nil {
 				logrus.Errorf("client DescribeInstances ", err)
 				tmpError = err
