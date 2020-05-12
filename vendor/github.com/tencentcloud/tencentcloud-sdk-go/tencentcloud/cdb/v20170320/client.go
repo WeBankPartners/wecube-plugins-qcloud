@@ -93,6 +93,31 @@ func (c *Client) AssociateSecurityGroups(request *AssociateSecurityGroupsRequest
     return
 }
 
+func NewBalanceRoGroupLoadRequest() (request *BalanceRoGroupLoadRequest) {
+    request = &BalanceRoGroupLoadRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "BalanceRoGroupLoad")
+    return
+}
+
+func NewBalanceRoGroupLoadResponse() (response *BalanceRoGroupLoadResponse) {
+    response = &BalanceRoGroupLoadResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(BalanceRoGroupLoad)用于重新均衡 RO 组内实例的负载。注意，RO 组内 RO 实例会有一次数据库连接瞬断，请确保应用程序能重连数据库，谨慎操作。
+func (c *Client) BalanceRoGroupLoad(request *BalanceRoGroupLoadRequest) (response *BalanceRoGroupLoadResponse, err error) {
+    if request == nil {
+        request = NewBalanceRoGroupLoadRequest()
+    }
+    response = NewBalanceRoGroupLoadResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCloseWanServiceRequest() (request *CloseWanServiceRequest) {
     request = &CloseWanServiceRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -261,6 +286,31 @@ func (c *Client) CreateDBInstanceHour(request *CreateDBInstanceHourRequest) (res
     return
 }
 
+func NewCreateDeployGroupRequest() (request *CreateDeployGroupRequest) {
+    request = &CreateDeployGroupRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "CreateDeployGroup")
+    return
+}
+
+func NewCreateDeployGroupResponse() (response *CreateDeployGroupResponse) {
+    response = &CreateDeployGroupResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(CreateDeployGroup)用于创建放置实例的置放群组
+func (c *Client) CreateDeployGroup(request *CreateDeployGroupRequest) (response *CreateDeployGroupResponse, err error) {
+    if request == nil {
+        request = NewCreateDeployGroupRequest()
+    }
+    response = NewCreateDeployGroupResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCreateParamTemplateRequest() (request *CreateParamTemplateRequest) {
     request = &CreateParamTemplateRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -326,12 +376,37 @@ func NewDeleteBackupResponse() (response *DeleteBackupResponse) {
     return
 }
 
-// 本接口(DeleteBackup)用于删除数据库备份。
+// 本接口(DeleteBackup)用于删除数据库备份。本接口只支持删除手动发起的备份。
 func (c *Client) DeleteBackup(request *DeleteBackupRequest) (response *DeleteBackupResponse, err error) {
     if request == nil {
         request = NewDeleteBackupRequest()
     }
     response = NewDeleteBackupResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDeleteDeployGroupsRequest() (request *DeleteDeployGroupsRequest) {
+    request = &DeleteDeployGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DeleteDeployGroups")
+    return
+}
+
+func NewDeleteDeployGroupsResponse() (response *DeleteDeployGroupsResponse) {
+    response = &DeleteDeployGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 根据置放群组ID删除置放群组（置放群组中有资源存在时不能删除该置放群组）
+func (c *Client) DeleteDeployGroups(request *DeleteDeployGroupsRequest) (response *DeleteDeployGroupsResponse, err error) {
+    if request == nil {
+        request = NewDeleteDeployGroupsRequest()
+    }
+    response = NewDeleteDeployGroupsResponse()
     err = c.Send(request, response)
     return
 }
@@ -501,12 +576,64 @@ func NewDescribeBackupDatabasesResponse() (response *DescribeBackupDatabasesResp
     return
 }
 
-// 本接口(DescribeBackupDatabases)用于查询备份数据库列表 (将废弃)。
+// 本接口(DescribeBackupDatabases)用于查询备份文件包含的库 (已废弃)。
+// 旧版本支持全量备份后，用户如果分库表下载逻辑备份文件，需要用到此接口。
+// 新版本支持(CreateBackup)创建逻辑备份的时候，直接发起指定库表备份，用户直接下载该备份文件即可。
 func (c *Client) DescribeBackupDatabases(request *DescribeBackupDatabasesRequest) (response *DescribeBackupDatabasesResponse, err error) {
     if request == nil {
         request = NewDescribeBackupDatabasesRequest()
     }
     response = NewDescribeBackupDatabasesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeBackupOverviewRequest() (request *DescribeBackupOverviewRequest) {
+    request = &DescribeBackupOverviewRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeBackupOverview")
+    return
+}
+
+func NewDescribeBackupOverviewResponse() (response *DescribeBackupOverviewResponse) {
+    response = &DescribeBackupOverviewResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeBackupOverview)用于查询用户的备份概览。返回用户当前备份总个数、备份总的占用容量、赠送的免费容量、计费容量（容量单位为字节）。
+func (c *Client) DescribeBackupOverview(request *DescribeBackupOverviewRequest) (response *DescribeBackupOverviewResponse, err error) {
+    if request == nil {
+        request = NewDescribeBackupOverviewRequest()
+    }
+    response = NewDescribeBackupOverviewResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeBackupSummariesRequest() (request *DescribeBackupSummariesRequest) {
+    request = &DescribeBackupSummariesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeBackupSummaries")
+    return
+}
+
+func NewDescribeBackupSummariesResponse() (response *DescribeBackupSummariesResponse) {
+    response = &DescribeBackupSummariesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeBackupSummaries)用于查询备份的统计情况，返回以实例为维度的备份占用容量，以及每个实例的数据备份和日志备份的个数和容量（容量单位为字节）。
+func (c *Client) DescribeBackupSummaries(request *DescribeBackupSummariesRequest) (response *DescribeBackupSummariesResponse, err error) {
+    if request == nil {
+        request = NewDescribeBackupSummariesRequest()
+    }
+    response = NewDescribeBackupSummariesResponse()
     err = c.Send(request, response)
     return
 }
@@ -526,7 +653,9 @@ func NewDescribeBackupTablesResponse() (response *DescribeBackupTablesResponse) 
     return
 }
 
-// 本接口(DescribeBackupTables)用于查询指定的数据库的备份数据表名 (将废弃)。
+// 本接口(DescribeBackupTables)用于查询指定的数据库的备份数据表名 (已废弃)。
+// 旧版本支持全量备份后，用户如果分库表下载逻辑备份文件，需要用到此接口。
+// 新版本支持(CreateBackup)创建逻辑备份的时候，直接发起指定库表备份，用户直接下载该备份文件即可。
 func (c *Client) DescribeBackupTables(request *DescribeBackupTablesRequest) (response *DescribeBackupTablesResponse, err error) {
     if request == nil {
         request = NewDescribeBackupTablesRequest()
@@ -561,6 +690,31 @@ func (c *Client) DescribeBackups(request *DescribeBackupsRequest) (response *Des
     return
 }
 
+func NewDescribeBinlogBackupOverviewRequest() (request *DescribeBinlogBackupOverviewRequest) {
+    request = &DescribeBinlogBackupOverviewRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeBinlogBackupOverview")
+    return
+}
+
+func NewDescribeBinlogBackupOverviewResponse() (response *DescribeBinlogBackupOverviewResponse) {
+    response = &DescribeBinlogBackupOverviewResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeBinlogBackupOverview)用于查询用户在当前地域总的日志备份概览。
+func (c *Client) DescribeBinlogBackupOverview(request *DescribeBinlogBackupOverviewRequest) (response *DescribeBinlogBackupOverviewResponse, err error) {
+    if request == nil {
+        request = NewDescribeBinlogBackupOverviewRequest()
+    }
+    response = NewDescribeBinlogBackupOverviewResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeBinlogsRequest() (request *DescribeBinlogsRequest) {
     request = &DescribeBinlogsRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -576,7 +730,7 @@ func NewDescribeBinlogsResponse() (response *DescribeBinlogsResponse) {
     return
 }
 
-// 本接口(DescribeBinlogs)用于查询云数据库实例的二进制数据。
+// 本接口(DescribeBinlogs)用于查询云数据库实例的 binlog 文件列表。
 func (c *Client) DescribeBinlogs(request *DescribeBinlogsRequest) (response *DescribeBinlogsResponse, err error) {
     if request == nil {
         request = NewDescribeBinlogsRequest()
@@ -682,6 +836,31 @@ func (c *Client) DescribeDBInstanceGTID(request *DescribeDBInstanceGTIDRequest) 
         request = NewDescribeDBInstanceGTIDRequest()
     }
     response = NewDescribeDBInstanceGTIDResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeDBInstanceInfoRequest() (request *DescribeDBInstanceInfoRequest) {
+    request = &DescribeDBInstanceInfoRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeDBInstanceInfo")
+    return
+}
+
+func NewDescribeDBInstanceInfoResponse() (response *DescribeDBInstanceInfoResponse) {
+    response = &DescribeDBInstanceInfoResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例基本信息（实例 ID ，实例名称，是否开通加密 ）
+func (c *Client) DescribeDBInstanceInfo(request *DescribeDBInstanceInfoRequest) (response *DescribeDBInstanceInfoResponse, err error) {
+    if request == nil {
+        request = NewDescribeDBInstanceInfoRequest()
+    }
+    response = NewDescribeDBInstanceInfoResponse()
     err = c.Send(request, response)
     return
 }
@@ -838,6 +1017,31 @@ func (c *Client) DescribeDBZoneConfig(request *DescribeDBZoneConfigRequest) (res
     return
 }
 
+func NewDescribeDataBackupOverviewRequest() (request *DescribeDataBackupOverviewRequest) {
+    request = &DescribeDataBackupOverviewRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeDataBackupOverview")
+    return
+}
+
+func NewDescribeDataBackupOverviewResponse() (response *DescribeDataBackupOverviewResponse) {
+    response = &DescribeDataBackupOverviewResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeDataBackupOverview)用于查询用户在当前地域总的数据备份概览。
+func (c *Client) DescribeDataBackupOverview(request *DescribeDataBackupOverviewRequest) (response *DescribeDataBackupOverviewResponse, err error) {
+    if request == nil {
+        request = NewDescribeDataBackupOverviewRequest()
+    }
+    response = NewDescribeDataBackupOverviewResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeDatabasesRequest() (request *DescribeDatabasesRequest) {
     request = &DescribeDatabasesRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -888,6 +1092,31 @@ func (c *Client) DescribeDefaultParams(request *DescribeDefaultParamsRequest) (r
     return
 }
 
+func NewDescribeDeployGroupListRequest() (request *DescribeDeployGroupListRequest) {
+    request = &DescribeDeployGroupListRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeDeployGroupList")
+    return
+}
+
+func NewDescribeDeployGroupListResponse() (response *DescribeDeployGroupListResponse) {
+    response = &DescribeDeployGroupListResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeDeployGroupList)用于查询用户的置放群组列表，可以指定置放群组 ID 或置放群组名称。
+func (c *Client) DescribeDeployGroupList(request *DescribeDeployGroupListRequest) (response *DescribeDeployGroupListResponse, err error) {
+    if request == nil {
+        request = NewDescribeDeployGroupListRequest()
+    }
+    response = NewDescribeDeployGroupListResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeDeviceMonitorInfoRequest() (request *DescribeDeviceMonitorInfoRequest) {
     request = &DescribeDeviceMonitorInfoRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -909,6 +1138,31 @@ func (c *Client) DescribeDeviceMonitorInfo(request *DescribeDeviceMonitorInfoReq
         request = NewDescribeDeviceMonitorInfoRequest()
     }
     response = NewDescribeDeviceMonitorInfoResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeErrorLogDataRequest() (request *DescribeErrorLogDataRequest) {
+    request = &DescribeErrorLogDataRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeErrorLogData")
+    return
+}
+
+func NewDescribeErrorLogDataResponse() (response *DescribeErrorLogDataResponse) {
+    response = &DescribeErrorLogDataResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 根据检索条件查询实例错误日志详情。只能查询一个月之内的错误日志。
+func (c *Client) DescribeErrorLogData(request *DescribeErrorLogDataRequest) (response *DescribeErrorLogDataResponse, err error) {
+    if request == nil {
+        request = NewDescribeErrorLogDataRequest()
+    }
+    response = NewDescribeErrorLogDataResponse()
     err = c.Send(request, response)
     return
 }
@@ -1038,6 +1292,31 @@ func (c *Client) DescribeProjectSecurityGroups(request *DescribeProjectSecurityG
     return
 }
 
+func NewDescribeRoGroupsRequest() (request *DescribeRoGroupsRequest) {
+    request = &DescribeRoGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeRoGroups")
+    return
+}
+
+func NewDescribeRoGroupsResponse() (response *DescribeRoGroupsResponse) {
+    response = &DescribeRoGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeRoGroups)用于查询云数据库实例的所有的RO组的信息。
+func (c *Client) DescribeRoGroups(request *DescribeRoGroupsRequest) (response *DescribeRoGroupsResponse, err error) {
+    if request == nil {
+        request = NewDescribeRoGroupsRequest()
+    }
+    response = NewDescribeRoGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeRollbackRangeTimeRequest() (request *DescribeRollbackRangeTimeRequest) {
     request = &DescribeRollbackRangeTimeRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1059,6 +1338,56 @@ func (c *Client) DescribeRollbackRangeTime(request *DescribeRollbackRangeTimeReq
         request = NewDescribeRollbackRangeTimeRequest()
     }
     response = NewDescribeRollbackRangeTimeResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeRollbackTaskDetailRequest() (request *DescribeRollbackTaskDetailRequest) {
+    request = &DescribeRollbackTaskDetailRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeRollbackTaskDetail")
+    return
+}
+
+func NewDescribeRollbackTaskDetailResponse() (response *DescribeRollbackTaskDetailResponse) {
+    response = &DescribeRollbackTaskDetailResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeRollbackTaskDetail)用于查询云数据库实例回档任务详情。
+func (c *Client) DescribeRollbackTaskDetail(request *DescribeRollbackTaskDetailRequest) (response *DescribeRollbackTaskDetailResponse, err error) {
+    if request == nil {
+        request = NewDescribeRollbackTaskDetailRequest()
+    }
+    response = NewDescribeRollbackTaskDetailResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeSlowLogDataRequest() (request *DescribeSlowLogDataRequest) {
+    request = &DescribeSlowLogDataRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "DescribeSlowLogData")
+    return
+}
+
+func NewDescribeSlowLogDataResponse() (response *DescribeSlowLogDataResponse) {
+    response = &DescribeSlowLogDataResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 条件检索实例的慢日志。只允许查看一个月之内的慢日志
+func (c *Client) DescribeSlowLogData(request *DescribeSlowLogDataRequest) (response *DescribeSlowLogDataResponse, err error) {
+    if request == nil {
+        request = NewDescribeSlowLogDataRequest()
+    }
+    response = NewDescribeSlowLogDataResponse()
     err = c.Send(request, response)
     return
 }
@@ -1328,7 +1657,7 @@ func NewIsolateDBInstanceResponse() (response *IsolateDBInstanceResponse) {
     return
 }
 
-// 本接口(IsolateDBInstance)用于隔离云数据库实例，隔离后不能通过IP和端口访问数据库。隔离的实例可在回收站中进行开机。若为欠费隔离，请尽快进行冲正。
+// 本接口(IsolateDBInstance)用于隔离云数据库实例，隔离后不能通过IP和端口访问数据库。隔离的实例可在回收站中进行开机。若为欠费隔离，请尽快进行充值。
 func (c *Client) IsolateDBInstance(request *IsolateDBInstanceRequest) (response *IsolateDBInstanceResponse, err error) {
     if request == nil {
         request = NewIsolateDBInstanceRequest()
@@ -1404,6 +1733,9 @@ func NewModifyAccountPrivilegesResponse() (response *ModifyAccountPrivilegesResp
 }
 
 // 本接口(ModifyAccountPrivileges)用于修改云数据库的账户的权限信息。
+// 
+// 注意，修改账号权限时，需要传入该账号下的全量权限信息。用户可以先通过 [查询云数据库账户的权限信息
+// ](https://cloud.tencent.com/document/api/236/17500) 查询该账号下的全量权限信息，然后进行权限修改。
 func (c *Client) ModifyAccountPrivileges(request *ModifyAccountPrivilegesRequest) (response *ModifyAccountPrivilegesResponse, err error) {
     if request == nil {
         request = NewModifyAccountPrivilegesRequest()
@@ -1613,6 +1945,31 @@ func (c *Client) ModifyInstanceTag(request *ModifyInstanceTagRequest) (response 
     return
 }
 
+func NewModifyNameOrDescByDpIdRequest() (request *ModifyNameOrDescByDpIdRequest) {
+    request = &ModifyNameOrDescByDpIdRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "ModifyNameOrDescByDpId")
+    return
+}
+
+func NewModifyNameOrDescByDpIdResponse() (response *ModifyNameOrDescByDpIdResponse) {
+    response = &ModifyNameOrDescByDpIdResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 修改置放群组的名称或者描述
+func (c *Client) ModifyNameOrDescByDpId(request *ModifyNameOrDescByDpIdRequest) (response *ModifyNameOrDescByDpIdResponse, err error) {
+    if request == nil {
+        request = NewModifyNameOrDescByDpIdRequest()
+    }
+    response = NewModifyNameOrDescByDpIdResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewModifyParamTemplateRequest() (request *ModifyParamTemplateRequest) {
     request = &ModifyParamTemplateRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1634,6 +1991,31 @@ func (c *Client) ModifyParamTemplate(request *ModifyParamTemplateRequest) (respo
         request = NewModifyParamTemplateRequest()
     }
     response = NewModifyParamTemplateResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyRoGroupInfoRequest() (request *ModifyRoGroupInfoRequest) {
+    request = &ModifyRoGroupInfoRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "ModifyRoGroupInfo")
+    return
+}
+
+func NewModifyRoGroupInfoResponse() (response *ModifyRoGroupInfoResponse) {
+    response = &ModifyRoGroupInfoResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ModifyRoGroupInfo）用于更新云数据库只读组的信息。包括设置实例延迟超限剔除策略，设置只读实例读权重等。
+func (c *Client) ModifyRoGroupInfo(request *ModifyRoGroupInfoRequest) (response *ModifyRoGroupInfoResponse, err error) {
+    if request == nil {
+        request = NewModifyRoGroupInfoRequest()
+    }
+    response = NewModifyRoGroupInfoResponse()
     err = c.Send(request, response)
     return
 }
@@ -1744,6 +2126,31 @@ func (c *Client) OpenWanService(request *OpenWanServiceRequest) (response *OpenW
     return
 }
 
+func NewReleaseIsolatedDBInstancesRequest() (request *ReleaseIsolatedDBInstancesRequest) {
+    request = &ReleaseIsolatedDBInstancesRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("cdb", APIVersion, "ReleaseIsolatedDBInstances")
+    return
+}
+
+func NewReleaseIsolatedDBInstancesResponse() (response *ReleaseIsolatedDBInstancesResponse) {
+    response = &ReleaseIsolatedDBInstancesResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口（ReleaseIsolatedDBInstances）用于恢复已隔离云数据库实例。
+func (c *Client) ReleaseIsolatedDBInstances(request *ReleaseIsolatedDBInstancesRequest) (response *ReleaseIsolatedDBInstancesResponse, err error) {
+    if request == nil {
+        request = NewReleaseIsolatedDBInstancesRequest()
+    }
+    response = NewReleaseIsolatedDBInstancesResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewRenewDBInstanceRequest() (request *RenewDBInstanceRequest) {
     request = &RenewDBInstanceRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1759,7 +2166,7 @@ func NewRenewDBInstanceResponse() (response *RenewDBInstanceResponse) {
     return
 }
 
-// 本接口(RenewDBInstance)用于续费云数据库实例，仅支持付费模式为包年包月的实例。按量计费实例不需要续费。
+// 本接口(RenewDBInstance)用于续费云数据库实例，支持付费模式为包年包月的实例。按量计费实例可通过该接口续费为包年包月的实例。
 func (c *Client) RenewDBInstance(request *RenewDBInstanceRequest) (response *RenewDBInstanceResponse, err error) {
     if request == nil {
         request = NewRenewDBInstanceRequest()
@@ -1888,7 +2295,7 @@ func NewUpgradeDBInstanceResponse() (response *UpgradeDBInstanceResponse) {
     return
 }
 
-// 本接口(UpgradeDBInstance)用于升级云数据库实例，实例类型支持主实例、灾备实例和只读实例。
+// 本接口(UpgradeDBInstance)用于升级或降级云数据库实例的配置，实例类型支持主实例、灾备实例和只读实例。
 func (c *Client) UpgradeDBInstance(request *UpgradeDBInstanceRequest) (response *UpgradeDBInstanceResponse, err error) {
     if request == nil {
         request = NewUpgradeDBInstanceRequest()

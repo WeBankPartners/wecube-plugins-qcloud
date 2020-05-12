@@ -43,6 +43,31 @@ func NewClient(credential *common.Credential, region string, clientProfile *prof
 }
 
 
+func NewAssociateSecurityGroupsRequest() (request *AssociateSecurityGroupsRequest) {
+    request = &AssociateSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "AssociateSecurityGroups")
+    return
+}
+
+func NewAssociateSecurityGroupsResponse() (response *AssociateSecurityGroupsResponse) {
+    response = &AssociateSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口 (AssociateSecurityGroups) 用于绑定安全组到指定实例。
+func (c *Client) AssociateSecurityGroups(request *AssociateSecurityGroupsRequest) (response *AssociateSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewAssociateSecurityGroupsRequest()
+    }
+    response = NewAssociateSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCleanUpInstanceRequest() (request *CleanUpInstanceRequest) {
     request = &CleanUpInstanceRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -93,6 +118,31 @@ func (c *Client) ClearInstance(request *ClearInstanceRequest) (response *ClearIn
     return
 }
 
+func NewCreateInstanceAccountRequest() (request *CreateInstanceAccountRequest) {
+    request = &CreateInstanceAccountRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "CreateInstanceAccount")
+    return
+}
+
+func NewCreateInstanceAccountResponse() (response *CreateInstanceAccountResponse) {
+    response = &CreateInstanceAccountResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 创建实例子账号
+func (c *Client) CreateInstanceAccount(request *CreateInstanceAccountRequest) (response *CreateInstanceAccountResponse, err error) {
+    if request == nil {
+        request = NewCreateInstanceAccountRequest()
+    }
+    response = NewCreateInstanceAccountResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewCreateInstancesRequest() (request *CreateInstancesRequest) {
     request = &CreateInstancesRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -114,6 +164,31 @@ func (c *Client) CreateInstances(request *CreateInstancesRequest) (response *Cre
         request = NewCreateInstancesRequest()
     }
     response = NewCreateInstancesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDeleteInstanceAccountRequest() (request *DeleteInstanceAccountRequest) {
+    request = &DeleteInstanceAccountRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DeleteInstanceAccount")
+    return
+}
+
+func NewDeleteInstanceAccountResponse() (response *DeleteInstanceAccountResponse) {
+    response = &DeleteInstanceAccountResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 删除实例子账号
+func (c *Client) DeleteInstanceAccount(request *DeleteInstanceAccountRequest) (response *DeleteInstanceAccountResponse, err error) {
+    if request == nil {
+        request = NewDeleteInstanceAccountRequest()
+    }
+    response = NewDeleteInstanceAccountResponse()
     err = c.Send(request, response)
     return
 }
@@ -168,6 +243,56 @@ func (c *Client) DescribeBackupUrl(request *DescribeBackupUrlRequest) (response 
     return
 }
 
+func NewDescribeDBSecurityGroupsRequest() (request *DescribeDBSecurityGroupsRequest) {
+    request = &DescribeDBSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeDBSecurityGroups")
+    return
+}
+
+func NewDescribeDBSecurityGroupsResponse() (response *DescribeDBSecurityGroupsResponse) {
+    response = &DescribeDBSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeDBSecurityGroups)用于查询实例的安全组详情。
+func (c *Client) DescribeDBSecurityGroups(request *DescribeDBSecurityGroupsRequest) (response *DescribeDBSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewDescribeDBSecurityGroupsRequest()
+    }
+    response = NewDescribeDBSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceAccountRequest() (request *DescribeInstanceAccountRequest) {
+    request = &DescribeInstanceAccountRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceAccount")
+    return
+}
+
+func NewDescribeInstanceAccountResponse() (response *DescribeInstanceAccountResponse) {
+    response = &DescribeInstanceAccountResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查看实例子账号信息
+func (c *Client) DescribeInstanceAccount(request *DescribeInstanceAccountRequest) (response *DescribeInstanceAccountResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceAccountRequest()
+    }
+    response = NewDescribeInstanceAccountResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeInstanceBackupsRequest() (request *DescribeInstanceBackupsRequest) {
     request = &DescribeInstanceBackupsRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -193,6 +318,31 @@ func (c *Client) DescribeInstanceBackups(request *DescribeInstanceBackupsRequest
     return
 }
 
+func NewDescribeInstanceDTSInfoRequest() (request *DescribeInstanceDTSInfoRequest) {
+    request = &DescribeInstanceDTSInfoRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceDTSInfo")
+    return
+}
+
+func NewDescribeInstanceDTSInfoResponse() (response *DescribeInstanceDTSInfoResponse) {
+    response = &DescribeInstanceDTSInfoResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例DTS信息
+func (c *Client) DescribeInstanceDTSInfo(request *DescribeInstanceDTSInfoRequest) (response *DescribeInstanceDTSInfoResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceDTSInfoRequest()
+    }
+    response = NewDescribeInstanceDTSInfoResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeInstanceDealDetailRequest() (request *DescribeInstanceDealDetailRequest) {
     request = &DescribeInstanceDealDetailRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -214,6 +364,206 @@ func (c *Client) DescribeInstanceDealDetail(request *DescribeInstanceDealDetailR
         request = NewDescribeInstanceDealDetailRequest()
     }
     response = NewDescribeInstanceDealDetailResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeyRequest() (request *DescribeInstanceMonitorBigKeyRequest) {
+    request = &DescribeInstanceMonitorBigKeyRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorBigKey")
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeyResponse() (response *DescribeInstanceMonitorBigKeyResponse) {
+    response = &DescribeInstanceMonitorBigKeyResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例大Key
+func (c *Client) DescribeInstanceMonitorBigKey(request *DescribeInstanceMonitorBigKeyRequest) (response *DescribeInstanceMonitorBigKeyResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorBigKeyRequest()
+    }
+    response = NewDescribeInstanceMonitorBigKeyResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeySizeDistRequest() (request *DescribeInstanceMonitorBigKeySizeDistRequest) {
+    request = &DescribeInstanceMonitorBigKeySizeDistRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorBigKeySizeDist")
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeySizeDistResponse() (response *DescribeInstanceMonitorBigKeySizeDistResponse) {
+    response = &DescribeInstanceMonitorBigKeySizeDistResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例大Key大小分布
+func (c *Client) DescribeInstanceMonitorBigKeySizeDist(request *DescribeInstanceMonitorBigKeySizeDistRequest) (response *DescribeInstanceMonitorBigKeySizeDistResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorBigKeySizeDistRequest()
+    }
+    response = NewDescribeInstanceMonitorBigKeySizeDistResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeyTypeDistRequest() (request *DescribeInstanceMonitorBigKeyTypeDistRequest) {
+    request = &DescribeInstanceMonitorBigKeyTypeDistRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorBigKeyTypeDist")
+    return
+}
+
+func NewDescribeInstanceMonitorBigKeyTypeDistResponse() (response *DescribeInstanceMonitorBigKeyTypeDistResponse) {
+    response = &DescribeInstanceMonitorBigKeyTypeDistResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例大Key类型分布
+func (c *Client) DescribeInstanceMonitorBigKeyTypeDist(request *DescribeInstanceMonitorBigKeyTypeDistRequest) (response *DescribeInstanceMonitorBigKeyTypeDistResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorBigKeyTypeDistRequest()
+    }
+    response = NewDescribeInstanceMonitorBigKeyTypeDistResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorHotKeyRequest() (request *DescribeInstanceMonitorHotKeyRequest) {
+    request = &DescribeInstanceMonitorHotKeyRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorHotKey")
+    return
+}
+
+func NewDescribeInstanceMonitorHotKeyResponse() (response *DescribeInstanceMonitorHotKeyResponse) {
+    response = &DescribeInstanceMonitorHotKeyResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例热Key
+func (c *Client) DescribeInstanceMonitorHotKey(request *DescribeInstanceMonitorHotKeyRequest) (response *DescribeInstanceMonitorHotKeyResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorHotKeyRequest()
+    }
+    response = NewDescribeInstanceMonitorHotKeyResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorSIPRequest() (request *DescribeInstanceMonitorSIPRequest) {
+    request = &DescribeInstanceMonitorSIPRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorSIP")
+    return
+}
+
+func NewDescribeInstanceMonitorSIPResponse() (response *DescribeInstanceMonitorSIPResponse) {
+    response = &DescribeInstanceMonitorSIPResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例访问来源信息
+func (c *Client) DescribeInstanceMonitorSIP(request *DescribeInstanceMonitorSIPRequest) (response *DescribeInstanceMonitorSIPResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorSIPRequest()
+    }
+    response = NewDescribeInstanceMonitorSIPResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorTookDistRequest() (request *DescribeInstanceMonitorTookDistRequest) {
+    request = &DescribeInstanceMonitorTookDistRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorTookDist")
+    return
+}
+
+func NewDescribeInstanceMonitorTookDistResponse() (response *DescribeInstanceMonitorTookDistResponse) {
+    response = &DescribeInstanceMonitorTookDistResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例访问的耗时分布
+func (c *Client) DescribeInstanceMonitorTookDist(request *DescribeInstanceMonitorTookDistRequest) (response *DescribeInstanceMonitorTookDistResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorTookDistRequest()
+    }
+    response = NewDescribeInstanceMonitorTookDistResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorTopNCmdRequest() (request *DescribeInstanceMonitorTopNCmdRequest) {
+    request = &DescribeInstanceMonitorTopNCmdRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorTopNCmd")
+    return
+}
+
+func NewDescribeInstanceMonitorTopNCmdResponse() (response *DescribeInstanceMonitorTopNCmdResponse) {
+    response = &DescribeInstanceMonitorTopNCmdResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例访问命令
+func (c *Client) DescribeInstanceMonitorTopNCmd(request *DescribeInstanceMonitorTopNCmdRequest) (response *DescribeInstanceMonitorTopNCmdResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorTopNCmdRequest()
+    }
+    response = NewDescribeInstanceMonitorTopNCmdResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeInstanceMonitorTopNCmdTookRequest() (request *DescribeInstanceMonitorTopNCmdTookRequest) {
+    request = &DescribeInstanceMonitorTopNCmdTookRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeInstanceMonitorTopNCmdTook")
+    return
+}
+
+func NewDescribeInstanceMonitorTopNCmdTookResponse() (response *DescribeInstanceMonitorTopNCmdTookResponse) {
+    response = &DescribeInstanceMonitorTopNCmdTookResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例CPU耗时
+func (c *Client) DescribeInstanceMonitorTopNCmdTook(request *DescribeInstanceMonitorTopNCmdTookRequest) (response *DescribeInstanceMonitorTopNCmdTookResponse, err error) {
+    if request == nil {
+        request = NewDescribeInstanceMonitorTopNCmdTookRequest()
+    }
+    response = NewDescribeInstanceMonitorTopNCmdTookResponse()
     err = c.Send(request, response)
     return
 }
@@ -393,6 +743,56 @@ func (c *Client) DescribeProjectSecurityGroup(request *DescribeProjectSecurityGr
     return
 }
 
+func NewDescribeProjectSecurityGroupsRequest() (request *DescribeProjectSecurityGroupsRequest) {
+    request = &DescribeProjectSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeProjectSecurityGroups")
+    return
+}
+
+func NewDescribeProjectSecurityGroupsResponse() (response *DescribeProjectSecurityGroupsResponse) {
+    response = &DescribeProjectSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DescribeProjectSecurityGroups)用于查询项目的安全组详情。
+func (c *Client) DescribeProjectSecurityGroups(request *DescribeProjectSecurityGroupsRequest) (response *DescribeProjectSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewDescribeProjectSecurityGroupsRequest()
+    }
+    response = NewDescribeProjectSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeSlowLogRequest() (request *DescribeSlowLogRequest) {
+    request = &DescribeSlowLogRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeSlowLog")
+    return
+}
+
+func NewDescribeSlowLogResponse() (response *DescribeSlowLogResponse) {
+    response = &DescribeSlowLogResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例慢查询记录
+func (c *Client) DescribeSlowLog(request *DescribeSlowLogRequest) (response *DescribeSlowLogResponse, err error) {
+    if request == nil {
+        request = NewDescribeSlowLogRequest()
+    }
+    response = NewDescribeSlowLogResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewDescribeTaskInfoRequest() (request *DescribeTaskInfoRequest) {
     request = &DescribeTaskInfoRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -414,6 +814,31 @@ func (c *Client) DescribeTaskInfo(request *DescribeTaskInfoRequest) (response *D
         request = NewDescribeTaskInfoRequest()
     }
     response = NewDescribeTaskInfoResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeTaskListRequest() (request *DescribeTaskListRequest) {
+    request = &DescribeTaskListRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DescribeTaskList")
+    return
+}
+
+func NewDescribeTaskListResponse() (response *DescribeTaskListResponse) {
+    response = &DescribeTaskListResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询任务列表信息
+func (c *Client) DescribeTaskList(request *DescribeTaskListRequest) (response *DescribeTaskListResponse, err error) {
+    if request == nil {
+        request = NewDescribeTaskListRequest()
+    }
+    response = NewDescribeTaskListResponse()
     err = c.Send(request, response)
     return
 }
@@ -493,6 +918,31 @@ func (c *Client) DisableReplicaReadonly(request *DisableReplicaReadonlyRequest) 
     return
 }
 
+func NewDisassociateSecurityGroupsRequest() (request *DisassociateSecurityGroupsRequest) {
+    request = &DisassociateSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "DisassociateSecurityGroups")
+    return
+}
+
+func NewDisassociateSecurityGroupsResponse() (response *DisassociateSecurityGroupsResponse) {
+    response = &DisassociateSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(DisassociateSecurityGroups)用于安全组批量解绑实例。
+func (c *Client) DisassociateSecurityGroups(request *DisassociateSecurityGroupsRequest) (response *DisassociateSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewDisassociateSecurityGroupsRequest()
+    }
+    response = NewDisassociateSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewEnableReplicaReadonlyRequest() (request *EnableReplicaReadonlyRequest) {
     request = &EnableReplicaReadonlyRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -514,6 +964,81 @@ func (c *Client) EnableReplicaReadonly(request *EnableReplicaReadonlyRequest) (r
         request = NewEnableReplicaReadonlyRequest()
     }
     response = NewEnableReplicaReadonlyResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewInquiryPriceCreateInstanceRequest() (request *InquiryPriceCreateInstanceRequest) {
+    request = &InquiryPriceCreateInstanceRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "InquiryPriceCreateInstance")
+    return
+}
+
+func NewInquiryPriceCreateInstanceResponse() (response *InquiryPriceCreateInstanceResponse) {
+    response = &InquiryPriceCreateInstanceResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询新购实例价格
+func (c *Client) InquiryPriceCreateInstance(request *InquiryPriceCreateInstanceRequest) (response *InquiryPriceCreateInstanceResponse, err error) {
+    if request == nil {
+        request = NewInquiryPriceCreateInstanceRequest()
+    }
+    response = NewInquiryPriceCreateInstanceResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewInquiryPriceRenewInstanceRequest() (request *InquiryPriceRenewInstanceRequest) {
+    request = &InquiryPriceRenewInstanceRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "InquiryPriceRenewInstance")
+    return
+}
+
+func NewInquiryPriceRenewInstanceResponse() (response *InquiryPriceRenewInstanceResponse) {
+    response = &InquiryPriceRenewInstanceResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例续费价格（包年包月）
+func (c *Client) InquiryPriceRenewInstance(request *InquiryPriceRenewInstanceRequest) (response *InquiryPriceRenewInstanceResponse, err error) {
+    if request == nil {
+        request = NewInquiryPriceRenewInstanceRequest()
+    }
+    response = NewInquiryPriceRenewInstanceResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewInquiryPriceUpgradeInstanceRequest() (request *InquiryPriceUpgradeInstanceRequest) {
+    request = &InquiryPriceUpgradeInstanceRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "InquiryPriceUpgradeInstance")
+    return
+}
+
+func NewInquiryPriceUpgradeInstanceResponse() (response *InquiryPriceUpgradeInstanceResponse) {
+    response = &InquiryPriceUpgradeInstanceResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询实例扩容价格
+func (c *Client) InquiryPriceUpgradeInstance(request *InquiryPriceUpgradeInstanceRequest) (response *InquiryPriceUpgradeInstanceResponse, err error) {
+    if request == nil {
+        request = NewInquiryPriceUpgradeInstanceRequest()
+    }
+    response = NewInquiryPriceUpgradeInstanceResponse()
     err = c.Send(request, response)
     return
 }
@@ -593,6 +1118,31 @@ func (c *Client) ModifyAutoBackupConfig(request *ModifyAutoBackupConfigRequest) 
     return
 }
 
+func NewModifyDBInstanceSecurityGroupsRequest() (request *ModifyDBInstanceSecurityGroupsRequest) {
+    request = &ModifyDBInstanceSecurityGroupsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "ModifyDBInstanceSecurityGroups")
+    return
+}
+
+func NewModifyDBInstanceSecurityGroupsResponse() (response *ModifyDBInstanceSecurityGroupsResponse) {
+    response = &ModifyDBInstanceSecurityGroupsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 本接口(ModifyDBInstanceSecurityGroups)用于修改实例绑定的安全组
+func (c *Client) ModifyDBInstanceSecurityGroups(request *ModifyDBInstanceSecurityGroupsRequest) (response *ModifyDBInstanceSecurityGroupsResponse, err error) {
+    if request == nil {
+        request = NewModifyDBInstanceSecurityGroupsRequest()
+    }
+    response = NewModifyDBInstanceSecurityGroupsResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewModifyInstanceRequest() (request *ModifyInstanceRequest) {
     request = &ModifyInstanceRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -608,12 +1158,37 @@ func NewModifyInstanceResponse() (response *ModifyInstanceResponse) {
     return
 }
 
-// 修改实例相关信息（目前支持：实例重命名）
+// 修改实例相关信息
 func (c *Client) ModifyInstance(request *ModifyInstanceRequest) (response *ModifyInstanceResponse, err error) {
     if request == nil {
         request = NewModifyInstanceRequest()
     }
     response = NewModifyInstanceResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewModifyInstanceAccountRequest() (request *ModifyInstanceAccountRequest) {
+    request = &ModifyInstanceAccountRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "ModifyInstanceAccount")
+    return
+}
+
+func NewModifyInstanceAccountResponse() (response *ModifyInstanceAccountResponse) {
+    response = &ModifyInstanceAccountResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 修改实例子账号
+func (c *Client) ModifyInstanceAccount(request *ModifyInstanceAccountRequest) (response *ModifyInstanceAccountResponse, err error) {
+    if request == nil {
+        request = NewModifyInstanceAccountRequest()
+    }
+    response = NewModifyInstanceAccountResponse()
     err = c.Send(request, response)
     return
 }
@@ -739,6 +1314,31 @@ func (c *Client) RestoreInstance(request *RestoreInstanceRequest) (response *Res
         request = NewRestoreInstanceRequest()
     }
     response = NewRestoreInstanceResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewStartupInstanceRequest() (request *StartupInstanceRequest) {
+    request = &StartupInstanceRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("redis", APIVersion, "StartupInstance")
+    return
+}
+
+func NewStartupInstanceResponse() (response *StartupInstanceResponse) {
+    response = &StartupInstanceResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 实例解隔离
+func (c *Client) StartupInstance(request *StartupInstanceRequest) (response *StartupInstanceResponse, err error) {
+    if request == nil {
+        request = NewStartupInstanceRequest()
+    }
+    response = NewStartupInstanceResponse()
     err = c.Send(request, response)
     return
 }

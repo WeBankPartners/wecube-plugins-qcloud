@@ -43,6 +43,31 @@ func NewClient(credential *common.Credential, region string, clientProfile *prof
 }
 
 
+func NewAttachCamRoleRequest() (request *AttachCamRoleRequest) {
+    request = &AttachCamRoleRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("bm", APIVersion, "AttachCamRole")
+    return
+}
+
+func NewAttachCamRoleResponse() (response *AttachCamRoleResponse) {
+    response = &AttachCamRoleResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 服务器绑定CAM角色，该角色授权访问黑石物理服务器服务，为黑石物理服务器提供了访问资源的权限，如请求服务器的临时证书
+func (c *Client) AttachCamRole(request *AttachCamRoleRequest) (response *AttachCamRoleResponse, err error) {
+    if request == nil {
+        request = NewAttachCamRoleRequest()
+    }
+    response = NewAttachCamRoleResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewBindPsaTagRequest() (request *BindPsaTagRequest) {
     request = &BindPsaTagRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -853,6 +878,31 @@ func (c *Client) DescribeUserCmds(request *DescribeUserCmdsRequest) (response *D
     return
 }
 
+func NewDetachCamRoleRequest() (request *DetachCamRoleRequest) {
+    request = &DetachCamRoleRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("bm", APIVersion, "DetachCamRole")
+    return
+}
+
+func NewDetachCamRoleResponse() (response *DetachCamRoleResponse) {
+    response = &DetachCamRoleResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 服务器绑定CAM角色
+func (c *Client) DetachCamRole(request *DetachCamRoleRequest) (response *DetachCamRoleResponse, err error) {
+    if request == nil {
+        request = NewDetachCamRoleRequest()
+    }
+    response = NewDetachCamRoleResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewModifyCustomImageAttributeRequest() (request *ModifyCustomImageAttributeRequest) {
     request = &ModifyCustomImageAttributeRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -1099,6 +1149,31 @@ func (c *Client) RecoverDevices(request *RecoverDevicesRequest) (response *Recov
         request = NewRecoverDevicesRequest()
     }
     response = NewRecoverDevicesResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewReloadDeviceOsRequest() (request *ReloadDeviceOsRequest) {
+    request = &ReloadDeviceOsRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("bm", APIVersion, "ReloadDeviceOs")
+    return
+}
+
+func NewReloadDeviceOsResponse() (response *ReloadDeviceOsResponse) {
+    response = &ReloadDeviceOsResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 重装操作系统
+func (c *Client) ReloadDeviceOs(request *ReloadDeviceOsRequest) (response *ReloadDeviceOsResponse, err error) {
+    if request == nil {
+        request = NewReloadDeviceOsRequest()
+    }
+    response = NewReloadDeviceOsResponse()
     err = c.Send(request, response)
     return
 }

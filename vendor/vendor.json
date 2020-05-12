@@ -20,88 +20,88 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "3y/fL7gLMeRL2nhkXsutDDwc9qk=",
+			"checksumSHA1": "IjBpq3NONaUcVJO8sY2TfkbAPGs=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/bm/v20180423",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "5+Dns9aYi02GoorbGYn1nsXaZQ4=",
+			"checksumSHA1": "Cegcp/xEwQHp93oRbtQTQpKJ5Yo=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/bmlb/v20180625",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "qnvW8BkL3VR90418xmN/4iyDWuo=",
+			"checksumSHA1": "4Pepw1DL3MAtiX4f7S7dxOJqp1c=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "TGDVzyrNcZo1hNQlUjqW/o2p3UE=",
+			"checksumSHA1": "rrL2xy6Lia2L5FqENlaF6CclWyE=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cdb/v20170320",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "ifNJy64Rl23Bo9KMkQPTygEM1fQ=",
+			"checksumSHA1": "RGtXuxu/9OJ1xdMlQUSt794Sfpw=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "zpgLms+/vE1D05K2eh3XFXjMbAU=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "q+o6CYdmE6zUexIu50LJ8m5V9M8=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "vOEpdTyJMQOzqpaN69AlYV70wWg=",
+			"checksumSHA1": "Y7ZQQRh9IlkQ7ZmV8Pf5MVi95jY=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "LjtkxgcL4JvLEuLUE71G1v2z3Bg=",
+			"checksumSHA1": "q2WHKIUWcGCk8pgwSlQT7dND2wI=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "ymORwvmqG1feV2lD3/GXtK3CWEQ=",
+			"checksumSHA1": "o0o8CPfkeZTFrp9uA6uvAJQkgek=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "NPY/BnzvwHCB5E5Tuj2pNgCYFYY=",
+			"checksumSHA1": "Kx+ovvR/Ukxy+H7vST2HWttWXQo=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/mariadb/v20170312",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "z/0XcQNK16VWTkTjFWW84rNeZOI=",
-			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/postgres/v20170312",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"checksumSHA1": "7KwRfl1P8QW0yJ87xDfmqwknvpU=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/mongodb/v20180408",
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "A/9TY8SQ0Vt38/bexu+6LgFf9I8=",
+			"checksumSHA1": "HXCGD6gHlT7vWwv2/mqLotSS7/4=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
-			"checksumSHA1": "+Nz9HXfUBjX6SPRwWB7e2yDccBg=",
+			"checksumSHA1": "DfDv7H4vEZTe9roPVpWArktqLnk=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
-			"revision": "d951db0c32a128a1107a5abe6e952f3d1b8471ae",
-			"revisionTime": "2019-09-06T12:32:28Z"
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "c126467f60eb25f8f27e5a981f32a87e3965053f",
 			"revisionTime": "2018-07-23T15:26:11Z"
+		},
+		{
+			"path": "golang.org/x/net/idna",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/sys/cpu",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "YVhxr50aj4r9QjM4CY52K45XOJY=",
@@ -114,6 +114,22 @@
 			"path": "golang.org/x/sys/windows",
 			"revision": "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e",
 			"revisionTime": "2018-07-27T21:32:08Z"
+		},
+		{
+			"path": "golang.org/x/text/secure/bidirule",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/text/transform",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/text/unicode/bidi",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/text/unicode/norm",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "GD/tP00KmteOc9TsOtTcrfKw3KA=",

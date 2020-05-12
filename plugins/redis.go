@@ -181,6 +181,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	if err != nil {
 		return output, err
 	}
+	for k,_ := range zonemap {
+		logrus.Infof("zone : %s", k)
+	}
 
 	request := redis.NewCreateInstancesRequest()
 	if _, found := zonemap[paramsMap["AvailableZone"]]; !found {
@@ -244,16 +247,21 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 
 	logrus.Info("create redis instance response = ", *response.Response.RequestId)
 	logrus.Info("new redis instance dealid = ", *response.Response.DealId)
-	logrus.Info("new redis instance instance ids = ", response.Response.InstanceIds)
+	logrus.Info("new redis instance instance ids length = ", len(response.Response.InstanceIds))
 
 	var instanceId string
 	if len(response.Response.InstanceIds) > 0 {
 		instanceId = *response.Response.InstanceIds[0]
+		logrus.Info("new redis instance instance ids 1 = ", instanceId)
 		var tmpError error
 		tmpCount := 0
 		for {
-			tmpInstanceResponse, err := client.DescribeInstances(&redis.DescribeInstancesRequest{InstanceId:response.Response.InstanceIds[0]})
+			newInstanceRequest := redis.NewDescribeInstancesRequest()
+			newInstanceRequest.InstanceId = &instanceId
+			tmpInstanceResponse, err := client.DescribeInstances(newInstanceRequest)
+
 			if err != nil {
+				logrus.Errorf("client DescribeInstances ", err)
 				tmpError = err
 				break
 			}
@@ -283,11 +291,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 	}
 
-	instanceRequest := redis.DescribeInstancesRequest{
-		InstanceId: &instanceId,
-	}
+	instanceRequest := redis.NewDescribeInstancesRequest()
+	instanceRequest.InstanceId = &instanceId
 
-	instanceResponse, err := client.DescribeInstances(&instanceRequest)
+	instanceResponse, err := client.DescribeInstances(instanceRequest)
 	if err != nil {
 		logrus.Errorf("query redis instance info meet error: %s", err)
 		return output, err
@@ -297,7 +304,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		err = fmt.Errorf("not query the new redis instance[%v]", instanceId)
 		return output, err
 	}
-
+	logrus.Infoln("create redis done ")
 	output.RequestId = *response.Response.RequestId
 	output.DealID = *response.Response.DealId
 	output.ID = instanceId
