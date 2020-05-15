@@ -11,6 +11,7 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	redis "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 )
 
 const (
@@ -59,6 +60,7 @@ type RedisInput struct {
 	ID               string `json:"id,omitempty"`
 	Location         string `json:"location"`
 	APISecret        string `json:"api_secret"`
+	Seed             string `json:"seed,omitempty"`
 }
 
 type RedisOutputs struct {
@@ -76,6 +78,7 @@ type RedisOutput struct {
 	ID        string `json:"id,omitempty"`
 	Vip       string `json:"vip,omitempty"`
 	Port      string `json:"port,omitempty"`
+	Password  string `json:"password,omitempty"`
 }
 
 type RedisPlugin struct {
@@ -310,6 +313,10 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	output.ID = instanceId
 	output.Vip = *instanceResponse.Response.InstanceSet[0].WanIp
 	output.Port = strconv.Itoa(int(*instanceResponse.Response.InstanceSet[0].Port))
+	if redisInput.Password != "" {
+		output.Password,_ = utils.AesEnPassword(redisInput.Guid,redisInput.Seed,redisInput.Password,utils.DEFALT_CIPHER)
+	}
+	createSubAccount(client,instanceId)
 
 	return output, err
 }
@@ -440,4 +447,28 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	output.InstanceName = *queryRedisInfoResponse.Response.InstanceSet[0].InstanceName
 
 	return &output, true, nil
+}
+
+func createSubAccount(client *redis.Client, instanceId string)  {
+	request := redis.NewCreateInstanceAccountRequest()
+	request.InstanceId = &instanceId
+	userA,userB := "user_a","user_b"
+	passA,passB := "user_pass_A","user_pass_B"
+	defaultPolicy,defaultPrivilege := "master","rw"
+	request.AccountName = &userA
+	request.AccountPassword = &passA
+	request.ReadonlyPolicy = []*string{&defaultPolicy}
+	request.Privilege = &defaultPrivilege
+	_,err := client.CreateInstanceAccount(request)
+	if err != nil {
+		logrus.Errorf("create redis first instance account fail ", err)
+		return
+	}
+	request.AccountName = &userB
+	request.AccountPassword = &passB
+	_,err = client.CreateInstanceAccount(request)
+	if err != nil {
+		logrus.Errorf("create redis second instance account fail ", err)
+		return
+	}
 }

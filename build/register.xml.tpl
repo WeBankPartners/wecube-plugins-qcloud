@@ -683,6 +683,7 @@
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">id</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">vip</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">port</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">password</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
     		        </outputParameters>
