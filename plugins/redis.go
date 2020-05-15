@@ -316,8 +316,6 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	if redisInput.Password != "" {
 		output.Password,_ = utils.AesEnPassword(redisInput.Guid,redisInput.Seed,redisInput.Password,utils.DEFALT_CIPHER)
 	}
-	createSubAccount(client,instanceId)
-
 	return output, err
 }
 
@@ -447,28 +445,4 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	output.InstanceName = *queryRedisInfoResponse.Response.InstanceSet[0].InstanceName
 
 	return &output, true, nil
-}
-
-func createSubAccount(client *redis.Client, instanceId string)  {
-	request := redis.NewCreateInstanceAccountRequest()
-	request.InstanceId = &instanceId
-	userA,userB := "user_a","user_b"
-	passA,passB := "user_pass_A","user_pass_B"
-	defaultPolicy,defaultPrivilege := "master","rw"
-	request.AccountName = &userA
-	request.AccountPassword = &passA
-	request.ReadonlyPolicy = []*string{&defaultPolicy}
-	request.Privilege = &defaultPrivilege
-	_,err := client.CreateInstanceAccount(request)
-	if err != nil {
-		logrus.Errorf("create redis first instance account fail ", err)
-		return
-	}
-	request.AccountName = &userB
-	request.AccountPassword = &passB
-	_,err = client.CreateInstanceAccount(request)
-	if err != nil {
-		logrus.Errorf("create redis second instance account fail ", err)
-		return
-	}
 }
