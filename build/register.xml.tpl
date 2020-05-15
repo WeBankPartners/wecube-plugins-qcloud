@@ -663,6 +663,7 @@
                 <interface action="create" path="/qcloud/v1/redis/create" filterRule="">
                     <inputParameters>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="ENCRYPT_SEED">seed</parameter>
                         <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_name</parameter>
                         <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">type_id</parameter>
