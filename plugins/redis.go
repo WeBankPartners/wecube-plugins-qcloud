@@ -542,6 +542,39 @@ func (action *RedisDeleteAction) deleteRedis(redisInput *RedisDeleteInput) (outp
 	}
 	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
 	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	instanceRequest := redis.NewDescribeInstancesRequest()
+	instanceRequest.InstanceId = &redisInput.ID
+	instanceResponse, err := client.DescribeInstances(instanceRequest)
+	if err != nil {
+		logrus.Errorf("query redis instance with id:%s error=%v ", redisInput.ID, err)
+		return
+	}
+	if len(instanceResponse.Response.InstanceSet) == 0 {
+		logrus.Infof("redis instance with id:%s already deleted ", redisInput.ID)
+		return
+	}
+	if *instanceResponse.Response.InstanceSet[0].BillingMode == 1 {
+		prepaidRequest := redis.NewDestroyPrepaidInstanceRequest()
+		prepaidRequest.InstanceId = &redisInput.ID
+		response := redis.NewDestroyPrepaidInstanceResponse()
+		response,err = client.DestroyPrepaidInstance(prepaidRequest)
+		if err == nil {
+			output.RequestId = *response.Response.RequestId
+		}
+	}else{
+		postpaidRequest := redis.NewDestroyPostpaidInstanceRequest()
+		postpaidRequest.InstanceId = &redisInput.ID
+		response := redis.NewDestroyPostpaidInstanceResponse()
+		response,err = client.DestroyPostpaidInstance(postpaidRequest)
+		if err == nil {
+			output.RequestId = *response.Response.RequestId
+		}
+	}
+	if err != nil {
+		logrus.Errorf("Delete redis instance:%s error=%v ", redisInput.ID, err)
+		return
+	}
+	time.Sleep(3*time.Second)
 	request := redis.NewCleanUpInstanceRequest()
 	request.InstanceId = &redisInput.ID
 	response,err := client.CleanUpInstance(request)
