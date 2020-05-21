@@ -49,6 +49,7 @@ type BackTargetInput struct {
 	HostPorts      string `json:"host_ports"`
 	Location       string `json:"location"`
 	APISecret      string `json:"api_secret"`
+	DeleteListener string `json:"delete_listener"`
 }
 
 type BackTargetOutputs struct {
@@ -399,6 +400,7 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 	portInt64, _ := strconv.ParseInt(input.Port, 10, 64)
 	listenerId, err := queryClbListener(client, input.LbId, input.Protocol, portInt64)
 	if err != nil {
+		logrus.Errorf("Delete clb-target query cli listener error : %v ", err)
 		return
 	}
 	if listenerId == "" {
@@ -446,6 +448,51 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
 			logrus.Errorf("ensureDelListenerBackHost meet error=%v", err)
 			return
+		}
+	}
+
+	if input.DeleteListener != "" {
+		isDeleteListener := strings.ToLower(input.DeleteListener)
+		if isDeleteListener == "y" || isDeleteListener == "yes" || isDeleteListener == "true" {
+			var deleteListenerError error
+			deleteListenerRequest := clb.NewDeleteListenerRequest()
+			deleteListenerRequest.LoadBalancerId = &input.LbId
+			deleteListenerRequest.ListenerId = &listenerId
+			deleteListenerResponse,deleteListenerError := client.DeleteListener(deleteListenerRequest)
+			if deleteListenerError != nil {
+				logrus.Errorf("Delete lb listener error=%v ", deleteListenerError)
+				err = deleteListenerError
+				return
+			}
+			tmpTaskId := *deleteListenerResponse.Response.RequestId
+			if tmpTaskId != "" {
+				count := 0
+				var queryTaskError error
+				for {
+					time.Sleep(3*time.Second)
+					taskRequest := clb.NewDescribeTaskStatusRequest()
+					taskRequest.TaskId = &tmpTaskId
+					taskResponse := clb.NewDescribeTaskStatusResponse()
+					taskResponse,queryTaskError = client.DescribeTaskStatus(taskRequest)
+					if queryTaskError != nil {
+						logrus.Errorf("Delete clb listener,query task:%s status error=%v ", tmpTaskId, queryTaskError)
+						break
+					}
+					if *taskResponse.Response.Status == 0 {
+						break
+					}
+					if *taskResponse.Response.Status == 1 {
+						queryTaskError = fmt.Errorf("Delete clb listener fail,please check task:%s detail from tencent cloud consol ", tmpTaskId)
+						break
+					}
+					if count >= 10 {
+						queryTaskError = fmt.Errorf("Query delete clb listener task:%s timeout ", tmpTaskId)
+						break
+					}
+					count ++
+				}
+				err = queryTaskError
+			}
 		}
 	}
 	return
