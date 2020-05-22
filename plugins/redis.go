@@ -28,6 +28,7 @@ var RedisActions = make(map[string]Action)
 
 func init() {
 	RedisActions["create"] = new(RedisCreateAction)
+	RedisActions["delete"] = new(RedisDeleteAction)
 }
 
 func CreateRedisClient(region, secretId, secretKey string) (client *redis.Client, err error) {
@@ -417,13 +418,12 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	limit = 10
 	var offset uint64
 	offset = 0
-	request := redis.DescribeInstancesRequest{
-		Limit:      &limit,
-		Offset:     &offset,
-		InstanceId: &input.ID,
-	}
+	request := redis.NewDescribeInstancesRequest()
+	request.Limit = &limit
+	request.Offset = &offset
+	request.InstanceId = &input.ID
 
-	queryRedisInfoResponse, err := client.DescribeInstances(&request)
+	queryRedisInfoResponse, err := client.DescribeInstances(request)
 	if err != nil {
 		logrus.Errorf("query redis instance info meet error: %s", err)
 		return nil, false, err
@@ -445,4 +445,143 @@ func queryRedisInstancesInfo(client *redis.Client, input *RedisInput) (*RedisOut
 	output.InstanceName = *queryRedisInfoResponse.Response.InstanceSet[0].InstanceName
 
 	return &output, true, nil
+}
+
+type RedisDeleteInputs struct {
+	Inputs []RedisDeleteInput `json:"inputs,omitempty"`
+}
+
+type RedisDeleteInput struct {
+	CallBackParameter
+	Guid             string `json:"guid,omitempty"`
+	ID               string `json:"id,omitempty"`
+	ProviderParams   string `json:"provider_params,omitempty"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
+}
+
+type RedisDeleteOutputs struct {
+	Outputs []RedisDeleteOutput `json:"outputs,omitempty"`
+}
+
+type RedisDeleteOutput struct {
+	CallBackParameter
+	Result
+	Guid      string `json:"guid,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
+	ID        string `json:"id,omitempty"`
+}
+
+type RedisDeleteAction struct {
+
+}
+
+func (action *RedisDeleteAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs RedisDeleteInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *RedisDeleteAction) Do(input interface{}) (interface{}, error) {
+	rediss, _ := input.(RedisDeleteInputs)
+	outputs := RedisDeleteOutputs{}
+	var finalErr error
+
+	for _, tmpRedisInput := range rediss.Inputs {
+		redisOutput, err := action.deleteRedis(&tmpRedisInput)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, redisOutput)
+	}
+
+	logrus.Infof("all rediss = %v are delete", rediss)
+	return &outputs, finalErr
+}
+
+func (action *RedisDeleteAction) checkParams(input *RedisDeleteInput) error {
+	if input.Guid == "" {
+		return errors.New("RedisDeleteAction input guid is empty")
+	}
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("RedisDeleteAction input Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("RedisDeleteAction input APISecret is empty")
+		}
+	}
+	if input.ID == "" {
+		return errors.New("RedisDeleteAction input id is empty")
+	}
+	return nil
+}
+
+func (action *RedisDeleteAction) deleteRedis(redisInput *RedisDeleteInput) (output RedisDeleteOutput, err error) {
+	output.Guid = redisInput.Guid
+	output.ID = redisInput.ID
+	output.Result.Code = RESULT_CODE_SUCCESS
+	output.CallBackParameter.Parameter = redisInput.CallBackParameter.Parameter
+	defer func() {
+		if err != nil {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+	err = action.checkParams(redisInput)
+	if err != nil {
+		logrus.Errorf("Delete redis check param error %v ", err)
+		return
+	}
+
+	if redisInput.Location != "" && redisInput.APISecret != "" {
+		redisInput.ProviderParams = fmt.Sprintf("%s;%s", redisInput.Location, redisInput.APISecret)
+	}
+	paramsMap, err := GetMapFromProviderParams(redisInput.ProviderParams)
+	client, _ := CreateRedisClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	instanceRequest := redis.NewDescribeInstancesRequest()
+	instanceRequest.InstanceId = &redisInput.ID
+	instanceResponse, err := client.DescribeInstances(instanceRequest)
+	if err != nil {
+		logrus.Errorf("query redis instance with id:%s error=%v ", redisInput.ID, err)
+		return
+	}
+	if len(instanceResponse.Response.InstanceSet) == 0 {
+		logrus.Infof("redis instance with id:%s already deleted ", redisInput.ID)
+		return
+	}
+	if *instanceResponse.Response.InstanceSet[0].BillingMode == 1 {
+		prepaidRequest := redis.NewDestroyPrepaidInstanceRequest()
+		prepaidRequest.InstanceId = &redisInput.ID
+		response := redis.NewDestroyPrepaidInstanceResponse()
+		response,err = client.DestroyPrepaidInstance(prepaidRequest)
+		if err == nil {
+			output.RequestId = *response.Response.RequestId
+		}
+	}else{
+		postpaidRequest := redis.NewDestroyPostpaidInstanceRequest()
+		postpaidRequest.InstanceId = &redisInput.ID
+		response := redis.NewDestroyPostpaidInstanceResponse()
+		response,err = client.DestroyPostpaidInstance(postpaidRequest)
+		if err == nil {
+			output.RequestId = *response.Response.RequestId
+		}
+	}
+	if err != nil {
+		logrus.Errorf("Delete redis instance:%s error=%v ", redisInput.ID, err)
+		return
+	}
+	time.Sleep(3*time.Second)
+	request := redis.NewCleanUpInstanceRequest()
+	request.InstanceId = &redisInput.ID
+	response,err := client.CleanUpInstance(request)
+	if err != nil {
+		logrus.Errorf("Delete redis cleanup instance:%s error %v ", redisInput.ID, err)
+		return
+	}
+	output.RequestId = *response.Response.RequestId
+	return
 }

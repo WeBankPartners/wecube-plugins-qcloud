@@ -689,6 +689,21 @@
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
     		        </outputParameters>
                 </interface>
+                <interface action="delete" path="/qcloud/v1/redis/delete" filterRule="">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">id</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">id</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
             </plugin>
             <plugin name="clb" targetPackage="" targetEntity="" registerName="" targetEntityFilterRule="">
                 <interface action="create" path="/qcloud/v1/clb/create" filterRule="">
@@ -757,6 +772,7 @@
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">host_ports</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">delete_listener</parameter>
                     </inputParameters>
                     <outputParameters>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
@@ -1385,6 +1401,7 @@
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_instance.unit>wecmdb:unit~(invoke_unit)wecmdb:invoke.invoked_unit>wecmdb:unit~(unit)wecmdb:app_instance.port">host_ports</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_instance.lb_resource_instance>wecmdb:lb_resource_instance.ip_address>wecmdb:ip_address.network_segment>wecmdb:network_segment.data_center>wecmdb:data_center.location">location</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">delete_listener</parameter>
                     </inputParameters>
                     <outputParameters>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_instance.guid">guid</parameter>
