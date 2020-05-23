@@ -458,7 +458,7 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 			deleteListenerRequest := clb.NewDeleteListenerRequest()
 			deleteListenerRequest.LoadBalancerId = &input.LbId
 			deleteListenerRequest.ListenerId = &listenerId
-			deleteListenerResponse,deleteListenerError := client.DeleteListener(deleteListenerRequest)
+			deleteListenerResponse, deleteListenerError := client.DeleteListener(deleteListenerRequest)
 			if deleteListenerError != nil {
 				logrus.Errorf("Delete lb listener error=%v ", deleteListenerError)
 				err = deleteListenerError
@@ -469,11 +469,11 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 				count := 0
 				var queryTaskError error
 				for {
-					time.Sleep(3*time.Second)
+					time.Sleep(3 * time.Second)
 					taskRequest := clb.NewDescribeTaskStatusRequest()
 					taskRequest.TaskId = &tmpTaskId
 					taskResponse := clb.NewDescribeTaskStatusResponse()
-					taskResponse,queryTaskError = client.DescribeTaskStatus(taskRequest)
+					taskResponse, queryTaskError = client.DescribeTaskStatus(taskRequest)
 					if queryTaskError != nil {
 						logrus.Errorf("Delete clb listener,query task:%s status error=%v ", tmpTaskId, queryTaskError)
 						break
@@ -489,7 +489,7 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 						queryTaskError = fmt.Errorf("Query delete clb listener task:%s timeout ", tmpTaskId)
 						break
 					}
-					count ++
+					count++
 				}
 				err = queryTaskError
 			}
