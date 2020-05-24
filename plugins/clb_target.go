@@ -404,7 +404,8 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 		return
 	}
 	if listenerId == "" {
-		err = fmt.Errorf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
+		logrus.Infof("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
+		//err = fmt.Errorf("can't found lb(%v) listnerId by proto(%v) and port(%v)", input.LbId, input.Protocol, portInt64)
 		return
 	}
 	hostIds, err := GetArrayFromString(input.HostIds, ARRAY_SIZE_REAL, 0)
@@ -426,34 +427,68 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 		}
 	}
 
-	for index, hostId := range hostIds {
-		hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
+	// check already delete back target
+	var tmpListenIds []*string
+	var newHostIds []string
+	tmpListenIds = append(tmpListenIds, &listenerId)
+	queryTargetRequest := clb.NewDescribeTargetsRequest()
+	queryTargetRequest.LoadBalancerId = &input.LbId
+	queryTargetRequest.ListenerIds = tmpListenIds
+	queryTargetResponse,err := client.DescribeTargets(queryTargetRequest)
+	if err != nil {
+		logrus.Errorf("query back target request error=%v ", err)
+		return
+	}
+	if len(queryTargetResponse.Response.Listeners) == 0 {
+		logrus.Infof("query back target response listener is empty ")
+		return
+	}
+	if len(queryTargetResponse.Response.Listeners[0].Targets) > 0 {
+		for _, v := range queryTargetResponse.Response.Listeners[0].Targets {
+			needDelete := false
+			for _, vv := range hostIds {
+				if *v.InstanceId == vv {
+					needDelete = true
+					break
+				}
+			}
+			if needDelete {
+				newHostIds = append(newHostIds, *v.InstanceId)
+			}
+		}
 
-		describeInstancesParams := cvm.DescribeInstancesRequest{
-			InstanceIds: []*string{&hostId},
-		}
-		clientCvm, _ := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
-		var describeInstancesResponse *cvm.DescribeInstancesResponse
-		describeInstancesResponse, err = describeInstancesFromCvm(clientCvm, describeInstancesParams)
-		if err != nil {
-			logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
-			return
-		}
-		if len(describeInstancesResponse.Response.InstanceSet) == 0 {
-			logrus.Errorf("hostId=[%v] is not existed", hostId)
-			err = fmt.Errorf("hostId=[%v] is not existed", hostId)
-			return
-		}
+		for index, hostId := range newHostIds {
+			hostPort, _ := strconv.ParseInt(hostPorts[index], 10, 64)
 
-		if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
-			logrus.Errorf("ensureDelListenerBackHost meet error=%v", err)
-			return
+			describeInstancesParams := cvm.DescribeInstancesRequest{
+				InstanceIds: []*string{&hostId},
+			}
+			clientCvm, _ := createCvmClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+			var describeInstancesResponse *cvm.DescribeInstancesResponse
+			describeInstancesResponse, err = describeInstancesFromCvm(clientCvm, describeInstancesParams)
+			if err != nil {
+				logrus.Errorf("describeInstancesFromCvm meet error=%v", err)
+				return
+			}
+			if len(describeInstancesResponse.Response.InstanceSet) == 0 {
+				logrus.Errorf("hostId=[%v] is not existed", hostId)
+				err = fmt.Errorf("hostId=[%v] is not existed", hostId)
+				return
+			}
+
+			if err = ensureDelListenerBackHost(client, input.LbId, listenerId, hostPort, hostId); err != nil {
+				logrus.Errorf("ensureDelListenerBackHost meet error=%v", err)
+				return
+			}
 		}
+	}else{
+		logrus.Infof("query back target, listener: %s target already empty ", listenerId)
 	}
 
 	if input.DeleteListener != "" {
 		isDeleteListener := strings.ToLower(input.DeleteListener)
 		if isDeleteListener == "y" || isDeleteListener == "yes" || isDeleteListener == "true" {
+			time.Sleep(3*time.Second)
 			var deleteListenerError error
 			deleteListenerRequest := clb.NewDeleteListenerRequest()
 			deleteListenerRequest.LoadBalancerId = &input.LbId
@@ -479,6 +514,7 @@ func (action *DelBackTargetAction) delBackTarget(input *BackTargetInput) (output
 						break
 					}
 					if *taskResponse.Response.Status == 0 {
+						logrus.Infof("Delete clb listener %s success ", listenerId)
 						break
 					}
 					if *taskResponse.Response.Status == 1 {
