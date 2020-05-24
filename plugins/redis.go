@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	redis "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/redis/v20180412"
-	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 )
 
 const (
@@ -71,15 +71,15 @@ type RedisOutputs struct {
 type RedisOutput struct {
 	CallBackParameter
 	Result
-	RequestId string `json:"request_id,omitempty"`
-	Guid      string `json:"guid,omitempty"`
-	InstanceName  string  `json:"instance_name,omitempty"`
-	DealID    string `json:"deal_id,omitempty"`
-	TaskID    int64  `json:"task_id,omitempty"`
-	ID        string `json:"id,omitempty"`
-	Vip       string `json:"vip,omitempty"`
-	Port      string `json:"port,omitempty"`
-	Password  string `json:"password,omitempty"`
+	RequestId    string `json:"request_id,omitempty"`
+	Guid         string `json:"guid,omitempty"`
+	InstanceName string `json:"instance_name,omitempty"`
+	DealID       string `json:"deal_id,omitempty"`
+	TaskID       int64  `json:"task_id,omitempty"`
+	ID           string `json:"id,omitempty"`
+	Vip          string `json:"vip,omitempty"`
+	Port         string `json:"port,omitempty"`
+	Password     string `json:"password,omitempty"`
 }
 
 type RedisPlugin struct {
@@ -185,7 +185,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	if err != nil {
 		return output, err
 	}
-	for k,_ := range zonemap {
+	for k, _ := range zonemap {
 		logrus.Infof("zone : %s", k)
 	}
 
@@ -226,7 +226,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 		uPeriod := uint64(period)
 		request.Period = &uPeriod
-	}else{
+	} else {
 		defaultPostPayPeriod := uint64(1)
 		request.Period = &defaultPostPayPeriod
 	}
@@ -286,9 +286,9 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 		}
 		if tmpError != nil {
 			logrus.Errorf("get redis instance info meet error: %s", tmpError)
-			return output,tmpError
+			return output, tmpError
 		}
-	}else {
+	} else {
 		instanceId, err = action.waitForRedisInstancesCreationToFinish(client, *response.Response.DealId)
 		if err != nil {
 			return output, err
@@ -315,7 +315,7 @@ func (action *RedisCreateAction) createRedis(redisInput *RedisInput) (output Red
 	output.Vip = *instanceResponse.Response.InstanceSet[0].WanIp
 	output.Port = strconv.Itoa(int(*instanceResponse.Response.InstanceSet[0].Port))
 	if redisInput.Password != "" {
-		output.Password,_ = utils.AesEnPassword(redisInput.Guid,redisInput.Seed,redisInput.Password,utils.DEFALT_CIPHER)
+		output.Password, _ = utils.AesEnPassword(redisInput.Guid, redisInput.Seed, redisInput.Password, utils.DEFALT_CIPHER)
 	}
 	return output, err
 }
@@ -350,7 +350,7 @@ func (action *RedisCreateAction) waitForRedisInstancesCreationToFinish(client *r
 			if count > 0 {
 				return "", fmt.Errorf("call DescribeInstanceDealDetail with dealid = %v meet error = %v", dealid, err)
 			}
-		}else {
+		} else {
 			if len(response.Response.DealDetails) == 0 {
 				if count > 0 {
 					return "", fmt.Errorf("the redis (dealid = %v) not found", dealid)
@@ -453,11 +453,11 @@ type RedisDeleteInputs struct {
 
 type RedisDeleteInput struct {
 	CallBackParameter
-	Guid             string `json:"guid,omitempty"`
-	ID               string `json:"id,omitempty"`
-	ProviderParams   string `json:"provider_params,omitempty"`
-	Location         string `json:"location"`
-	APISecret        string `json:"api_secret"`
+	Guid           string `json:"guid,omitempty"`
+	ID             string `json:"id,omitempty"`
+	ProviderParams string `json:"provider_params,omitempty"`
+	Location       string `json:"location"`
+	APISecret      string `json:"api_secret"`
 }
 
 type RedisDeleteOutputs struct {
@@ -473,7 +473,6 @@ type RedisDeleteOutput struct {
 }
 
 type RedisDeleteAction struct {
-
 }
 
 func (action *RedisDeleteAction) ReadParam(param interface{}) (interface{}, error) {
@@ -557,15 +556,15 @@ func (action *RedisDeleteAction) deleteRedis(redisInput *RedisDeleteInput) (outp
 		prepaidRequest := redis.NewDestroyPrepaidInstanceRequest()
 		prepaidRequest.InstanceId = &redisInput.ID
 		response := redis.NewDestroyPrepaidInstanceResponse()
-		response,err = client.DestroyPrepaidInstance(prepaidRequest)
+		response, err = client.DestroyPrepaidInstance(prepaidRequest)
 		if err == nil {
 			output.RequestId = *response.Response.RequestId
 		}
-	}else{
+	} else {
 		postpaidRequest := redis.NewDestroyPostpaidInstanceRequest()
 		postpaidRequest.InstanceId = &redisInput.ID
 		response := redis.NewDestroyPostpaidInstanceResponse()
-		response,err = client.DestroyPostpaidInstance(postpaidRequest)
+		response, err = client.DestroyPostpaidInstance(postpaidRequest)
 		if err == nil {
 			output.RequestId = *response.Response.RequestId
 		}
@@ -574,10 +573,10 @@ func (action *RedisDeleteAction) deleteRedis(redisInput *RedisDeleteInput) (outp
 		logrus.Errorf("Delete redis instance:%s error=%v ", redisInput.ID, err)
 		return
 	}
-	time.Sleep(3*time.Second)
+	time.Sleep(3 * time.Second)
 	request := redis.NewCleanUpInstanceRequest()
 	request.InstanceId = &redisInput.ID
-	response,err := client.CleanUpInstance(request)
+	response, err := client.CleanUpInstance(request)
 	if err != nil {
 		logrus.Errorf("Delete redis cleanup instance:%s error %v ", redisInput.ID, err)
 		return

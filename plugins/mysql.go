@@ -71,8 +71,8 @@ type MysqlVmInput struct {
 	ChargePeriod     string `json:"charge_period,omitempty"`
 	Password         string `json:"password,omitempty"`
 	UserName         string `json:"user_name,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"api_secret"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
 
 	//初始化时使用
 	CharacterSet        string `json:"character_set,omitempty"`
@@ -646,12 +646,12 @@ func (action *MysqlVmCreateAction) waitForMysqlVmCreationToFinish(client *cdb.Cl
 			if count > 0 {
 				return "", err
 			}
-		}else {
+		} else {
 			if len(response.Response.Items) == 0 {
 				if count > 0 {
 					return "", fmt.Errorf("the mysql vm (instanceId = %v) not found", instanceId)
 				}
-			}else {
+			} else {
 				if *response.Response.Items[0].Status == MYSQL_VM_STATUS_RUNNING {
 					return *response.Response.Items[0].Vip, nil
 				}
@@ -770,12 +770,12 @@ func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *
 			if count > 0 {
 				return err
 			}
-		}else {
+		} else {
 			if len(response.Response.Items) == 0 {
 				if count > 0 {
 					return nil
 				}
-			}else {
+			} else {
 				if *response.Response.Items[0].Status == MYSQL_VM_STATUS_ISOLATED {
 					return nil
 				}
@@ -1028,8 +1028,8 @@ type MysqlBindSecurityGroupInput struct {
 	ProviderParams   string `json:"provider_params,omitempty"`
 	MySqlId          string `json:"mysql_id,omitempty"`
 	SecurityGroupIds string `json:"security_group_ids,omitempty"`
-	Location       string `json:"location"`
-	APISecret      string `json:"api_secret"`
+	Location         string `json:"location"`
+	APISecret        string `json:"api_secret"`
 }
 
 type MysqlBindSecurityGroupOutputs struct {

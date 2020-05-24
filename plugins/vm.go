@@ -39,7 +39,10 @@ func init() {
 	VmActions["terminate"] = new(VmTerminateAction)
 	VmActions["start"] = new(VmStartAction)
 	VmActions["stop"] = new(VmStopAction)
-	VmActions["bind-security-groups"] = new(VmBindSecurityGroupsAction)
+	//VmActions["bind-security-groups"] = new(VmBindSecurityGroupsAction)
+
+	VmActions["add-security-groups"] = new(VmAddSecurityGroupsAction)
+	VmActions["remove-security-groups"] = new(VmRemoveSecurityGroupsAction)
 }
 
 func (plugin *VmPlugin) GetActionByName(actionName string) (Action, error) {
@@ -989,4 +992,290 @@ func describeInstancesFromCvm(client *cvm.Client, describeInstancesParams cvm.De
 	}
 
 	return response, err
+}
+
+type VmAddSecurityGroupsAction struct {
+}
+
+type VmAddSecurityGroupsInputs struct {
+	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type VmAddSecurityGroupsOutputs struct {
+	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
+}
+
+func checkVmAddSecurityGoupsParam(input VmBindSecurityGroupInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("APISecret is empty")
+		}
+	}
+
+	if input.InstanceId == "" {
+		return fmt.Errorf("id is empty")
+	}
+	if input.SecurityGroupIds == "" {
+		return fmt.Errorf("security_groups is empty")
+	}
+	return nil
+}
+
+func getSecurityGroupsByVm(providerParam string, instanceId string) ([]*string, error) {
+	filter := Filter{
+		Name:   "instanceId",
+		Values: []string{instanceId},
+	}
+
+	items, err := QueryCvmInstance(providerParam, filter)
+	if err != nil {
+		return []*string{}, err
+	}
+
+	if len(items) != 1 {
+		return []*string{}, fmt.Errorf("getSecurityGroupsByVm len(items)=%v", len(items))
+	}
+
+	return items[0].SecurityGroupIds, nil
+}
+
+func vmAddSecurityGoups(input *VmBindSecurityGroupInput) (output VmBindSecurityGroupOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = checkVmAddSecurityGoupsParam(*input); err != nil {
+		return
+	}
+
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	// do input.SecurityGoups to []string
+	sgIds, err := GetArrayFromString(input.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
+	if err != nil {
+		return
+	}
+
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return
+	}
+
+	// check wether input.SecurityGoups exist
+	for _, sgId := range sgIds {
+		var exist bool
+		exist, err = querySecurityGroupsInfo(client, sgId)
+		if err != nil {
+			return
+		}
+
+		if !exist {
+			err = fmt.Errorf("securityGroup[%v] is not exist", sgId)
+			return
+		}
+	}
+
+	// get all security groups of the vm
+	sgs, err := getSecurityGroupsByVm(input.ProviderParams, input.InstanceId)
+	if err != nil {
+		return
+	}
+
+	// check wether the vm has the sgId
+	var addSgIds []string
+	for _, sgId := range sgIds {
+		flag := false
+		for _, sg := range sgs {
+			if sgId == *sg {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			addSgIds = append(addSgIds, sgId)
+		}
+	}
+
+	for _, sg := range sgs {
+		addSgIds = append(addSgIds, *sg)
+	}
+
+	// add input.SecurityGoups to vm
+	err = BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, addSgIds)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (action *VmAddSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmAddSecurityGroupsInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func (action *VmAddSecurityGroupsAction) Do(inputs interface{}) (interface{}, error) {
+	vms, _ := inputs.(VmAddSecurityGroupsInputs)
+	outputs := VmAddSecurityGroupsOutputs{}
+	var finalErr error
+
+	for _, input := range vms.Inputs {
+		output, err := vmAddSecurityGoups(&input)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all securityGoups had been added, input = %++v", vms)
+	return &outputs, finalErr
+}
+
+//vm remove security group
+type VmRemoveSecurityGroupsAction struct {
+}
+
+type VmRemoveSecurityGroupsInputs struct {
+	Inputs []VmBindSecurityGroupInput `json:"inputs,omitempty"`
+}
+
+type VmRemoveSecurityGroupsOutputs struct {
+	Outputs []VmBindSecurityGroupOutput `json:"outputs,omitempty"`
+}
+
+func (action *VmRemoveSecurityGroupsAction) ReadParam(param interface{}) (interface{}, error) {
+	var inputs VmRemoveSecurityGroupsInputs
+	err := UnmarshalJson(param, &inputs)
+	if err != nil {
+		return nil, err
+	}
+	return inputs, nil
+}
+
+func checkVmRemoveSecurityGoupsParam(input VmBindSecurityGroupInput) error {
+	if input.ProviderParams == "" {
+		if input.Location == "" {
+			return errors.New("Location is empty")
+		}
+		if input.APISecret == "" {
+			return errors.New("APISecret is empty")
+		}
+	}
+
+	if input.InstanceId == "" {
+		return fmt.Errorf("id is empty")
+	}
+	if input.SecurityGroupIds == "" {
+		return fmt.Errorf("security_groups is empty")
+	}
+	return nil
+}
+
+func vmRemoveSecurityGoups(input *VmBindSecurityGroupInput) (output VmBindSecurityGroupOutput, err error) {
+	defer func() {
+		output.Guid = input.Guid
+		output.CallBackParameter.Parameter = input.CallBackParameter.Parameter
+		if err == nil {
+			output.Result.Code = RESULT_CODE_SUCCESS
+		} else {
+			output.Result.Code = RESULT_CODE_ERROR
+			output.Result.Message = err.Error()
+		}
+	}()
+
+	if err = checkVmRemoveSecurityGoupsParam(*input); err != nil {
+		return
+	}
+
+	if input.Location != "" && input.APISecret != "" {
+		input.ProviderParams = fmt.Sprintf("%s;%s", input.Location, input.APISecret)
+	}
+
+	// do input.SecurityGoups to []string
+	sgIds, err := GetArrayFromString(input.SecurityGroupIds, ARRAY_SIZE_REAL, 0)
+	if err != nil {
+		return
+	}
+
+	paramsMap, _ := GetMapFromProviderParams(input.ProviderParams)
+	client, err := createVpcClient(paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"])
+	if err != nil {
+		return
+	}
+
+	var existSgIds []string
+	for _, sgId := range sgIds {
+		var exist bool
+		exist, err = querySecurityGroupsInfo(client, sgId)
+		if err != nil {
+			return
+		}
+
+		if exist {
+			existSgIds = append(existSgIds, sgId)
+		}
+	}
+
+	// get all security groups of the vm
+	sgs, err := getSecurityGroupsByVm(input.ProviderParams, input.InstanceId)
+	if err != nil {
+		return
+	}
+
+	// check wether the vm has the sgId
+	newSgs := []string{}
+	for _, sg := range sgs {
+		flag := false
+		for _, sgId := range existSgIds {
+			if sgId == *sg {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			newSgs = append(newSgs, *sg)
+		}
+	}
+
+	// add input.SecurityGoups to vm
+	err = BindCvmInstanceSecurityGroups(input.ProviderParams, input.InstanceId, newSgs)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (action *VmRemoveSecurityGroupsAction) Do(inputs interface{}) (interface{}, error) {
+	vms, _ := inputs.(VmRemoveSecurityGroupsInputs)
+	outputs := VmRemoveSecurityGroupsOutputs{}
+	var finalErr error
+
+	for _, input := range vms.Inputs {
+		output, err := vmRemoveSecurityGoups(&input)
+		if err != nil {
+			finalErr = err
+		}
+		outputs.Outputs = append(outputs.Outputs, output)
+	}
+
+	logrus.Infof("all securityGoups had been removed, input = %++v", vms)
+	return &outputs, finalErr
 }

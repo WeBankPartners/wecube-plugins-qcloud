@@ -1079,7 +1079,22 @@
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                     </outputParameters>
                 </interface>
-                <interface action="bind-security-group-to-vm" path="/qcloud/v1/vm/bind-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
+                <interface action="add-security-group-to-vm" path="/qcloud/v1/vm/add-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.guid">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.NONE">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.asset_id">instance_id</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.f_network_segment>wecmdb:network_segment.security_group_asset_id">security_group_ids</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.intranet_ip>wecmdb:ip_address.network_segment>wecmdb:network_segment.data_center>wecmdb:data_center.location">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.guid">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
+                <interface action="remove-security-group-to-vm" path="/qcloud/v1/vm/remove-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                     <inputParameters>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.guid">guid</parameter>
                         <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.NONE">provider_params</parameter>
