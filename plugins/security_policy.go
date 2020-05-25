@@ -98,14 +98,25 @@ func createSecurityPolices(input SecurityGroupPolicyInput) ([]*vpc.SecurityGroup
 	}
 
 	for i, ip := range policyIps {
-		policy := &vpc.SecurityGroupPolicy{
-			Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
-			Port:              common.StringPtr(strings.ToUpper(ports[i])),
-			CidrBlock:         common.StringPtr(ip),
-			Action:            common.StringPtr(action),
-			PolicyDescription: common.StringPtr(input.PolicyDescription),
+		tmpProtocol := strings.ToUpper(protos[i])
+		if tmpProtocol == "TCP" || tmpProtocol == "UDP" {
+			policy := &vpc.SecurityGroupPolicy{
+				Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
+				Port:              common.StringPtr(strings.ToUpper(ports[i])),
+				CidrBlock:         common.StringPtr(ip),
+				Action:            common.StringPtr(action),
+				PolicyDescription: common.StringPtr(input.PolicyDescription),
+			}
+			policies = append(policies, policy)
+		}else {
+			policy := &vpc.SecurityGroupPolicy{
+				Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
+				CidrBlock:         common.StringPtr(ip),
+				Action:            common.StringPtr(action),
+				PolicyDescription: common.StringPtr(input.PolicyDescription),
+			}
+			policies = append(policies, policy)
 		}
-		policies = append(policies, policy)
 	}
 	return policies, nil
 }
