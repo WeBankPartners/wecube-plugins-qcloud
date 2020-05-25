@@ -130,7 +130,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="context">eip_id</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/nat-gateway/terminate" filterRule="">
                 <inputParameters>
@@ -283,7 +283,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">id</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/route-policy/terminate" filterRule="">
                 <inputParameters>
@@ -407,7 +407,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">instance_private_ip</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    	        </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vm/terminate" filterRule="">
                 <inputParameters>
@@ -483,7 +483,7 @@
             </interface>
         </plugin>
         <plugin name="storage" targetPackage="" targetEntity="" registerName="" targetEntityFilterRule="">
-            <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="">
+    	    <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="">
                 <inputParameters>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
@@ -508,7 +508,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">disk_id</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    		    </outputParameters>
             </interface>
             <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate" filterRule="">
                 <inputParameters>
@@ -565,7 +565,7 @@
                     <parameter datatype="string" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">password</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-             </outputParameters>
+    		 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/mysql/terminate" filterRule="">
                 <inputParameters>
@@ -676,7 +676,7 @@
                     <parameter datatype="string" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">password</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    		    </outputParameters>
             </interface>
         </plugin>
         <plugin name="redis" targetPackage="" targetEntity="" registerName="" targetEntityFilterRule="">
@@ -707,7 +707,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">password</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    		    </outputParameters>
             </interface>
             <interface action="delete" path="/qcloud/v1/redis/delete" filterRule="">
                 <inputParameters>
@@ -744,7 +744,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">vip</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-             </outputParameters>
+    		 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/clb/terminate" filterRule="">
                 <inputParameters>
@@ -756,7 +756,7 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
-                    <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+    		        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                 </outputParameters>
             </interface>
@@ -777,7 +777,7 @@
                     <outputParameters>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">listener_id</parameter>
-                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+    		            <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                     </outputParameters>
                 </interface>
@@ -1405,7 +1405,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.ip_address">instance_private_ip</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-            </outputParameters>
+    	    </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/vm/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
                 <inputParameters>
@@ -1543,7 +1543,7 @@
             </interface>
         </plugin>
         <plugin name="storage" targetPackage="wecmdb" targetEntity="block_storage" registerName="block_storage" targetEntityFilterRule="">
-            <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
+    	    <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                 <inputParameters>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.guid">guid</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.NONE">provider_params</parameter>
@@ -1568,7 +1568,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.asset_id">disk_id</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    		    </outputParameters>
             </interface>
             <interface action="umount-destroy-cbs-disk" path="/qcloud/v1/cbs/umount-terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
                 <inputParameters>
@@ -1597,7 +1597,7 @@
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.guid">guid</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="ENCRYPT_SEED">seed</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE">provider_params</parameter>
-                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_type>wecmdb:resource_instance_type.code">engine_version</parameter>
+                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_system>wecmdb:resource_instance_system.code">engine_version</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.resource_instance_spec>wecmdb:resource_instance_spec.code">memory_size</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.cluster_node_type>wecmdb:cluster_node_type.code">instance_role</parameter>
                     <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.NONE">master_region</parameter>
@@ -1611,8 +1611,8 @@
                     <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.asset_id">id</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.user_name">user_name</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.user_password">password</parameter>
-                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="system_variable" mappingSystemVariableName="MYSQL_CHARACTER_SET">character_set</parameter>
-                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="system_variable" mappingSystemVariableName="MYSQL_LOWER_CASE_TABLE_NAMES">lower_case_table_names</parameter>
+                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="system_variable" mappingSystemVariableName="QCLOUD_MYSQL_CHARACTER_SET">character_set</parameter>
+                    <parameter datatype="string" required="Y" sensitiveData="N" mappingType="system_variable" mappingSystemVariableName="QCLOUD_MYSQL_LOWER_CASE_TABLE_NAMES">lower_case_table_names</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.network_segment>wecmdb:network_segment.data_center>wecmdb:data_center.location">location</parameter>
                 </inputParameters>
@@ -1625,7 +1625,7 @@
                     <parameter datatype="string" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.user_password">password</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-             </outputParameters>
+    		 </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/mysql/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
                 <inputParameters>
@@ -1800,7 +1800,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:cache_resource_instance.user_password">password</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+		        </outputParameters>
             </interface>
             <interface action="delete" path="/qcloud/v1/redis/delete" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
                 <inputParameters>
@@ -1837,7 +1837,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.ip_address">vip</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
-                </outputParameters>
+    		    </outputParameters>
             </interface>
             <interface action="terminate" path="/qcloud/v1/clb/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
                 <inputParameters>
@@ -1849,7 +1849,7 @@
                 </inputParameters>
                 <outputParameters>
                     <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.guid">guid</parameter>
-                    <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+    		        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                 </outputParameters>
             </interface>
