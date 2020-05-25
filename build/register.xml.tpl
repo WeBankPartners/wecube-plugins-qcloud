@@ -1511,7 +1511,7 @@
             </interface>
         </plugin>
         <plugin name="vm" targetPackage="wecmdb" targetEntity="app_instance" registerName="app_deploy" targetEntityFilterRule="">
-            <interface action="bind_sg_app_created" path="/qcloud/v1/vm/bind-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
+            <interface action="bind_sg_app_created" path="/qcloud/v1/vm/add-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                 <inputParameters>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:app_instance.guid">guid</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:app_instance.NONE">provider_params</parameter>
