@@ -1152,7 +1152,7 @@
                     <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                 </outputParameters>
             </interface>
-            <interface action="terminate" path="/qcloud/v1/security-group/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}">
+            <interface action="terminate" path="/qcloud/v1/security-group/terminate" filterRule="{state_code eq 'destroyed'}{fixed_date is NULL}{white_list_type neq 'N'}{security_group_asset_id neq ''}">
                 <inputParameters>
                     <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:unit.guid">guid</parameter>
                     <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="wecmdb:unit.NONE">provider_params</parameter>
