@@ -742,9 +742,9 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 	request := cdb.NewIsolateDBInstanceRequest()
 	request.InstanceId = &mysqlVmInput.Id
 
-	response, err := client.IsolateDBInstance(request)
+	_, err = client.IsolateDBInstance(request)
 	if err != nil {
-		err = fmt.Errorf("failed to terminate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
+		err = fmt.Errorf("failed to terminate isolate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
 		return output, err
 	}
 
@@ -752,8 +752,21 @@ func (action *MysqlVmTerminateAction) terminateMysqlVm(mysqlVmInput *MysqlVmInpu
 	if err != nil {
 		return output, err
 	}
+	var tmpRequestIds []*string
+	tmpRequestIds = append(tmpRequestIds, &mysqlVmInput.Id)
+	offlineRequest := cdb.NewOfflineIsolatedInstancesRequest()
+	offlineRequest.InstanceIds = tmpRequestIds
+	offlineResponse,err := client.OfflineIsolatedInstances(offlineRequest)
+	if err != nil {
+		err = fmt.Errorf("failed to terminate offline isolate MysqlVm (mysqlVmId=%v), error=%s", mysqlVmInput.Id, err)
+		return output, err
+	}
 
-	output.RequestId = *response.Response.RequestId
+	err = action.waitForMysqlVmTOfflineToFinish(client, mysqlVmInput.Id)
+	if err != nil {
+		return output, err
+	}
+	output.RequestId = *offlineResponse.Response.RequestId
 	output.Id = mysqlVmInput.Id
 
 	return output, err
@@ -786,6 +799,23 @@ func (action *MysqlVmTerminateAction) waitForMysqlVmTerminationToFinish(client *
 		count++
 		if count >= 20 {
 			return errors.New("waitForMysqlVmTerminationToFinish timeout")
+		}
+	}
+}
+
+func (action *MysqlVmTerminateAction) waitForMysqlVmTOfflineToFinish(client *cdb.Client, instanceId string) error {
+	time.Sleep(2 * time.Second)
+	count := 0
+	for {
+		_,b,err := queryMysqlVMInstancesInfo(client, instanceId)
+		if b == false && err == nil {
+			return nil
+		}
+
+		time.Sleep(3 * time.Second)
+		count++
+		if count >= 60 {
+			return errors.New("waitForMysqlVmOfflineToFinish timeout")
 		}
 	}
 }
