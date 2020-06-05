@@ -3,10 +3,22 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "ZXja1pB/YvDYcNpkp7AtOm1mhgk=",
+			"path": "github.com/google/go-querystring/query",
+			"revision": "c8c88dbee036db4e4808d1f2ec8c2e15e11c3f80",
+			"revisionTime": "2019-03-18T16:54:38Z"
+		},
+		{
 			"checksumSHA1": "Z7rkupTQRAZzzTCqDLiSbNR70to=",
 			"path": "github.com/konsorten/go-windows-terminal-sequences",
 			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
 			"revisionTime": "2019-02-26T22:47:05Z"
+		},
+		{
+			"checksumSHA1": "Gq1zmTuoLEop9LI/g0dI1Z+BwOc=",
+			"path": "github.com/mozillazg/go-httpheader",
+			"revision": "61f2392c3317b60616c9dcb10d0a4cfef131fe62",
+			"revisionTime": "2018-11-03T08:20:14Z"
 		},
 		{
 			"checksumSHA1": "4GI/G+nYyCQ3ltASSBIunUr2LYk=",
@@ -88,6 +100,12 @@
 			"checksumSHA1": "DfDv7H4vEZTe9roPVpWArktqLnk=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "lZvtmIyzzmeRgddyBEcm01uxT20=",
+			"path": "github.com/tencentyun/cos-go-sdk-v5",
+			"revision": "7b799aff211f3422fb61e511030e48c0278f3c8c",
+			"revisionTime": "2020-06-04T07:29:57Z"
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",

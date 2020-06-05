@@ -801,6 +801,41 @@
                     </outputParameters>
                 </interface>
         </plugin>
+        <plugin name="bucket" targetPackage="" targetEntity="" registerName="" targetEntityFilterRule="">
+                <interface action="add-bucket" path="/qcloud/v1/bucket/create" filterRule="">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_name</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">account_app_id</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">is_public</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_url</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
+                <interface action="del-bucket" path="/qcloud/v1/bucket/delete" filterRule="">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_name</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">account_app_id</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">force_delete</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
+        </plugin>
 
         <!-- 最佳实践 -->
          <plugin name="vpc" targetPackage="wecmdb" targetEntity="network_segment" registerName="network_segment" targetEntityFilterRule="{network_segment_usage eq 'VPC'}">
