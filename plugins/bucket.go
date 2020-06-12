@@ -25,8 +25,8 @@ func (plugin *BucketPlugin) GetActionByName(actionName string) (Action, error) {
 var BucketActions = make(map[string]Action)
 
 func init() {
-	BucketActions["create"] = new(BucketActionsCreateAction)
-	BucketActions["delete"] = new(BucketActionsDeleteAction)
+	BucketActions["create"] = new(BucketCreateAction)
+	BucketActions["delete"] = new(BucketDeleteAction)
 }
 
 type BucketInputs struct {
@@ -58,13 +58,13 @@ type BucketOutput struct {
 	BucketUrl    string `json:"bucket_url,omitempty"`
 }
 
-type BucketActionsCreateAction struct {
+type BucketCreateAction struct {
 }
 
-type BucketActionsDeleteAction struct {
+type BucketDeleteAction struct {
 }
 
-func (action *BucketActionsCreateAction) ReadParam(param interface{}) (interface{}, error) {
+func (action *BucketCreateAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs BucketInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
@@ -73,7 +73,7 @@ func (action *BucketActionsCreateAction) ReadParam(param interface{}) (interface
 	return inputs, nil
 }
 
-func (action *BucketActionsDeleteAction) ReadParam(param interface{}) (interface{}, error) {
+func (action *BucketDeleteAction) ReadParam(param interface{}) (interface{}, error) {
 	var inputs BucketInputs
 	err := UnmarshalJson(param, &inputs)
 	if err != nil {
@@ -82,7 +82,22 @@ func (action *BucketActionsDeleteAction) ReadParam(param interface{}) (interface
 	return inputs, nil
 }
 
-func (action *BucketActionsCreateAction) createBucket(bucketInput *BucketInput) (output BucketOutput, err error) {
+func getCosClient(name,appId,region,secretID,secretKey,bucketUrl string) (client *cos.Client,cosUrl string) {
+	if bucketUrl == "" {
+		bucketUrl = fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", name, appId, region)
+	}
+	u, _ := url.Parse(bucketUrl)
+	b := &cos.BaseURL{BucketURL: u}
+	client = cos.NewClient(b, &http.Client{
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  secretID,
+			SecretKey: secretKey,
+		},
+	})
+	return client,bucketUrl
+}
+
+func (action *BucketCreateAction) createBucket(bucketInput *BucketInput) (output BucketOutput, err error) {
 	output.Guid = bucketInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = bucketInput.CallBackParameter.Parameter
@@ -98,14 +113,7 @@ func (action *BucketActionsCreateAction) createBucket(bucketInput *BucketInput) 
 			output.Result.Message = err.Error()
 		}
 	}()
-	u, _ := url.Parse(fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", bucketInput.BucketName, bucketInput.AccountAppId, paramsMap["Region"]))
-	b := &cos.BaseURL{BucketURL: u}
-	client := cos.NewClient(b, &http.Client{
-		Transport: &cos.AuthorizationTransport{
-			SecretID:  paramsMap["SecretID"],
-			SecretKey: paramsMap["SecretKey"],
-		},
-	})
+	client,bucketUrl := getCosClient(bucketInput.BucketName, bucketInput.AccountAppId, paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"], "")
 	cosAcl := "private"
 	isPublic := strings.ToLower(bucketInput.IsPublic)
 	if isPublic == "y" || isPublic == "yes" || isPublic == "true" {
@@ -117,12 +125,12 @@ func (action *BucketActionsCreateAction) createBucket(bucketInput *BucketInput) 
 		err = fmt.Errorf("create bucket:%s error ---> %v", bucketInput.BucketName, err)
 		return output, err
 	}
-	logrus.Printf("create bucket:%s success,url:%s \n", bucketInput.BucketName, u.String())
-	output.BucketUrl = u.String()
+	logrus.Printf("create bucket:%s success,url:%s \n", bucketInput.BucketName, bucketUrl)
+	output.BucketUrl = bucketUrl
 	return output, err
 }
 
-func (action *BucketActionsCreateAction) Do(input interface{}) (interface{}, error) {
+func (action *BucketCreateAction) Do(input interface{}) (interface{}, error) {
 	buckets, _ := input.(BucketInputs)
 	outputs := BucketOutputs{}
 	var finalErr error
@@ -139,7 +147,7 @@ func (action *BucketActionsCreateAction) Do(input interface{}) (interface{}, err
 	return &outputs, finalErr
 }
 
-func (action *BucketActionsDeleteAction) deleteBucket(bucketInput *BucketInput) (output BucketOutput, err error) {
+func (action *BucketDeleteAction) deleteBucket(bucketInput *BucketInput) (output BucketOutput, err error) {
 	output.Guid = bucketInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = bucketInput.CallBackParameter.Parameter
@@ -155,14 +163,7 @@ func (action *BucketActionsDeleteAction) deleteBucket(bucketInput *BucketInput) 
 			output.Result.Message = err.Error()
 		}
 	}()
-	u, _ := url.Parse(fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", bucketInput.BucketName, bucketInput.AccountAppId, paramsMap["Region"]))
-	b := &cos.BaseURL{BucketURL: u}
-	client := cos.NewClient(b, &http.Client{
-		Transport: &cos.AuthorizationTransport{
-			SecretID:  paramsMap["SecretID"],
-			SecretKey: paramsMap["SecretKey"],
-		},
-	})
+	client,_ := getCosClient(bucketInput.BucketName, bucketInput.AccountAppId, paramsMap["Region"], paramsMap["SecretID"], paramsMap["SecretKey"], "")
 	// force
 	forceDelete := strings.ToLower(bucketInput.ForceDelete)
 	if forceDelete == "y" || forceDelete == "yes" || forceDelete == "true" {
@@ -195,7 +196,7 @@ func (action *BucketActionsDeleteAction) deleteBucket(bucketInput *BucketInput) 
 	return output, err
 }
 
-func (action *BucketActionsDeleteAction) Do(input interface{}) (interface{}, error) {
+func (action *BucketDeleteAction) Do(input interface{}) (interface{}, error) {
 	buckets, _ := input.(BucketInputs)
 	outputs := BucketOutputs{}
 	var finalErr error
@@ -210,4 +211,72 @@ func (action *BucketActionsDeleteAction) Do(input interface{}) (interface{}, err
 
 	logrus.Infof("all buckets = %v are delete", buckets)
 	return &outputs, finalErr
+}
+
+func SetBucketAcl(region,secretID,secretKey,bucketUrl,uin,permission string) error {
+	client,_ := getCosClient("","",region,secretID,secretKey,bucketUrl)
+	bucketAclResult,_,err := client.Bucket.GetACL(context.Background())
+	if err != nil {
+		return fmt.Errorf("get bucket owner id fail,error: %v ", err)
+	}
+	var readGrant,writeGrant,fullControlGrant string
+	if len(bucketAclResult.AccessControlList) > 0 {
+		userClient,_ := createUserClient(region,secretID,secretKey)
+		users,_ := ListSubUsers(userClient)
+		for _,v := range bucketAclResult.AccessControlList {
+			logrus.Infof("access control ---> permission:%s id:%s type:%s ", v.Permission, v.Grantee.ID, v.Grantee.Type)
+			tmpGranteeId := v.Grantee.ID
+			var newList []string
+			for _,vv := range strings.Split(tmpGranteeId, ",") {
+				if strings.Contains(vv, uin) {
+					continue
+				}
+				userExist := false
+				for _,vvv := range users {
+					if strings.Contains(vv, vvv.Uin) {
+						userExist = true
+						break
+					}
+				}
+				if !userExist {
+					logrus.Infof("user uin:%s this user not exist ")
+					continue
+				}
+				newList = append(newList, fmt.Sprintf("id=\"%s\"", vv))
+			}
+			tmpGranteeId = strings.Join(newList, ",")
+			switch strings.ToLower(v.Permission) {
+				case "read": readGrant = tmpGranteeId
+				case "write": writeGrant = tmpGranteeId
+				case "full_control": fullControlGrant = tmpGranteeId
+			}
+		}
+	}
+	ownerUin := bucketAclResult.Owner.ID[strings.LastIndex(bucketAclResult.Owner.ID, "/")+1:]
+	grantId := fmt.Sprintf("id=\"qcs::cam::uin/%s:uin/%s\"", ownerUin, uin)
+	switch permission {
+		case "read": readGrant = appendGrantId(readGrant, grantId)
+		case "write": writeGrant = appendGrantId(writeGrant, grantId)
+		case "full_control": fullControlGrant = appendGrantId(fullControlGrant, grantId)
+	}
+	logrus.Infof("--------> read:%s  write:%s  full_control:%s", readGrant, writeGrant, fullControlGrant)
+	opt := &cos.BucketPutACLOptions{
+		Header: &cos.ACLHeaderOptions{
+			XCosGrantRead: readGrant,
+			XCosGrantWrite: writeGrant,
+			XCosGrantFullControl: fullControlGrant,
+		},
+	}
+	_,err = client.Bucket.PutACL(context.Background(), opt)
+	if err != nil {
+		logrus.Errorf("set bucket acl with grant:%s error %v ", grantId, err)
+	}
+	return err
+}
+
+func appendGrantId(old,grant string) string {
+	if old == "" {
+		return grant
+	}
+	return fmt.Sprintf("%s,%s", old, grant)
 }
