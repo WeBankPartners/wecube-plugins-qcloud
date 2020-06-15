@@ -69,6 +69,7 @@ func init() {
 	RegisterPlugin("cbs", new(CbsPlugin))
 	RegisterPlugin("clb-target", new(ClbTargetPlugin))
 	RegisterPlugin("bucket", new(BucketPlugin))
+	RegisterPlugin("user", new(UserPlugin))
 }
 
 type PluginRequest struct {

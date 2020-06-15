@@ -42,6 +42,11 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "cvqMJtV0/iUnuHa8Ni7gS1QVSkU=",
+			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cam/v20190116",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "4Pepw1DL3MAtiX4f7S7dxOJqp1c=",
 			"path": "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
 			"revision": ""

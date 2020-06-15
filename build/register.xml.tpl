@@ -24,6 +24,9 @@
             <systemParameter name="QCLOUD_SECURITY_POLICY_ACTION_EGRESS" scopeType="global" defaultValue="egress"/>
             <systemParameter name="QCLOUD_SECURITY_POLICY_ACTION_INGRESS" scopeType="global" defaultValue="ingress"/>
             <systemParameter name="QCLOUD_DEFAULT_SECURITY_POLICY_ACTION" scopeType="global" defaultValue="accept"/>
+            <systemParameter name="QCLOUD_BUCKET_READ" scopeType="global" defaultValue="read"/>
+            <systemParameter name="QCLOUD_BUCKET_WRITE" scopeType="global" defaultValue="write"/>
+            <systemParameter name="QCLOUD_BUCKET_FULL_CONTROL" scopeType="global" defaultValue="full_control"/>
     </systemParameters>
 
     <!-- 5.权限设定 -->
@@ -826,6 +829,41 @@
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_name</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">account_app_id</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">force_delete</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
+        </plugin>
+        <plugin name="user" targetPackage="" targetEntity="" registerName="" targetEntityFilterRule="">
+                <interface action="add" path="/qcloud/v1/user/add" filterRule="">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">user_name</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_url</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_BUCKET_READ">bucket_permission</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
+                    </inputParameters>
+                    <outputParameters>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">secret_id</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">secret_key</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">uin</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
+                    </outputParameters>
+                </interface>
+                <interface action="delete" path="/qcloud/v1/user/delete" filterRule="">
+                    <inputParameters>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">user_name</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="QCLOUD_API_SECRET">api_secret</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">location</parameter>
                     </inputParameters>
