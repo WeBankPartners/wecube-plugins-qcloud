@@ -6,6 +6,7 @@ import (
 	cam "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cam/v20190116"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	"github.com/WeBankPartners/wecube-plugins-qcloud/plugins/utils"
 )
 
 type UserPlugin struct {
@@ -41,6 +42,7 @@ type UserInput struct {
 	APISecret        string `json:"api_secret,omitempty"`
 	BucketUrl        string `json:"bucket_url,omitempty"`
 	BucketPermission string `json:"bucket_permission,omitempty"`
+	Seed             string `json:"seed,omitempty"`
 }
 
 type UserOutputs struct {
@@ -140,7 +142,11 @@ func (action *UserAddAction) addUser(userInput *UserInput) (output UserOutput, e
 	}
 	output.Password = *addUserResponse.Response.Password
 	output.SecretId = *addUserResponse.Response.SecretId
-	output.SecretKey = *addUserResponse.Response.SecretKey
+	output.SecretKey,err = utils.AesEnPassword(userInput.Guid, userInput.Seed, *addUserResponse.Response.SecretKey, utils.DEFALT_CIPHER)
+	if err != nil {
+		logrus.Errorf("AesEnPassword meet error(%v)", err)
+		return output, err
+	}
 	output.Uid = fmt.Sprintf("%d", *addUserResponse.Response.Uid)
 	output.Uin = fmt.Sprintf("%d", *addUserResponse.Response.Uin)
 	output.RequestId = *addUserResponse.Response.RequestId

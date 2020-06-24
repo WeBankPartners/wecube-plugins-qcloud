@@ -843,6 +843,7 @@
                 <interface action="add" path="/qcloud/v1/user/add" filterRule="">
                     <inputParameters>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
+                        <parameter datatype="string" required="Y" sensitiveData="Y" mappingType="system_variable" mappingSystemVariableName="ENCRYPT_SEED">seed</parameter>
                         <parameter datatype="string" required="N" sensitiveData="Y" mappingType="entity" mappingEntityExpression="">provider_params</parameter>
                         <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="">user_name</parameter>
                         <parameter datatype="string" required="N" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_url</parameter>
