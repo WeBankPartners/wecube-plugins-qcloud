@@ -882,6 +882,10 @@
 
         <!-- 最佳实践 -->
          <plugin name="vpc" targetPackage="wecmdb" targetEntity="network_segment" registerName="network_segment" targetEntityFilterRule="{network_segment_usage eq 'VPC'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/vpc/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid">guid</parameter>
@@ -916,6 +920,10 @@
              </interface>
          </plugin>
          <plugin name="peering-connection" targetPackage="wecmdb" targetEntity="network_link" registerName="network_link" targetEntityFilterRule="{code eq 'peer'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/peering-connection/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_link.guid">guid</parameter>
@@ -956,6 +964,10 @@
              </interface>
          </plugin>
          <plugin name="nat-gateway" targetPackage="wecmdb" targetEntity="network_link" registerName="network_link" targetEntityFilterRule="{code eq 'nat'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/nat-gateway/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_link.guid">guid</parameter>
@@ -994,6 +1006,10 @@
              </interface>
          </plugin>
          <plugin name="subnet" targetPackage="wecmdb" targetEntity="network_segment" registerName="network_segment" targetEntityFilterRule="{network_segment_usage eq 'SUBNET'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/subnet/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}{private_route_table eq 'N'}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid">guid</parameter>
@@ -1062,6 +1078,10 @@
              </interface>
          </plugin>
          <plugin name="route-table" targetPackage="wecmdb" targetEntity="network_segment" registerName="subnet" targetEntityFilterRule="{network_segment_usage eq 'SUBNET'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/route-table/create" filterRule="{fixed_date is NULL}{private_route_table eq 'Y'}{route_table_asset_id eq ''}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid">guid</parameter>
@@ -1110,6 +1130,10 @@
              </interface>
          </plugin>
          <plugin name="route-policy" targetPackage="wecmdb" targetEntity="route" registerName="route" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/route-policy/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:route.guid">guid</parameter>
@@ -1147,6 +1171,10 @@
              </interface>
          </plugin>
          <plugin name="security-group" targetPackage="wecmdb" targetEntity="network_segment" registerName="vpc" targetEntityFilterRule="{network_segment_usage eq 'VPC'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/security-group/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}{private_security_group eq 'Y'}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid">guid</parameter>
@@ -1180,6 +1208,10 @@
              </interface>
          </plugin>
          <plugin name="security-group" targetPackage="wecmdb" targetEntity="network_segment" registerName="subnet" targetEntityFilterRule="{network_segment_usage eq 'SUBNET'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/security-group/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}{private_security_group eq 'Y'}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:network_segment.guid">guid</parameter>
@@ -1213,6 +1245,10 @@
              </interface>
          </plugin>
          <plugin name="security-group" targetPackage="wecmdb" targetEntity="unit" registerName="unit" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/security-group/create" filterRule="{fixed_date is NULL}{white_list_type neq 'N'}{security_group_asset_id eq ''}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:unit.guid">guid</parameter>
@@ -1246,6 +1282,10 @@
              </interface>
          </plugin>
          <plugin name="security-policy" targetPackage="wecmdb" targetEntity="default_security_policy" registerName="default" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:default_security_policy.guid">guid</parameter>
@@ -1287,6 +1327,10 @@
              </interface>
          </plugin>
          <plugin name="security-policy" targetPackage="wecmdb" targetEntity="invoke" registerName="egress_cache" targetEntityFilterRule="{invoked_resource_type eq 'CACHE'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:invoke.guid">guid</parameter>
@@ -1328,6 +1372,10 @@
              </interface>
          </plugin>
          <plugin name="security-policy" targetPackage="wecmdb" targetEntity="invoke" registerName="egress_rdb" targetEntityFilterRule="{invoked_resource_type eq 'RDB'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:invoke.guid">guid</parameter>
@@ -1369,6 +1417,10 @@
              </interface>
          </plugin>
          <plugin name="security-policy" targetPackage="wecmdb" targetEntity="invoke" registerName="egress_lb" targetEntityFilterRule="{invoked_resource_type eq 'LB'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:invoke.guid">guid</parameter>
@@ -1410,6 +1462,10 @@
              </interface>
          </plugin>
          <plugin name="security-policy" targetPackage="wecmdb" targetEntity="invoke" registerName="egress_app" targetEntityFilterRule="{invoked_resource_type eq 'HOST'}">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-policies" path="/qcloud/v1/security-policy/create-policies" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:invoke.guid">guid</parameter>
@@ -1451,6 +1507,10 @@
              </interface>
          </plugin>
          <plugin name="vm" targetPackage="wecmdb" targetEntity="host_resource_instance" registerName="resource" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/vm/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:host_resource_instance.guid">guid</parameter>
@@ -1617,6 +1677,10 @@
              </interface>
          </plugin>
          <plugin name="vm" targetPackage="wecmdb" targetEntity="app_instance" registerName="app_deploy" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="bind_sg_app_created" path="/qcloud/v1/vm/add-security-groups" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:app_instance.guid">guid</parameter>
@@ -1649,6 +1713,10 @@
              </interface>
          </plugin>
          <plugin name="storage" targetPackage="wecmdb" targetEntity="block_storage" registerName="block_storage" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
             <interface action="buy-and-mount-cbs-disk" path="/qcloud/v1/cbs/create-mount" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:block_storage.guid">guid</parameter>
@@ -1698,6 +1766,10 @@
              </interface>
          </plugin>
          <plugin name="mysql" targetPackage="wecmdb" targetEntity="rdb_resource_instance" registerName="resource" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/mysql/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_resource_instance.guid">guid</parameter>
@@ -1811,6 +1883,10 @@
              </interface>
          </plugin>
          <plugin name="mysql" targetPackage="wecmdb" targetEntity="rdb_instance" registerName="database" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create-deploy-backup" path="/qcloud/v1/mysql/create-backup" filterRule="{state_code eq 'changed'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:rdb_instance.guid">guid</parameter>
@@ -1879,6 +1955,10 @@
              </interface>
          </plugin>
          <plugin name="redis" targetPackage="wecmdb" targetEntity="cache_resource_instance" registerName="resource" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/redis/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:cache_resource_instance.guid">guid</parameter>
@@ -1925,6 +2005,10 @@
              </interface>
          </plugin>
          <plugin name="clb" targetPackage="wecmdb" targetEntity="lb_resource_instance" registerName="resource" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="create" path="/qcloud/v1/clb/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_resource_instance.guid">guid</parameter>
@@ -1961,6 +2045,10 @@
              </interface>
          </plugin>
          <plugin name="clb-target" targetPackage="wecmdb" targetEntity="lb_instance" registerName="whole" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="add" path="/qcloud/v1/clb-target/add-backtarget" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_instance.guid">guid</parameter>
@@ -2001,6 +2089,10 @@
              </interface>
          </plugin>
          <plugin name="clb-target" targetPackage="wecmdb" targetEntity="lb_instance" registerName="target" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="add" path="/qcloud/v1/clb-target/add-backtarget" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:lb_instance.guid">guid</parameter>
@@ -2041,6 +2133,10 @@
              </interface>
          </plugin>
          <plugin name="bucket" targetPackage="wecmdb" targetEntity="cos_resource_instance" registerName="resource" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="add-bucket" path="/qcloud/v1/bucket/create" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:cos_resource_instance.guid">guid</parameter>
@@ -2076,6 +2172,10 @@
              </interface>
          </plugin>
          <plugin name="user" targetPackage="wecmdb" targetEntity="cos_instance" registerName="cos" targetEntityFilterRule="">
+             <roleBinds>
+                 <roleBind permission="MGMT" roleName="SUPER_ADMIN"/>
+                 <roleBind permission="USE" roleName="SUPER_ADMIN"/>
+             </roleBinds>
              <interface action="add" path="/qcloud/v1/user/add" filterRule="{state_code eq 'created'}{fixed_date is NULL}">
                  <inputParameters>
                      <parameter datatype="string" required="Y" sensitiveData="N" mappingType="entity" mappingEntityExpression="wecmdb:cos_instance.guid">guid</parameter>
