@@ -87,37 +87,63 @@ func createSecurityPolices(input SecurityGroupPolicyInput) ([]*vpc.SecurityGroup
 		return policies, err
 	}
 
-	ports, err := GetArrayFromString(input.PolicyPort, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
+	ports, err := GetArrayFromString(input.PolicyPort, ARRAY_SIZE_REAL, len(policyIps))
 	if err != nil {
 		return policies, err
 	}
 
-	protos, err := GetArrayFromString(input.PolicyProtocol, ARRAY_SIZE_AS_EXPECTED, len(policyIps))
+	protos, err := GetArrayFromString(input.PolicyProtocol, ARRAY_SIZE_REAL, len(policyIps))
 	if err != nil {
 		return policies, err
 	}
 
-	for i, ip := range policyIps {
-		tmpProtocol := strings.ToUpper(protos[i])
-		if tmpProtocol == "TCP" || tmpProtocol == "UDP" {
-			policy := &vpc.SecurityGroupPolicy{
-				Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
-				Port:              common.StringPtr(strings.ToUpper(ports[i])),
-				CidrBlock:         common.StringPtr(ip),
-				Action:            common.StringPtr(action),
-				PolicyDescription: common.StringPtr(input.PolicyDescription),
+	for _,tmpIp := range policyIps {
+		for _,tmpProtocol := range protos {
+			protocolUpString := strings.ToUpper(tmpProtocol)
+			if protocolUpString == "TCP" || protocolUpString == "UDP" {
+				for _,tmpPort := range ports {
+					policy := &vpc.SecurityGroupPolicy{
+						Protocol:          common.StringPtr(protocolUpString),
+						Port:              common.StringPtr(tmpPort),
+						CidrBlock:         common.StringPtr(tmpIp),
+						Action:            common.StringPtr(action),
+						PolicyDescription: common.StringPtr(input.PolicyDescription),
+					}
+					policies = append(policies, policy)
+				}
+			}else{
+				policy := &vpc.SecurityGroupPolicy{
+					Protocol:          common.StringPtr(strings.ToUpper(tmpProtocol)),
+					CidrBlock:         common.StringPtr(tmpIp),
+					Action:            common.StringPtr(action),
+					PolicyDescription: common.StringPtr(input.PolicyDescription),
+				}
+				policies = append(policies, policy)
 			}
-			policies = append(policies, policy)
-		}else {
-			policy := &vpc.SecurityGroupPolicy{
-				Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
-				CidrBlock:         common.StringPtr(ip),
-				Action:            common.StringPtr(action),
-				PolicyDescription: common.StringPtr(input.PolicyDescription),
-			}
-			policies = append(policies, policy)
 		}
 	}
+
+	//for i, ip := range policyIps {
+	//	tmpProtocol := strings.ToUpper(protos[i])
+	//	if tmpProtocol == "TCP" || tmpProtocol == "UDP" {
+	//		policy := &vpc.SecurityGroupPolicy{
+	//			Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
+	//			Port:              common.StringPtr(strings.ToUpper(ports[i])),
+	//			CidrBlock:         common.StringPtr(ip),
+	//			Action:            common.StringPtr(action),
+	//			PolicyDescription: common.StringPtr(input.PolicyDescription),
+	//		}
+	//		policies = append(policies, policy)
+	//	}else {
+	//		policy := &vpc.SecurityGroupPolicy{
+	//			Protocol:          common.StringPtr(strings.ToUpper(protos[i])),
+	//			CidrBlock:         common.StringPtr(ip),
+	//			Action:            common.StringPtr(action),
+	//			PolicyDescription: common.StringPtr(input.PolicyDescription),
+	//		}
+	//		policies = append(policies, policy)
+	//	}
+	//}
 	return policies, nil
 }
 
