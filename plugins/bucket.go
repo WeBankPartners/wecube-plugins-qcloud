@@ -101,7 +101,7 @@ func (action *BucketCreateAction) createBucket(bucketInput *BucketInput) (output
 	output.Guid = bucketInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = bucketInput.CallBackParameter.Parameter
-	output.BucketName = bucketInput.BucketName
+	output.BucketName = fmt.Sprintf("%s-%s", bucketInput.BucketName, bucketInput.AccountAppId)
 
 	if bucketInput.Location != "" && bucketInput.APISecret != "" {
 		bucketInput.ProviderParams = fmt.Sprintf("%s;%s", bucketInput.Location, bucketInput.APISecret)
@@ -151,7 +151,10 @@ func (action *BucketDeleteAction) deleteBucket(bucketInput *BucketInput) (output
 	output.Guid = bucketInput.Guid
 	output.Result.Code = RESULT_CODE_SUCCESS
 	output.CallBackParameter.Parameter = bucketInput.CallBackParameter.Parameter
-	output.BucketName = bucketInput.BucketName
+	if strings.Contains(bucketInput.BucketName, bucketInput.AccountAppId) {
+		bucketInput.BucketName = strings.Replace(bucketInput.BucketName, "-"+bucketInput.AccountAppId, "", -1)
+	}
+	output.BucketName = fmt.Sprintf("%s-%s", bucketInput.BucketName, bucketInput.AccountAppId)
 
 	if bucketInput.Location != "" && bucketInput.APISecret != "" {
 		bucketInput.ProviderParams = fmt.Sprintf("%s;%s", bucketInput.Location, bucketInput.APISecret)
