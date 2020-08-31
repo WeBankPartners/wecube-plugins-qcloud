@@ -60,7 +60,7 @@ func init() {
 	RegisterPlugin("route-table", new(RouteTablePlugin))
 	RegisterPlugin("mysql", new(MysqlVmPlugin))
 	RegisterPlugin("redis", new(RedisPlugin))
-	RegisterPlugin("log", new(LogPlugin))
+	//RegisterPlugin("log", new(LogPlugin))
 	RegisterPlugin("elastic-nic", new(ElasticNicPlugin))
 	RegisterPlugin("eip", new(EIPPlugin))
 	RegisterPlugin("mariadb", new(MariadbPlugin))
