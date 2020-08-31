@@ -487,7 +487,7 @@ type VmTerminateInput struct {
 }
 
 type VmTerminateOutputs struct {
-	Outputs []VmTerminateOutput `json:outputs,omitempty`
+	Outputs []VmTerminateOutput `json:"outputs,omitempty"`
 }
 type VmTerminateOutput struct {
 	CallBackParameter
