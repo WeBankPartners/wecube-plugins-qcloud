@@ -63,7 +63,8 @@ func initRouter() {
 func routeDispatcher(w http.ResponseWriter, r *http.Request) {
 	pluginRequest := parsePluginRequest(r)
 	pluginResponse, _ := plugins.Process(pluginRequest)
-	logrus.Infof("write data to client response=%++v", pluginResponse)
+	b,_ := json.Marshal(pluginResponse)
+	logrus.Infof("write data to client response=%s", string(b))
 	write(w, pluginResponse)
 }
 
