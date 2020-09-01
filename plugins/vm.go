@@ -487,7 +487,7 @@ type VmTerminateInput struct {
 }
 
 type VmTerminateOutputs struct {
-	Outputs []VmTerminateOutput `json:outputs,omitempty`
+	Outputs []VmTerminateOutput `json:"outputs,omitempty"`
 }
 type VmTerminateOutput struct {
 	CallBackParameter
@@ -609,13 +609,15 @@ func (action *VmTerminateAction) Do(input interface{}) (interface{}, error) {
 	var finalErr error
 	for _, vm := range vms.Inputs {
 		output, err := action.terminateVm(&vm)
+		outPrint,_ := json.Marshal(output)
+		logrus.Infof("terminate vm output------------>%s ", string(outPrint))
 		if err != nil {
 			finalErr = err
 		}
 		outputs.Outputs = append(outputs.Outputs, output)
 	}
 
-	logrus.Infof("all vms = %v are created", vms)
+	logrus.Infof("all vms = %v are terminate", vms)
 	return &outputs, finalErr
 }
 
