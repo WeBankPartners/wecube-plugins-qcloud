@@ -823,6 +823,7 @@
                     <outputParameters>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">guid</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_url</parameter>
+                        <parameter datatype="string" sensitiveData="N" mappingType="entity" mappingEntityExpression="">bucket_name</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorCode</parameter>
                         <parameter datatype="string" sensitiveData="N" mappingType="context">errorMessage</parameter>
                     </outputParameters>
