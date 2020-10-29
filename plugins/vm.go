@@ -267,12 +267,12 @@ func (action *VmCreateAction) createVm(input *VmCreateInput) (output VmCreateOut
 		Password: &input.Password,
 	}
 
-	assignPublicIp := false
-	maxBandwidth := int64(10)
-	request.InternetAccessible = &cvm.InternetAccessible{
-		PublicIpAssigned:        &assignPublicIp,
-		InternetMaxBandwidthOut: &maxBandwidth,
-	}
+	//assignPublicIp := false
+	//maxBandwidth := int64(10)
+	//request.InternetAccessible = &cvm.InternetAccessible{
+	//	PublicIpAssigned:        &assignPublicIp,
+	//	InternetMaxBandwidthOut: &maxBandwidth,
+	//}
 
 	if input.InstanceType == "" && input.HostType != "" {
 		input.InstanceType = getInstanceType(client, paramsMap["AvailableZone"], input.InstanceChargeType, input.HostType, input.InstanceFamily)
